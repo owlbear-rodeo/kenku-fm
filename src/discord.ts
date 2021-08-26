@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import { ipcMain } from "electron";
 import Eris from "eris";
+import ytdl from "ytdl-core";
 
 dotenv.config();
 
@@ -42,7 +43,7 @@ bot.on("messageCreate", (msg) => {
       bot.createMessage(msg.channel.id, "You are not in a voice channel.");
       return;
     }
-    const filename = msg.content.substring(playCommand.length + 1); // Get the filename
+    const url = msg.content.substring(playCommand.length + 1); // Get the filename
     bot
       .joinVoiceChannel(msg.member.voiceState.channelID)
       .catch((err) => {
@@ -59,10 +60,10 @@ bot.on("messageCreate", (msg) => {
             // Stop playing if the connection is playing something
             connection.stopPlaying();
           }
-          connection.play(filename); // Play the file and notify the user
-          bot.createMessage(msg.channel.id, `Now playing **${filename}**`);
+          connection.play(ytdl(url, { quality: "highestaudio" }));
+          bot.createMessage(msg.channel.id, `Now playing **${url}**`);
           connection.once("end", () => {
-            bot.createMessage(msg.channel.id, `Finished **${filename}**`); // Say when the file has finished playing
+            bot.createMessage(msg.channel.id, `Finished **${url}**`);
           });
         }
       });

@@ -6,13 +6,9 @@ import CssBaseline from "@material-ui/core/CssBaseline";
 import "typeface-roboto/index.css";
 import { ThemeProvider } from "@material-ui/core/styles";
 
-import Box from "@material-ui/core/Box";
-import Container from "@material-ui/core/Container";
-import Typography from "@material-ui/core/Typography";
+import { TextField, Box, Container, Typography } from "@material-ui/core";
 
 import { theme } from "./theme";
-
-import { Counter } from "../features/counter/Counter";
 
 function App() {
   return (
@@ -21,7 +17,16 @@ function App() {
         <Typography variant="h4" component="h1" gutterBottom>
           App
         </Typography>
-        <Counter />
+        <TextField
+          variant="outlined"
+          label="message"
+          InputLabelProps={{
+            shrink: true,
+          }}
+          onChange={(e) => {
+            (window as any).discord.updateMessage(e.target.value);
+          }}
+        />
       </Box>
     </Container>
   );

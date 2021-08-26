@@ -75,3 +75,5 @@ bot.connect();
 ipcMain.on("update-message", (_, arg) => {
   message = arg;
 });
+
+export default bot;

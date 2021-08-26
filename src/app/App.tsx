@@ -6,7 +6,8 @@ import CssBaseline from "@material-ui/core/CssBaseline";
 import "typeface-roboto/index.css";
 import { ThemeProvider } from "@material-ui/core/styles";
 
-import { TextField, Box, Container, Typography } from "@material-ui/core";
+import { Box, Container, Typography } from "@material-ui/core";
+import { Playlist } from "../features/playlist/Playlist";
 
 import { theme } from "./theme";
 
@@ -17,16 +18,7 @@ function App() {
         <Typography variant="h4" component="h1" gutterBottom>
           App
         </Typography>
-        <TextField
-          variant="outlined"
-          label="message"
-          InputLabelProps={{
-            shrink: true,
-          }}
-          onChange={(e) => {
-            (window as any).discord.updateMessage(e.target.value);
-          }}
-        />
+        <Playlist />
       </Box>
     </Container>
   );

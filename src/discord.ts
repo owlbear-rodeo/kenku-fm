@@ -50,7 +50,7 @@ bot.on("voiceChannelLeave", () => {
 
 bot.connect();
 
-ipcMain.on("play", (event, url) => {
+ipcMain.on("play", async (event, url) => {
   if (!currentVoiceConnection) {
     event.reply(
       "error",
@@ -62,11 +62,23 @@ ipcMain.on("play", (event, url) => {
     // Stop playing if the connection is playing something
     currentVoiceConnection.stopPlaying();
   }
-  currentVoiceConnection.play(ytdl(url, { quality: "highestaudio" }));
-  event.reply("message", `Now playing ${url}`);
+  const info = await ytdl.getInfo(url);
+  const stream = ytdl.downloadFromInfo(info, { quality: "highestaudio" });
+  currentVoiceConnection.play(stream);
+  event.reply("message", `Now playing ${info.videoDetails.title}`);
   currentVoiceConnection.once("end", () => {
-    event.reply("message", `Finished ${url}`);
+    event.reply("message", `Finished ${info.videoDetails.title}`);
   });
+});
+
+ipcMain.on("getInfo", async (event, url, id) => {
+  const info = await ytdl.getBasicInfo(url);
+  event.reply("info", info.videoDetails.title, id);
+});
+
+ipcMain.on("validateUrl", async (event, url, id) => {
+  const valid = ytdl.validateURL(url);
+  event.reply("validation", valid, id);
 });
 
 export default bot;

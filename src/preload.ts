@@ -1,7 +1,7 @@
 import { contextBridge, IpcRendererEvent } from "electron";
 import { ipcRenderer } from "electron";
 
-const validChannels = ["error", "message"];
+const validChannels = ["error", "message", "info", "validation"];
 
 const api = {
   play: (url: string) => {
@@ -18,6 +18,12 @@ const api = {
     if (validChannels.includes(channel)) {
       ipcRenderer.removeAllListeners(channel);
     }
+  },
+  getInfo: (url: string, id: string) => {
+    ipcRenderer.send("getInfo", url, id);
+  },
+  validateUrl: (url: string, id: string) => {
+    ipcRenderer.send("validateUrl", url, id);
   },
 };
 

@@ -1,9 +1,13 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { v4 as uuid } from "uuid";
 
+export type PlaylistItemState = "unknown" | "valid" | "invalid";
+
 export interface PlaylistItem {
   url: string;
   playing: boolean;
+  state: PlaylistItemState;
+  title: string;
   id: string;
 }
 
@@ -23,7 +27,13 @@ export const playlistSlice = createSlice({
   reducers: {
     addItem: (state) => {
       const id = uuid();
-      state.items[id] = { id, url: "", playing: false };
+      state.items[id] = {
+        id,
+        url: "",
+        playing: false,
+        state: "unknown",
+        title: "",
+      };
       state.order.push(id);
     },
     removeItem: (state, action: PayloadAction<string>) => {

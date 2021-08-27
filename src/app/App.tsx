@@ -14,6 +14,10 @@ import { ConnectionDialog } from "../features/connection/ConnectionDialog";
 
 import { theme } from "./theme";
 
+import icon from "../icons/256x256.png";
+
+import "./App.css";
+
 function App() {
   const { enqueueSnackbar } = useSnackbar();
 
@@ -38,9 +42,17 @@ function App() {
   return (
     <Container maxWidth="sm">
       <Box sx={{ my: 4 }}>
-        <Stack direction="row" sx={{ justifyContent: "space-between" }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Kenku FM
+        <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+          <Box sx={{ width: "48px", height: "48px" }}>
+            <img src={icon} />
+          </Box>
+          <Typography
+            variant="h4"
+            component="h1"
+            gutterBottom
+            sx={{ flexGrow: 1 }}
+          >
+            Kenku <span style={{ fontSize: "1rem" }}>fm</span>
           </Typography>
           <ConnectionDialog />
         </Stack>

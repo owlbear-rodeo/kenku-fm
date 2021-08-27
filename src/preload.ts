@@ -8,9 +8,15 @@ const validChannels = [
   "validation",
   "play",
   "stop",
+  "stopAll",
+  "ready",
+  "disconnect",
 ];
 
 const api = {
+  connect: (token: string) => {
+    ipcRenderer.send("connect", token);
+  },
   play: (url: string, id: string) => {
     ipcRenderer.send("play", url, id);
   },

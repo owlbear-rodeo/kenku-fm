@@ -99,7 +99,6 @@
     "@material-ui/styled-engine-sc": "^5.0.0-beta.5",
     "@reduxjs/toolkit": "^1.6.1",
     "add": "^2.0.6",
-    "dotenv": "^10.0.0",
     "electron-squirrel-startup": "^1.0.0",
     "eris": "^0.15.1",
     "notistack": "^2.0.1-alpha.5",

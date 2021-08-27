@@ -5,7 +5,7 @@ import AddIcon from "@material-ui/icons/AddRounded";
 
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
-import { addItem, editItem } from "./playlistSlice";
+import { addItem, editItem, stopAll } from "./playlistSlice";
 
 import { PlaylistItem } from "./PlaylistItem";
 
@@ -21,6 +21,9 @@ export function Playlist() {
     window.discord.on("stop", (args) => {
       const id = args[0];
       dispatch(editItem({ id, state: "valid" }));
+    });
+    window.discord.on("stopAll", () => {
+      dispatch(stopAll());
     });
     window.discord.on("info", (args) => {
       const title = args[0];

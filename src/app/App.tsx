@@ -8,8 +8,9 @@ import { ThemeProvider } from "@material-ui/core/styles";
 import { SnackbarProvider } from "notistack";
 import { useSnackbar } from "notistack";
 
-import { Box, Container, Typography } from "@material-ui/core";
+import { Box, Container, Typography, Stack } from "@material-ui/core";
 import { Playlist } from "../features/playlist/Playlist";
+import { ConnectionDialog } from "../features/connection/ConnectionDialog";
 
 import { theme } from "./theme";
 
@@ -37,9 +38,12 @@ function App() {
   return (
     <Container maxWidth="sm">
       <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Kenku FM
-        </Typography>
+        <Stack direction="row" sx={{ justifyContent: "space-between" }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Kenku FM
+          </Typography>
+          <ConnectionDialog />
+        </Stack>
         <Playlist />
       </Box>
     </Container>

@@ -56,9 +56,16 @@ export const playlistSlice = createSlice({
         ...action.payload,
       };
     },
+    stopAll: (state) => {
+      for (let id of state.order) {
+        if (state.items[id].state === "playing") {
+          state.items[id].state = "valid";
+        }
+      }
+    },
   },
 });
 
-export const { addItem, removeItem, editItem } = playlistSlice.actions;
+export const { addItem, removeItem, editItem, stopAll } = playlistSlice.actions;
 
 export default playlistSlice.reducer;

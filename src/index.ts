@@ -58,7 +58,7 @@ app.on("window-all-closed", () => {
 });
 
 app.on("quit", () => {
-  discord.disconnect({ reconnect: false });
+  discord?.disconnect({ reconnect: false });
 });
 
 app.on("activate", () => {

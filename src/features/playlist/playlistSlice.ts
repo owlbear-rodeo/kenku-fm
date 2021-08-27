@@ -21,8 +21,10 @@ export interface PlaylistState {
 }
 
 const initialState: PlaylistState = {
-  items: {},
-  order: [],
+  items: {
+    initial: { id: "initial", url: "", state: "unknown", title: "" },
+  },
+  order: ["initial"],
 };
 
 export const playlistSlice = createSlice({

@@ -4,7 +4,9 @@ import Paper from "@material-ui/core/Paper";
 import TextField from "@material-ui/core/TextField";
 import IconButton from "@material-ui/core/IconButton";
 import PlayIcon from "@material-ui/icons/PlayArrowRounded";
+import StopIcon from "@material-ui/icons/StopRounded";
 import DeleteIcon from "@material-ui/icons/DeleteRounded";
+import CircularProgress from "@material-ui/core/CircularProgress";
 
 import { useDispatch } from "react-redux";
 import { removeItem, editItem, PlaylistItem } from "./playlistSlice";
@@ -26,14 +28,21 @@ export function PlaylistItem({ item }: PlaylistItemProps) {
   }
 
   function handlePlay() {
-    window.discord.play(item.url);
+    if (item.state === "playing") {
+      dispatch(editItem({ id: item.id }));
+      window.discord.stop(item.id);
+    } else {
+      dispatch(editItem({ id: item.id, state: "loading" }));
+      window.discord.play(item.url, item.id);
+    }
   }
 
-  const debouncedItem = useDebounce(item, 1000);
+  const debouncedItemUrl = useDebounce(item.url, 1000);
+  const debouncedItemId = useDebounce(item.id, 1000);
   useEffect(() => {
-    window.discord.validateUrl(debouncedItem.url, debouncedItem.id);
-    window.discord.getInfo(debouncedItem.url, debouncedItem.id);
-  }, [debouncedItem]);
+    window.discord.validateUrl(debouncedItemUrl, debouncedItemId);
+    window.discord.getInfo(debouncedItemUrl, debouncedItemId);
+  }, [debouncedItemUrl, debouncedItemId]);
 
   return (
     <Paper sx={{ p: 1 }}>
@@ -53,9 +62,20 @@ export function PlaylistItem({ item }: PlaylistItemProps) {
         />
         <IconButton
           onClick={handlePlay}
-          disabled={!item.url || item.state !== "valid"}
+          disabled={
+            !item.url ||
+            item.state === "invalid" ||
+            item.state === "loading" ||
+            item.state === "unknown"
+          }
         >
-          <PlayIcon />
+          {item.state === "loading" ? (
+            <CircularProgress size={24} />
+          ) : item.state === "playing" ? (
+            <StopIcon />
+          ) : (
+            <PlayIcon />
+          )}
         </IconButton>
         <IconButton onClick={handleRemove}>
           <DeleteIcon />

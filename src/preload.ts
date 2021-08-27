@@ -1,11 +1,21 @@
 import { contextBridge, IpcRendererEvent } from "electron";
 import { ipcRenderer } from "electron";
 
-const validChannels = ["error", "message", "info", "validation"];
+const validChannels = [
+  "error",
+  "message",
+  "info",
+  "validation",
+  "play",
+  "stop",
+];
 
 const api = {
-  play: (url: string) => {
-    ipcRenderer.send("play", url);
+  play: (url: string, id: string) => {
+    ipcRenderer.send("play", url, id);
+  },
+  stop: (id: string) => {
+    ipcRenderer.send("stop", id);
   },
   on: (channel: string, callback: (...args: any[]) => void) => {
     if (validChannels.includes(channel)) {

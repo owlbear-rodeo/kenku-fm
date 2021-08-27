@@ -1,11 +1,15 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { v4 as uuid } from "uuid";
 
-export type PlaylistItemState = "unknown" | "valid" | "invalid";
+export type PlaylistItemState =
+  | "unknown"
+  | "valid"
+  | "invalid"
+  | "loading"
+  | "playing";
 
 export interface PlaylistItem {
   url: string;
-  playing: boolean;
   state: PlaylistItemState;
   title: string;
   id: string;
@@ -30,7 +34,6 @@ export const playlistSlice = createSlice({
       state.items[id] = {
         id,
         url: "",
-        playing: false,
         state: "unknown",
         title: "",
       };

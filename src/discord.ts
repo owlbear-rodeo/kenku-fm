@@ -50,30 +50,52 @@ bot.on("voiceChannelLeave", () => {
 
 bot.connect();
 
-ipcMain.on("play", async (event, url) => {
+ipcMain.on("play", async (event, url, id) => {
   if (!currentVoiceConnection) {
     event.reply(
       "error",
       "Not in a voice channel use !join to add bot to a voice channel"
     );
+    event.reply("stop", id);
     return;
   }
   if (currentVoiceConnection.playing) {
     // Stop playing if the connection is playing something
     currentVoiceConnection.stopPlaying();
   }
+  const valid = ytdl.validateURL(url);
+  if (!valid) {
+    event.reply("error", "Invalid url");
+    event.reply("stop", id);
+    return;
+  }
   const info = await ytdl.getInfo(url);
   const stream = ytdl.downloadFromInfo(info, { quality: "highestaudio" });
   currentVoiceConnection.play(stream);
+  event.reply("play", id);
   event.reply("message", `Now playing ${info.videoDetails.title}`);
   currentVoiceConnection.once("end", () => {
+    event.reply("stop", id);
     event.reply("message", `Finished ${info.videoDetails.title}`);
   });
 });
 
+ipcMain.on("stop", (event, id) => {
+  if (!currentVoiceConnection) {
+    event.reply("error", "No voice connection to stop");
+    return;
+  }
+  if (currentVoiceConnection.playing) {
+    currentVoiceConnection.stopPlaying();
+  }
+});
+
 ipcMain.on("getInfo", async (event, url, id) => {
-  const info = await ytdl.getBasicInfo(url);
-  event.reply("info", info.videoDetails.title, id);
+  const valid = ytdl.validateURL(url);
+  if (valid) {
+    const info = await ytdl.getBasicInfo(url);
+    event.reply("info", info.videoDetails.title, id);
+  }
 });
 
 ipcMain.on("validateUrl", async (event, url, id) => {

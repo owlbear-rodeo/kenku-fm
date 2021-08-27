@@ -100,6 +100,7 @@
     "dotenv": "^10.0.0",
     "electron-squirrel-startup": "^1.0.0",
     "eris": "^0.15.1",
+    "notistack": "^2.0.1-alpha.5",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-redux": "^7.2.4",

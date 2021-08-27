@@ -20,8 +20,12 @@ export function PlaylistItem({ item }: PlaylistItemProps) {
     dispatch(editItem({ id: item.id, url: e.target.value }));
   }
 
-  function handleItemRemove() {
+  function handleRemove() {
     dispatch(removeItem(item.id));
+  }
+
+  function handlePlay() {
+    window.discord.play(item.url);
   }
 
   return (
@@ -38,10 +42,10 @@ export function PlaylistItem({ item }: PlaylistItemProps) {
           }}
           size="small"
         />
-        <IconButton>
+        <IconButton onClick={handlePlay} disabled={!item.url}>
           <PlayIcon />
         </IconButton>
-        <IconButton onClick={handleItemRemove}>
+        <IconButton onClick={handleRemove}>
           <DeleteIcon />
         </IconButton>
       </Stack>

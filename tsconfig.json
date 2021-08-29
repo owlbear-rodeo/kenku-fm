@@ -1,21 +1,27 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "module": "commonjs",
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "noImplicitAny": true,
+    "target": "ES2018",
+    "module": "CommonJS",
+    "lib": ["dom", "esnext"],
+    "declaration": true,
+    "declarationMap": true,
+    "noEmit": true,
+    "jsx": "react",
+    "strict": true,
+    "pretty": true,
     "sourceMap": true,
-    "baseUrl": ".",
-    "outDir": "dist",
+    "baseUrl": "./src",
+    /* Additional Checks */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    /* Module Resolution Options */
     "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "paths": {
-      "*": ["node_modules/*"],
-    },
-    "jsx": "react"
+    "allowJs": true
   },
-  "include": [
-    "src/**/*"
-  ]
+  "exclude": ["test", "build/release", "build/app/dist", ".erb/dll"]
 }

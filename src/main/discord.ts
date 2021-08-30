@@ -12,6 +12,10 @@ client.on('message', async (msg) => {
       msg.reply('This command can only be run in a server.');
       return;
     }
+    if (!msg.member) {
+      msg.reply('This command can only be run by a user.');
+      return;
+    }
     if (!msg.member.voice.channel) {
       // Check if the user is in a voice channel
       msg.reply('You are not in a voice channel.');
@@ -37,8 +41,11 @@ ipcMain.on('connect', async (event, token) => {
 });
 
 ipcMain.on('play', async (event, url, id) => {
-  // TODO: Check client ready
-
+  if (!client.voice) {
+    event.reply('error', 'Not in a voice channel');
+    event.reply('stop', id);
+    return;
+  }
   let broadcast: Discord.VoiceBroadcast;
   if (id in broadcasts) {
     broadcast = broadcasts[id];
@@ -72,8 +79,9 @@ ipcMain.on('play', async (event, url, id) => {
 
 ipcMain.on('stop', (event, id) => {
   event.reply('stop', id);
-  if (broadcasts[id]) {
-    broadcasts[id].dispatcher.pause();
+  const broadcast = broadcasts[id];
+  if (broadcast) {
+    broadcast.dispatcher?.pause();
   }
 });
 

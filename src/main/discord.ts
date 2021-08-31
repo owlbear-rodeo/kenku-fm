@@ -1,9 +1,59 @@
 import { ipcMain, app } from 'electron';
 import Discord from 'discord.js';
 import ytdl from 'ytdl-core-discord';
+import Hapi from '@hapi/hapi';
+import { LocalDispatcher } from './LocalDispatcher';
 
 const client = new Discord.Client();
-const broadcasts: Record<string, Discord.VoiceBroadcast> = {};
+const broadcast = client.voice?.createBroadcast();
+
+const server = Hapi.server({
+  port: 3333,
+  host: 'localhost',
+});
+
+server.route({
+  method: 'GET',
+  path: '/stream',
+  handler: (_, h) => {
+    if (broadcast) {
+      const dispatcher = new LocalDispatcher(undefined, { broadcast });
+      (broadcast as any).add(dispatcher);
+      return h.response(dispatcher.output).type('audio/mpeg');
+    } else {
+      return h.response();
+    }
+  },
+  options: {
+    cors: {
+      origin: ['*'],
+    },
+  },
+});
+
+server.route({
+  method: 'GET',
+  path: '/',
+  handler: (_, h) => {
+    return h
+      .response(
+        `
+      <!DOCTYPE html>
+<html>
+<head>
+    <title>Audio</title>
+</head>
+<body>
+  <audio src="/stream" preload="none" controls autoplay></audio>
+</body>
+</html>
+      `
+      )
+      .type('text/html');
+  },
+});
+
+server.start();
 
 client.on('message', async (msg) => {
   if (msg.content === '!join') {
@@ -21,7 +71,12 @@ client.on('message', async (msg) => {
       msg.reply('You are not in a voice channel.');
       return;
     }
-    await msg.member.voice.channel.join();
+    if (!broadcast) {
+      msg.reply('Error: No broadcast available.');
+      return;
+    }
+    const connection = await msg.member.voice.channel.join();
+    connection.play(broadcast);
   }
 });
 
@@ -41,17 +96,10 @@ ipcMain.on('connect', async (event, token) => {
 });
 
 ipcMain.on('play', async (event, url, id) => {
-  if (!client.voice) {
-    event.reply('error', 'Not in a voice channel');
+  if (!broadcast || !client.voice) {
+    event.reply('error', 'No broadcast available');
     event.reply('stop', id);
     return;
-  }
-  let broadcast: Discord.VoiceBroadcast;
-  if (id in broadcasts) {
-    broadcast = broadcasts[id];
-  } else {
-    broadcast = client.voice.createBroadcast();
-    broadcasts[id] = broadcast;
   }
 
   const valid = ytdl.validateURL(url);
@@ -64,10 +112,6 @@ ipcMain.on('play', async (event, url, id) => {
   const stream = await ytdl(url);
   const dispatcher = broadcast.play(stream, { type: 'opus' });
 
-  client.voice.connections.forEach((connection) => {
-    connection.play(broadcast);
-  });
-
   event.reply('play', id);
   event.reply('message', `Now playing ${info.videoDetails.title}`);
 
@@ -79,7 +123,6 @@ ipcMain.on('play', async (event, url, id) => {
 
 ipcMain.on('stop', (event, id) => {
   event.reply('stop', id);
-  const broadcast = broadcasts[id];
   if (broadcast) {
     broadcast.dispatcher?.pause();
   }

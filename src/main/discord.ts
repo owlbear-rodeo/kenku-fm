@@ -3,7 +3,7 @@ import Discord from 'discord.js';
 import ytdl from 'ytdl-core-discord';
 
 const client = new Discord.Client();
-const broadcasts: Record<string, Discord.VoiceBroadcast> = {};
+const broadcast = client.voice?.createBroadcast();
 
 client.on('message', async (msg) => {
   if (msg.content === '!join') {
@@ -21,7 +21,12 @@ client.on('message', async (msg) => {
       msg.reply('You are not in a voice channel.');
       return;
     }
-    await msg.member.voice.channel.join();
+    if (!broadcast) {
+      msg.reply('Error: No broadcast available.');
+      return;
+    }
+    const connection = await msg.member.voice.channel.join();
+    connection.play(broadcast);
   }
 });
 
@@ -36,22 +41,15 @@ ipcMain.on('connect', async (event, token) => {
     event.reply('ready');
     event.reply('message', 'Connected');
   } catch (err) {
-    event.reply('error', 'Error connecting to bot ' + err.message);
+    event.reply('error', `Error connecting to bot ${err.message}`);
   }
 });
 
 ipcMain.on('play', async (event, url, id) => {
-  if (!client.voice) {
-    event.reply('error', 'Not in a voice channel');
+  if (!broadcast || !client.voice) {
+    event.reply('error', 'No broadcast available');
     event.reply('stop', id);
     return;
-  }
-  let broadcast: Discord.VoiceBroadcast;
-  if (id in broadcasts) {
-    broadcast = broadcasts[id];
-  } else {
-    broadcast = client.voice.createBroadcast();
-    broadcasts[id] = broadcast;
   }
 
   const valid = ytdl.validateURL(url);
@@ -64,10 +62,6 @@ ipcMain.on('play', async (event, url, id) => {
   const stream = await ytdl(url);
   const dispatcher = broadcast.play(stream, { type: 'opus' });
 
-  client.voice.connections.forEach((connection) => {
-    connection.play(broadcast);
-  });
-
   event.reply('play', id);
   event.reply('message', `Now playing ${info.videoDetails.title}`);
 
@@ -79,7 +73,6 @@ ipcMain.on('play', async (event, url, id) => {
 
 ipcMain.on('stop', (event, id) => {
   event.reply('stop', id);
-  const broadcast = broadcasts[id];
   if (broadcast) {
     broadcast.dispatcher?.pause();
   }

@@ -1,28 +1,24 @@
 import { ipcMain, app } from 'electron';
 import Discord from 'discord.js';
-import ytdl from 'ytdl-core-discord';
+import ytdl from 'ytdl-core';
 import Hapi from '@hapi/hapi';
-import { LocalDispatcher } from './LocalDispatcher';
+import { PassThrough } from 'stream';
+import { BroadcastManager } from './BroadcastManager';
 
 const client = new Discord.Client();
-const broadcast = client.voice?.createBroadcast();
+const broadcasts = new BroadcastManager(client);
 
 const server = Hapi.server({
   port: 3333,
-  host: 'localhost',
 });
 
 server.route({
   method: 'GET',
   path: '/stream',
   handler: (_, h) => {
-    if (broadcast) {
-      const dispatcher = new LocalDispatcher(undefined, { broadcast });
-      (broadcast as any).add(dispatcher);
-      return h.response(dispatcher.output).type('audio/mpeg');
-    } else {
-      return h.response();
-    }
+    const dispatcher = new PassThrough();
+    broadcasts.local.add(dispatcher);
+    return h.response(dispatcher).type('audio/mpeg');
   },
   options: {
     cors: {
@@ -71,12 +67,8 @@ client.on('message', async (msg) => {
       msg.reply('You are not in a voice channel.');
       return;
     }
-    if (!broadcast) {
-      msg.reply('Error: No broadcast available.');
-      return;
-    }
     const connection = await msg.member.voice.channel.join();
-    connection.play(broadcast);
+    connection.play(broadcasts.discord);
   }
 });
 
@@ -96,7 +88,7 @@ ipcMain.on('connect', async (event, token) => {
 });
 
 ipcMain.on('play', async (event, url, id) => {
-  if (!broadcast || !client.voice) {
+  if (!client.voice) {
     event.reply('error', 'No broadcast available');
     event.reply('stop', id);
     return;
@@ -109,8 +101,8 @@ ipcMain.on('play', async (event, url, id) => {
     return;
   }
   const info = await ytdl.getInfo(url);
-  const stream = await ytdl(url);
-  const dispatcher = broadcast.play(stream, { type: 'opus' });
+  const stream = ytdl.downloadFromInfo(info, { filter: 'audioonly' });
+  const dispatcher = broadcasts.play(stream);
 
   event.reply('play', id);
   event.reply('message', `Now playing ${info.videoDetails.title}`);
@@ -123,9 +115,7 @@ ipcMain.on('play', async (event, url, id) => {
 
 ipcMain.on('stop', (event, id) => {
   event.reply('stop', id);
-  if (broadcast) {
-    broadcast.dispatcher?.pause();
-  }
+  // TODO implement pause / stop
 });
 
 ipcMain.on('getInfo', async (event, url, id) => {

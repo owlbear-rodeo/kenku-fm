@@ -32,8 +32,13 @@ export function OutputListItems() {
       dispatch(setVoiceChannels(voiceChannels));
     });
 
+    window.discord.on('channelLeft', () => {
+      dispatch(setCurrentChannel('local'));
+    });
+
     return () => {
       window.discord.removeAllListeners('voiceChannels');
+      window.discord.removeAllListeners('channelLeft');
     };
   }, [dispatch]);
 

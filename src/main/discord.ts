@@ -63,7 +63,6 @@ ipcMain.on('connect', async (event, token) => {
   }
 
   try {
-    await client.login(token);
     client.once('ready', () => {
       event.reply('ready');
       event.reply('message', 'Connected');
@@ -75,6 +74,7 @@ ipcMain.on('connect', async (event, token) => {
       });
       event.reply('voiceChannels', voiceChannels);
     });
+    await client.login(token);
   } catch (err) {
     event.reply('error', `Error connecting to bot ${err.message}`);
   }
@@ -89,6 +89,9 @@ ipcMain.on('joinChannel', async (event, channelId) => {
     if (channel instanceof Discord.VoiceChannel) {
       const connection = await channel.join();
       connection.play(broadcasts.discord);
+      connection.once('disconnect', () => {
+        event.reply('channelLeft', channelId);
+      });
       event.reply('channelJoined', channelId);
     }
   }

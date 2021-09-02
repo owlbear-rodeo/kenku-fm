@@ -13,6 +13,7 @@ const validChannels = [
   'disconnect',
   'voiceChannels',
   'channelJoined',
+  'channelLeft',
 ];
 
 const api = {

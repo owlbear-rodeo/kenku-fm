@@ -10,6 +10,7 @@ const broadcasts = new BroadcastManager(client);
 
 const server = Hapi.server({
   port: 3333,
+  address: 'localhost',
 });
 
 server.route({
@@ -54,39 +55,42 @@ server.route({
 
 server.start();
 
-client.on('message', async (msg) => {
-  if (msg.content === '!join') {
-    if (!msg.guild) {
-      // Check if the message was sent in a guild
-      msg.reply('This command can only be run in a server.');
-      return;
-    }
-    if (!msg.member) {
-      msg.reply('This command can only be run by a user.');
-      return;
-    }
-    if (!msg.member.voice.channel) {
-      // Check if the user is in a voice channel
-      msg.reply('You are not in a voice channel.');
-      return;
-    }
-    const connection = await msg.member.voice.channel.join();
-    connection.play(broadcasts.discord);
-  }
-});
-
 ipcMain.on('connect', async (event, token) => {
   if (!token) {
     event.reply('disconnect');
     event.reply('error', 'Error connecting to bot: invalid token');
     return;
   }
+
   try {
     await client.login(token);
-    event.reply('ready');
-    event.reply('message', 'Connected');
+    client.once('ready', () => {
+      event.reply('ready');
+      event.reply('message', 'Connected');
+      const voiceChannels = [{ id: 'local', name: 'This Computer' }];
+      client.channels.cache.forEach((channel) => {
+        if (channel.type === 'voice') {
+          voiceChannels.push({ id: channel.id, name: (channel as any).name });
+        }
+      });
+      event.reply('voiceChannels', voiceChannels);
+    });
   } catch (err) {
     event.reply('error', `Error connecting to bot ${err.message}`);
+  }
+});
+
+ipcMain.on('joinChannel', async (event, channelId) => {
+  client.voice?.connections.forEach((connection) => {
+    connection.disconnect();
+  });
+  if (channelId !== 'local') {
+    const channel = await client.channels.fetch(channelId);
+    if (channel instanceof Discord.VoiceChannel) {
+      const connection = await channel.join();
+      connection.play(broadcasts.discord);
+      event.reply('channelJoined', channelId);
+    }
   }
 });
 

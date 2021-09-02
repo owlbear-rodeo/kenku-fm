@@ -11,6 +11,8 @@ const validChannels = [
   'stopAll',
   'ready',
   'disconnect',
+  'voiceChannels',
+  'channelJoined',
 ];
 
 const api = {
@@ -39,6 +41,9 @@ const api = {
   },
   validateUrl: (url, id) => {
     ipcRenderer.send('validateUrl', url, id);
+  },
+  joinChannel: (channelId) => {
+    ipcRenderer.send('joinChannel', channelId);
   },
 };
 

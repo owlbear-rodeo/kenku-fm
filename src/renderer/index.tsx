@@ -31,6 +31,7 @@ declare global {
       removeAllListeners: (channel: string) => void;
       getInfo: (url: string, id: string) => void;
       validateUrl: (url: string, id: string) => void;
+      joinChannel: (channelId: string) => void;
     };
   }
 }

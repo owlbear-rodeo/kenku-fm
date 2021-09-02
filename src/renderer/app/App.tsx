@@ -2,9 +2,17 @@ import React, { useEffect } from 'react';
 // import 'typeface-roboto/index.css';
 import { useSnackbar } from 'notistack';
 
-import { Box, Container, Typography, Stack } from '@material-ui/core';
+import {
+  Box,
+  Typography,
+  Stack,
+  AppBar,
+  Toolbar,
+  useTheme,
+} from '@material-ui/core';
 import { Playlist } from '../features/playlist/Playlist';
 import { ConnectionDialog } from '../features/connection/ConnectionDialog';
+import { ActionDrawer } from '../common/ActionDrawer';
 
 import icon from '../../../assets/icon.svg';
 
@@ -12,6 +20,8 @@ import './App.css';
 
 export function App() {
   const { enqueueSnackbar } = useSnackbar();
+
+  const theme = useTheme();
 
   useEffect(() => {
     window.discord.on('message', (args) => {
@@ -32,24 +42,42 @@ export function App() {
   }, [enqueueSnackbar]);
 
   return (
-    <Container maxWidth="sm">
-      <Box sx={{ my: 4 }}>
-        <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-          <Box sx={{ width: '48px', height: '48px' }}>
+    <Box>
+      <AppBar
+        sx={{ position: 'relative', zIndex: theme.zIndex.drawer + 1 }}
+        elevation={1}
+      >
+        <Toolbar sx={{ justifyContent: 'center', bgcolor: 'background.paper' }}>
+          <Box sx={{ width: '48px', height: '48px', mx: 1 }}>
             <img src={icon} />
           </Box>
-          <Typography
-            variant="h4"
-            component="h1"
-            gutterBottom
-            sx={{ flexGrow: 1 }}
-          >
+          <Typography variant="h4" component="h1">
             Kenku <span style={{ fontSize: '1rem' }}>fm</span>
           </Typography>
-          <ConnectionDialog />
+          <Box sx={{ position: 'absolute', right: '24px' }}>
+            <ConnectionDialog />
+          </Box>
+        </Toolbar>
+      </AppBar>
+      <Box sx={{ display: 'flex' }}>
+        <Stack direction="row" sx={{ flexGrow: 1 }}>
+          <ActionDrawer />
+          <Box
+            sx={{
+              flexGrow: 1,
+              overflowY: 'auto',
+              height: {
+                xs: 'calc(100vh - 56px)',
+                sm: 'calc(100vh - 64px)',
+              },
+              py: 2,
+              px: 3,
+            }}
+          >
+            <Playlist />
+          </Box>
         </Stack>
-        <Playlist />
       </Box>
-    </Container>
+    </Box>
   );
 }

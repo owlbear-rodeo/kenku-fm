@@ -4,7 +4,7 @@ import Paper from '@material-ui/core/Paper';
 import TextField from '@material-ui/core/TextField';
 import IconButton from '@material-ui/core/IconButton';
 import PlayIcon from '@material-ui/icons/PlayArrowRounded';
-import StopIcon from '@material-ui/icons/StopRounded';
+import PauseIcon from '@material-ui/icons/PauseRounded';
 import DeleteIcon from '@material-ui/icons/DeleteRounded';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
@@ -34,7 +34,7 @@ export function PlaylistItem({ item }: PlaylistItemProps) {
   function handlePlay() {
     if (item.state === 'playing') {
       dispatch(editItem({ id: item.id }));
-      window.discord.stop(item.id);
+      window.discord.pause(item.id);
     } else {
       dispatch(editItem({ id: item.id, state: 'loading' }));
       window.discord.play(item.url, item.id);
@@ -76,7 +76,7 @@ export function PlaylistItem({ item }: PlaylistItemProps) {
           {item.state === 'loading' ? (
             <CircularProgress size={24} />
           ) : item.state === 'playing' ? (
-            <StopIcon />
+            <PauseIcon />
           ) : (
             <PlayIcon />
           )}

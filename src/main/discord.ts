@@ -15,10 +15,13 @@ const server = Hapi.server({
 server.route({
   method: 'GET',
   path: '/stream',
-  handler: (_, h) => {
-    const dispatcher = new PassThrough();
-    broadcasts.local.add(dispatcher);
-    return h.response(dispatcher).type('audio/mpeg');
+  handler: (request, h) => {
+    const listener = new PassThrough();
+    broadcasts.local.add(listener);
+    request.events.once('disconnect', () => {
+      broadcasts.local.remove(listener);
+    });
+    return h.response(listener).type('audio/mpeg');
   },
   options: {
     cors: {
@@ -94,6 +97,13 @@ ipcMain.on('play', async (event, url, id) => {
     return;
   }
 
+  // Resume if already playing this track
+  if (broadcasts.playId === id) {
+    event.reply('play', id);
+    broadcasts.resume();
+    return;
+  }
+
   const valid = ytdl.validateURL(url);
   if (!valid) {
     event.reply('error', 'Invalid url');
@@ -102,7 +112,7 @@ ipcMain.on('play', async (event, url, id) => {
   }
   const info = await ytdl.getInfo(url);
   const stream = ytdl.downloadFromInfo(info, { filter: 'audioonly' });
-  const dispatcher = broadcasts.play(stream);
+  const dispatcher = broadcasts.play(stream, id);
 
   event.reply('play', id);
   event.reply('message', `Now playing ${info.videoDetails.title}`);
@@ -113,9 +123,9 @@ ipcMain.on('play', async (event, url, id) => {
   });
 });
 
-ipcMain.on('stop', (event, id) => {
-  event.reply('stop', id);
-  // TODO implement pause / stop
+ipcMain.on('pause', (event, id) => {
+  event.reply('pause', id);
+  broadcasts.pause();
 });
 
 ipcMain.on('getInfo', async (event, url, id) => {

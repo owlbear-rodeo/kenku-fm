@@ -99,7 +99,7 @@ ipcMain.on('joinChannel', async (event, channelId) => {
 
 ipcMain.on('play', async (event, url, id) => {
   if (!client.voice) {
-    event.reply('error', 'No broadcast available');
+    event.reply('error', 'No voice connection available');
     event.reply('stop', id);
     return;
   }

@@ -6,6 +6,7 @@ const validChannels = [
   'info',
   'validation',
   'play',
+  'pause',
   'stop',
   'stopAll',
   'ready',
@@ -19,8 +20,8 @@ const api = {
   play: (url, id) => {
     ipcRenderer.send('play', url, id);
   },
-  stop: (id) => {
-    ipcRenderer.send('stop', id);
+  pause: (id) => {
+    ipcRenderer.send('pause', id);
   },
   on: (channel, callback) => {
     if (validChannels.includes(channel)) {

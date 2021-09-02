@@ -26,7 +26,7 @@ declare global {
     discord: {
       connect: (token: string) => void;
       play: (url: string, id: string) => void;
-      stop: (id: string) => string;
+      pause: (id: string) => string;
       on: (channel: string, callback: (...args: any[]) => void) => void;
       removeAllListeners: (channel: string) => void;
       getInfo: (url: string, id: string) => void;

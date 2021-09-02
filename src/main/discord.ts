@@ -1,9 +1,58 @@
 import { ipcMain, app } from 'electron';
 import Discord from 'discord.js';
-import ytdl from 'ytdl-core-discord';
+import ytdl from 'ytdl-core';
+import Hapi from '@hapi/hapi';
+import { PassThrough } from 'stream';
+import { BroadcastManager } from './BroadcastManager';
 
 const client = new Discord.Client();
-const broadcast = client.voice?.createBroadcast();
+const broadcasts = new BroadcastManager(client);
+
+const server = Hapi.server({
+  port: 3333,
+});
+
+server.route({
+  method: 'GET',
+  path: '/stream',
+  handler: (request, h) => {
+    const listener = new PassThrough();
+    broadcasts.local.add(listener);
+    request.events.once('disconnect', () => {
+      broadcasts.local.remove(listener);
+    });
+    return h.response(listener).type('audio/mpeg');
+  },
+  options: {
+    cors: {
+      origin: ['*'],
+    },
+  },
+});
+
+server.route({
+  method: 'GET',
+  path: '/',
+  handler: (_, h) => {
+    return h
+      .response(
+        `
+      <!DOCTYPE html>
+<html>
+<head>
+    <title>Audio</title>
+</head>
+<body>
+  <audio src="/stream" preload="none" controls autoplay></audio>
+</body>
+</html>
+      `
+      )
+      .type('text/html');
+  },
+});
+
+server.start();
 
 client.on('message', async (msg) => {
   if (msg.content === '!join') {
@@ -21,12 +70,8 @@ client.on('message', async (msg) => {
       msg.reply('You are not in a voice channel.');
       return;
     }
-    if (!broadcast) {
-      msg.reply('Error: No broadcast available.');
-      return;
-    }
     const connection = await msg.member.voice.channel.join();
-    connection.play(broadcast);
+    connection.play(broadcasts.discord);
   }
 });
 
@@ -46,9 +91,16 @@ ipcMain.on('connect', async (event, token) => {
 });
 
 ipcMain.on('play', async (event, url, id) => {
-  if (!broadcast || !client.voice) {
+  if (!client.voice) {
     event.reply('error', 'No broadcast available');
     event.reply('stop', id);
+    return;
+  }
+
+  // Resume if already playing this track
+  if (broadcasts.playId === id) {
+    event.reply('play', id);
+    broadcasts.resume();
     return;
   }
 
@@ -59,8 +111,8 @@ ipcMain.on('play', async (event, url, id) => {
     return;
   }
   const info = await ytdl.getInfo(url);
-  const stream = await ytdl(url);
-  const dispatcher = broadcast.play(stream, { type: 'opus' });
+  const stream = ytdl.downloadFromInfo(info, { filter: 'audioonly' });
+  const dispatcher = broadcasts.play(stream, id);
 
   event.reply('play', id);
   event.reply('message', `Now playing ${info.videoDetails.title}`);
@@ -71,11 +123,9 @@ ipcMain.on('play', async (event, url, id) => {
   });
 });
 
-ipcMain.on('stop', (event, id) => {
-  event.reply('stop', id);
-  if (broadcast) {
-    broadcast.dispatcher?.pause();
-  }
+ipcMain.on('pause', (event, id) => {
+  event.reply('pause', id);
+  broadcasts.pause();
 });
 
 ipcMain.on('getInfo', async (event, url, id) => {

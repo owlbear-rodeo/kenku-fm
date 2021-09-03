@@ -1,16 +1,25 @@
+import React, { useState } from 'react';
 import {
   Collapse,
   List,
   ListItemButton,
-  ListItemIcon,
   ListItemText,
+  IconButton,
 } from '@material-ui/core';
-import PlaylistIcon from '@material-ui/icons/AudiotrackRounded';
 import ExpandLess from '@material-ui/icons/ExpandLessRounded';
 import ExpandMore from '@material-ui/icons/ExpandMoreRounded';
-import React, { useState } from 'react';
+import AddIcon from '@material-ui/icons/AddRounded';
+
+import { RootState } from '../../app/store';
+import { useSelector, useDispatch } from 'react-redux';
+import { addPlaylist } from './playlistSlice';
+
+import { PlaylistListItem } from './PlaylistListItem';
 
 export function PlaylistListItems() {
+  const playlist = useSelector((state: RootState) => state.playlist);
+  const dispatch = useDispatch();
+
   const [open, setOpen] = useState(true);
 
   function toggleOpen() {
@@ -21,30 +30,25 @@ export function PlaylistListItems() {
     <>
       <ListItemButton onClick={toggleOpen}>
         <ListItemText primary="Playlists" />
+        <IconButton
+          onClick={(e) => {
+            e.stopPropagation();
+            dispatch(addPlaylist());
+          }}
+        >
+          <AddIcon />
+        </IconButton>
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItemButton>
       <Collapse in={open} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
-          {['Playlist 1', 'Playlist 2', 'Playlist 3', 'Playlist 4'].map(
-            (text, index) => (
-              <ListItemButton
-                dense
-                key={text}
-                selected={index === 0}
-                sx={{ px: 2 }}
-              >
-                <ListItemIcon
-                  sx={{
-                    minWidth: '36px',
-                    color: index === 0 ? 'primary.main' : undefined,
-                  }}
-                >
-                  <PlaylistIcon />
-                </ListItemIcon>
-                <ListItemText primary={text} />
-              </ListItemButton>
-            )
-          )}
+          {playlist.playlists.allIds.map((id) => (
+            <PlaylistListItem
+              playlist={playlist.playlists.byId[id]}
+              selected={playlist.selectedPlaylist === id}
+              key={id}
+            />
+          ))}
         </List>
       </Collapse>
     </>

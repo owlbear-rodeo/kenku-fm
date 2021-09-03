@@ -8,6 +8,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { addItem, editItem, stopAll } from './playlistSlice';
 
 import { PlaylistItem } from './PlaylistItem';
+import { Box, Typography } from '@material-ui/core';
 
 export function Playlist() {
   const playlist = useSelector((state: RootState) => state.playlist);
@@ -50,13 +51,32 @@ export function Playlist() {
     };
   }, [dispatch]);
 
+  if (playlist.selectedPlaylist === undefined) {
+    return (
+      <Box>
+        <Typography>Select a playlist</Typography>
+      </Box>
+    );
+  }
+
+  const currentPlaylist = playlist.playlists.byId[playlist.selectedPlaylist];
+
   return (
     <Stack direction="column" spacing={1}>
-      {playlist.order.map((id) => (
-        <PlaylistItem key={id} item={playlist.items[id]} />
+      {currentPlaylist.items.map((id) => (
+        <PlaylistItem
+          key={id}
+          item={playlist.items.byId[id]}
+          playlist={currentPlaylist}
+        />
       ))}
       <Stack direction="row" sx={{ justifyContent: 'center' }}>
-        <IconButton onClick={() => dispatch(addItem())}>
+        <IconButton
+          onClick={() =>
+            playlist.selectedPlaylist &&
+            dispatch(addItem({ playlistId: playlist.selectedPlaylist }))
+          }
+        >
           <AddIcon />
         </IconButton>
       </Stack>

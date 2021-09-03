@@ -13,14 +13,16 @@ import {
   removeItem,
   editItem,
   PlaylistItem as PlaylistItemType,
+  Playlist,
 } from './playlistSlice';
 import { useDebounce } from '../../common/useDebounce';
 
 type PlaylistItemProps = {
+  playlist: Playlist;
   item: PlaylistItemType;
 };
 
-export function PlaylistItem({ item }: PlaylistItemProps) {
+export function PlaylistItem({ playlist, item }: PlaylistItemProps) {
   const dispatch = useDispatch();
 
   function handleUrlChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -28,7 +30,7 @@ export function PlaylistItem({ item }: PlaylistItemProps) {
   }
 
   function handleRemove() {
-    dispatch(removeItem(item.id));
+    dispatch(removeItem({ playlistId: playlist.id, itemId: item.id }));
   }
 
   function handlePlay() {

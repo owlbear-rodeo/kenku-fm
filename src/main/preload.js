@@ -8,7 +8,6 @@ const validChannels = [
   'play',
   'pause',
   'stop',
-  'stopAll',
   'ready',
   'disconnect',
   'voiceChannels',

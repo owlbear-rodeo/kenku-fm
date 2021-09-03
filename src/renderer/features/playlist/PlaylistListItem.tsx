@@ -47,7 +47,7 @@ export function PlaylistListItem({
     setEditing(false);
   }
 
-  function handleRemove(e: React.MouseEvent<HTMLAnchorElement>) {
+  function handleRemove(e: React.MouseEvent<HTMLButtonElement>) {
     e.stopPropagation();
     dispatch(removePlaylist(playlist.id));
   }

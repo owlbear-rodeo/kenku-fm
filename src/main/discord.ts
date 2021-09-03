@@ -128,9 +128,6 @@ ipcMain.on('play', async (event, url, id) => {
     event.reply('stop', id);
     event.reply('message', `Finished ${info.videoDetails.title}`);
   });
-  dispatcher.on('close', () => {
-    event.reply('stop', id);
-  });
 });
 
 ipcMain.on('pause', (event, id) => {

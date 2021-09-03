@@ -15,14 +15,16 @@ import {
   PlaylistItem as PlaylistItemType,
   Playlist,
 } from './playlistSlice';
+import { PlaybackStateType, load, pause } from '../playback/playbackSlice';
 import { useDebounce } from '../../common/useDebounce';
 
 type PlaylistItemProps = {
   playlist: Playlist;
   item: PlaylistItemType;
+  state: PlaybackStateType;
 };
 
-export function PlaylistItem({ playlist, item }: PlaylistItemProps) {
+export function PlaylistItem({ playlist, item, state }: PlaylistItemProps) {
   const dispatch = useDispatch();
 
   function handleUrlChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -34,11 +36,11 @@ export function PlaylistItem({ playlist, item }: PlaylistItemProps) {
   }
 
   function handlePlay() {
-    if (item.state === 'playing') {
-      dispatch(editItem({ id: item.id }));
+    if (state === 'playing') {
+      dispatch(pause());
       window.discord.pause(item.id);
     } else {
-      dispatch(editItem({ id: item.id, state: 'loading' }));
+      dispatch(load(item.id));
       window.discord.play(item.url, item.id);
     }
   }
@@ -71,13 +73,13 @@ export function PlaylistItem({ playlist, item }: PlaylistItemProps) {
           disabled={
             !item.url ||
             item.state === 'invalid' ||
-            item.state === 'loading' ||
+            state === 'loading' ||
             item.state === 'unknown'
           }
         >
-          {item.state === 'loading' ? (
+          {state === 'loading' ? (
             <CircularProgress size={24} />
-          ) : item.state === 'playing' ? (
+          ) : state === 'playing' ? (
             <PauseIcon />
           ) : (
             <PlayIcon />

@@ -5,30 +5,26 @@ import AddIcon from '@material-ui/icons/AddRounded';
 
 import { RootState } from '../../app/store';
 import { useSelector, useDispatch } from 'react-redux';
-import { addItem, editItem, stopAll } from './playlistSlice';
+import { addItem, editItem } from './playlistSlice';
+import { play, stop, pause } from '../playback/playbackSlice';
 
 import { PlaylistItem } from './PlaylistItem';
 import { Box, Typography } from '@material-ui/core';
 
 export function Playlist() {
   const playlist = useSelector((state: RootState) => state.playlist);
+  const playback = useSelector((state: RootState) => state.playback);
   const dispatch = useDispatch();
 
   useEffect(() => {
-    window.discord.on('play', (args) => {
-      const id = args[0];
-      dispatch(editItem({ id, state: 'playing' }));
+    window.discord.on('play', () => {
+      dispatch(play());
     });
-    window.discord.on('stop', (args) => {
-      const id = args[0];
-      dispatch(editItem({ id, state: 'valid' }));
+    window.discord.on('stop', () => {
+      dispatch(stop());
     });
-    window.discord.on('pause', (args) => {
-      const id = args[0];
-      dispatch(editItem({ id, state: 'valid' }));
-    });
-    window.discord.on('stopAll', () => {
-      dispatch(stopAll());
+    window.discord.on('pause', () => {
+      dispatch(pause());
     });
     window.discord.on('info', (args) => {
       const title = args[0];
@@ -44,7 +40,6 @@ export function Playlist() {
     return () => {
       window.discord.removeAllListeners('play');
       window.discord.removeAllListeners('stop');
-      window.discord.removeAllListeners('stopAll');
       window.discord.removeAllListeners('pause');
       window.discord.removeAllListeners('info');
       window.discord.removeAllListeners('validation');
@@ -68,6 +63,7 @@ export function Playlist() {
           key={id}
           item={playlist.items.byId[id]}
           playlist={currentPlaylist}
+          state={playback.item === id ? playback.state : 'unknown'}
         />
       ))}
       <Stack direction="row" sx={{ justifyContent: 'center' }}>

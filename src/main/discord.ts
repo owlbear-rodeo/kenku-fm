@@ -80,6 +80,14 @@ ipcMain.on('connect', async (event, token) => {
   }
 });
 
+ipcMain.on('disconnect', async (event) => {
+  client.voice?.connections.forEach((connection) => {
+    connection.disconnect();
+  });
+  event.reply('voiceChannels', [{ id: 'local', name: 'This Computer' }]);
+  event.reply('channelJoined', 'local');
+});
+
 ipcMain.on('joinChannel', async (event, channelId) => {
   client.voice?.connections.forEach((connection) => {
     connection.disconnect();
@@ -110,9 +118,8 @@ ipcMain.on('play', async (event, url, id) => {
     event.reply('stop', id);
     return;
   }
-  const info = await ytdl.getInfo(url);
-  const stream = ytdl.downloadFromInfo(info, { filter: 'audioonly' });
-  const dispatcher = broadcasts.play(stream);
+
+  const dispatcher = await broadcasts.play(url);
 
   event.reply('play', id);
 

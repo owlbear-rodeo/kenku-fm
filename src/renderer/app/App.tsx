@@ -12,7 +12,7 @@ import {
 } from '@material-ui/core';
 import { Playlist } from '../features/playlist/Playlist';
 import { Playback } from '../features/playback/Playback';
-import { ConnectionDialog } from '../features/connection/ConnectionDialog';
+import { Settings } from '../features/settings/Settings';
 import { ActionDrawer } from '../common/ActionDrawer';
 
 import icon from '../../../assets/icon.svg';
@@ -56,7 +56,7 @@ export function App() {
             Kenku <span style={{ fontSize: '1rem' }}>fm</span>
           </Typography>
           <Box sx={{ position: 'absolute', right: '24px' }}>
-            {/* <ConnectionDialog /> */}
+            <Settings />
           </Box>
         </Toolbar>
       </AppBar>

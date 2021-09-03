@@ -3,6 +3,7 @@ import playlistReducer from '../features/playlist/playlistSlice';
 import connectionReducer from '../features/connection/connectionSlice';
 import outputReducer from '../features/output/outputSlice';
 import playbackReducer from '../features/playback/playbackSlice';
+import settingsReducer from '../features/settings/settingsSlice';
 
 import {
   persistStore,
@@ -21,13 +22,14 @@ const rootReducer = combineReducers({
   connection: connectionReducer,
   output: outputReducer,
   playback: playbackReducer,
+  settings: settingsReducer,
 });
 
 const persistConfig = {
   key: 'root',
   version: 1,
   storage,
-  whitelist: ['playlist'],
+  whitelist: ['playlist', 'settings'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

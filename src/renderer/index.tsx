@@ -36,6 +36,7 @@ declare global {
   interface Window {
     discord: {
       connect: (token: string) => void;
+      disconnect: () => void;
       play: (url: string, id: string) => void;
       pause: (id: string) => void;
       resume: (id: string) => void;

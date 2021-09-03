@@ -20,6 +20,9 @@ const api = {
   connect: (token) => {
     ipcRenderer.send('connect', token);
   },
+  disconnect: (token) => {
+    ipcRenderer.send('disconnect');
+  },
   play: (url, id) => {
     ipcRenderer.send('play', url, id);
   },

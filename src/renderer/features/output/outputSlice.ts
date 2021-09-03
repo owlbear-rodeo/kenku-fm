@@ -16,7 +16,7 @@ const initialState: OutputState = {
 };
 
 export const outputSlice = createSlice({
-  name: 'connection',
+  name: 'output',
   initialState,
   reducers: {
     setVoiceChannels: (state, action: PayloadAction<VoiceChannel[]>) => {

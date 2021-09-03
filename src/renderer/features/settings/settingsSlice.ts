@@ -2,24 +2,24 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'ready';
 
-export interface ConnectionState {
-  status: ConnectionStatus;
+export interface SettingsState {
+  discordToken: string;
 }
 
-const initialState: ConnectionState = {
-  status: 'disconnected',
+const initialState: SettingsState = {
+  discordToken: '',
 };
 
 export const connectionSlice = createSlice({
   name: 'connection',
   initialState,
   reducers: {
-    setStatus: (state, action: PayloadAction<ConnectionStatus>) => {
-      state.status = action.payload;
+    setDiscordToken: (state, action: PayloadAction<string>) => {
+      state.discordToken = action.payload;
     },
   },
 });
 
-export const { setStatus } = connectionSlice.actions;
+export const { setDiscordToken } = connectionSlice.actions;
 
 export default connectionSlice.reducer;

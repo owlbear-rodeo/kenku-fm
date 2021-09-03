@@ -24,7 +24,7 @@ const initialState: PlaybackState = {
 };
 
 export const playbackSlice = createSlice({
-  name: 'connection',
+  name: 'playback',
   initialState,
   reducers: {
     queue: (state, action: PayloadAction<string[]>) => {

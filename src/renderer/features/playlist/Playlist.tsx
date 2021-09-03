@@ -6,7 +6,7 @@ import AddIcon from '@material-ui/icons/AddRounded';
 import { RootState } from '../../app/store';
 import { useSelector, useDispatch } from 'react-redux';
 import { addItem, editItem } from './playlistSlice';
-import { play, stop, pause } from '../playback/playbackSlice';
+import { play, stop, pause, getCurrentItem } from '../playback/playbackSlice';
 
 import { PlaylistItem } from './PlaylistItem';
 import { Box, Typography } from '@material-ui/core';
@@ -55,6 +55,7 @@ export function Playlist() {
   }
 
   const currentPlaylist = playlist.playlists.byId[playlist.selectedPlaylist];
+  const currentPlaybackItem = getCurrentItem(playback);
 
   return (
     <Stack direction="column" spacing={1}>
@@ -63,7 +64,7 @@ export function Playlist() {
           key={id}
           item={playlist.items.byId[id]}
           playlist={currentPlaylist}
-          state={playback.item === id ? playback.state : 'unknown'}
+          state={currentPlaybackItem === id ? playback.state : 'unknown'}
         />
       ))}
       <Stack direction="row" sx={{ justifyContent: 'center' }}>

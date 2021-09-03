@@ -8,14 +8,22 @@ import PauseIcon from '@material-ui/icons/PauseRounded';
 import DeleteIcon from '@material-ui/icons/DeleteRounded';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   removeItem,
   editItem,
   PlaylistItem as PlaylistItemType,
   Playlist,
 } from './playlistSlice';
-import { PlaybackStateType, load, pause } from '../playback/playbackSlice';
+
+import { RootState } from '../../app/store';
+import {
+  load,
+  queue,
+  togglePlay,
+  PlaybackStateType,
+} from '../playback/playbackSlice';
+
 import { useDebounce } from '../../common/useDebounce';
 
 type PlaylistItemProps = {
@@ -25,6 +33,8 @@ type PlaylistItemProps = {
 };
 
 export function PlaylistItem({ playlist, item, state }: PlaylistItemProps) {
+  const playback = useSelector((state: RootState) => state.playback);
+
   const dispatch = useDispatch();
 
   function handleUrlChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -36,10 +46,9 @@ export function PlaylistItem({ playlist, item, state }: PlaylistItemProps) {
   }
 
   function handlePlay() {
-    if (state === 'playing') {
-      dispatch(pause());
-      window.discord.pause(item.id);
-    } else {
+    // Try toggling item and load it if it wasn't playing
+    if (!togglePlay(item, playback, dispatch)) {
+      dispatch(queue(playlist.items));
       dispatch(load(item.id));
       window.discord.play(item.url, item.id);
     }

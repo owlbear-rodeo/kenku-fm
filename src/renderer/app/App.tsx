@@ -11,6 +11,7 @@ import {
   useTheme,
 } from '@material-ui/core';
 import { Playlist } from '../features/playlist/Playlist';
+import { Playback } from '../features/playback/Playback';
 import { ConnectionDialog } from '../features/connection/ConnectionDialog';
 import { ActionDrawer } from '../common/ActionDrawer';
 
@@ -55,27 +56,36 @@ export function App() {
             Kenku <span style={{ fontSize: '1rem' }}>fm</span>
           </Typography>
           <Box sx={{ position: 'absolute', right: '24px' }}>
-            <ConnectionDialog />
+            {/* <ConnectionDialog /> */}
           </Box>
         </Toolbar>
       </AppBar>
       <Box sx={{ display: 'flex' }}>
         <Stack direction="row" sx={{ flexGrow: 1 }}>
           <ActionDrawer />
-          <Box
+          <Stack
+            direction="column"
             sx={{
-              flexGrow: 1,
-              overflowY: 'auto',
               height: {
                 xs: 'calc(100vh - 56px)',
                 sm: 'calc(100vh - 64px)',
               },
-              py: 2,
-              px: 3,
+              flexGrow: 1,
             }}
           >
-            <Playlist />
-          </Box>
+            <Box
+              sx={{
+                flexGrow: 1,
+                overflowY: 'auto',
+
+                py: 2,
+                px: 3,
+              }}
+            >
+              <Playlist />
+            </Box>
+            <Playback />
+          </Stack>
         </Stack>
       </Box>
     </Box>

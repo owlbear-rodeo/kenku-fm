@@ -1,14 +1,15 @@
 import { createSlice, Dispatch, PayloadAction } from '@reduxjs/toolkit';
 import { shuffle } from '../../common/shuffle';
-import { Playlist, PlaylistItem } from '../playlist/playlistSlice';
+import { PlaylistItem } from '../playlist/playlistSlice';
 
 export type PlaybackStateType = 'unknown' | 'paused' | 'loading' | 'playing';
+export type LoopState = 'off' | 'on' | 'one';
 
 export interface PlaybackState {
   queue: string[];
   shuffledQueue: string[];
   shuffle: boolean;
-  loop: boolean;
+  loop: LoopState;
   current: number;
   state: PlaybackStateType;
 }
@@ -17,7 +18,7 @@ const initialState: PlaybackState = {
   queue: [],
   shuffledQueue: [],
   shuffle: false,
-  loop: true,
+  loop: 'on',
   current: -1,
   state: 'unknown',
 };
@@ -53,10 +54,27 @@ export const playbackSlice = createSlice({
       state.current = -1;
       state.state = 'unknown';
     },
+    toggleShuffle: (state) => {
+      state.shuffle = !state.shuffle;
+    },
+    toggleLoop: (state) => {
+      switch (state.loop) {
+        case 'off':
+          state.loop = 'on';
+          break;
+        case 'on':
+          state.loop = 'one';
+          break;
+        case 'one':
+          state.loop = 'off';
+          break;
+      }
+    },
   },
 });
 
-export const { queue, load, play, pause, stop } = playbackSlice.actions;
+export const { queue, load, play, pause, stop, toggleShuffle, toggleLoop } =
+  playbackSlice.actions;
 
 export function getCurrentItem(state: PlaybackState): string | undefined {
   const items = state.shuffle ? state.shuffledQueue : state.queue;

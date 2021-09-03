@@ -68,6 +68,14 @@ export function PlaylistItem({ playlist, item, state }: PlaylistItemProps) {
           value={item.url}
           onChange={handleUrlChange}
           sx={{ flexGrow: 1 }}
+          FormHelperTextProps={{
+            sx: {
+              color:
+                state === 'playing' || state === 'paused'
+                  ? 'primary.main'
+                  : undefined,
+            },
+          }}
           variant="outlined"
           label="url"
           InputLabelProps={{

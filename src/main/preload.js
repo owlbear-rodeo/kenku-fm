@@ -8,6 +8,7 @@ const validChannels = [
   'play',
   'pause',
   'stop',
+  'finish',
   'ready',
   'disconnect',
   'voiceChannels',
@@ -24,6 +25,12 @@ const api = {
   },
   pause: (id) => {
     ipcRenderer.send('pause', id);
+  },
+  resume: (id) => {
+    ipcRenderer.send('resume', id);
+  },
+  stop: (id) => {
+    ipcRenderer.send('stop', id);
   },
   on: (channel, callback) => {
     if (validChannels.includes(channel)) {

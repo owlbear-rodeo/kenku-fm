@@ -6,7 +6,7 @@ import AddIcon from '@material-ui/icons/AddRounded';
 import { RootState } from '../../app/store';
 import { useSelector, useDispatch } from 'react-redux';
 import { addItem, editItem } from './playlistSlice';
-import { play, stop, pause, getCurrentItem } from '../playback/playbackSlice';
+import { getCurrentItem } from '../playback/playbackSlice';
 
 import { PlaylistItem } from './PlaylistItem';
 import { Box, Typography } from '@material-ui/core';
@@ -17,15 +17,6 @@ export function Playlist() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    window.discord.on('play', () => {
-      dispatch(play());
-    });
-    window.discord.on('stop', () => {
-      dispatch(stop());
-    });
-    window.discord.on('pause', () => {
-      dispatch(pause());
-    });
     window.discord.on('info', (args) => {
       const title = args[0];
       const id = args[1];
@@ -38,9 +29,6 @@ export function Playlist() {
     });
 
     return () => {
-      window.discord.removeAllListeners('play');
-      window.discord.removeAllListeners('stop');
-      window.discord.removeAllListeners('pause');
       window.discord.removeAllListeners('info');
       window.discord.removeAllListeners('validation');
     };

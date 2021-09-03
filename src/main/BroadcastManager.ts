@@ -6,7 +6,6 @@ import { LocalBroadcast } from './LocalBroadcast';
 export class BroadcastManager {
   local: LocalBroadcast;
   discord: Discord.VoiceBroadcast;
-  playId?: string;
   _discordDispatcher?: Discord.BroadcastDispatcher;
   _localDispatcher?: Throttle;
 
@@ -24,20 +23,24 @@ export class BroadcastManager {
     this._discordDispatcher?.resume();
   }
 
-  play(input: Readable, id: string) {
+  play(input: Readable) {
     // Cleanup old dispatchers
     this._localDispatcher?.destroy();
     this._discordDispatcher?.destroy();
-    // Store current playing item so we can check the id to resume
-    this.playId = id;
 
     this._localDispatcher = this.local.play(input);
     this._discordDispatcher = this.discord.play(input);
+
     return this._discordDispatcher;
   }
 
   pause() {
     this._localDispatcher?.pause();
     this._discordDispatcher?.pause();
+  }
+
+  stop() {
+    this._localDispatcher?.destroy();
+    this._discordDispatcher?.destroy();
   }
 }

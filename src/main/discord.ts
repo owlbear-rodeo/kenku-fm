@@ -104,13 +104,6 @@ ipcMain.on('play', async (event, url, id) => {
     return;
   }
 
-  // Resume if already playing this track
-  if (broadcasts.playId === id) {
-    event.reply('play', id);
-    broadcasts.resume();
-    return;
-  }
-
   const valid = ytdl.validateURL(url);
   if (!valid) {
     event.reply('error', 'Invalid url');
@@ -119,20 +112,28 @@ ipcMain.on('play', async (event, url, id) => {
   }
   const info = await ytdl.getInfo(url);
   const stream = ytdl.downloadFromInfo(info, { filter: 'audioonly' });
-  const dispatcher = broadcasts.play(stream, id);
+  const dispatcher = broadcasts.play(stream);
 
   event.reply('play', id);
-  event.reply('message', `Now playing ${info.videoDetails.title}`);
 
-  dispatcher.on('finish', () => {
-    event.reply('stop', id);
-    event.reply('message', `Finished ${info.videoDetails.title}`);
+  dispatcher.once('finish', () => {
+    event.reply('finish', id);
   });
 });
 
 ipcMain.on('pause', (event, id) => {
-  event.reply('pause', id);
   broadcasts.pause();
+  event.reply('pause', id);
+});
+
+ipcMain.on('resume', (event, id) => {
+  broadcasts.resume();
+  event.reply('play', id);
+});
+
+ipcMain.on('stop', (event, id) => {
+  broadcasts.stop();
+  event.reply('stop', id);
 });
 
 ipcMain.on('getInfo', async (event, url, id) => {

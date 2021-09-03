@@ -1,6 +1,8 @@
-import { Readable, Writable } from 'stream';
-import Throttle from 'throttle';
+import { PassThrough, Readable, Writable } from 'stream';
 import prism from 'prism-media';
+
+const BITRATE = 48000;
+const CHANNELS = 2;
 
 /**
  * Local broadcaster that encodes and audio stream as mp3
@@ -20,7 +22,7 @@ export class LocalBroadcast {
     }
   }
 
-  play(input: Readable): Throttle {
+  play(input: Readable): PassThrough {
     // Ensure it is encoded as an mp3
     const transcoder = new prism.FFmpeg({
       args: [
@@ -29,15 +31,15 @@ export class LocalBroadcast {
         '-loglevel',
         '0',
         '-ar',
-        '48000',
+        `${BITRATE}`,
         '-ac',
-        '2',
+        `${CHANNELS}`,
         '-f',
         'mp3',
       ],
     });
-    const throttle = new Throttle(48000);
-    const dispatcher = input.pipe(transcoder).pipe(throttle);
+    const output = new PassThrough();
+    const dispatcher = input.pipe(transcoder).pipe(output);
 
     // Send data from the dispatcher to all the current listeners
     dispatcher.on('data', (chunk) => {

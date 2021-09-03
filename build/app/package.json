@@ -22,7 +22,6 @@
     "ffmpeg-static": "^4.4.0",
     "opusscript": "^0.0.8",
     "prism-media": "^1.3.2",
-    "throttle": "^1.0.3",
     "ytdl-core": "^4.9.1"
   },
   "devDependencies": {}

@@ -29,10 +29,8 @@ export const playbackSlice = createSlice({
   reducers: {
     queue: (state, action: PayloadAction<string[]>) => {
       state.queue = action.payload;
-      if (state.shuffle) {
-        state.shuffledQueue = [...action.payload];
-        shuffle(state.shuffledQueue);
-      }
+      state.shuffledQueue = [...action.payload];
+      shuffle(state.shuffledQueue);
     },
     load: (state, action: PayloadAction<string>) => {
       if (state.shuffle) {
@@ -55,7 +53,18 @@ export const playbackSlice = createSlice({
       state.state = 'unknown';
     },
     toggleShuffle: (state) => {
+      const currentId = state.shuffle
+        ? state.shuffledQueue[state.current]
+        : state.queue[state.current];
       state.shuffle = !state.shuffle;
+      // Retain state.current after shuffle toggle
+      if (currentId) {
+        if (state.shuffle) {
+          state.current = state.shuffledQueue.indexOf(currentId);
+        } else {
+          state.current = state.queue.indexOf(currentId);
+        }
+      }
     },
     toggleLoop: (state) => {
       switch (state.loop) {
@@ -84,8 +93,24 @@ export function getCurrentItem(state: PlaybackState): string | undefined {
 export function getNextItem(state: PlaybackState): string | undefined {
   const items = state.shuffle ? state.shuffledQueue : state.queue;
   const next = state.current + 1;
-  if (state.loop) {
+  if (state.loop === 'on') {
     return items[next % items.length];
+  } else if (state.loop === 'one') {
+    return items[state.current];
+  } else if (next < items.length) {
+    return items[next];
+  }
+  return undefined;
+}
+
+export function getPreviousItem(state: PlaybackState): string | undefined {
+  const items = state.shuffle ? state.shuffledQueue : state.queue;
+  console.log(items, state);
+  const next = state.current - 1;
+  if (state.loop === 'on') {
+    return items[next < 0 ? items.length - 1 : next];
+  } else if (state.loop === 'one') {
+    return items[state.current];
   } else if (next < items.length) {
     return items[next];
   }
@@ -106,7 +131,7 @@ export function togglePlay(
         return true;
       } else if (state.state === 'paused') {
         dispatch(play());
-        window.discord.play(item.url, item.id);
+        window.discord.resume(item.id);
         return true;
       }
     }

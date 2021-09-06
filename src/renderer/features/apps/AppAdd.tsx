@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -20,6 +20,13 @@ export function AppAdd({ open, onClose }: AppAddProps) {
 
   const [url, setURL] = useState('');
   const [title, setTitle] = useState('');
+
+  useEffect(() => {
+    if (!open) {
+      setURL('');
+      setTitle('');
+    }
+  }, [open]);
 
   function handleURLChange(event: React.ChangeEvent<HTMLInputElement>) {
     setURL(event.target.value);
@@ -72,7 +79,9 @@ export function AppAdd({ open, onClose }: AppAddProps) {
       </DialogContent>
       <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
         <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleAdd}>Add</Button>
+        <Button disabled={!url} onClick={handleAdd}>
+          Add
+        </Button>
       </DialogActions>
     </Dialog>
   );

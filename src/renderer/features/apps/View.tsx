@@ -8,12 +8,16 @@ import {
 
 import { drawerWidth } from '../../common/ActionDrawer';
 
-export function View({ initialUrl }: { initialUrl: string }) {
-  const [url, setUrl] = useState(initialUrl);
+type ViewProps = {
+  url: string;
+  setURL?: (url: string) => void;
+};
+
+export function View({ url, setURL }: ViewProps) {
   const [showControls] = useState(false);
   const [viewId, setViewId] = useState<number>(-1);
 
-  const urlRef = useRef(initialUrl);
+  const urlRef = useRef(url);
   useEffect(() => {
     urlRef.current = url;
   });
@@ -32,13 +36,17 @@ export function View({ initialUrl }: { initialUrl: string }) {
     };
   }, [showControls]);
 
+  useEffect(() => {
+    window.kenku.loadURL(viewId, url);
+  }, [viewId, url]);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     window.kenku.loadURL(viewId, url);
   }
 
   function handleUrlChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setUrl(e.target.value);
+    setURL?.(e.target.value);
   }
 
   function handleBack() {
@@ -92,7 +100,3 @@ export function View({ initialUrl }: { initialUrl: string }) {
     </Stack>
   );
 }
-
-View.defaultProps = {
-  initialUrl: 'https://tabletopaudio.com',
-};

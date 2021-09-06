@@ -77,7 +77,12 @@ export class BrowserViewManagerMain {
       height: true,
       vertical: true,
     });
-    view.webContents.loadURL(url);
+
+    try {
+      view.webContents.loadURL(url);
+    } catch (err) {
+      console.error(err);
+    }
 
     this.views[view.webContents.id] = view;
 
@@ -92,18 +97,34 @@ export class BrowserViewManagerMain {
   }
 
   loadURL(id: number, url: string) {
-    this.views[id]?.webContents.loadURL(url);
+    try {
+      this.views[id]?.webContents.loadURL(url);
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   goForward(id: number) {
-    this.views[id]?.webContents.goForward();
+    try {
+      this.views[id]?.webContents.goForward();
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   goBack(id: number) {
-    this.views[id]?.webContents.goBack();
+    try {
+      this.views[id]?.webContents.goBack();
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   reload(id: number) {
-    this.views[id]?.webContents.reload();
+    try {
+      this.views[id]?.webContents.reload();
+    } catch (err) {
+      console.error(err);
+    }
   }
 }

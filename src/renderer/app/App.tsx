@@ -5,11 +5,16 @@ import { useSnackbar } from 'notistack';
 import { Stack } from '@material-ui/core';
 import { ActionDrawer } from '../common/ActionDrawer';
 
+import { RootState } from './store';
+import { useSelector } from 'react-redux';
+
 import { View } from '../features/apps/View';
 
 import './App.css';
 
 export function App() {
+  const apps = useSelector((state: RootState) => state.apps);
+
   const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
@@ -33,7 +38,9 @@ export function App() {
   return (
     <Stack direction="row" sx={{ flexGrow: 1 }}>
       <ActionDrawer />
-      <View />
+      <View
+        url={apps.selectedApp ? apps.apps.byId[apps.selectedApp].url : ''}
+      />
     </Stack>
   );
 }

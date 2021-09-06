@@ -11,7 +11,7 @@ const initialState: SettingsState = {
 };
 
 export const connectionSlice = createSlice({
-  name: 'connection',
+  name: 'settings',
   initialState,
   reducers: {
     setDiscordToken: (state, action: PayloadAction<string>) => {

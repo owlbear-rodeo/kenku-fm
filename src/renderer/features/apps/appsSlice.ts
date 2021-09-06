@@ -41,9 +41,8 @@ export const appsSlice = createSlice({
   initialState,
   reducers: {
     addApp: (state, action: PayloadAction<App>) => {
-      const id = uuid();
-      state.apps.byId[id] = action.payload;
-      state.apps.allIds.push(id);
+      state.apps.byId[action.payload.id] = action.payload;
+      state.apps.allIds.push(action.payload.id);
     },
     removeApp: (state, action: PayloadAction<string>) => {
       delete state.apps.byId[action.payload];

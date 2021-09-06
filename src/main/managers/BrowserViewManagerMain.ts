@@ -21,9 +21,19 @@ export class BrowserViewManagerMain {
       this.outputStream.write(Buffer.from(data));
     });
 
-    ipcMain.on('createBrowserView', (event, url: string, xOffset: number) => {
-      event.returnValue = this.createBrowserView(url, xOffset);
-    });
+    ipcMain.on(
+      'createBrowserView',
+      (
+        event,
+        url: string,
+        x: number,
+        y: number,
+        width: number,
+        height: number
+      ) => {
+        event.returnValue = this.createBrowserView(url, x, y, width, height);
+      }
+    );
     ipcMain.on('removeBrowserView', (_, id: number) =>
       this.removeBrowserView(id)
     );
@@ -41,7 +51,13 @@ export class BrowserViewManagerMain {
    * @param xOffset Offset from the left side of the screen
    * @returns id of the created window
    */
-  createBrowserView(url: string, xOffset: number): number {
+  createBrowserView(
+    url: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ): number {
     const view = new BrowserView({
       webPreferences: {
         contextIsolation: true,
@@ -49,13 +65,12 @@ export class BrowserViewManagerMain {
       },
     });
     this.window.setBrowserView(view);
-    const bounds = this.window.getBounds();
 
     view.setBounds({
-      x: 30,
-      y: 0,
-      width: 400,
-      height: 500,
+      x,
+      y,
+      width,
+      height,
     });
     view.setAutoResize({
       width: true,

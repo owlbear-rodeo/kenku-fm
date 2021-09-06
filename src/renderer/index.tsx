@@ -38,7 +38,13 @@ declare global {
       connect: (token: string) => void;
       disconnect: () => void;
       joinChannel: (channelId: string) => void;
-      createBrowserView: (url: string, xOffset: number) => number;
+      createBrowserView: (
+        url: string,
+        x: number,
+        y: number,
+        width: number,
+        height: number
+      ) => number;
       removeBrowserView: (id: number) => void;
       loadURL: (id: number, url: string) => void;
       goForward: (id: number) => void;

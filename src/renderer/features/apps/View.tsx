@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Divider, IconButton, Stack, TextField } from '@material-ui/core';
 import {
   ArrowBackRounded,
@@ -6,15 +6,31 @@ import {
   RefreshRounded,
 } from '@material-ui/icons';
 
+import { drawerWidth } from '../../common/ActionDrawer';
+
 export function View({ initialUrl }: { initialUrl: string }) {
   const [url, setUrl] = useState(initialUrl);
-  const [viewId] = useState(window.kenku.createBrowserView(initialUrl, 240));
+  const [showControls] = useState(false);
+  const [viewId, setViewId] = useState<number>(-1);
+
+  const urlRef = useRef(initialUrl);
+  useEffect(() => {
+    urlRef.current = url;
+  });
 
   useEffect(() => {
+    const id = window.kenku.createBrowserView(
+      urlRef.current,
+      drawerWidth,
+      showControls ? 73 : 0,
+      window.innerWidth - drawerWidth,
+      window.innerHeight
+    );
+    setViewId(id);
     return () => {
-      window.kenku.removeBrowserView(viewId);
+      window.kenku.removeBrowserView(id);
     };
-  }, [viewId]);
+  }, [showControls]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,14 +53,17 @@ export function View({ initialUrl }: { initialUrl: string }) {
     window.kenku.reload(viewId);
   }
 
+  if (!showControls) {
+    return null;
+  }
+
   return (
     <Stack
       direction="column"
       sx={{
-        width: '100%',
+        flexGrow: 1,
       }}
     >
-      <Divider />
       <Stack direction="row" spacing={1} sx={{ p: 2 }}>
         <IconButton onClick={handleBack}>
           <ArrowBackRounded />

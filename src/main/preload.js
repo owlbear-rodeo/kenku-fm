@@ -1,16 +1,5 @@
 const { contextBridge, ipcRenderer, desktopCapturer } = require('electron');
 
-const validChannels = [
-  'error',
-  'message',
-  'info',
-  'ready',
-  'disconnect',
-  'voiceChannels',
-  'channelJoined',
-  'channelLeft',
-];
-
 /**
  * Manager to help create and manager browser views
  * This class is to be run on the renderer thread
@@ -59,8 +48,15 @@ class BrowserViewManagerRenderer {
       this._audioOutputElement.play();
   }
 
-  createBrowserView(url, xOffset) {
-    const viewId = ipcRenderer.sendSync('createBrowserView', url, xOffset);
+  createBrowserView(url, x, y, width, height) {
+    const viewId = ipcRenderer.sendSync(
+      'createBrowserView',
+      url,
+      x,
+      y,
+      width,
+      height
+    );
     this._startStream(viewId);
     return viewId;
   }
@@ -123,6 +119,17 @@ class BrowserViewManagerRenderer {
 
 const viewManager = new BrowserViewManagerRenderer();
 
+const validChannels = [
+  'error',
+  'message',
+  'info',
+  'ready',
+  'disconnect',
+  'voiceChannels',
+  'channelJoined',
+  'channelLeft',
+];
+
 const api = {
   connect: (token) => {
     ipcRenderer.send('connect', token);
@@ -134,8 +141,8 @@ const api = {
     ipcRenderer.send('joinChannel', channelId);
     viewManager.setLoopback(channelId === 'loocal');
   },
-  createBrowserView: (url, xOffset) => {
-    return viewManager.createBrowserView(url, xOffset);
+  createBrowserView: (url, x, y, width, height) => {
+    return viewManager.createBrowserView(url, x, y, width, height);
   },
   removeBrowserView: (id) => {
     viewManager.removeBrowserView(id);

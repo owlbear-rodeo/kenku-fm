@@ -72,7 +72,10 @@ export function Settings() {
       <IconButton onClick={handleOpen}>
         <SettingsIcon />
       </IconButton>
-      <Dialog open={open} onClose={handleClose}>
+      <Dialog fullScreen sx={{ width: 240 }} open={open} onClose={handleClose}>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={handleClose}>Done</Button>
+        </DialogActions>
         <DialogTitle>Connection</DialogTitle>
         <DialogContent>
           <DialogContentText>Enter your bot's token</DialogContentText>
@@ -100,9 +103,6 @@ export function Settings() {
             </IconButton>
           </Stack>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Done</Button>
-        </DialogActions>
       </Dialog>
     </div>
   );

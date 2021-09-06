@@ -2,7 +2,6 @@ import React from 'react';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import { SnackbarProvider } from 'notistack';
 import { ThemeProvider } from '@material-ui/core/styles';
 import { Backdrop, CircularProgress } from '@material-ui/core';
 import { PersistGate } from 'redux-persist/integration/react';
@@ -22,10 +21,8 @@ render(
       persistor={persistor}
     >
       <ThemeProvider theme={theme}>
-        <SnackbarProvider maxSnack={3}>
-          <CssBaseline />
-          <App />
-        </SnackbarProvider>
+        <CssBaseline />
+        <App />
       </ThemeProvider>
     </PersistGate>
   </Provider>,

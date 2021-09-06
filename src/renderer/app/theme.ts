@@ -76,6 +76,13 @@ export const themeOptions: ThemeOptions = {
         },
       },
     },
+    MuiSnackbarContent: {
+      styleOverrides: {
+        root: {
+          minWidth: '192px !important',
+        },
+      },
+    },
   },
 };
 

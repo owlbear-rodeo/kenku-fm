@@ -1,4 +1,5 @@
 const { contextBridge, ipcRenderer, desktopCapturer } = require('electron');
+const { LogoScrape } = require('logo-scrape');
 
 /**
  * Manager to help create and manager browser views
@@ -168,6 +169,21 @@ const api = {
   removeAllListeners: (channel) => {
     if (validChannels.includes(channel)) {
       ipcRenderer.removeAllListeners(channel);
+    }
+  },
+  appIcon: async (url) => {
+    try {
+      const icons = await LogoScrape.getLogos(url);
+      // Find icon with the largest size
+      const sorted = icons.sort((a, b) => {
+        const aSize = parseInt((a.size || '').split('x')[0] || 0);
+        const bSize = parseInt((b.size || '').split('x')[0] || 0);
+        return bSize - aSize;
+      });
+      const urls = sorted.map((icon) => icon.url);
+      return urls[0] || '';
+    } catch {
+      return '';
     }
   },
 };

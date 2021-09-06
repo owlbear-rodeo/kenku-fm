@@ -2,6 +2,7 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import connectionReducer from '../features/connection/connectionSlice';
 import outputReducer from '../features/output/outputSlice';
 import settingsReducer from '../features/settings/settingsSlice';
+import appsReducer from '../features/apps/appsSlice';
 
 import {
   persistStore,
@@ -19,13 +20,14 @@ const rootReducer = combineReducers({
   connection: connectionReducer,
   output: outputReducer,
   settings: settingsReducer,
+  apps: appsReducer,
 });
 
 const persistConfig = {
   key: 'root',
   version: 1,
   storage,
-  whitelist: ['playlist', 'settings'],
+  whitelist: ['apps', 'settings'],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

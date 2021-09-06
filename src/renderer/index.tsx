@@ -52,6 +52,7 @@ declare global {
       reload: (id: number) => void;
       on: (channel: string, callback: (...args: any[]) => void) => void;
       removeAllListeners: (channel: string) => void;
+      appIcon: (url: string) => Promise<string>;
     };
   }
 }

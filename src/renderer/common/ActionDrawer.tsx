@@ -2,7 +2,8 @@ import React from 'react';
 import Box from '@material-ui/core/Box';
 import Drawer from '@material-ui/core/Drawer';
 import { Toolbar, Stack } from '@material-ui/core';
-import { OutputListItems } from 'renderer/features/output/OutputListItems';
+import { OutputListItems } from '../features/output/OutputListItems';
+import { AppListItems } from '../features/apps/AppListItems';
 import { Settings } from '../features/settings/Settings';
 
 import icon from '../../../assets/icon.svg';
@@ -38,6 +39,7 @@ export function ActionDrawer() {
           <Settings />
         </Toolbar>
         <Stack>
+          <AppListItems />
           <OutputListItems />
         </Stack>
       </Drawer>

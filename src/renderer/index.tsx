@@ -34,18 +34,18 @@ render(
 
 declare global {
   interface Window {
-    discord: {
+    kenku: {
       connect: (token: string) => void;
       disconnect: () => void;
-      play: (url: string, id: string) => void;
-      pause: (id: string) => void;
-      resume: (id: string) => void;
-      stop: (id: string) => void;
+      joinChannel: (channelId: string) => void;
+      createBrowserView: (url: string, xOffset: number) => number;
+      removeBrowserView: (id: number) => void;
+      loadURL: (id: number, url: string) => void;
+      goForward: (id: number) => void;
+      goBack: (id: number) => void;
+      reload: (id: number) => void;
       on: (channel: string, callback: (...args: any[]) => void) => void;
       removeAllListeners: (channel: string) => void;
-      getInfo: (url: string, id: string) => void;
-      validateUrl: (url: string, id: string) => void;
-      joinChannel: (channelId: string) => void;
     };
   }
 }

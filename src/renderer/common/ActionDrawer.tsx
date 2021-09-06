@@ -4,7 +4,6 @@ import Drawer from '@material-ui/core/Drawer';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/QueueMusicRounded';
 import { Toolbar, useTheme } from '@material-ui/core';
-import { PlaylistListItems } from 'renderer/features/playlist/PlaylistListItems';
 import { OutputListItems } from 'renderer/features/output/OutputListItems';
 
 const drawerWidth = 240;
@@ -23,7 +22,6 @@ export function ActionDrawer() {
   const drawer = (
     <div>
       <Toolbar sx={{ marginBottom: 2 }} />
-      <PlaylistListItems />
       <OutputListItems />
     </div>
   );

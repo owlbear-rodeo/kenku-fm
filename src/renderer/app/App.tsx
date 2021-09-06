@@ -10,10 +10,10 @@ import {
   Toolbar,
   useTheme,
 } from '@material-ui/core';
-import { Playlist } from '../features/playlist/Playlist';
-import { Playback } from '../features/playback/Playback';
 import { Settings } from '../features/settings/Settings';
 import { ActionDrawer } from '../common/ActionDrawer';
+
+import { View } from '../features/apps/View';
 
 import icon from '../../../assets/icon.svg';
 
@@ -25,11 +25,11 @@ export function App() {
   const theme = useTheme();
 
   useEffect(() => {
-    window.discord.on('message', (args) => {
+    window.kenku.on('message', (args) => {
       const message = args[0];
       enqueueSnackbar(message);
     });
-    window.discord.on('error', (args) => {
+    window.kenku.on('error', (args) => {
       const error = args[0];
       enqueueSnackbar(error, {
         variant: 'error',
@@ -37,8 +37,8 @@ export function App() {
     });
 
     return () => {
-      window.discord.removeAllListeners('message');
-      window.discord.removeAllListeners('error');
+      window.kenku.removeAllListeners('message');
+      window.kenku.removeAllListeners('error');
     };
   }, [enqueueSnackbar]);
 
@@ -63,29 +63,7 @@ export function App() {
       <Box sx={{ display: 'flex' }}>
         <Stack direction="row" sx={{ flexGrow: 1 }}>
           <ActionDrawer />
-          <Stack
-            direction="column"
-            sx={{
-              height: {
-                xs: 'calc(100vh - 56px)',
-                sm: 'calc(100vh - 64px)',
-              },
-              flexGrow: 1,
-            }}
-          >
-            <Box
-              sx={{
-                flexGrow: 1,
-                overflowY: 'auto',
-
-                py: 2,
-                px: 3,
-              }}
-            >
-              <Playlist />
-            </Box>
-            <Playback />
-          </Stack>
+          <View />
         </Stack>
       </Box>
     </Box>

@@ -16,7 +16,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import './discord';
+import { PlaybackManager } from './managers/PlaybackManager';
 
 export default class AppUpdater {
   constructor() {
@@ -37,7 +37,7 @@ const isDevelopment =
   process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
 if (isDevelopment) {
-  require('electron-debug')();
+  // require('electron-debug')();
 }
 
 const installExtensions = async () => {
@@ -71,13 +71,17 @@ const createWindow = async () => {
 
   mainWindow = new BrowserWindow({
     show: false,
-    width: 1920,
-    height: 728,
+    width: 800,
+    height: 600,
     icon: getAssetPath('icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      worldSafeExecuteJavaScript: true,
     },
   });
+
+  new PlaybackManager(mainWindow);
 
   mainWindow.loadURL(resolveHtmlPath('index.html'));
 

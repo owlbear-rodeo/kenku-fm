@@ -39,31 +39,31 @@ export function Settings() {
   function handleDiscordConnect() {
     if (connection.status === 'disconnected') {
       dispatch(setStatus('connecting'));
-      window.discord.connect(settings.discordToken);
+      window.kenku.connect(settings.discordToken);
     } else {
       dispatch(setStatus('disconnected'));
-      window.discord.disconnect();
+      window.kenku.disconnect();
     }
   }
 
   useEffect(() => {
     if (settings.discordToken) {
       dispatch(setStatus('connecting'));
-      window.discord.connect(settings.discordToken);
+      window.kenku.connect(settings.discordToken);
     }
   }, []);
 
   useEffect(() => {
-    window.discord.on('ready', () => {
+    window.kenku.on('ready', () => {
       dispatch(setStatus('ready'));
     });
-    window.discord.on('disconnect', () => {
+    window.kenku.on('disconnect', () => {
       dispatch(setStatus('disconnected'));
     });
 
     return () => {
-      window.discord.removeAllListeners('ready');
-      window.discord.removeAllListeners('disconnect');
+      window.kenku.removeAllListeners('ready');
+      window.kenku.removeAllListeners('disconnect');
     };
   }, [dispatch]);
 

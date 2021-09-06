@@ -27,25 +27,25 @@ export function OutputListItems() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    window.discord.on('voiceChannels', (args) => {
+    window.kenku.on('voiceChannels', (args) => {
       const voiceChannels = args[0];
       dispatch(setVoiceChannels(voiceChannels));
     });
 
-    window.discord.on('channelLeft', () => {
+    window.kenku.on('channelLeft', () => {
       dispatch(setCurrentChannel('local'));
     });
 
     return () => {
-      window.discord.removeAllListeners('voiceChannels');
-      window.discord.removeAllListeners('channelLeft');
+      window.kenku.removeAllListeners('voiceChannels');
+      window.kenku.removeAllListeners('channelLeft');
     };
   }, [dispatch]);
 
   function handleChannelChange(channelId: string) {
     if (channelId !== output.currentChannel) {
       dispatch(setCurrentChannel(channelId));
-      window.discord.joinChannel(channelId);
+      window.kenku.joinChannel(channelId);
     }
   }
 

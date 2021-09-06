@@ -1,5 +1,6 @@
 import { PassThrough, Readable, Writable } from 'stream';
 import prism from 'prism-media';
+import Hapi from '@hapi/hapi';
 
 const BITRATE = 48000;
 const CHANNELS = 2;
@@ -10,6 +11,58 @@ const CHANNELS = 2;
  */
 export class LocalBroadcast {
   _listeners: Writable[] = [];
+  server: Hapi.Server;
+
+  constructor(port = 3333, address = 'localhost') {
+    this.server = Hapi.server({
+      port,
+      address,
+    });
+    this._setupRoutes();
+    this.server.start();
+  }
+
+  _setupRoutes() {
+    this.server.route({
+      method: 'GET',
+      path: '/stream',
+      handler: (request, h) => {
+        const listener = new PassThrough();
+        this.add(listener);
+        request.events.once('disconnect', () => {
+          this.remove(listener);
+        });
+        return h.response(listener).type('audio/mpeg');
+      },
+      options: {
+        cors: {
+          origin: ['*'],
+        },
+      },
+    });
+
+    this.server.route({
+      method: 'GET',
+      path: '/',
+      handler: (_, h) => {
+        return h
+          .response(
+            `
+          <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Audio</title>
+    </head>
+    <body>
+      <audio src="/stream" preload="none" controls autoplay></audio>
+    </body>
+    </html>
+          `
+          )
+          .type('text/html');
+      },
+    });
+  }
 
   add(listener: Writable) {
     this._listeners.push(listener);

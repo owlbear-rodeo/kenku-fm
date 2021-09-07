@@ -38,8 +38,10 @@ class BrowserViewManagerRenderer {
     this._audioOutputNode.connect(destination);
 
     const recorder = new MediaRecorder(destination.stream);
-    recorder.ondataavailable = async (event) => {
-      ipcRenderer.send('browserViewStream', await event.data.arrayBuffer());
+    recorder.ondataavailable = (event) => {
+      event.data.arrayBuffer().then((buffer) => {
+        ipcRenderer.send('browserViewStream', buffer);
+      });
     };
     recorder.start(500);
 
@@ -93,28 +95,30 @@ class BrowserViewManagerRenderer {
     this._audioOutputElement.muted = !loopback;
   }
 
-  async _startStream(viewId) {
-    const mediaSourceId = await desktopCapturer.getMediaSourceIdForWebContents(
-      viewId
-    );
-    try {
-      const streamConfig = {
-        audio: {
-          mandatory: {
-            chromeMediaSource: 'tab',
-            chromeMediaSourceId: mediaSourceId,
+  _startStream(viewId) {
+    desktopCapturer
+      .getMediaSourceIdForWebContents(viewId)
+      .then((mediaSourceId) => {
+        const streamConfig = {
+          audio: {
+            mandatory: {
+              chromeMediaSource: 'tab',
+              chromeMediaSourceId: mediaSourceId,
+            },
           },
-        },
-        video: false,
-      };
-      const stream = await navigator.mediaDevices.getUserMedia(streamConfig);
-      this._mediaStreams[viewId] = stream;
+          video: false,
+        };
+        navigator.mediaDevices.getUserMedia(streamConfig).then((stream) => {
+          this._mediaStreams[viewId] = stream;
 
-      const audioSource = this._audioContext.createMediaStreamSource(stream);
-      audioSource.connect(this._audioOutputNode);
-    } catch (err) {
-      console.error(`Unable to start stream for web view ${viewId}`);
-    }
+          const audioSource =
+            this._audioContext.createMediaStreamSource(stream);
+          audioSource.connect(this._audioOutputNode);
+        });
+      })
+      .catch((err) => {
+        console.error(`Unable to start stream for web view ${viewId}`);
+      });
   }
 }
 
@@ -171,20 +175,22 @@ const api = {
       ipcRenderer.removeAllListeners(channel);
     }
   },
-  appIcon: async (url) => {
-    try {
-      const icons = await LogoScrape.getLogos(url);
-      // Find icon with the largest size
-      const sorted = icons.sort((a, b) => {
-        const aSize = parseInt((a.size || '').split('x')[0] || 0);
-        const bSize = parseInt((b.size || '').split('x')[0] || 0);
-        return bSize - aSize;
+  appIcon: (url) => {
+    return LogoScrape.getLogos(url)
+      .then((icons) => {
+        // Find icon with the largest size
+        const sorted = icons.sort((a, b) => {
+          const aSize = parseInt((a.size || '0x0').split('x')[0] || 0);
+          const bSize = parseInt((b.size || '0x0').split('x')[0] || 0);
+          return bSize - aSize;
+        });
+        const urls = sorted.map((icon) => icon.url);
+        return urls[0] || '';
+      })
+      .catch((err) => {
+        console.error(err);
+        return '';
       });
-      const urls = sorted.map((icon) => icon.url);
-      return urls[0] || '';
-    } catch {
-      return '';
-    }
   },
 };
 

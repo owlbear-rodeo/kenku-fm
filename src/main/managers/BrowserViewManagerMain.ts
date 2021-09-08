@@ -1,6 +1,5 @@
 import { BrowserView, BrowserWindow, ipcMain } from 'electron';
 import { PassThrough } from 'stream';
-// import IPCStream from 'electron-ipc-stream';
 
 /**
  * Manager to help create and manager browser views

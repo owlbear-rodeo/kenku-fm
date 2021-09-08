@@ -144,7 +144,7 @@ const api = {
   },
   joinChannel: (channelId) => {
     ipcRenderer.send('joinChannel', channelId);
-    viewManager.setLoopback(channelId === 'loocal');
+    viewManager.setLoopback(channelId === 'local');
   },
   createBrowserView: (url, x, y, width, height) => {
     return viewManager.createBrowserView(url, x, y, width, height);

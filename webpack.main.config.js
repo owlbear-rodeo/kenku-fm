@@ -15,6 +15,5 @@ module.exports = {
     "discord.js": "commonjs2 discord.js",
     "ffmpeg-static": "commonjs2 ffmpeg-static",
     opusscript: "commonjs2 opusscript",
-    "prism-media": "commonjs2 prism-media",
   },
 };

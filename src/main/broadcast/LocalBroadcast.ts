@@ -1,6 +1,6 @@
-import { PassThrough, Readable, Writable } from 'stream';
-import prism from 'prism-media';
-import Hapi from '@hapi/hapi';
+import { PassThrough, Readable, Writable } from "stream";
+import prism from "prism-media";
+import Hapi from "@hapi/hapi";
 
 const BITRATE = 48000;
 const CHANNELS = 2;
@@ -13,7 +13,7 @@ export class LocalBroadcast {
   _listeners: Writable[] = [];
   server: Hapi.Server;
 
-  constructor(port = 3333, address = 'localhost') {
+  constructor(port = 3333, address = "localhost") {
     this.server = Hapi.server({
       port,
       address,
@@ -24,26 +24,26 @@ export class LocalBroadcast {
 
   _setupRoutes() {
     this.server.route({
-      method: 'GET',
-      path: '/stream',
+      method: "GET",
+      path: "/stream",
       handler: (request, h) => {
         const listener = new PassThrough();
         this.add(listener);
-        request.events.once('disconnect', () => {
+        request.events.once("disconnect", () => {
           this.remove(listener);
         });
-        return h.response(listener).type('audio/mpeg');
+        return h.response(listener).type("audio/mpeg");
       },
       options: {
         cors: {
-          origin: ['*'],
+          origin: ["*"],
         },
       },
     });
 
     this.server.route({
-      method: 'GET',
-      path: '/',
+      method: "GET",
+      path: "/",
       handler: (_, h) => {
         return h
           .response(
@@ -59,7 +59,7 @@ export class LocalBroadcast {
     </html>
           `
           )
-          .type('text/html');
+          .type("text/html");
       },
     });
   }
@@ -79,23 +79,23 @@ export class LocalBroadcast {
     // Ensure it is encoded as an mp3
     const transcoder = new prism.FFmpeg({
       args: [
-        '-analyzeduration',
-        '0',
-        '-loglevel',
-        '0',
-        '-ar',
+        "-analyzeduration",
+        "0",
+        "-loglevel",
+        "0",
+        "-ar",
         `${BITRATE}`,
-        '-ac',
+        "-ac",
         `${CHANNELS}`,
-        '-f',
-        'mp3',
+        "-f",
+        "mp3",
       ],
     });
     const output = new PassThrough();
     const dispatcher = input.pipe(transcoder).pipe(output);
 
     // Send data from the dispatcher to all the current listeners
-    dispatcher.on('data', (chunk) => {
+    dispatcher.on("data", (chunk) => {
       for (const listener of this._listeners) {
         listener.write(chunk);
       }

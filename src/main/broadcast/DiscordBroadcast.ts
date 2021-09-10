@@ -1,5 +1,5 @@
-import { ipcMain, app } from 'electron';
-import Discord from 'discord.js';
+import { ipcMain, app } from "electron";
+import Discord from "discord.js";
 
 export class DiscordBroadcast {
   client: Discord.Client;
@@ -9,45 +9,45 @@ export class DiscordBroadcast {
     if (this.client.voice) {
       this.broadcast = this.client.voice.createBroadcast();
     } else {
-      throw Error('No voice available for discord client');
+      throw Error("No voice available for discord client");
     }
-    ipcMain.on('connect', this.handleConnect);
+    ipcMain.on("connect", this.handleConnect);
 
-    ipcMain.on('disconnect', this.handleDisconnect);
+    ipcMain.on("disconnect", this.handleDisconnect);
 
-    ipcMain.on('joinChannel', this.handleJoinChannel);
+    ipcMain.on("joinChannel", this.handleJoinChannel);
 
-    app.on('window-all-closed', () => {
+    app.on("window-all-closed", () => {
       this.client.destroy();
     });
 
-    app.on('quit', () => {
+    app.on("quit", () => {
       this.client.destroy();
     });
   }
 
   handleConnect = async (event: Electron.IpcMainEvent, token: string) => {
     if (!token) {
-      event.reply('disconnect');
-      event.reply('error', 'Error connecting to bot: invalid token');
+      event.reply("disconnect");
+      event.reply("error", "Error connecting to bot: invalid token");
       return;
     }
 
     try {
-      this.client.once('ready', () => {
-        event.reply('ready');
-        event.reply('message', 'Connected');
-        const voiceChannels = [{ id: 'local', name: 'This Computer' }];
+      this.client.once("ready", () => {
+        event.reply("ready");
+        event.reply("message", "Connected");
+        const voiceChannels = [{ id: "local", name: "This Computer" }];
         this.client.channels.cache.forEach((channel) => {
-          if (channel.type === 'voice') {
+          if (channel.type === "voice") {
             voiceChannels.push({ id: channel.id, name: (channel as any).name });
           }
         });
-        event.reply('voiceChannels', voiceChannels);
+        event.reply("voiceChannels", voiceChannels);
       });
       await this.client.login(token);
     } catch (err) {
-      event.reply('error', `Error connecting to bot ${err.message}`);
+      event.reply("error", `Error connecting to bot ${err.message}`);
     }
   };
 
@@ -55,8 +55,8 @@ export class DiscordBroadcast {
     this.client.voice?.connections.forEach((connection) => {
       connection.disconnect();
     });
-    event.reply('voiceChannels', [{ id: 'local', name: 'This Computer' }]);
-    event.reply('channelJoined', 'local');
+    event.reply("voiceChannels", [{ id: "local", name: "This Computer" }]);
+    event.reply("channelJoined", "local");
   };
 
   handleJoinChannel = async (
@@ -66,15 +66,15 @@ export class DiscordBroadcast {
     this.client.voice?.connections.forEach((connection) => {
       connection.disconnect();
     });
-    if (channelId !== 'local') {
+    if (channelId !== "local") {
       const channel = await this.client.channels.fetch(channelId);
       if (channel instanceof Discord.VoiceChannel) {
         const connection = await channel.join();
         connection.play(this.broadcast);
-        connection.once('disconnect', () => {
-          event.reply('channelLeft', channelId);
+        connection.once("disconnect", () => {
+          event.reply("channelLeft", channelId);
         });
-        event.reply('channelJoined', channelId);
+        event.reply("channelJoined", channelId);
       }
     }
   };

@@ -1,5 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { v4 as uuid } from 'uuid';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { v4 as uuid } from "uuid";
 
 export interface App {
   url: string;
@@ -20,24 +20,24 @@ const initialState: AppsState = {
   apps: {
     byId: {
       tabletopaudio: {
-        id: 'tabletopaudio',
-        url: 'https://tabletopaudio.com/',
-        title: 'Tabletop Audio',
-        icon: 'https://images.tabletopaudio.com/touch-icons/icon-hd.png',
+        id: "tabletopaudio",
+        url: "https://tabletopaudio.com/",
+        title: "Tabletop Audio",
+        icon: "https://images.tabletopaudio.com/touch-icons/icon-hd.png",
       },
       spotify: {
-        id: 'spotify',
-        url: 'https://open.spotify.com/',
-        title: 'Spotify',
-        icon: 'https://open.scdn.co/cdn/images/favicon.5cb2bd30.ico',
+        id: "spotify",
+        url: "https://open.spotify.com/",
+        title: "Spotify",
+        icon: "https://open.scdn.co/cdn/images/favicon.5cb2bd30.ico",
       },
     },
-    allIds: ['tabletopaudio', 'spotify'],
+    allIds: ["tabletopaudio", "spotify"],
   },
 };
 
 export const appsSlice = createSlice({
-  name: 'apps',
+  name: "apps",
   initialState,
   reducers: {
     addApp: (state, action: PayloadAction<App>) => {
@@ -58,7 +58,7 @@ export const appsSlice = createSlice({
     },
     editApp: (state, action: PayloadAction<Partial<App>>) => {
       if (!action.payload.id) {
-        throw Error('Id needed in editApp payload');
+        throw Error("Id needed in editApp payload");
       }
       state.apps.byId[action.payload.id] = {
         ...state.apps.byId[action.payload.id],

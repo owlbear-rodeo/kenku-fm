@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   ListItemButton,
   ListItemText,
@@ -7,12 +7,12 @@ import {
   Popover,
   List,
   ListItem,
-} from '@material-ui/core';
-import MoreIcon from '@material-ui/icons/MoreHorizRounded';
+} from "@material-ui/core";
+import MoreIcon from "@material-ui/icons/MoreHorizRounded";
 
-import { useDispatch } from 'react-redux';
-import { App, selectApp, removeApp } from './appsSlice';
-import { AppSettings } from './AppSettings';
+import { useDispatch } from "react-redux";
+import { App, selectApp, removeApp } from "./appsSlice";
+import { AppSettings } from "./AppSettings";
 
 type AppListItemProps = {
   app: App;
@@ -53,7 +53,7 @@ export function AppListItem({ app, selected }: AppListItemProps) {
   }
 
   const moreOpen = Boolean(more);
-  const moreId = moreOpen ? 'more-popover' : undefined;
+  const moreId = moreOpen ? "more-popover" : undefined;
 
   return (
     <>
@@ -67,9 +67,9 @@ export function AppListItem({ app, selected }: AppListItemProps) {
         {app.icon && (
           <Box
             sx={{
-              width: '24px',
-              height: '24px',
-              objectFit: 'cover',
+              width: "24px",
+              height: "24px",
+              objectFit: "cover",
               marginRight: 1,
             }}
           >
@@ -87,12 +87,12 @@ export function AppListItem({ app, selected }: AppListItemProps) {
         anchorEl={more}
         onClose={handleMoreClose}
         anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
+          vertical: "bottom",
+          horizontal: "right",
         }}
         transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
+          vertical: "top",
+          horizontal: "right",
         }}
       >
         <List>

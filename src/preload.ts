@@ -1,33 +1,39 @@
-import { contextBridge, ipcRenderer } from 'electron';
-import { LogoScrape } from 'logo-scrape';
+import { contextBridge, ipcRenderer } from "electron";
+import { LogoScrape } from "logo-scrape";
 
-import {BrowserViewManagerPreload} from "./preload/managers/BrowserViewManagerPreload";
+import { BrowserViewManagerPreload } from "./preload/managers/BrowserViewManagerPreload";
 
 const viewManager = new BrowserViewManagerPreload();
 
 const validChannels = [
-  'error',
-  'message',
-  'info',
-  'ready',
-  'disconnect',
-  'voiceChannels',
-  'channelJoined',
-  'channelLeft',
+  "error",
+  "message",
+  "info",
+  "ready",
+  "disconnect",
+  "voiceChannels",
+  "channelJoined",
+  "channelLeft",
 ];
 
 const api = {
   connect: (token: string) => {
-    ipcRenderer.send('connect', token);
+    ipcRenderer.send("connect", token);
   },
   disconnect: (token: string) => {
-    ipcRenderer.send('disconnect');
+    ipcRenderer.send("disconnect");
   },
   joinChannel: (channelId: string) => {
-    ipcRenderer.send('joinChannel', channelId);
-    viewManager.setLoopback(channelId === 'local');
+    ipcRenderer.send("joinChannel", channelId);
+    viewManager.setLoopback(channelId === "local");
   },
-  createBrowserView: (url: string, x: number, y: number, width: number, height: number): number => {
+  createBrowserView: (
+    url: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ): number => {
     return viewManager.createBrowserView(url, x, y, width, height);
   },
   removeBrowserView: (id: number) => {
@@ -61,24 +67,23 @@ const api = {
       .then((icons: any) => {
         // Find icon with the largest size
         const sorted = icons.sort((a: any, b: any) => {
-          const aSize = parseInt((a.size || '0x0').split('x')[0] || 0);
-          const bSize = parseInt((b.size || '0x0').split('x')[0] || 0);
+          const aSize = parseInt((a.size || "0x0").split("x")[0] || 0);
+          const bSize = parseInt((b.size || "0x0").split("x")[0] || 0);
           return bSize - aSize;
         });
         const urls = sorted.map((icon: any) => icon.url);
-        return urls[0] || '';
+        return urls[0] || "";
       })
       .catch((err: Error) => {
         console.error(err);
-        return '';
+        return "";
       });
   },
 };
 
-
 declare global {
   interface Window {
-    kenku: typeof api
+    kenku: typeof api;
   }
 }
-contextBridge.exposeInMainWorld('kenku', api);
+contextBridge.exposeInMainWorld("kenku", api);

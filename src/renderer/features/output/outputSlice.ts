@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export type VoiceChannel = {
   id: string;
@@ -11,12 +11,12 @@ export interface OutputState {
 }
 
 const initialState: OutputState = {
-  voiceChannels: [{ id: 'local', name: 'This Computer' }],
-  currentChannel: 'local',
+  voiceChannels: [{ id: "local", name: "This Computer" }],
+  currentChannel: "local",
 };
 
 export const outputSlice = createSlice({
-  name: 'output',
+  name: "output",
   initialState,
   reducers: {
     setVoiceChannels: (state, action: PayloadAction<VoiceChannel[]>) => {

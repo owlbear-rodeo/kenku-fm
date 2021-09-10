@@ -1,20 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Collapse,
   List,
   ListItemButton,
   ListItemText,
   IconButton,
-} from '@material-ui/core';
-import ExpandLess from '@material-ui/icons/ExpandLessRounded';
-import ExpandMore from '@material-ui/icons/ExpandMoreRounded';
-import AddIcon from '@material-ui/icons/AddRounded';
+} from "@material-ui/core";
+import ExpandLess from "@material-ui/icons/ExpandLessRounded";
+import ExpandMore from "@material-ui/icons/ExpandMoreRounded";
+import AddIcon from "@material-ui/icons/AddRounded";
 
-import { RootState } from '../../app/store';
-import { useSelector } from 'react-redux';
+import { RootState } from "../../app/store";
+import { useSelector } from "react-redux";
 
-import { AppListItem } from './AppListItem';
-import { AppAdd } from './AppAdd';
+import { AppListItem } from "./AppListItem";
+import { AppAdd } from "./AppAdd";
 
 export function AppListItems() {
   const apps = useSelector((state: RootState) => state.apps);

@@ -1,7 +1,7 @@
-import { BrowserWindow } from 'electron';
-import { DiscordBroadcast } from '../broadcast/DiscordBroadcast';
-import { BroadcastManager } from './BroadcastManager';
-import { BrowserViewManagerMain } from './BrowserViewManagerMain';
+import { BrowserWindow } from "electron";
+import { DiscordBroadcast } from "../broadcast/DiscordBroadcast";
+import { BroadcastManager } from "./BroadcastManager";
+import { BrowserViewManagerMain } from "./BrowserViewManagerMain";
 
 export class PlaybackManager {
   broadcast: BroadcastManager;

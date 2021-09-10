@@ -1,12 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Divider, IconButton, Stack, TextField } from '@material-ui/core';
+import React, { useEffect, useRef, useState } from "react";
+import { Divider, IconButton, Stack, TextField } from "@material-ui/core";
 import {
   ArrowBackRounded,
   ArrowForwardRounded,
   RefreshRounded,
-} from '@material-ui/icons';
+} from "@material-ui/icons";
 
-import { drawerWidth } from '../../common/ActionDrawer';
+import { drawerWidth } from "../../common/ActionDrawer";
 
 type ViewProps = {
   url: string;

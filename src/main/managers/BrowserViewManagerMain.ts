@@ -1,5 +1,5 @@
-import { BrowserView, BrowserWindow, ipcMain } from 'electron';
-import { PassThrough } from 'stream';
+import { BrowserView, BrowserWindow, ipcMain } from "electron";
+import { PassThrough } from "stream";
 
 /**
  * Manager to help create and manager browser views
@@ -18,7 +18,7 @@ export class BrowserViewManagerMain {
     this.outputStream = new PassThrough();
     this.ready = true;
 
-    ipcMain.on('browserViewStream', async (_, data: ArrayBuffer) => {
+    ipcMain.on("browserViewStream", async (_, data: ArrayBuffer) => {
       if (this.ready) {
         this.ready = false;
         this.outputStream.write(Buffer.from(data), undefined, () => {
@@ -28,7 +28,7 @@ export class BrowserViewManagerMain {
     });
 
     ipcMain.on(
-      'createBrowserView',
+      "createBrowserView",
       (
         event,
         url: string,
@@ -40,15 +40,15 @@ export class BrowserViewManagerMain {
         event.returnValue = this.createBrowserView(url, x, y, width, height);
       }
     );
-    ipcMain.on('removeBrowserView', (_, id: number) =>
+    ipcMain.on("removeBrowserView", (_, id: number) =>
       this.removeBrowserView(id)
     );
-    ipcMain.on('loadURL', (_, id: number, url: string) =>
+    ipcMain.on("loadURL", (_, id: number, url: string) =>
       this.loadURL(id, url)
     );
-    ipcMain.on('goForward', (_, id: number) => this.goForward(id));
-    ipcMain.on('goBack', (_, id: number) => this.goBack(id));
-    ipcMain.on('reload', (_, id: number) => this.reload(id));
+    ipcMain.on("goForward", (_, id: number) => this.goForward(id));
+    ipcMain.on("goBack", (_, id: number) => this.goBack(id));
+    ipcMain.on("reload", (_, id: number) => this.reload(id));
   }
 
   /**

@@ -1,8 +1,8 @@
-import { combineReducers, configureStore } from '@reduxjs/toolkit';
-import connectionReducer from '../features/connection/connectionSlice';
-import outputReducer from '../features/output/outputSlice';
-import settingsReducer from '../features/settings/settingsSlice';
-import appsReducer from '../features/apps/appsSlice';
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import connectionReducer from "../features/connection/connectionSlice";
+import outputReducer from "../features/output/outputSlice";
+import settingsReducer from "../features/settings/settingsSlice";
+import appsReducer from "../features/apps/appsSlice";
 
 import {
   persistStore,
@@ -13,8 +13,8 @@ import {
   PERSIST,
   PURGE,
   REGISTER,
-} from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
+} from "redux-persist";
+import storage from "redux-persist/lib/storage";
 
 const rootReducer = combineReducers({
   connection: connectionReducer,
@@ -24,10 +24,10 @@ const rootReducer = combineReducers({
 });
 
 const persistConfig = {
-  key: 'root',
+  key: "root",
   version: 1,
   storage,
-  whitelist: ['apps', 'settings'],
+  whitelist: ["apps", "settings"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

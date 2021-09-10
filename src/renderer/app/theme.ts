@@ -1,19 +1,19 @@
 import createTheme, {
   ThemeOptions,
-} from '@material-ui/core/styles/createTheme';
+} from "@material-ui/core/styles/createTheme";
 
 export const themeOptions: ThemeOptions = {
   palette: {
-    mode: 'dark',
+    mode: "dark",
     primary: {
-      main: '#bb99ff',
+      main: "#bb99ff",
     },
     secondary: {
-      main: '#ee99ff',
+      main: "#ee99ff",
     },
     background: {
-      paper: '#222639',
-      default: '#1e2231',
+      paper: "#222639",
+      default: "#1e2231",
     },
   },
   shape: {
@@ -23,7 +23,7 @@ export const themeOptions: ThemeOptions = {
     MuiAppBar: {
       styleOverrides: {
         root: {
-          color: 'secondary',
+          color: "secondary",
         },
       },
     },
@@ -42,12 +42,12 @@ export const themeOptions: ThemeOptions = {
         },
         switchBase: {
           padding: 1,
-          '&$checked, &$colorPrimary$checked, &$colorSecondary$checked': {
-            transform: 'translateX(16px)',
-            color: '#fff',
-            '& + $track': {
+          "&$checked, &$colorPrimary$checked, &$colorSecondary$checked": {
+            transform: "translateX(16px)",
+            color: "#fff",
+            "& + $track": {
               opacity: 1,
-              border: 'none',
+              border: "none",
             },
           },
         },
@@ -57,29 +57,29 @@ export const themeOptions: ThemeOptions = {
         },
         track: {
           borderRadius: 13,
-          border: '1px solid #bdbdbd',
-          backgroundColor: '#fafafa',
+          border: "1px solid #bdbdbd",
+          backgroundColor: "#fafafa",
           opacity: 1,
           transition:
-            'background-color 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,border 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
+            "background-color 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,border 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
         },
       },
     },
     MuiListItemButton: {
       styleOverrides: {
         root: {
-          margin: '4px 8px',
-          borderRadius: '16px',
+          margin: "4px 8px",
+          borderRadius: "16px",
         },
         dense: {
-          borderRadius: '12px',
+          borderRadius: "12px",
         },
       },
     },
     MuiSnackbarContent: {
       styleOverrides: {
         root: {
-          minWidth: '192px !important',
+          minWidth: "192px !important",
         },
       },
     },

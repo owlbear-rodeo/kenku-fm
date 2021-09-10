@@ -5,16 +5,16 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-} from '@material-ui/core';
-import ExpandLess from '@material-ui/icons/ExpandLessRounded';
-import ExpandMore from '@material-ui/icons/ExpandMoreRounded';
-import VolumeIcon from '@material-ui/icons/VolumeUpRounded';
+} from "@material-ui/core";
+import ExpandLess from "@material-ui/icons/ExpandLessRounded";
+import ExpandMore from "@material-ui/icons/ExpandMoreRounded";
+import VolumeIcon from "@material-ui/icons/VolumeUpRounded";
 
-import { RootState } from '../../app/store';
-import { useSelector, useDispatch } from 'react-redux';
-import { setVoiceChannels, setCurrentChannel } from './outputSlice';
+import { RootState } from "../../app/store";
+import { useSelector, useDispatch } from "react-redux";
+import { setVoiceChannels, setCurrentChannel } from "./outputSlice";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 export function OutputListItems() {
   const [open, setOpen] = useState(true);
@@ -27,18 +27,18 @@ export function OutputListItems() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    window.kenku.on('voiceChannels', (args) => {
+    window.kenku.on("voiceChannels", (args) => {
       const voiceChannels = args[0];
       dispatch(setVoiceChannels(voiceChannels));
     });
 
-    window.kenku.on('channelLeft', () => {
-      dispatch(setCurrentChannel('local'));
+    window.kenku.on("channelLeft", () => {
+      dispatch(setCurrentChannel("local"));
     });
 
     return () => {
-      window.kenku.removeAllListeners('voiceChannels');
-      window.kenku.removeAllListeners('channelLeft');
+      window.kenku.removeAllListeners("voiceChannels");
+      window.kenku.removeAllListeners("channelLeft");
     };
   }, [dispatch]);
 
@@ -67,10 +67,10 @@ export function OutputListItems() {
               >
                 <ListItemIcon
                   sx={{
-                    minWidth: '36px',
+                    minWidth: "36px",
                     color:
                       output.currentChannel === channel.id
-                        ? 'primary.main'
+                        ? "primary.main"
                         : undefined,
                   }}
                 >
@@ -78,7 +78,7 @@ export function OutputListItems() {
                 </ListItemIcon>
                 <ListItemText primary={channel.name} />
               </ListItemButton>
-              {channel.id === 'local' && output.voiceChannels.length > 1 && (
+              {channel.id === "local" && output.voiceChannels.length > 1 && (
                 <Divider variant="middle" />
               )}
             </React.Fragment>

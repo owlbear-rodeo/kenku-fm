@@ -6,7 +6,7 @@ import { OutputListItems } from '../features/output/OutputListItems';
 import { AppListItems } from '../features/apps/AppListItems';
 import { Settings } from '../features/settings/Settings';
 
-import icon from '../../../assets/icon.svg';
+import icon from '../../assets/icon.svg';
 
 export const drawerWidth = 240;
 

@@ -28,28 +28,3 @@ render(
   </Provider>,
   document.getElementById('root')
 );
-
-declare global {
-  interface Window {
-    kenku: {
-      connect: (token: string) => void;
-      disconnect: () => void;
-      joinChannel: (channelId: string) => void;
-      createBrowserView: (
-        url: string,
-        x: number,
-        y: number,
-        width: number,
-        height: number
-      ) => number;
-      removeBrowserView: (id: number) => void;
-      loadURL: (id: number, url: string) => void;
-      goForward: (id: number) => void;
-      goBack: (id: number) => void;
-      reload: (id: number) => void;
-      on: (channel: string, callback: (...args: any[]) => void) => void;
-      removeAllListeners: (channel: string) => void;
-      appIcon: (url: string) => Promise<string>;
-    };
-  }
-}

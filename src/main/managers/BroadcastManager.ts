@@ -33,7 +33,11 @@ export class BroadcastManager {
       stream.on('data', (chunk) => {
         duplicateStream.write(chunk);
       });
-      broadcast.play(duplicateStream);
+      if (broadcast instanceof Discord.VoiceBroadcast) {
+        broadcast.play(duplicateStream, { type: 'webm/opus' });
+      } else {
+        broadcast.play(duplicateStream);
+      }
     }
 
     return initialDispatcher;

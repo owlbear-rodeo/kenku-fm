@@ -42,7 +42,7 @@ export function Settings() {
       window.kenku.connect(settings.discordToken);
     } else {
       dispatch(setStatus('disconnected'));
-      window.kenku.disconnect();
+      window.kenku.disconnect(settings.discordToken);
     }
   }
 

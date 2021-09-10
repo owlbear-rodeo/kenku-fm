@@ -1,7 +1,5 @@
 import { ipcRenderer, desktopCapturer } from "electron";
 
-import audioStreamProcessorUrl from "worklet-loader!../worklets/AudioStreamProcessor.worklet.js";
-
 /**
  * Manager to help create and manager browser views
  * This class is to be run on the renderer thread
@@ -29,13 +27,12 @@ export class BrowserViewManagerPreload {
   constructor() {
     this._mediaStreams = {};
 
-    this._audioContext = new AudioContext();
+    this._audioContext = new AudioContext({ latencyHint: "playback" });
     this._audioOutputNode = this._audioContext.createGain();
   }
 
-  async load() {
-    this._createLocalProcessor();
-    await this._createStreamProcessor();
+  load() {
+    this._setupPlayback();
   }
 
   createBrowserView(
@@ -88,32 +85,24 @@ export class BrowserViewManagerPreload {
     this._audioOutputElement.muted = !loopback;
   }
 
-  _createLocalProcessor() {
-    const localOutput = this._audioContext.createMediaStreamDestination();
+  _setupPlayback() {
+    const destination = this._audioContext.createMediaStreamDestination();
 
     this._audioOutputElement = document.createElement("audio");
-    this._audioOutputElement.srcObject = localOutput.stream;
+    this._audioOutputElement.srcObject = destination.stream;
     this._audioOutputElement.onloadedmetadata = (e) => {
       this._audioOutputElement.play();
     };
 
-    this._audioOutputNode.connect(localOutput);
-  }
-
-  async _createStreamProcessor() {
-    await this._audioContext.audioWorklet.addModule(audioStreamProcessorUrl);
-    const streamProcessor = new AudioWorkletNode(
-      this._audioContext,
-      "audio-stream-processor"
-    );
-
-    streamProcessor.port.onmessage = (e) => {
-      if (e.data.eventType === "data") {
-        ipcRenderer.send("browserViewStream", e.data.data);
-      }
+    const recorder = new MediaRecorder(destination.stream);
+    recorder.ondataavailable = (event) => {
+      event.data.arrayBuffer().then((buffer) => {
+        ipcRenderer.send("browserViewStream", buffer);
+      });
     };
+    recorder.start(300);
 
-    this._audioOutputNode.connect(streamProcessor);
+    this._audioOutputNode.connect(destination);
   }
 
   async _startStream(viewId: number) {

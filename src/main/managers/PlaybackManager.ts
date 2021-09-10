@@ -10,7 +10,7 @@ export class PlaybackManager {
     this.viewManager = new BrowserViewManagerMain(window);
 
     this.discord.broadcast.play(this.viewManager.outputStream, {
-      type: "converted",
+      type: "webm/opus",
     });
   }
 }

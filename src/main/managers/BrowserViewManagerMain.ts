@@ -10,19 +10,19 @@ export class BrowserViewManagerMain {
   window: BrowserWindow;
   views: Record<number, BrowserView>;
   outputStream: PassThrough;
-  ready: boolean;
+  _streamReady: boolean;
 
   constructor(window: BrowserWindow) {
     this.window = window;
     this.views = {};
     this.outputStream = new PassThrough();
-    this.ready = true;
+    this._streamReady = true;
 
     ipcMain.on("browserViewStream", async (_, data: Uint8Array) => {
-      if (this.ready) {
-        this.ready = false;
+      if (this._streamReady) {
+        this._streamReady = false;
         this.outputStream.write(Buffer.from(data), undefined, () => {
-          this.ready = true;
+          this._streamReady = true;
         });
       }
     });

@@ -16,15 +16,9 @@ export class BrowserViewManagerMain {
     this.window = window;
     this.views = {};
     this.outputStream = new PassThrough();
-    this._streamReady = true;
 
     ipcMain.on("browserViewStream", async (_, data: Uint8Array) => {
-      if (this._streamReady) {
-        this._streamReady = false;
-        this.outputStream.write(Buffer.from(data), undefined, () => {
-          this._streamReady = true;
-        });
-      }
+      this.outputStream.write(Buffer.from(data));
     });
 
     ipcMain.on(

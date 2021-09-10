@@ -90,4 +90,5 @@ declare global {
     kenku: typeof api;
   }
 }
+
 contextBridge.exposeInMainWorld("kenku", api);

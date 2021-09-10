@@ -46,7 +46,7 @@ module.exports = {
     [
       "@timfish/forge-externals-plugin",
       {
-        externals: ["ffmpeg-static", "opusscript", "discord.js"],
+        externals: ["opusscript", "discord.js"],
         includeDeps: true,
       },
     ],

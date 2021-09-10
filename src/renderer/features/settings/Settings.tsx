@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import IconButton from "@material-ui/core/IconButton";
-import LinkIcon from "@material-ui/icons/LinkRounded";
-import LinkOffIcon from "@material-ui/icons/LinkOffRounded";
 import SettingsIcon from "@material-ui/icons/SettingsRounded";
 import Dialog from "@material-ui/core/Dialog";
 import DialogTitle from "@material-ui/core/DialogTitle";
@@ -79,7 +77,7 @@ export function Settings() {
         <DialogTitle>Connection</DialogTitle>
         <DialogContent>
           <DialogContentText>Enter your bot's token</DialogContentText>
-          <Stack direction="row" sx={{ alignItems: "center" }} spacing={1}>
+          <Stack spacing={1}>
             <TextField
               autoFocus
               margin="dense"
@@ -92,15 +90,20 @@ export function Settings() {
               value={settings.discordToken}
               onChange={handleDiscordTokenChange}
             />
-            <IconButton onClick={handleDiscordConnect}>
+            <Button
+              disabled={connection.status === "connecting"}
+              onClick={handleDiscordConnect}
+              fullWidth
+              variant="outlined"
+            >
               {connection.status === "connecting" ? (
                 <CircularProgress size={24} />
               ) : connection.status === "ready" ? (
-                <LinkIcon />
+                "Disconnect"
               ) : (
-                <LinkOffIcon />
+                "Connect"
               )}
-            </IconButton>
+            </Button>
           </Stack>
         </DialogContent>
       </Dialog>

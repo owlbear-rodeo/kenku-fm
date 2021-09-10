@@ -5,6 +5,10 @@ import { BrowserViewManagerPreload } from "./preload/managers/BrowserViewManager
 
 const viewManager = new BrowserViewManagerPreload();
 
+window.addEventListener("load", () => {
+  viewManager.load();
+});
+
 const validChannels = [
   "error",
   "message",

@@ -4,7 +4,7 @@ import { PassThrough } from "stream";
 /**
  * Manager to help create and manager browser views
  * This class is to be run on the main thread
- * For the render thread counterpart see `BrowserViewManagerRenderer.ts`
+ * For the render thread counterpart see `BrowserViewManagerPreload.ts`
  */
 export class BrowserViewManagerMain {
   window: BrowserWindow;
@@ -18,7 +18,7 @@ export class BrowserViewManagerMain {
     this.outputStream = new PassThrough();
     this.ready = true;
 
-    ipcMain.on("browserViewStream", async (_, data: ArrayBuffer) => {
+    ipcMain.on("browserViewStream", async (_, data: Uint8Array) => {
       if (this.ready) {
         this.ready = false;
         this.outputStream.write(Buffer.from(data), undefined, () => {

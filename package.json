@@ -21,8 +21,6 @@
     "forge": "./forge.config.js"
   },
   "devDependencies": {
-    "@babel/core": "^7.15.5",
-    "@babel/preset-react": "^7.14.5",
     "@electron-forge/cli": "^6.0.0-beta.60",
     "@electron-forge/maker-deb": "^6.0.0-beta.60",
     "@electron-forge/maker-rpm": "^6.0.0-beta.60",
@@ -40,7 +38,6 @@
     "@typescript-eslint/eslint-plugin": "^4.0.1",
     "@typescript-eslint/parser": "^4.0.1",
     "@vercel/webpack-asset-relocator-loader": "1.7.0",
-    "babel-loader": "^8.2.2",
     "css-loader": "^6.0.0",
     "electron": "11.0.0-beta.1",
     "eslint": "^7.6.0",

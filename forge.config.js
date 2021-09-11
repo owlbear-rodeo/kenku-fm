@@ -6,7 +6,7 @@ module.exports = {
     {
       name: "@electron-forge/maker-squirrel",
       config: {
-        name: "kenku_forge",
+        name: "kenku_fm",
       },
     },
     {

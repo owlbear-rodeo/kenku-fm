@@ -33,41 +33,48 @@ export function AppSettings({ app, open, onClose }: AppSettingsProps) {
     onClose();
   }
 
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    handleClose();
+  }
+
   return (
     <Dialog fullScreen sx={{ width: 240 }} open={open} onClose={handleClose}>
       <DialogTitle>Edit App</DialogTitle>
-      <DialogContent>
-        <TextField
-          autoFocus
-          margin="dense"
-          id="url"
-          label="URL"
-          fullWidth
-          variant="outlined"
-          autoComplete="off"
-          InputLabelProps={{
-            shrink: true,
-          }}
-          value={app.url}
-          onChange={handleURLChange}
-        />
-        <TextField
-          margin="dense"
-          id="name"
-          label="Name"
-          fullWidth
-          variant="standard"
-          autoComplete="off"
-          InputLabelProps={{
-            shrink: true,
-          }}
-          value={app.title}
-          onChange={handleTitleChange}
-        />
-      </DialogContent>
-      <DialogActions sx={{ p: 2 }}>
-        <Button onClick={handleClose}>Done</Button>
-      </DialogActions>
+      <form onSubmit={handleSubmit}>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="url"
+            label="URL"
+            fullWidth
+            variant="outlined"
+            autoComplete="off"
+            InputLabelProps={{
+              shrink: true,
+            }}
+            value={app.url}
+            onChange={handleURLChange}
+          />
+          <TextField
+            margin="dense"
+            id="name"
+            label="Name"
+            fullWidth
+            variant="standard"
+            autoComplete="off"
+            InputLabelProps={{
+              shrink: true,
+            }}
+            value={app.title}
+            onChange={handleTitleChange}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button type="submit">Done</Button>
+        </DialogActions>
+      </form>
     </Dialog>
   );
 }

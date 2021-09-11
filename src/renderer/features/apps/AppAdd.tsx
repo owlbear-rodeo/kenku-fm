@@ -36,7 +36,8 @@ export function AppAdd({ open, onClose }: AppAddProps) {
     setTitle(event.target.value);
   }
 
-  function handleAdd() {
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
     const id = uuid();
     dispatch(addApp({ id, url, title, icon: "" }));
     window.kenku.appIcon(url).then((icon) => {
@@ -48,41 +49,43 @@ export function AppAdd({ open, onClose }: AppAddProps) {
   return (
     <Dialog fullScreen sx={{ width: 240 }} open={open} onClose={onClose}>
       <DialogTitle>Add App</DialogTitle>
-      <DialogContent>
-        <TextField
-          autoFocus
-          margin="dense"
-          id="url"
-          label="URL"
-          fullWidth
-          variant="standard"
-          autoComplete="off"
-          InputLabelProps={{
-            shrink: true,
-          }}
-          value={url}
-          onChange={handleURLChange}
-        />
-        <TextField
-          margin="dense"
-          id="name"
-          label="Name"
-          fullWidth
-          variant="standard"
-          autoComplete="off"
-          InputLabelProps={{
-            shrink: true,
-          }}
-          value={title}
-          onChange={handleTitleChange}
-        />
-      </DialogContent>
-      <DialogActions sx={{ p: 2, justifyContent: "space-between" }}>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button disabled={!url} onClick={handleAdd}>
-          Add
-        </Button>
-      </DialogActions>
+      <form onSubmit={handleSubmit}>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="url"
+            label="URL"
+            fullWidth
+            variant="standard"
+            autoComplete="off"
+            InputLabelProps={{
+              shrink: true,
+            }}
+            value={url}
+            onChange={handleURLChange}
+          />
+          <TextField
+            margin="dense"
+            id="name"
+            label="Name"
+            fullWidth
+            variant="standard"
+            autoComplete="off"
+            InputLabelProps={{
+              shrink: true,
+            }}
+            value={title}
+            onChange={handleTitleChange}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2, justifyContent: "space-between" }}>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button disabled={!url} type="submit">
+            Add
+          </Button>
+        </DialogActions>
+      </form>
     </Dialog>
   );
 }

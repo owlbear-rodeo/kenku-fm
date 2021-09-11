@@ -4,7 +4,6 @@ import { LogoScrape } from "logo-scrape";
 import { BrowserViewManagerPreload } from "./preload/managers/BrowserViewManagerPreload";
 
 const viewManager = new BrowserViewManagerPreload();
-console.log("PRELOAD!!");
 
 window.addEventListener("load", () => {
   viewManager.load();

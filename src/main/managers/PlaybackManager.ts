@@ -1,7 +1,6 @@
 import { BrowserWindow } from "electron";
 import { DiscordBroadcast } from "../broadcast/DiscordBroadcast";
 import { BrowserViewManagerMain } from "./BrowserViewManagerMain";
-import { Readable } from "stream";
 
 export class PlaybackManager {
   discord: DiscordBroadcast;
@@ -9,7 +8,7 @@ export class PlaybackManager {
   constructor(window: BrowserWindow) {
     this.discord = new DiscordBroadcast();
     this.viewManager = new BrowserViewManagerMain(window);
-    this.viewManager.on("streamStart", (stream: Readable) => {
+    this.viewManager.on("streamStart", (stream) => {
       this.discord.broadcast.play(stream, {
         type: "webm/opus",
       });

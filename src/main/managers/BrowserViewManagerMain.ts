@@ -1,13 +1,19 @@
 import { BrowserView, BrowserWindow, ipcMain } from "electron";
 import { PassThrough } from "stream";
-import EventEmitter from "events";
+import { TypedEmitter } from "tiny-typed-emitter";
+import { Readable } from "stream";
+
+interface BrowserViewManagerEvents {
+  streamStart: (stream: Readable) => void;
+  streamEnd: () => void;
+}
 
 /**
  * Manager to help create and manager browser views
  * This class is to be run on the main thread
  * For the render thread counterpart see `BrowserViewManagerPreload.ts`
  */
-export class BrowserViewManagerMain extends EventEmitter {
+export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvents> {
   window: BrowserWindow;
   views: Record<number, BrowserView>;
   _outputStream?: PassThrough;

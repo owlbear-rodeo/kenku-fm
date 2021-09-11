@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from "react";
-import IconButton from "@material-ui/core/IconButton";
-import SettingsIcon from "@material-ui/icons/SettingsRounded";
+import React, { useEffect } from "react";
 import Dialog from "@material-ui/core/Dialog";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import DialogContent from "@material-ui/core/DialogContent";
@@ -16,19 +14,15 @@ import { useSelector, useDispatch } from "react-redux";
 import { setStatus } from "../connection/connectionSlice";
 import { setDiscordToken } from "./settingsSlice";
 
-export function Settings() {
+type SettingsProps = {
+  open: boolean;
+  onClose: () => void;
+};
+
+export function Settings({ open, onClose }: SettingsProps) {
   const connection = useSelector((state: RootState) => state.connection);
   const settings = useSelector((state: RootState) => state.settings);
   const dispatch = useDispatch();
-  const [open, setOpen] = useState(false);
-
-  function handleOpen() {
-    setOpen(true);
-  }
-
-  function handleClose() {
-    setOpen(false);
-  }
 
   function handleDiscordTokenChange(e: React.ChangeEvent<HTMLInputElement>) {
     dispatch(setDiscordToken(e.target.value));
@@ -68,47 +62,42 @@ export function Settings() {
   }, [dispatch]);
 
   return (
-    <div>
-      <IconButton onClick={handleOpen}>
-        <SettingsIcon />
-      </IconButton>
-      <Dialog fullScreen sx={{ width: 240 }} open={open} onClose={handleClose}>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={handleClose}>Done</Button>
-        </DialogActions>
-        <DialogTitle>Connection</DialogTitle>
-        <DialogContent>
-          <DialogContentText>Enter your bot's token</DialogContentText>
-          <Stack spacing={1}>
-            <TextField
-              autoFocus
-              margin="dense"
-              id="token"
-              label="Token"
-              type="password"
-              fullWidth
-              variant="standard"
-              autoComplete="off"
-              value={settings.discordToken}
-              onChange={handleDiscordTokenChange}
-            />
-            <Button
-              disabled={connection.status === "connecting"}
-              onClick={handleDiscordConnect}
-              fullWidth
-              variant="outlined"
-            >
-              {connection.status === "connecting" ? (
-                <CircularProgress size={24} />
-              ) : connection.status === "ready" ? (
-                "Disconnect"
-              ) : (
-                "Connect"
-              )}
-            </Button>
-          </Stack>
-        </DialogContent>
-      </Dialog>
-    </div>
+    <Dialog fullScreen sx={{ width: 240 }} open={open} onClose={onClose}>
+      <DialogActions sx={{ p: 2 }}>
+        <Button onClick={onClose}>Done</Button>
+      </DialogActions>
+      <DialogTitle>Connection</DialogTitle>
+      <DialogContent>
+        <DialogContentText>Enter your bot's token</DialogContentText>
+        <Stack spacing={1}>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="token"
+            label="Token"
+            type="password"
+            fullWidth
+            variant="standard"
+            autoComplete="off"
+            value={settings.discordToken}
+            onChange={handleDiscordTokenChange}
+          />
+          <Button
+            disabled={connection.status === "connecting"}
+            onClick={handleDiscordConnect}
+            fullWidth
+            variant="outlined"
+          >
+            {connection.status === "connecting" ? (
+              <CircularProgress size={24} />
+            ) : connection.status === "ready" ? (
+              "Disconnect"
+            ) : (
+              "Connect"
+            )}
+          </Button>
+        </Stack>
+      </DialogContent>
+    </Dialog>
   );
 }

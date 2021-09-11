@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { v4 as uuid } from "uuid";
 
 export interface App {
   url: string;
@@ -26,13 +25,13 @@ const initialState: AppsState = {
         icon: "https://images.tabletopaudio.com/touch-icons/icon-hd.png",
       },
       spotify: {
-        id: "spotify",
-        url: "https://open.spotify.com/",
-        title: "Spotify",
-        icon: "https://open.scdn.co/cdn/images/favicon.5cb2bd30.ico",
+        id: "youtube",
+        url: "https://www.youtube.com/",
+        title: "YouTube",
+        icon: "https://www.youtube.com/s/desktop/8a85ed3f/img/favicon_144x144.png",
       },
     },
-    allIds: ["tabletopaudio", "spotify"],
+    allIds: ["tabletopaudio", "youtube"],
   },
 };
 

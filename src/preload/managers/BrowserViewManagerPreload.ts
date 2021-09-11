@@ -6,22 +6,14 @@ import { ipcRenderer, desktopCapturer } from "electron";
  * For the main thread counterpart see `BrowserViewManagerMain.ts`
  */
 export class BrowserViewManagerPreload {
-  /**
-   * Audio context to mix media streams into one audio output
-   */
+  /** Audio context to mix media streams into one audio output */
   _audioContext: AudioContext;
-  /**
-   * Audio output node that streams will connect to
-   */
+  /** Audio output node that streams will connect to */
   _audioOutputNode: AudioNode;
 
-  /**
-   * Audio DOM element for the current output / local playback
-   */
+  /** Audio DOM element for the current output / local playback */
   _audioOutputElement: HTMLAudioElement;
-  /**
-   * Raw media streams for each browser view containing ogg/opus audio
-   */
+  /** Raw media streams for each browser view containing webp/opus audio */
   _mediaStreams: Record<number, MediaStream>;
 
   constructor() {
@@ -33,6 +25,18 @@ export class BrowserViewManagerPreload {
 
   load() {
     this._setupPlayback();
+    ipcRenderer.send("browserViewStreamStart");
+  }
+
+  unload() {
+    for (let stream of Object.values(this._mediaStreams)) {
+      for (let track of stream.getTracks()) {
+        track.stop();
+      }
+    }
+    this._audioContext.close();
+    ipcRenderer.send("removeAllBrowserViews");
+    ipcRenderer.send("browserViewStreamEnd");
   }
 
   createBrowserView(
@@ -57,6 +61,9 @@ export class BrowserViewManagerPreload {
   removeBrowserView(id: number) {
     ipcRenderer.send("removeBrowserView", id);
     if (this._mediaStreams[id]) {
+      for (let track of this._mediaStreams[id].getTracks()) {
+        track.stop();
+      }
       delete this._mediaStreams[id];
     }
   }
@@ -97,7 +104,7 @@ export class BrowserViewManagerPreload {
     const recorder = new MediaRecorder(destination.stream);
     recorder.ondataavailable = (event) => {
       event.data.arrayBuffer().then((buffer) => {
-        ipcRenderer.send("browserViewStream", buffer);
+        ipcRenderer.send("browserViewStreamData", buffer);
       });
     };
     recorder.start(300);
@@ -125,8 +132,9 @@ export class BrowserViewManagerPreload {
 
       const audioSource = this._audioContext.createMediaStreamSource(stream);
       audioSource.connect(this._audioOutputNode);
-    } catch {
+    } catch (error) {
       console.error(`Unable to start stream for web view ${viewId}`);
+      console.error(error);
     }
   }
 }

@@ -39,8 +39,7 @@ export function Settings() {
       dispatch(setStatus("connecting"));
       window.kenku.connect(settings.discordToken);
     } else {
-      dispatch(setStatus("disconnected"));
-      window.kenku.disconnect(settings.discordToken);
+      window.kenku.disconnect();
     }
   }
 
@@ -49,6 +48,9 @@ export function Settings() {
       dispatch(setStatus("connecting"));
       window.kenku.connect(settings.discordToken);
     }
+    return () => {
+      window.kenku.disconnect();
+    };
   }, []);
 
   useEffect(() => {

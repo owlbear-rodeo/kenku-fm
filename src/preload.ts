@@ -4,9 +4,15 @@ import { LogoScrape } from "logo-scrape";
 import { BrowserViewManagerPreload } from "./preload/managers/BrowserViewManagerPreload";
 
 const viewManager = new BrowserViewManagerPreload();
+console.log("PRELOAD!!");
 
 window.addEventListener("load", () => {
   viewManager.load();
+});
+
+window.addEventListener("beforeunload", () => {
+  ipcRenderer.send("disconnect");
+  viewManager.unload();
 });
 
 const validChannels = [
@@ -24,7 +30,7 @@ const api = {
   connect: (token: string) => {
     ipcRenderer.send("connect", token);
   },
-  disconnect: (token: string) => {
+  disconnect: () => {
     ipcRenderer.send("disconnect");
   },
   joinChannel: (channelId: string) => {

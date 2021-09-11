@@ -31,6 +31,7 @@ export function View({ url, setURL }: ViewProps) {
       window.innerHeight
     );
     setViewId(id);
+
     return () => {
       window.kenku.removeBrowserView(id);
     };

@@ -34,7 +34,7 @@ export class DiscordBroadcast {
     }
 
     try {
-      this.client.once("ready", () => {
+      const onReady = () => {
         event.reply("ready");
         event.reply("message", "Connected");
         const voiceChannels = [{ id: "local", name: "This Computer" }];
@@ -44,8 +44,15 @@ export class DiscordBroadcast {
           }
         });
         event.reply("voiceChannels", voiceChannels);
-      });
+      };
+      const ready = this.client.readyTimestamp !== null;
+      if (!ready) {
+        this.client.once("ready", onReady);
+      }
       await this.client.login(token);
+      if (ready) {
+        onReady();
+      }
     } catch (err) {
       event.reply("error", `Error connecting to bot ${err.message}`);
     }
@@ -55,8 +62,10 @@ export class DiscordBroadcast {
     this.client.voice?.connections.forEach((connection) => {
       connection.disconnect();
     });
+    event.reply("disconnect");
     event.reply("voiceChannels", [{ id: "local", name: "This Computer" }]);
     event.reply("channelJoined", "local");
+    this.client.destroy();
   };
 
   handleJoinChannel = async (

@@ -1,24 +1,36 @@
 import { BrowserView, BrowserWindow, ipcMain } from "electron";
 import { PassThrough } from "stream";
+import EventEmitter from "events";
 
 /**
  * Manager to help create and manager browser views
  * This class is to be run on the main thread
  * For the render thread counterpart see `BrowserViewManagerPreload.ts`
  */
-export class BrowserViewManagerMain {
+export class BrowserViewManagerMain extends EventEmitter {
   window: BrowserWindow;
   views: Record<number, BrowserView>;
-  outputStream: PassThrough;
-  _streamReady: boolean;
+  _outputStream?: PassThrough;
 
   constructor(window: BrowserWindow) {
+    super();
     this.window = window;
     this.views = {};
-    this.outputStream = new PassThrough();
 
-    ipcMain.on("browserViewStream", async (_, data: Uint8Array) => {
-      this.outputStream.write(Buffer.from(data));
+    ipcMain.on("browserViewStreamStart", () => {
+      const stream = new PassThrough();
+      this._outputStream = stream;
+      this.emit("streamStart", stream);
+    });
+
+    ipcMain.on("browserViewStreamData", async (_, data: Uint8Array) => {
+      this._outputStream?.write(Buffer.from(data));
+    });
+
+    ipcMain.on("browserViewStreamEnd", () => {
+      this._outputStream?.end();
+      this._outputStream = undefined;
+      this.emit("streamEnd");
     });
 
     ipcMain.on(
@@ -37,6 +49,7 @@ export class BrowserViewManagerMain {
     ipcMain.on("removeBrowserView", (_, id: number) =>
       this.removeBrowserView(id)
     );
+    ipcMain.on("removeAllBrowserViews", () => this.removeAllBrowserViews());
     ipcMain.on("loadURL", (_, id: number, url: string) =>
       this.loadURL(id, url)
     );
@@ -92,6 +105,15 @@ export class BrowserViewManagerMain {
   removeBrowserView(id: number) {
     if (this.views[id]) {
       this.window.removeBrowserView(this.views[id]);
+      (this.views[id].webContents as any).destroy();
+      delete this.views[id];
+    }
+  }
+
+  removeAllBrowserViews() {
+    for (let id in this.views) {
+      this.window.removeBrowserView(this.views[id]);
+      (this.views[id].webContents as any).destroy();
       delete this.views[id];
     }
   }

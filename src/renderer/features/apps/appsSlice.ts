@@ -24,7 +24,7 @@ const initialState: AppsState = {
         title: "Tabletop Audio",
         icon: "https://images.tabletopaudio.com/touch-icons/icon-hd.png",
       },
-      spotify: {
+      youtube: {
         id: "youtube",
         url: "https://www.youtube.com/",
         title: "YouTube",

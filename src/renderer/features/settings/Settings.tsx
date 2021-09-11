@@ -8,6 +8,7 @@ import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import Stack from "@material-ui/core/Stack";
+import Link from "@material-ui/core/Link";
 
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
@@ -96,6 +97,16 @@ export function Settings({ open, onClose }: SettingsProps) {
               "Connect"
             )}
           </Button>
+          <Link
+            href="https://discord.com/developers/applications"
+            variant="caption"
+            textAlign="center"
+            target="_blank"
+            rel="noopener noreferrer"
+            py={2}
+          >
+            Where do I get my token?
+          </Link>
         </Stack>
       </DialogContent>
     </Dialog>

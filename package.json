@@ -1,6 +1,6 @@
 {
-  "name": "kenku-forge",
-  "productName": "kenku-forge",
+  "name": "kenku-fm",
+  "productName": "Kenku FM",
   "version": "1.0.0",
   "description": "My Electron application description",
   "main": ".webpack/main",

@@ -7,37 +7,52 @@ jobs:
     name: Build - Linux (Ubuntu)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@master
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@master
         with:
           node-version: 14
-      - name: install dependencies
+
+      - name: Install Dependencies
         run: yarn install
-      - name: build
+
+      - name: Build
         run: yarn run make
 
   build_on_mac:
     name: Build - MacOS
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@master
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@master
         with:
           node-version: 14
-      - name: install dependencies
+
+      - name: Install Dependencies
         run: yarn install
-      - name: build
+
+      - name: Build
         run: yarn run make
 
   build_on_win:
     name: Build - Windows
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@master
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@master
         with:
           node-version: 14
-      - name: install dependencies
+
+      - name: Install Dependencies
         run: yarn install
-      - name: build
+
+      - name: Build
         run: yarn run make

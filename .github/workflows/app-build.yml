@@ -18,12 +18,12 @@ jobs:
           scope: "@owlbear-rodeo"
 
       - name: Install Dependencies
-        run: yarn install --ignore-scripts --production --non-interactive
+        run: yarn install --ignore-scripts --non-interactive
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
 
       - name: Package
-        run: yarn package
+        run: yarn make
 
   build_on_mac:
     name: Build - MacOS
@@ -40,12 +40,12 @@ jobs:
           scope: "@owlbear-rodeo"
 
       - name: Install Dependencies
-        run: yarn install --ignore-scripts --production --non-interactive
+        run: yarn install --ignore-scripts --non-interactive
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
 
       - name: Package
-        run: yarn package
+        run: yarn make
 
   build_on_win:
     name: Build - Windows
@@ -62,9 +62,9 @@ jobs:
           scope: "@owlbear-rodeo"
 
       - name: Install Dependencies
-        run: yarn install --ignore-scripts --production --non-interactive
+        run: yarn install --ignore-scripts --non-interactive
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
 
       - name: Package
-        run: yarn package
+        run: yarn make

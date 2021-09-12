@@ -643,6 +643,20 @@
     mkdirp "^1.0.4"
     rimraf "^3.0.2"
 
+"@owlbear-rodeo/discord.js@^12.5.3":
+  version "12.5.3"
+  resolved "https://npm.pkg.github.com/download/@owlbear-rodeo/discord.js/12.5.3/0ccd7e21bc19e5aa80b11aec6f6f37937d4b32ce24ebaa989f77594df46becba#5b229b34d91f512444796ca35d2163c082a44006"
+  integrity sha512-b6ulI4sH70MKRf/JTtfHeyxv/I2i4x81Yd0FQQtlLiTUdf46d4TrSH3DE4dcu1TTJULHzy6EK7pbdfgGZiwzew==
+  dependencies:
+    "@discordjs/collection" "^0.1.6"
+    "@discordjs/form-data" "^3.0.1"
+    abort-controller "^3.0.0"
+    node-fetch "^2.6.1"
+    prism-media "^1.2.9"
+    setimmediate "^1.0.5"
+    tweetnacl "^1.0.3"
+    ws "^7.4.4"
+
 "@popperjs/core@^2.4.4":
   version "2.10.1"
   resolved "https://registry.npmjs.org/@popperjs/core/-/core-2.10.1.tgz"
@@ -2234,20 +2248,6 @@ dir-glob@^3.0.1:
   integrity sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==
   dependencies:
     path-type "^4.0.0"
-
-discord.js@12.5.3:
-  version "12.5.3"
-  resolved "https://registry.npmjs.org/discord.js/-/discord.js-12.5.3.tgz"
-  integrity sha512-D3nkOa/pCkNyn6jLZnAiJApw2N9XrIsXUAdThf01i7yrEuqUmDGc7/CexVWwEcgbQR97XQ+mcnqJpmJ/92B4Aw==
-  dependencies:
-    "@discordjs/collection" "^0.1.6"
-    "@discordjs/form-data" "^3.0.1"
-    abort-controller "^3.0.0"
-    node-fetch "^2.6.1"
-    prism-media "^1.2.9"
-    setimmediate "^1.0.5"
-    tweetnacl "^1.0.3"
-    ws "^7.4.4"
 
 dns-equal@^1.0.0:
   version "1.0.0"

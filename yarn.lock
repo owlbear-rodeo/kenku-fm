@@ -643,10 +643,10 @@
     mkdirp "^1.0.4"
     rimraf "^3.0.2"
 
-"@owlbear-rodeo/discord.js@^12.5.3":
-  version "12.5.3"
-  resolved "https://npm.pkg.github.com/download/@owlbear-rodeo/discord.js/12.5.3/0ccd7e21bc19e5aa80b11aec6f6f37937d4b32ce24ebaa989f77594df46becba#5b229b34d91f512444796ca35d2163c082a44006"
-  integrity sha512-b6ulI4sH70MKRf/JTtfHeyxv/I2i4x81Yd0FQQtlLiTUdf46d4TrSH3DE4dcu1TTJULHzy6EK7pbdfgGZiwzew==
+"@owlbear-rodeo/discord.js@^12.5.4":
+  version "12.5.4"
+  resolved "https://npm.pkg.github.com/download/@owlbear-rodeo/discord.js/12.5.4/a98ff98efef28eac4a2cb98ea0aec3283d186e4c1dfcc5b2fa2130331cc9e6fb#102c5a004653b29e194fe6287498cdcb569e005f"
+  integrity sha512-RnHwFCBA8YeDxvEvnQfqVEHMVeUfwEP2L1gtJ0/0y9Vw2l/kHHJJSwYLTgcXZI2CfljWarayHtImcMezmMEtJg==
   dependencies:
     "@discordjs/collection" "^0.1.6"
     "@discordjs/form-data" "^3.0.1"

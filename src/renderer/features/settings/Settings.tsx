@@ -84,7 +84,9 @@ export function Settings({ open, onClose }: SettingsProps) {
             onChange={handleDiscordTokenChange}
           />
           <Button
-            disabled={connection.status === "connecting"}
+            disabled={
+              connection.status === "connecting" || !settings.discordToken
+            }
             onClick={handleDiscordConnect}
             fullWidth
             variant="outlined"

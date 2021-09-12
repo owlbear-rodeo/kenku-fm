@@ -22,8 +22,8 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
 
-      - name: Build
-        run: yarn run make
+      - name: Package
+        run: yarn package
 
   build_on_mac:
     name: Build - MacOS
@@ -44,8 +44,8 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
 
-      - name: Build
-        run: yarn run make
+      - name: Package
+        run: yarn package
 
   build_on_win:
     name: Build - Windows
@@ -66,5 +66,5 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
 
-      - name: Build
-        run: yarn run make
+      - name: Package
+        run: yarn package

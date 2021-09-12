@@ -15,7 +15,10 @@ module.exports = {
     },
     {
       name: "@electron-forge/maker-deb",
-      config: {},
+      config: {
+        name: "kenku_fm",
+        productName: "Kenku FM"
+      },
     },
     {
       name: "@electron-forge/maker-rpm",

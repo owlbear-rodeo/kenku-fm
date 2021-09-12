@@ -1,4 +1,4 @@
-name: Deploy Application in Dev
+name: Build Kenku FM
 
 on: [workflow_dispatch]
 

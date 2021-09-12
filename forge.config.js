@@ -1,5 +1,6 @@
 module.exports = {
   packagerConfig: {
+    executableName: "kenku-fm",
     icon: "./src/assets/icon",
   },
   makers: [

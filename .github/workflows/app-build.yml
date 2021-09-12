@@ -16,7 +16,9 @@ jobs:
           node-version: 14
 
       - name: Install Dependencies
-        run: yarn install
+        run: yarn install --ignore-scripts --production --non-interactive
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
         run: yarn run make
@@ -34,7 +36,9 @@ jobs:
           node-version: 14
 
       - name: Install Dependencies
-        run: yarn install
+        run: yarn install --ignore-scripts --production --non-interactive
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
         run: yarn run make
@@ -52,7 +56,9 @@ jobs:
           node-version: 14
 
       - name: Install Dependencies
-        run: yarn install
+        run: yarn install --ignore-scripts --production --non-interactive
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
         run: yarn run make

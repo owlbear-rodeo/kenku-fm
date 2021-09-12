@@ -12,7 +12,7 @@ module.exports = {
     extensions: [".js", ".ts", ".jsx", ".tsx", ".css", ".json"],
   },
   externals: {
-    "discord.js": "commonjs2 discord.js",
+    "@owlbear-rodeo/discord.js": "commonjs2 @owlbear-rodeo/discord.js",
     opusscript: "commonjs2 opusscript",
   },
 };

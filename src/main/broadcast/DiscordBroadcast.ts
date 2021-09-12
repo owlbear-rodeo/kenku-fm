@@ -1,5 +1,5 @@
 import { ipcMain, app } from "electron";
-import Discord from "discord.js";
+import Discord from "@owlbear-rodeo/discord.js";
 
 export class DiscordBroadcast {
   client: Discord.Client;

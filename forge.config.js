@@ -46,7 +46,7 @@ module.exports = {
     [
       "@timfish/forge-externals-plugin",
       {
-        externals: ["opusscript", "discord.js"],
+        externals: ["opusscript", "@owlbear-rodeo/discord.js"],
         includeDeps: true,
       },
     ],

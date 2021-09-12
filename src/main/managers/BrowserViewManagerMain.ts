@@ -24,6 +24,7 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     this.views = {};
 
     ipcMain.on("browserViewStreamStart", () => {
+      this._outputStream?.end();
       const stream = new PassThrough();
       this._outputStream = stream;
       this.emit("streamStart", stream);

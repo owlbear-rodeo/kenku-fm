@@ -80,6 +80,9 @@ export function Settings({ open, onClose }: SettingsProps) {
             fullWidth
             variant="standard"
             autoComplete="off"
+            InputLabelProps={{
+              shrink: true,
+            }}
             value={settings.discordToken}
             onChange={handleDiscordTokenChange}
           />

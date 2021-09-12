@@ -17,4 +17,9 @@ export class PlaybackManager {
       this.discord.broadcast.end();
     });
   }
+
+  destroy() {
+    this.discord.destroy();
+    this.viewManager.destroy();
+  }
 }

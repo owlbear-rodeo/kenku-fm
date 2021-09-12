@@ -28,7 +28,7 @@ export class BrowserViewManagerPreload {
     ipcRenderer.send("browserViewStreamStart");
   }
 
-  unload() {
+  destroy() {
     for (let stream of Object.values(this._mediaStreams)) {
       for (let track of stream.getTracks()) {
         track.stop();

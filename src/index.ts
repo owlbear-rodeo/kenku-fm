@@ -22,7 +22,7 @@ const createWindow = (): void => {
     },
   });
 
-  new PlaybackManager(mainWindow);
+  const playbackManager = new PlaybackManager(mainWindow);
 
   // and load the index.html of the app.
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
@@ -30,6 +30,10 @@ const createWindow = (): void => {
   mainWindow.webContents.on("new-window", (event, url) => {
     event.preventDefault();
     shell.openExternal(url);
+  });
+
+  mainWindow.on("close", () => {
+    playbackManager.destroy();
   });
 };
 

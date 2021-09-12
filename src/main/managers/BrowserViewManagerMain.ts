@@ -23,47 +23,78 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     this.window = window;
     this.views = {};
 
-    ipcMain.on("browserViewStreamStart", () => {
-      this._outputStream?.end();
-      const stream = new PassThrough();
-      this._outputStream = stream;
-      this.emit("streamStart", stream);
-    });
-
-    ipcMain.on("browserViewStreamData", async (_, data: Uint8Array) => {
-      this._outputStream?.write(Buffer.from(data));
-    });
-
-    ipcMain.on("browserViewStreamEnd", () => {
-      this._outputStream?.end();
-      this._outputStream = undefined;
-      this.emit("streamEnd");
-    });
-
-    ipcMain.on(
-      "createBrowserView",
-      (
-        event,
-        url: string,
-        x: number,
-        y: number,
-        width: number,
-        height: number
-      ) => {
-        event.returnValue = this.createBrowserView(url, x, y, width, height);
-      }
-    );
-    ipcMain.on("removeBrowserView", (_, id: number) =>
-      this.removeBrowserView(id)
-    );
-    ipcMain.on("removeAllBrowserViews", () => this.removeAllBrowserViews());
-    ipcMain.on("loadURL", (_, id: number, url: string) =>
-      this.loadURL(id, url)
-    );
-    ipcMain.on("goForward", (_, id: number) => this.goForward(id));
-    ipcMain.on("goBack", (_, id: number) => this.goBack(id));
-    ipcMain.on("reload", (_, id: number) => this.reload(id));
+    ipcMain.on("browserViewStreamStart", this._handleBrowserViewStreamStart);
+    ipcMain.on("browserViewStreamData", this._handleBrowserViewStreamData);
+    ipcMain.on("browserViewStreamEnd", this._handleBrowserViewStreamEnd);
+    ipcMain.on("createBrowserView", this._handleCreateBrowserView);
+    ipcMain.on("removeBrowserView", this._handleRemoveBrowserView);
+    ipcMain.on("removeAllBrowserViews", this._handleRemoveAllBrowserViews);
+    ipcMain.on("loadURL", this._handleLoadURL);
+    ipcMain.on("goForward", this._handleGoForward);
+    ipcMain.on("goBack", this._handleGoBack);
+    ipcMain.on("reload", this._handleReload);
   }
+
+  destroy() {
+    ipcMain.off("browserViewStreamStart", this._handleBrowserViewStreamStart);
+    ipcMain.off("browserViewStreamData", this._handleBrowserViewStreamData);
+    ipcMain.off("browserViewStreamEnd", this._handleBrowserViewStreamEnd);
+    ipcMain.off("createBrowserView", this._handleCreateBrowserView);
+    ipcMain.off("removeBrowserView", this._handleRemoveBrowserView);
+    ipcMain.off("removeAllBrowserViews", this._handleRemoveAllBrowserViews);
+    ipcMain.off("loadURL", this._handleLoadURL);
+    ipcMain.off("goForward", this._handleGoForward);
+    ipcMain.off("goBack", this._handleGoBack);
+    ipcMain.off("reload", this._handleReload);
+    this._handleBrowserViewStreamEnd();
+    this.removeAllBrowserViews();
+  }
+
+  _handleBrowserViewStreamStart = () => {
+    this._outputStream?.end();
+    const stream = new PassThrough();
+    this._outputStream = stream;
+    this.emit("streamStart", stream);
+  };
+
+  _handleBrowserViewStreamData = async (
+    _: Electron.IpcMainEvent,
+    data: Uint8Array
+  ) => {
+    this._outputStream?.write(Buffer.from(data));
+  };
+
+  _handleBrowserViewStreamEnd = () => {
+    this._outputStream?.end();
+    this._outputStream = undefined;
+    this.emit("streamEnd");
+  };
+
+  _handleCreateBrowserView = (
+    event: Electron.IpcMainEvent,
+    url: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ) => {
+    event.returnValue = this.createBrowserView(url, x, y, width, height);
+  };
+
+  _handleRemoveBrowserView = (_: Electron.IpcMainEvent, id: number) =>
+    this.removeBrowserView(id);
+
+  _handleRemoveAllBrowserViews = () => this.removeAllBrowserViews();
+
+  _handleLoadURL = (_: Electron.IpcMainEvent, id: number, url: string) =>
+    this.loadURL(id, url);
+
+  _handleGoForward = (_: Electron.IpcMainEvent, id: number) =>
+    this.goForward(id);
+
+  _handleGoBack = (_: Electron.IpcMainEvent, id: number) => this.goBack(id);
+
+  _handleReload = (_: Electron.IpcMainEvent, id: number) => this.reload(id);
 
   /**
    * Create a new browser view and attach it to the current window

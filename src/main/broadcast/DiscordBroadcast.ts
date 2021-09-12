@@ -11,22 +11,19 @@ export class DiscordBroadcast {
     } else {
       throw Error("No voice available for discord client");
     }
-    ipcMain.on("connect", this.handleConnect);
-
-    ipcMain.on("disconnect", this.handleDisconnect);
-
-    ipcMain.on("joinChannel", this.handleJoinChannel);
-
-    app.on("window-all-closed", () => {
-      this.client.destroy();
-    });
-
-    app.on("quit", () => {
-      this.client.destroy();
-    });
+    ipcMain.on("connect", this._handleConnect);
+    ipcMain.on("disconnect", this._handleDisconnect);
+    ipcMain.on("joinChannel", this._handleJoinChannel);
   }
 
-  handleConnect = async (event: Electron.IpcMainEvent, token: string) => {
+  destroy() {
+    ipcMain.off("connect", this._handleConnect);
+    ipcMain.off("disconnect", this._handleDisconnect);
+    ipcMain.off("joinChannel", this._handleJoinChannel);
+    this.client.destroy();
+  }
+
+  _handleConnect = async (event: Electron.IpcMainEvent, token: string) => {
     if (!token) {
       event.reply("disconnect");
       event.reply("error", "Error connecting to bot: Invalid token");
@@ -59,7 +56,7 @@ export class DiscordBroadcast {
     }
   };
 
-  handleDisconnect = async (event: Electron.IpcMainEvent) => {
+  _handleDisconnect = async (event: Electron.IpcMainEvent) => {
     this.client.voice?.connections.forEach((connection) => {
       connection.disconnect();
     });
@@ -69,7 +66,7 @@ export class DiscordBroadcast {
     this.client.destroy();
   };
 
-  handleJoinChannel = async (
+  _handleJoinChannel = async (
     event: Electron.IpcMainEvent,
     channelId: string
   ) => {

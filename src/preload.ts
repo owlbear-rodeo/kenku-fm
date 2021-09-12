@@ -11,7 +11,7 @@ window.addEventListener("load", () => {
 
 window.addEventListener("beforeunload", () => {
   ipcRenderer.send("disconnect");
-  viewManager.unload();
+  viewManager.destroy();
 });
 
 const validChannels = [

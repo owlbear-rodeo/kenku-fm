@@ -1,0 +1,49 @@
+name: Deploy Application in Dev
+
+on: [workflow_dispatch]
+
+jobs:
+  build_on_linux:
+    name: Build - Linux (Ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${GITHUB_REF}
+      - uses: actions/setup-node@master
+        with:
+          node-version: 14
+      - name: install dependencies
+        run: yarn install
+      - name: build
+        run: yarn run make
+
+  build_on_mac:
+    name: Build - MacOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${GITHUB_REF}
+      - uses: actions/setup-node@master
+        with:
+          node-version: 14
+      - name: install dependencies
+        run: yarn install
+      - name: build
+        run: yarn run make
+
+  build_on_win:
+    name: Build - Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${GITHUB_REF}
+      - uses: actions/setup-node@master
+        with:
+          node-version: 14
+      - name: install dependencies
+        run: yarn install
+      - name: build
+        run: yarn run make

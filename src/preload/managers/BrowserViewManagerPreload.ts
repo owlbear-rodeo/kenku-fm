@@ -34,7 +34,6 @@ export class BrowserViewManagerPreload {
         track.stop();
       }
     }
-    this._audioContext.close();
     ipcRenderer.send("removeAllBrowserViews");
     ipcRenderer.send("browserViewStreamEnd");
   }

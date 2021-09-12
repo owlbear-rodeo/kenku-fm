@@ -29,7 +29,7 @@ export class DiscordBroadcast {
   handleConnect = async (event: Electron.IpcMainEvent, token: string) => {
     if (!token) {
       event.reply("disconnect");
-      event.reply("error", "Error connecting to bot: invalid token");
+      event.reply("error", "Error connecting to bot: Invalid token");
       return;
     }
 
@@ -54,7 +54,8 @@ export class DiscordBroadcast {
         onReady();
       }
     } catch (err) {
-      event.reply("error", `Error connecting to bot ${err.message}`);
+      event.reply("disconnect");
+      event.reply("error", `Error connecting to bot: ${err.message}`);
     }
   };
 

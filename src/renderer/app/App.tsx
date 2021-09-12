@@ -42,6 +42,7 @@ export function App() {
         autoHideDuration={6000}
         onClose={() => setMessage(undefined)}
         message={message}
+        sx={{ maxWidth: "192px" }}
       />
     </Stack>
   );

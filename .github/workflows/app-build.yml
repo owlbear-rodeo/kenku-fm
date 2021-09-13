@@ -66,5 +66,9 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
 
+      - run: $env:DEBUG='electron-forge:*';
+
       - name: Package
-        run: DEBUG='*' yarn make
+        run: yarn make
+        env:
+          DEBUG: electron-forge:*

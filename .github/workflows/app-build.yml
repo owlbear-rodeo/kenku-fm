@@ -49,7 +49,7 @@ jobs:
 
   build_on_win:
     name: Build - Windows
-    runs-on: windows-2016
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -67,4 +67,4 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
 
       - name: Package
-        run: yarn make
+        run: DEBUG='*' yarn make

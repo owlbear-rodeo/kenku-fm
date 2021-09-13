@@ -3,49 +3,49 @@ name: Build Kenku FM
 on: [workflow_dispatch]
 
 jobs:
-  build_on_linux:
-    name: Build - Linux (Ubuntu)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+  # build_on_linux:
+  #   name: Build - Linux (Ubuntu)
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
 
-      - name: Setup Node
-        uses: actions/setup-node@master
-        with:
-          node-version: 14
-          registry-url: "https://npm.pkg.github.com"
-          scope: "@owlbear-rodeo"
+  #     - name: Setup Node
+  #       uses: actions/setup-node@master
+  #       with:
+  #         node-version: 14
+  #         registry-url: "https://npm.pkg.github.com"
+  #         scope: "@owlbear-rodeo"
 
-      - name: Install Dependencies
-        run: yarn install --ignore-scripts --non-interactive
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
+  #     - name: Install Dependencies
+  #       run: yarn install --ignore-scripts --non-interactive
+  #       env:
+  #         NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
 
-      - name: Package
-        run: yarn make
+  #     - name: Package
+  #       run: yarn make
 
-  build_on_mac:
-    name: Build - MacOS
-    runs-on: macos-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+  # build_on_mac:
+  #   name: Build - MacOS
+  #   runs-on: macos-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
 
-      - name: Setup Node
-        uses: actions/setup-node@master
-        with:
-          node-version: 14
-          registry-url: "https://npm.pkg.github.com"
-          scope: "@owlbear-rodeo"
+  #     - name: Setup Node
+  #       uses: actions/setup-node@master
+  #       with:
+  #         node-version: 14
+  #         registry-url: "https://npm.pkg.github.com"
+  #         scope: "@owlbear-rodeo"
 
-      - name: Install Dependencies
-        run: yarn install --ignore-scripts --non-interactive
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
+  #     - name: Install Dependencies
+  #       run: yarn install --ignore-scripts --non-interactive
+  #       env:
+  #         NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
 
-      - name: Package
-        run: yarn make
+  #     - name: Package
+  #       run: yarn make
 
   build_on_win:
     name: Build - Windows
@@ -69,4 +69,4 @@ jobs:
       - name: Package App
         run: yarn make
         env:
-          DEBUG: electron-forge:*
+          DEBUG: '*'

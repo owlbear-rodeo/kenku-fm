@@ -135,7 +135,7 @@ jobs:
           scope: "@owlbear-rodeo"
 
       - name: Install Dependencies
-        run: yarn install --ignore-scripts --non-interactive
+        run: yarn install --non-interactive
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
 

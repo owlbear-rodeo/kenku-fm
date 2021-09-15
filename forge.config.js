@@ -27,6 +27,18 @@ module.exports = {
       config: {},
     },
   ],
+  publishers: [
+    {
+      name: '@electron-forge/publisher-github',
+      config: {
+        repository: {
+          owner: 'owlbear-rodeo',
+          name: 'kenku-fm'
+        },
+        prerelease: true
+      }
+    }
+  ],
   plugins: [
     [
       "@electron-forge/plugin-webpack",

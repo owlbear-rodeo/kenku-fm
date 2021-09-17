@@ -22,30 +22,10 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
 
-      - name: Package
+      - name: Package App
         run: yarn make
-  
-  publish_on_linux:
-    needs: build_on_linux
-    name: Publish - Linux (Ubuntu)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
 
-      - name: Setup Node
-        uses: actions/setup-node@master
-        with:
-          node-version: 14
-          registry-url: "https://npm.pkg.github.com"
-          scope: "@owlbear-rodeo"
-
-      - name: Install Dependencies
-        run: yarn install --ignore-scripts --non-interactive
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
-
-      - name: Package
+      - name: Publish
         run: yarn run publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -65,11 +45,11 @@ jobs:
           scope: "@owlbear-rodeo"
 
       - name: Install Dependencies
-        run: yarn install --ignore-scripts --non-interactive
+        run: yarn install --non-interactive
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
 
-      - name: Package
+      - name: Package App
         run: yarn make
         env:
           CSC_LINK: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
@@ -78,27 +58,7 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
 
-  publish_on_mac:
-    needs: build_on_mac
-    name: Publish - MacOS
-    runs-on: macos-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Setup Node
-        uses: actions/setup-node@master
-        with:
-          node-version: 14
-          registry-url: "https://npm.pkg.github.com"
-          scope: "@owlbear-rodeo"
-
-      - name: Install Dependencies
-        run: yarn install --ignore-scripts --non-interactive
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
-
-      - name: Package
+      - name: Publish
         run: yarn run publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -125,27 +85,7 @@ jobs:
       - name: Package App
         run: yarn make
 
-  publish_on_windows:
-    needs: build_on_windows
-    name: Publish - Windows
-    runs-on: windows-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Setup Node
-        uses: actions/setup-node@master
-        with:
-          node-version: 14
-          registry-url: "https://npm.pkg.github.com"
-          scope: "@owlbear-rodeo"
-
-      - name: Install Dependencies
-        run: yarn install --non-interactive
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
-
-      - name: Package
+      - name: Publish
         run: yarn run publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

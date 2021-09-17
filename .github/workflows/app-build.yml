@@ -71,6 +71,12 @@ jobs:
 
       - name: Package
         run: yarn make
+        env:
+          CSC_LINK: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          CSC_KEY_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          CI: "true"
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
 
   publish_on_mac:
     needs: build_on_mac

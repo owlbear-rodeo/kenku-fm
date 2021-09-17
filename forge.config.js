@@ -1,8 +1,15 @@
-module.exports = {
+const config = {
   packagerConfig: {
     executableName: "kenku-fm",
     out: "./out",
     icon: "./src/assets/icon",
+    osxSign: {
+      identity: "Developer ID Application: Mitchell McCaffrey (34SN58ZB9F)",
+      "hardened-runtime": true,
+      entitlements: "entitlements.plist",
+      "entitlements-inherit": "entitlements.plist",
+      "signature-flags": "library",
+    },
   },
   makers: [
     {
@@ -69,3 +76,30 @@ module.exports = {
     ],
   ],
 };
+
+function notarizeMaybe() {
+  if (process.platform !== "darwin") {
+    return;
+  }
+
+  if (!process.env.CI) {
+    console.log(`Not in CI, skipping notarization`);
+    return;
+  }
+
+  if (!process.env.APPLE_ID || !process.env.APPLE_ID_PASSWORD) {
+    console.warn(
+      "Should be notarizing, but environment variables APPLE_ID or APPLE_ID_PASSWORD are missing!"
+    );
+    return;
+  }
+
+  config.packagerConfig.osxNotarize = {
+    appleId: process.env.APPLE_ID,
+    appleIdPassword: process.env.APPLE_ID_PASSWORD,
+  };
+}
+
+notarizeMaybe();
+
+module.exports = config;

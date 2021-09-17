@@ -19,7 +19,7 @@ module.exports = {
       name: "@electron-forge/maker-deb",
       config: {
         name: "kenku_fm",
-        productName: "Kenku FM"
+        productName: "Kenku FM",
       },
     },
     {
@@ -29,15 +29,15 @@ module.exports = {
   ],
   publishers: [
     {
-      name: '@electron-forge/publisher-github',
+      name: "@electron-forge/publisher-github",
       config: {
         repository: {
-          owner: 'owlbear-rodeo',
-          name: 'kenku-fm'
+          owner: "owlbear-rodeo",
+          name: "kenku-fm",
         },
-        prerelease: true
-      }
-    }
+        prerelease: false,
+      },
+    },
   ],
   plugins: [
     [

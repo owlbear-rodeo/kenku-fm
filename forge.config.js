@@ -3,6 +3,7 @@ const config = {
     executableName: "kenku-fm",
     out: "./out",
     icon: "./src/assets/icon",
+    appBundleId: "com.kenku.fm",
     osxSign: {
       identity: "Developer ID Application: Mitchell McCaffrey (34SN58ZB9F)",
       "hardened-runtime": true,
@@ -95,6 +96,7 @@ function notarizeMaybe() {
   }
 
   config.packagerConfig.osxNotarize = {
+    appBundleId: "com.kenku.fm",
     appleId: process.env.APPLE_ID,
     appleIdPassword: process.env.APPLE_ID_PASSWORD,
   };

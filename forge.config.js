@@ -25,6 +25,12 @@ const config = {
       platforms: ["darwin"],
     },
     {
+      name: '@electron-forge/maker-dmg',
+      config: {
+        debug: true
+      }
+    },
+    {
       name: "@electron-forge/maker-deb",
       config: {
         name: "kenku_fm",
@@ -45,6 +51,7 @@ const config = {
           name: "kenku-fm",
         },
         prerelease: false,
+        draft: false
       },
     },
   ],

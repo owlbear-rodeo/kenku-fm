@@ -5,6 +5,7 @@ const config = {
     icon: "./src/assets/icon",
     appBundleId: "com.kenku.fm",
     osxSign: {
+      gatekeeperAssess: false,
       identity: "Developer ID Application: Mitchell McCaffrey (34SN58ZB9F)",
       "hardened-runtime": true,
       entitlements: "entitlements.plist",

@@ -99,6 +99,7 @@ function notarizeMaybe() {
     appBundleId: "com.kenku.fm",
     appleId: process.env.APPLE_ID,
     appleIdPassword: process.env.APPLE_ID_PASSWORD,
+    ascProvider: "34SN58ZB9F",
   };
 }
 

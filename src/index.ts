@@ -1,8 +1,15 @@
-import { app, BrowserWindow, session, shell } from "electron";
+import { app, BrowserWindow, session, shell, autoUpdater } from "electron";
 import { PlaybackManager } from "./main/managers/PlaybackManager";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
+
+if (app.isPackaged) {
+  const server = "https://kenku-fm-releases.vercel.app/";
+  const url = `${server}/update/${process.platform}/${app.getVersion()}`;
+
+  autoUpdater.setFeedURL({ url });
+}
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {

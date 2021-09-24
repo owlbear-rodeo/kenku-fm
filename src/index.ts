@@ -1,4 +1,5 @@
 import { app, BrowserWindow, session, shell, autoUpdater } from "electron";
+import { FaviconManager } from "./main/managers/FaviconManager";
 import { PlaybackManager } from "./main/managers/PlaybackManager";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
@@ -30,6 +31,7 @@ const createWindow = (): void => {
   });
 
   const playbackManager = new PlaybackManager(mainWindow);
+  const faviconManager = new FaviconManager();
 
   // and load the index.html of the app.
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
@@ -41,6 +43,7 @@ const createWindow = (): void => {
 
   mainWindow.on("close", () => {
     playbackManager.destroy();
+    faviconManager.destroy();
   });
 };
 

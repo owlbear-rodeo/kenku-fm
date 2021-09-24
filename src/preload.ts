@@ -1,5 +1,4 @@
 import { contextBridge, ipcRenderer } from "electron";
-import { LogoScrape } from "logo-scrape";
 
 import { BrowserViewManagerPreload } from "./preload/managers/BrowserViewManagerPreload";
 
@@ -71,22 +70,13 @@ const api = {
       ipcRenderer.removeAllListeners(channel);
     }
   },
-  appIcon: (url: string) => {
-    return LogoScrape.getLogos(url)
-      .then((icons: any) => {
-        // Find icon with the largest size
-        const sorted = icons.sort((a: any, b: any) => {
-          const aSize = parseInt((a.size || "0x0").split("x")[0] || 0);
-          const bSize = parseInt((b.size || "0x0").split("x")[0] || 0);
-          return bSize - aSize;
-        });
-        const urls = sorted.map((icon: any) => icon.url);
-        return urls[0] || "";
-      })
-      .catch((err: Error) => {
-        console.error(err);
-        return "";
+  appIcon: async (appURL: string) => {
+    ipcRenderer.send("APP_ICON_REQUEST", appURL);
+    return new Promise((resolve) => {
+      ipcRenderer.once("APP_ICON_RESPONSE", (_, icon) => {
+        resolve(icon);
       });
+    });
   },
 };
 

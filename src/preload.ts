@@ -70,13 +70,8 @@ const api = {
       ipcRenderer.removeAllListeners(channel);
     }
   },
-  appIcon: async (appURL: string) => {
-    ipcRenderer.send("APP_ICON_REQUEST", appURL);
-    return new Promise((resolve) => {
-      ipcRenderer.once("APP_ICON_RESPONSE", (_, icon) => {
-        resolve(icon);
-      });
-    });
+  appIcon: async (appURL: string): Promise<string> => {
+    return ipcRenderer.invoke("APP_ICON_REQUEST", appURL);
   },
 };
 

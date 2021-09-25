@@ -110,11 +110,11 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
   _handleRemoveAllBrowserViews = () => this.removeAllBrowserViews();
 
   _handleGetMediaSourceId = async (
-    _: Electron.IpcMainEvent,
+    event: Electron.IpcMainEvent,
     id: number
   ): Promise<string> => {
     if (this.views[id]) {
-      return this.views[id].webContents.getMediaSourceId();
+      return this.views[id].webContents.getMediaSourceId(event.sender);
     }
   };
 

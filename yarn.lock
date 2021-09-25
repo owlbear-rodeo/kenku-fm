@@ -2705,18 +2705,9 @@ electron-winstaller@^5.0.0:
     lodash.template "^4.2.2"
     temp "^0.9.0"
 
-electron@14.0.0:
-  version "14.0.0"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-14.0.0.tgz#a096484bfbf71d87fc0fa85a943a7869d6b9bf94"
-  integrity sha512-O6EI7L1BPIrTpEIFefjjmdbmSn9LtE4mmrv4dfpV4Mqaa8uKuNYQogwZPEvSwaBexb69eb1LQ25n+f+kBcjiRQ==
-  dependencies:
-    "@electron/get" "^1.0.1"
-    "@types/node" "^14.6.2"
-    extract-zip "^1.0.3"
-
 "electron@https://github.com/owlbear-rodeo/electron-releases#v14.0.0-kenku":
   version "14.0.0-kenku"
-  resolved "https://github.com/owlbear-rodeo/electron-releases#fb1ac9ad7e8165b17388e134a4af1c75babe2a1a"
+  resolved "https://github.com/owlbear-rodeo/electron-releases#b3a72ba8023bcee97babf04ab5f8ca1eea374538"
   dependencies:
     "@electron/get" "^1.0.1"
     "@types/node" "^14.6.2"

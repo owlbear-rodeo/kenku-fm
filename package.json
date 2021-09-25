@@ -6,8 +6,8 @@
   "main": ".webpack/main",
   "scripts": {
     "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
+    "package": "ELECTRON_MIRROR=https://github.com/owlbear-rodeo/electron-releases/releases/download/ electron-forge package",
+    "make": "ELECTRON_MIRROR=https://github.com/owlbear-rodeo/electron-releases/releases/download/ electron-forge make",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },

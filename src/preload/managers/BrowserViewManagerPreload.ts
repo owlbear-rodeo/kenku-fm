@@ -117,7 +117,6 @@ export class BrowserViewManagerPreload {
         "BROWSER_VIEW_GET_MEDIA_SOURCE_ID",
         viewId
       );
-      console.log("MEDIA", mediaSourceId);
       const streamConfig = {
         audio: {
           mandatory: {

@@ -23,29 +23,52 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     this.window = window;
     this.views = {};
 
-    ipcMain.on("browserViewStreamStart", this._handleBrowserViewStreamStart);
-    ipcMain.on("browserViewStreamData", this._handleBrowserViewStreamData);
-    ipcMain.on("browserViewStreamEnd", this._handleBrowserViewStreamEnd);
-    ipcMain.on("createBrowserView", this._handleCreateBrowserView);
-    ipcMain.on("removeBrowserView", this._handleRemoveBrowserView);
-    ipcMain.on("removeAllBrowserViews", this._handleRemoveAllBrowserViews);
-    ipcMain.on("loadURL", this._handleLoadURL);
-    ipcMain.on("goForward", this._handleGoForward);
-    ipcMain.on("goBack", this._handleGoBack);
-    ipcMain.on("reload", this._handleReload);
+    ipcMain.on("BROWSER_VIEW_STREAM_START", this._handleBrowserViewStreamStart);
+    ipcMain.on("BROWSER_VIEW_STREAM_DATA", this._handleBrowserViewStreamData);
+    ipcMain.on("BROWSER_VIEW_STREAM_END", this._handleBrowserViewStreamEnd);
+    ipcMain.handle(
+      "BROWSER_VIEW_CREATE_BROWSER_VIEW",
+      this._handleCreateBrowserView
+    );
+    ipcMain.on(
+      "BROWSER_VIEW_REMOVE_BROWSER_VIEW",
+      this._handleRemoveBrowserView
+    );
+    ipcMain.on(
+      "BROWSER_VIEW_REMOVE_ALL_BROWSER_VIEWS",
+      this._handleRemoveAllBrowserViews
+    );
+    ipcMain.handle(
+      "BROWSER_VIEW_GET_MEDIA_SOURCE_ID",
+      this._handleGetMediaSourceId
+    );
+    ipcMain.on("BROWSER_VIEW_LOAD_URL", this._handleLoadURL);
+    ipcMain.on("BROWSER_VIEW_GO_FORWARD", this._handleGoForward);
+    ipcMain.on("BROWSER_VIEW_GO_BACK", this._handleGoBack);
+    ipcMain.on("BROWSER_VIEW_RELOAD", this._handleReload);
   }
 
   destroy() {
-    ipcMain.off("browserViewStreamStart", this._handleBrowserViewStreamStart);
-    ipcMain.off("browserViewStreamData", this._handleBrowserViewStreamData);
-    ipcMain.off("browserViewStreamEnd", this._handleBrowserViewStreamEnd);
-    ipcMain.off("createBrowserView", this._handleCreateBrowserView);
-    ipcMain.off("removeBrowserView", this._handleRemoveBrowserView);
-    ipcMain.off("removeAllBrowserViews", this._handleRemoveAllBrowserViews);
-    ipcMain.off("loadURL", this._handleLoadURL);
-    ipcMain.off("goForward", this._handleGoForward);
-    ipcMain.off("goBack", this._handleGoBack);
-    ipcMain.off("reload", this._handleReload);
+    ipcMain.off(
+      "BROWSER_VIEW_STREAM_START",
+      this._handleBrowserViewStreamStart
+    );
+    ipcMain.off("BROWSER_VIEW_STREAM_DATA", this._handleBrowserViewStreamData);
+    ipcMain.off("BROWSER_VIEW_STREAM_END", this._handleBrowserViewStreamEnd);
+    ipcMain.removeHandler("BROWSER_VIEW_CREATE_BROWSER_VIEW");
+    ipcMain.off(
+      "BROWSER_VIEW_REMOVE_BROWSER_VIEW",
+      this._handleRemoveBrowserView
+    );
+    ipcMain.off(
+      "BROWSER_VIEW_REMOVE_ALL_BROWSER_VIEWS",
+      this._handleRemoveAllBrowserViews
+    );
+    ipcMain.removeHandler("BROWSER_VIEW_GET_MEDIA_SOURCE_ID");
+    ipcMain.off("BROWSER_VIEW_LOAD_URL", this._handleLoadURL);
+    ipcMain.off("BROWSER_VIEW_GO_FORWARD", this._handleGoForward);
+    ipcMain.off("BROWSER_VIEW_GO_BACK", this._handleGoBack);
+    ipcMain.off("BROWSER_VIEW_RELOAD", this._handleReload);
     this._handleBrowserViewStreamEnd();
     this.removeAllBrowserViews();
   }
@@ -70,21 +93,30 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     this.emit("streamEnd");
   };
 
-  _handleCreateBrowserView = (
-    event: Electron.IpcMainEvent,
+  _handleCreateBrowserView = async (
+    _: Electron.IpcMainEvent,
     url: string,
     x: number,
     y: number,
     width: number,
     height: number
   ) => {
-    event.returnValue = this.createBrowserView(url, x, y, width, height);
+    return this.createBrowserView(url, x, y, width, height);
   };
 
   _handleRemoveBrowserView = (_: Electron.IpcMainEvent, id: number) =>
     this.removeBrowserView(id);
 
   _handleRemoveAllBrowserViews = () => this.removeAllBrowserViews();
+
+  _handleGetMediaSourceId = async (
+    _: Electron.IpcMainEvent,
+    id: number
+  ): Promise<string> => {
+    if (this.views[id]) {
+      return this.views[id].webContents.getMediaSourceId();
+    }
+  };
 
   _handleLoadURL = (_: Electron.IpcMainEvent, id: number, url: string) =>
     this.loadURL(id, url);
@@ -109,12 +141,7 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     width: number,
     height: number
   ): number {
-    const view = new BrowserView({
-      webPreferences: {
-        contextIsolation: true,
-        worldSafeExecuteJavaScript: true,
-      },
-    });
+    const view = new BrowserView();
     this.window.setBrowserView(view);
 
     view.setBounds({

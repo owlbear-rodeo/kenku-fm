@@ -23,17 +23,22 @@ export function View({ url, setURL }: ViewProps) {
   });
 
   useEffect(() => {
-    const id = window.kenku.createBrowserView(
-      urlRef.current,
-      drawerWidth,
-      showControls ? 73 : 0,
-      window.innerWidth - drawerWidth,
-      window.innerHeight
-    );
-    setViewId(id);
+    let id: number | undefined = undefined;
+    window.kenku
+      .createBrowserView(
+        urlRef.current,
+        drawerWidth,
+        showControls ? 73 : 0,
+        window.innerWidth - drawerWidth,
+        window.innerHeight
+      )
+      .then((_id) => {
+        id = _id;
+        setViewId(id);
+      });
 
     return () => {
-      window.kenku.removeBrowserView(id);
+      id && window.kenku.removeBrowserView(id);
     };
   }, [showControls]);
 

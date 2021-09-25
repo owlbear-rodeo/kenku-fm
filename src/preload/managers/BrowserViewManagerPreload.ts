@@ -1,4 +1,4 @@
-import { ipcRenderer, desktopCapturer } from "electron";
+import { ipcRenderer } from "electron";
 
 /**
  * Manager to help create and manager browser views
@@ -25,7 +25,7 @@ export class BrowserViewManagerPreload {
 
   load() {
     this._setupPlayback();
-    ipcRenderer.send("browserViewStreamStart");
+    ipcRenderer.send("BROWSER_VIEW_STREAM_START");
   }
 
   destroy() {
@@ -34,19 +34,19 @@ export class BrowserViewManagerPreload {
         track.stop();
       }
     }
-    ipcRenderer.send("removeAllBrowserViews");
-    ipcRenderer.send("browserViewStreamEnd");
+    ipcRenderer.send("BROWSER_VIEW_REMOVE_ALL_BROWSER_VIEWS");
+    ipcRenderer.send("BROWSER_VIEW_STREAM_END");
   }
 
-  createBrowserView(
+  async createBrowserView(
     url: string,
     x: number,
     y: number,
     width: number,
     height: number
-  ): number {
-    const viewId = ipcRenderer.sendSync(
-      "createBrowserView",
+  ): Promise<number> {
+    const viewId = await ipcRenderer.invoke(
+      "BROWSER_VIEW_CREATE_BROWSER_VIEW",
       url,
       x,
       y,
@@ -58,7 +58,7 @@ export class BrowserViewManagerPreload {
   }
 
   removeBrowserView(id: number) {
-    ipcRenderer.send("removeBrowserView", id);
+    ipcRenderer.send("BROWSER_VIEW_REMOVE_BROWSER_VIEW", id);
     if (this._mediaStreams[id]) {
       for (let track of this._mediaStreams[id].getTracks()) {
         track.stop();
@@ -68,19 +68,19 @@ export class BrowserViewManagerPreload {
   }
 
   loadURL(id: number, url: string) {
-    ipcRenderer.send("loadURL", id, url);
+    ipcRenderer.send("BROWSER_VIEW_LOAD_URL", id, url);
   }
 
   goForward(id: number) {
-    ipcRenderer.send("goForward", id);
+    ipcRenderer.send("BROWSER_VIEW_GO_FORWARD", id);
   }
 
   goBack(id: number) {
-    ipcRenderer.send("goBack", id);
+    ipcRenderer.send("BROWSER_VIEW_GO_BACK", id);
   }
 
   reload(id: number) {
-    ipcRenderer.send("reload", id);
+    ipcRenderer.send("BROWSER_VIEW_RELOAD", id);
   }
 
   /**
@@ -103,7 +103,7 @@ export class BrowserViewManagerPreload {
     const recorder = new MediaRecorder(destination.stream);
     recorder.ondataavailable = (event) => {
       event.data.arrayBuffer().then((buffer) => {
-        ipcRenderer.send("browserViewStreamData", buffer);
+        ipcRenderer.send("BROWSER_VIEW_STREAM_DATA", buffer);
       });
     };
     recorder.start(300);
@@ -113,8 +113,11 @@ export class BrowserViewManagerPreload {
 
   async _startStream(viewId: number) {
     try {
-      const mediaSourceId =
-        await desktopCapturer.getMediaSourceIdForWebContents(viewId);
+      const mediaSourceId = await ipcRenderer.invoke(
+        "BROWSER_VIEW_GET_MEDIA_SOURCE_ID",
+        viewId
+      );
+      console.log("MEDIA", mediaSourceId);
       const streamConfig = {
         audio: {
           mandatory: {

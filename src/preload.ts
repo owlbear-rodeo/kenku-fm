@@ -41,7 +41,7 @@ const api = {
     y: number,
     width: number,
     height: number
-  ): number => {
+  ): Promise<number> => {
     return viewManager.createBrowserView(url, x, y, width, height);
   },
   removeBrowserView: (id: number) => {

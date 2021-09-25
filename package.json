@@ -40,7 +40,7 @@
     "@typescript-eslint/parser": "^4.0.1",
     "@vercel/webpack-asset-relocator-loader": "1.7.0",
     "css-loader": "^6.0.0",
-    "electron": "11.0.0-beta.1",
+    "electron": "https://github.com/owlbear-rodeo/electron-releases#v14.0.0-kenku",
     "eslint": "^7.6.0",
     "eslint-plugin-import": "^2.20.0",
     "fork-ts-checker-webpack-plugin": "^6.0.1",

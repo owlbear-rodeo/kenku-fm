@@ -21,10 +21,10 @@ const config = {
       },
     },
     {
-      name: '@electron-forge/maker-dmg',
+      name: "@electron-forge/maker-dmg",
       config: {
-        debug: true
-      }
+        debug: true,
+      },
     },
     {
       name: "@electron-forge/maker-deb",
@@ -47,7 +47,7 @@ const config = {
           name: "kenku-fm",
         },
         prerelease: false,
-        draft: false
+        draft: false,
       },
     },
   ],

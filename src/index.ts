@@ -1,6 +1,7 @@
 import { app, BrowserWindow, session, shell, autoUpdater } from "electron";
 import { FaviconManager } from "./main/managers/FaviconManager";
 import { PlaybackManager } from "./main/managers/PlaybackManager";
+import "./menu";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;

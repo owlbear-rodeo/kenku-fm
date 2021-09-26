@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import Box from "@material-ui/core/Box";
-import Drawer from "@material-ui/core/Drawer";
-import IconButton from "@material-ui/core/IconButton";
-import SettingsIcon from "@material-ui/icons/SettingsRounded";
-import { Toolbar, Stack, Typography, Link } from "@material-ui/core";
+import Box from "@mui/material/Box";
+import Drawer from "@mui/material/Drawer";
+import IconButton from "@mui/material/IconButton";
+import SettingsIcon from "@mui/icons-material/SettingsRounded";
+import { Toolbar, Stack, Typography, Link } from "@mui/material";
 import { OutputListItems } from "../features/output/OutputListItems";
 import { AppListItems } from "../features/apps/AppListItems";
 import { Settings } from "../features/settings/Settings";

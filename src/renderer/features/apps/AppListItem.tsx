@@ -1,14 +1,12 @@
 import React, { useState } from "react";
-import {
-  ListItemButton,
-  ListItemText,
-  IconButton,
-  Box,
-  Popover,
-  List,
-  ListItem,
-} from "@material-ui/core";
-import MoreIcon from "@material-ui/icons/MoreHorizRounded";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemText from "@mui/material/ListItemText";
+import IconButton from "@mui/material/IconButton";
+import Box from "@mui/material/Box";
+import Popover from "@mui/material/Popover";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import MoreIcon from "@mui/icons-material/MoreHorizRounded";
 
 import { useDispatch } from "react-redux";
 import { App, selectApp, removeApp } from "./appsSlice";

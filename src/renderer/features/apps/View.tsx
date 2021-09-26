@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Divider, IconButton, Stack, TextField } from "@material-ui/core";
-import {
-  ArrowBackRounded,
-  ArrowForwardRounded,
-  RefreshRounded,
-} from "@material-ui/icons";
+import Divider from "@mui/material/Divider";
+import IconButton from "@mui/material/IconButton";
+import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+
+import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
+import ArrowForwardRounded from "@mui/icons-material/ArrowForwardRounded";
+import RefreshRounded from "@mui/icons-material/RefreshRounded";
 
 import { drawerWidth } from "../../common/ActionDrawer";
 

@@ -1,9 +1,10 @@
 import React from "react";
 import { render } from "react-dom";
 import { Provider } from "react-redux";
-import CssBaseline from "@material-ui/core/CssBaseline";
-import { ThemeProvider } from "@material-ui/core/styles";
-import { Backdrop, CircularProgress } from "@material-ui/core";
+import CssBaseline from "@mui/material/CssBaseline";
+import ThemeProvider from "@mui/material/styles/ThemeProvider";
+import Backdrop from "@mui/material/Backdrop";
+import CircularProgress from "@mui/material/CircularProgress";
 import { PersistGate } from "redux-persist/integration/react";
 
 import { App } from "./app/App";

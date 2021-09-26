@@ -1,14 +1,13 @@
-import {
-  Collapse,
-  Divider,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-} from "@material-ui/core";
-import ExpandLess from "@material-ui/icons/ExpandLessRounded";
-import ExpandMore from "@material-ui/icons/ExpandMoreRounded";
-import VolumeIcon from "@material-ui/icons/VolumeUpRounded";
+import Collapse from "@mui/material/Collapse";
+import Divider from "@mui/material/Divider";
+import List from "@mui/material/List";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemText from "@mui/material/ListItemText";
+import ListItemIcon from "@mui/material/ListItemIcon";
+
+import ExpandLess from "@mui/icons-material/ExpandLessRounded";
+import ExpandMore from "@mui/icons-material/ExpandMoreRounded";
+import VolumeIcon from "@mui/icons-material/VolumeUpRounded";
 
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";

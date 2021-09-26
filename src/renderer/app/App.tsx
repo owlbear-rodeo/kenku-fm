@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-// import 'typeface-roboto/index.css';
 
-import { Snackbar, Stack } from "@material-ui/core";
+import Snackbar from "@mui/material/Snackbar";
+import Stack from "@mui/material/Stack";
 import { ActionDrawer } from "../common/ActionDrawer";
 
 import { RootState } from "./store";

@@ -103,7 +103,7 @@ export function Settings({ open, onClose }: SettingsProps) {
             )}
           </Button>
           <Link
-            href="https://discord.com/developers/applications"
+            href="https://kenku.fm/getting-started#discord"
             variant="caption"
             textAlign="center"
             target="_blank"

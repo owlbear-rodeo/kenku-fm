@@ -17,21 +17,8 @@ export interface AppsState {
 
 const initialState: AppsState = {
   apps: {
-    byId: {
-      tabletopaudio: {
-        id: "tabletopaudio",
-        url: "https://tabletopaudio.com/",
-        title: "Tabletop Audio",
-        icon: "https://images.tabletopaudio.com/touch-icons/icon-hd.png",
-      },
-      youtube: {
-        id: "youtube",
-        url: "https://www.youtube.com/",
-        title: "YouTube",
-        icon: "https://www.youtube.com/s/desktop/8a85ed3f/img/favicon_144x144.png",
-      },
-    },
-    allIds: ["tabletopaudio", "youtube"],
+    byId: {},
+    allIds: [],
   },
 };
 

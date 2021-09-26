@@ -3,32 +3,32 @@ name: Build Kenku FM
 on: [workflow_dispatch]
 
 jobs:
-  build_on_linux:
-    name: Build - Linux (Ubuntu)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+  # build_on_linux:
+  #   name: Build - Linux (Ubuntu)
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
 
-      - name: Setup Node
-        uses: actions/setup-node@master
-        with:
-          node-version: 14
-          registry-url: "https://npm.pkg.github.com"
-          scope: "@owlbear-rodeo"
+  #     - name: Setup Node
+  #       uses: actions/setup-node@master
+  #       with:
+  #         node-version: 14
+  #         registry-url: "https://npm.pkg.github.com"
+  #         scope: "@owlbear-rodeo"
 
-      - name: Install Dependencies
-        run: yarn install --ignore-scripts --non-interactive
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
+  #     - name: Install Dependencies
+  #       run: yarn install --ignore-scripts --non-interactive
+  #       env:
+  #         NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
 
-      - name: Package App
-        run: yarn make
+  #     - name: Package App
+  #       run: yarn make
 
-      - name: Publish
-        run: yarn run publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Publish
+  #       run: yarn run publish
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build_on_mac:
     name: Build - MacOS
@@ -49,11 +49,22 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
 
+      - name: Codesign executable
+        run: |
+          echo $MACOS_CERTIFICATE | base64 —decode > certificate.p12
+          security create-keychain -p $KEYCHAIN_PASSWORD build.keychain 
+          security default-keychain -s build.keychain
+          security unlock-keychain -p $KEYCHAIN_PASSWORD build.keychain
+          security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PASSWORD build.keychain
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.P12_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+
       - name: Package App
         run: yarn make
         env:
-          CSC_LINK: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-          CSC_KEY_PASSWORD: ${{ secrets.P12_PASSWORD }}
           CI: "true"
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
@@ -63,29 +74,29 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build_on_windows:
-    name: Build - Windows
-    runs-on: windows-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+  # build_on_windows:
+  #   name: Build - Windows
+  #   runs-on: windows-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
 
-      - name: Setup Node
-        uses: actions/setup-node@master
-        with:
-          node-version: 14
-          registry-url: "https://npm.pkg.github.com"
-          scope: "@owlbear-rodeo"
+  #     - name: Setup Node
+  #       uses: actions/setup-node@master
+  #       with:
+  #         node-version: 14
+  #         registry-url: "https://npm.pkg.github.com"
+  #         scope: "@owlbear-rodeo"
 
-      - name: Install Dependencies
-        run: yarn install --non-interactive
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
+  #     - name: Install Dependencies
+  #       run: yarn install --non-interactive
+  #       env:
+  #         NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
 
-      - name: Package App
-        run: yarn make
+  #     - name: Package App
+  #       run: yarn make
 
-      - name: Publish
-        run: yarn run publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Publish
+  #       run: yarn run publish
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

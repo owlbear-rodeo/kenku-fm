@@ -55,7 +55,7 @@
     "@material-ui/core": "^5.0.0-beta.5",
     "@material-ui/icons": "^5.0.0-beta.5",
     "@owlbear-rodeo/discord.js": "^12.5.4",
-    "@owlbear-rodeo/page-icon": "^0.5.0",
+    "@owlbear-rodeo/page-icon": "^0.5.1",
     "@reduxjs/toolkit": "^1.6.1",
     "electron-squirrel-startup": "^1.0.0",
     "env-cmd": "^10.1.0",

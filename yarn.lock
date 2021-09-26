@@ -774,10 +774,10 @@
     tweetnacl "^1.0.3"
     ws "^7.4.4"
 
-"@owlbear-rodeo/page-icon@^0.5.0":
-  version "0.5.0"
-  resolved "https://npm.pkg.github.com/download/@owlbear-rodeo/page-icon/0.5.0/08dde08be6faccfd841a3c3dd6272093307e0149828330982ae720b51afe0ea1#3ea573150340f87a1a8bd6aad5524e05ef622b2f"
-  integrity sha512-lR+RhZl1A3+oVFNc8hdmJusuAVTN6Nsu8YpLXpxw7n4XXFjjaGQseuVqRcjv8FEjvpiP1XvM4aApF/FNkzKslA==
+"@owlbear-rodeo/page-icon@^0.5.1":
+  version "0.5.1"
+  resolved "https://npm.pkg.github.com/download/@owlbear-rodeo/page-icon/0.5.1/1c17bfa4482442671d7910b9ac7a2606868d88d0e79b20c8819245d55c1b9a34#53bae4a2d198047459e537b85e4bf0e7c06b7cb7"
+  integrity sha512-NPPTjQBNlOeSsvXHkRtXOWST3X2jTjwvLzoxqaWZdBNIOnxic36mOFs85q8eU1OcnAxsdWa+/jVPhniWCwIUUA==
   dependencies:
     axios "^0.21.1"
     cheerio "^1.0.0-rc.5"

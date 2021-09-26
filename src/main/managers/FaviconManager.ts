@@ -15,7 +15,7 @@ export class FaviconManager {
     appURL: string
   ): Promise<string> => {
     try {
-      const icon = await pageIcon(appURL);
+      const icon = await pageIcon(appURL, { metaTags: false });
       return icon.source;
     } catch {
       return "";

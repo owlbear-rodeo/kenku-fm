@@ -34,6 +34,20 @@ jobs:
     name: Build - MacOS
     runs-on: macos-latest
     steps:
+      - name: Codesign executable
+        run: |
+          echo $MACOS_CERTIFICATE > ./base64certificate.txt
+          base64 —-decode -i ./base64certificate.txt -o ./certificate.p12
+          security create-keychain -p $KEYCHAIN_PASSWORD build.keychain 
+          security default-keychain -s build.keychain
+          security unlock-keychain -p $KEYCHAIN_PASSWORD build.keychain
+          security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PASSWORD build.keychain
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.P12_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -48,20 +62,6 @@ jobs:
         run: yarn install --non-interactive
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
-
-      - name: Codesign executable
-        run: |
-          echo $MACOS_CERTIFICATE > ./base64certificate.txt
-          base64 —-decode -i ./base64certificate.txt -o ./certificate.p12
-          security create-keychain -p $KEYCHAIN_PASSWORD build.keychain 
-          security default-keychain -s build.keychain
-          security unlock-keychain -p $KEYCHAIN_PASSWORD build.keychain
-          security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PASSWORD build.keychain
-        env:
-          MACOS_CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-          MACOS_CERTIFICATE_PWD: ${{ secrets.P12_PASSWORD }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
 
       - name: Package App
         run: yarn make

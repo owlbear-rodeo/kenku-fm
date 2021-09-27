@@ -85,6 +85,7 @@ export function Settings({ open, onClose }: SettingsProps) {
             }}
             value={settings.discordToken}
             onChange={handleDiscordTokenChange}
+            disabled={connection.status !== "disconnected"}
           />
           <Button
             disabled={

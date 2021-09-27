@@ -48,8 +48,9 @@ const createWindow = (): void => {
 
 const spoofUserAgent = () => {
   session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    // Google blocks sign in on CEF so spoof Firefox
     details.requestHeaders["User-Agent"] =
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36";
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:92.0) Gecko/20100101 Firefox/92.0";
     callback({ cancel: false, requestHeaders: details.requestHeaders });
   });
 };

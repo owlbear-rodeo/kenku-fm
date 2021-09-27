@@ -26,18 +26,18 @@ export function OutputListItems() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    window.kenku.on("voiceChannels", (args) => {
+    window.kenku.on("DISCORD_VOICE_CHANNELS", (args) => {
       const voiceChannels = args[0];
       dispatch(setVoiceChannels(voiceChannels));
     });
 
-    window.kenku.on("channelLeft", () => {
+    window.kenku.on("DISCORD_CHANNEL_LEFT", () => {
       dispatch(setCurrentChannel("local"));
     });
 
     return () => {
-      window.kenku.removeAllListeners("voiceChannels");
-      window.kenku.removeAllListeners("channelLeft");
+      window.kenku.removeAllListeners("DISCORD_VOICE_CHANNELS");
+      window.kenku.removeAllListeners("DISCORD_CHANNEL_LEFT");
     };
   }, [dispatch]);
 

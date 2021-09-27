@@ -11,36 +11,36 @@ export class DiscordBroadcast {
     } else {
       throw Error("No voice available for discord client");
     }
-    ipcMain.on("connect", this._handleConnect);
-    ipcMain.on("disconnect", this._handleDisconnect);
-    ipcMain.on("joinChannel", this._handleJoinChannel);
+    ipcMain.on("DISCORD_CONNECT", this._handleConnect);
+    ipcMain.on("DISCORD_DISCONNECT", this._handleDisconnect);
+    ipcMain.on("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
   }
 
   destroy() {
-    ipcMain.off("connect", this._handleConnect);
-    ipcMain.off("disconnect", this._handleDisconnect);
-    ipcMain.off("joinChannel", this._handleJoinChannel);
+    ipcMain.off("DISCORD_CONNECT", this._handleConnect);
+    ipcMain.off("DISCORD_DISCONNECT", this._handleDisconnect);
+    ipcMain.off("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
     this.client.destroy();
   }
 
   _handleConnect = async (event: Electron.IpcMainEvent, token: string) => {
     if (!token) {
-      event.reply("disconnect");
-      event.reply("error", "Error connecting to bot: Invalid token");
+      event.reply("DISCORD_DISCONNECTED");
+      event.reply("ERROR", "Error connecting to bot: Invalid token");
       return;
     }
 
     try {
       const onReady = () => {
-        event.reply("ready");
-        event.reply("message", "Connected");
+        event.reply("DISCORD_READY");
+        event.reply("MESSAGE", "Connected");
         const voiceChannels = [{ id: "local", name: "This Computer" }];
         this.client.channels.cache.forEach((channel) => {
           if (channel.type === "voice") {
             voiceChannels.push({ id: channel.id, name: (channel as any).name });
           }
         });
-        event.reply("voiceChannels", voiceChannels);
+        event.reply("DISCORD_VOICE_CHANNELS", voiceChannels);
       };
       const ready = this.client.readyTimestamp !== null;
       if (!ready) {
@@ -51,8 +51,8 @@ export class DiscordBroadcast {
         onReady();
       }
     } catch (err) {
-      event.reply("disconnect");
-      event.reply("error", `Error connecting to bot: ${err.message}`);
+      event.reply("DISCORD_DISCONNECTED");
+      event.reply("ERROR", `Error connecting to bot: ${err.message}`);
     }
   };
 
@@ -60,9 +60,11 @@ export class DiscordBroadcast {
     this.client.voice?.connections.forEach((connection) => {
       connection.disconnect();
     });
-    event.reply("disconnect");
-    event.reply("voiceChannels", [{ id: "local", name: "This Computer" }]);
-    event.reply("channelJoined", "local");
+    event.reply("DISCORD_DISCONNECTED");
+    event.reply("DISCORD_VOICE_CHANNELS", [
+      { id: "local", name: "This Computer" },
+    ]);
+    event.reply("DISCORD_CHANNEL_JOINED", "local");
     this.client.destroy();
   };
 
@@ -79,9 +81,9 @@ export class DiscordBroadcast {
         const connection = await channel.join();
         connection.play(this.broadcast);
         connection.once("disconnect", () => {
-          event.reply("channelLeft", channelId);
+          event.reply("DISCORD_CHANNEL_LEFT", channelId);
         });
-        event.reply("channelJoined", channelId);
+        event.reply("DISCORD_CHANNEL_JOINED", channelId);
       }
     }
   };

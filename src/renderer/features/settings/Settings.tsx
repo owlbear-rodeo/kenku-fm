@@ -49,16 +49,16 @@ export function Settings({ open, onClose }: SettingsProps) {
   }, []);
 
   useEffect(() => {
-    window.kenku.on("ready", () => {
+    window.kenku.on("DISCORD_READY", () => {
       dispatch(setStatus("ready"));
     });
-    window.kenku.on("disconnect", () => {
+    window.kenku.on("DISCORD_DISCONNECTED", () => {
       dispatch(setStatus("disconnected"));
     });
 
     return () => {
-      window.kenku.removeAllListeners("ready");
-      window.kenku.removeAllListeners("disconnect");
+      window.kenku.removeAllListeners("DISCORD_READY");
+      window.kenku.removeAllListeners("DISCORD_DISCONNECTED");
     };
   }, [dispatch]);
 

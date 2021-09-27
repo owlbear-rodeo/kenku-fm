@@ -13,26 +13,36 @@ window.addEventListener("beforeunload", () => {
   viewManager.destroy();
 });
 
-const validChannels = [
-  "error",
-  "message",
-  "info",
-  "ready",
-  "disconnect",
-  "voiceChannels",
-  "channelJoined",
-  "channelLeft",
+type Channel =
+  | "ERROR"
+  | "MESSAGE"
+  | "INFO"
+  | "DISCORD_READY"
+  | "DISCORD_DISCONNECTED"
+  | "DISCORD_VOICE_CHANNELS"
+  | "DISCORD_CHANNEL_JOINED"
+  | "DISCORD_CHANNEL_LEFT";
+
+const validChannels: Channel[] = [
+  "ERROR",
+  "MESSAGE",
+  "INFO",
+  "DISCORD_READY",
+  "DISCORD_DISCONNECTED",
+  "DISCORD_VOICE_CHANNELS",
+  "DISCORD_CHANNEL_JOINED",
+  "DISCORD_CHANNEL_LEFT",
 ];
 
 const api = {
   connect: (token: string) => {
-    ipcRenderer.send("connect", token);
+    ipcRenderer.send("DISCORD_CONNECT", token);
   },
   disconnect: () => {
-    ipcRenderer.send("disconnect");
+    ipcRenderer.send("DISCORD_DISCONNECT");
   },
   joinChannel: (channelId: string) => {
-    ipcRenderer.send("joinChannel", channelId);
+    ipcRenderer.send("DISCORD_JOIN_CHANNEL", channelId);
     viewManager.setLoopback(channelId === "local");
   },
   createBrowserView: (
@@ -59,13 +69,13 @@ const api = {
   reload: (id: number) => {
     viewManager.reload(id);
   },
-  on: (channel: string, callback: (...args: any[]) => any) => {
+  on: (channel: Channel, callback: (...args: any[]) => any) => {
     if (validChannels.includes(channel)) {
       const newCallback = (_: any, ...args: any[]) => callback(args);
       ipcRenderer.on(channel, newCallback);
     }
   },
-  removeAllListeners: (channel: string) => {
+  removeAllListeners: (channel: Channel) => {
     if (validChannels.includes(channel)) {
       ipcRenderer.removeAllListeners(channel);
     }

@@ -16,18 +16,18 @@ export function App() {
   const [message, setMessage] = useState<string>();
 
   useEffect(() => {
-    window.kenku.on("message", (args) => {
+    window.kenku.on("MESSAGE", (args) => {
       const message = args[0];
       setMessage(message);
     });
-    window.kenku.on("error", (args) => {
+    window.kenku.on("ERROR", (args) => {
       const error = args[0];
       setMessage(error);
     });
 
     return () => {
-      window.kenku.removeAllListeners("message");
-      window.kenku.removeAllListeners("error");
+      window.kenku.removeAllListeners("MESSAGE");
+      window.kenku.removeAllListeners("ERROR");
     };
   }, []);
 

@@ -26,7 +26,7 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     ipcMain.on("BROWSER_VIEW_STREAM_START", this._handleBrowserViewStreamStart);
     ipcMain.on("BROWSER_VIEW_STREAM_DATA", this._handleBrowserViewStreamData);
     ipcMain.on("BROWSER_VIEW_STREAM_END", this._handleBrowserViewStreamEnd);
-    ipcMain.handle(
+    ipcMain.on(
       "BROWSER_VIEW_CREATE_BROWSER_VIEW",
       this._handleCreateBrowserView
     );
@@ -55,7 +55,10 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     );
     ipcMain.off("BROWSER_VIEW_STREAM_DATA", this._handleBrowserViewStreamData);
     ipcMain.off("BROWSER_VIEW_STREAM_END", this._handleBrowserViewStreamEnd);
-    ipcMain.removeHandler("BROWSER_VIEW_CREATE_BROWSER_VIEW");
+    ipcMain.off(
+      "BROWSER_VIEW_CREATE_BROWSER_VIEW",
+      this._handleCreateBrowserView
+    );
     ipcMain.off(
       "BROWSER_VIEW_REMOVE_BROWSER_VIEW",
       this._handleRemoveBrowserView
@@ -93,15 +96,24 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     this.emit("streamEnd");
   };
 
-  _handleCreateBrowserView = async (
-    _: Electron.IpcMainEvent,
+  _handleCreateBrowserView = (
+    event: Electron.IpcMainEvent,
     url: string,
     x: number,
     y: number,
     width: number,
     height: number
   ) => {
-    return this.createBrowserView(url, x, y, width, height);
+    const id = this.createBrowserView(url, x, y, width, height);
+    this.views[id].webContents.on(
+      "did-start-navigation",
+      (_, url, __, isMainFrame) => {
+        if (isMainFrame) {
+          event.reply("BROWSER_VIEW_DID_NAVIGATE", id, url);
+        }
+      }
+    );
+    event.returnValue = id;
   };
 
   _handleRemoveBrowserView = (_: Electron.IpcMainEvent, id: number) =>

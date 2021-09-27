@@ -45,7 +45,7 @@ export class BrowserViewManagerPreload {
     width: number,
     height: number
   ): Promise<number> {
-    const viewId = await ipcRenderer.invoke(
+    const viewId = ipcRenderer.sendSync(
       "BROWSER_VIEW_CREATE_BROWSER_VIEW",
       url,
       x,

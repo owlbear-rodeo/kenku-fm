@@ -1,15 +1,18 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 import { BrowserViewManagerPreload } from "./preload/managers/BrowserViewManagerPreload";
+import store from "./preload/store";
 
 const viewManager = new BrowserViewManagerPreload();
 
 window.addEventListener("load", () => {
   viewManager.load();
+  // Hydrate saved options
+  ipcRenderer.emit("SHOW_CONTROLS", undefined, store.get("showControls"));
 });
 
 window.addEventListener("beforeunload", () => {
-  ipcRenderer.send("disconnect");
+  ipcRenderer.send("DISCORD_DISCONNECT");
   viewManager.destroy();
 });
 
@@ -21,7 +24,9 @@ type Channel =
   | "DISCORD_DISCONNECTED"
   | "DISCORD_VOICE_CHANNELS"
   | "DISCORD_CHANNEL_JOINED"
-  | "DISCORD_CHANNEL_LEFT";
+  | "DISCORD_CHANNEL_LEFT"
+  | "SHOW_CONTROLS"
+  | "BROWSER_VIEW_DID_NAVIGATE";
 
 const validChannels: Channel[] = [
   "ERROR",
@@ -32,6 +37,8 @@ const validChannels: Channel[] = [
   "DISCORD_VOICE_CHANNELS",
   "DISCORD_CHANNEL_JOINED",
   "DISCORD_CHANNEL_LEFT",
+  "SHOW_CONTROLS",
+  "BROWSER_VIEW_DID_NAVIGATE",
 ];
 
 const api = {

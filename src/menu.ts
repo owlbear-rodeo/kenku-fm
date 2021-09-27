@@ -1,6 +1,9 @@
-import { app, Menu } from "electron";
+import { app, Menu, MenuItem, BrowserWindow } from "electron";
+import store from "./main/store";
 
 const isMac = process.platform === "darwin";
+
+const SHOW_CONTROLS_ID = "SHOW_CONTROLS";
 
 const template: any = [
   // { role: 'appMenu' }
@@ -64,6 +67,18 @@ const template: any = [
       { role: "zoomOut" },
       { type: "separator" },
       { role: "togglefullscreen" },
+      {
+        type: "checkbox",
+        label: "Show Controls",
+        click: (item: MenuItem, window: BrowserWindow | undefined) => {
+          if (window) {
+            window.webContents.send("SHOW_CONTROLS", item.checked);
+          }
+          store.set("showControls", item.checked);
+        },
+        checked: store.get("showControls"),
+        id: SHOW_CONTROLS_ID,
+      },
     ],
   },
   // { role: 'windowMenu' }

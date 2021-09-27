@@ -12,17 +12,32 @@ import { drawerWidth } from "../../common/ActionDrawer";
 
 type ViewProps = {
   url: string;
-  setURL?: (url: string) => void;
 };
 
-export function View({ url, setURL }: ViewProps) {
-  const [showControls] = useState(false);
+export function View({ url }: ViewProps) {
+  const [showControls, setShowControls] = useState(false);
   const [viewId, setViewId] = useState<number>(-1);
+  const [customURL, setCustomURL] = useState(url);
 
   const urlRef = useRef(url);
   useEffect(() => {
     urlRef.current = url;
   });
+
+  useEffect(() => {
+    window.kenku.on("SHOW_CONTROLS", (args) => {
+      const show = args[0];
+      setShowControls(show);
+    });
+    window.kenku.on("BROWSER_VIEW_DID_NAVIGATE", (args) => {
+      setCustomURL(args[1]);
+    });
+
+    return () => {
+      window.kenku.removeAllListeners("SHOW_CONTROLS");
+      window.kenku.removeAllListeners("BROWSER_VIEW_DID_NAVIGATE");
+    };
+  }, []);
 
   useEffect(() => {
     let id: number | undefined = undefined;
@@ -50,11 +65,11 @@ export function View({ url, setURL }: ViewProps) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    window.kenku.loadURL(viewId, url);
+    window.kenku.loadURL(viewId, customURL);
   }
 
   function handleUrlChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setURL?.(e.target.value);
+    setCustomURL(e.target.value);
   }
 
   function handleBack() {
@@ -91,7 +106,7 @@ export function View({ url, setURL }: ViewProps) {
           <TextField
             variant="outlined"
             label="url"
-            value={url}
+            value={customURL}
             InputLabelProps={{
               shrink: true,
             }}

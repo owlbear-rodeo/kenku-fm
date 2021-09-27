@@ -39,9 +39,14 @@ export function OutputListItems() {
       dispatch(setCurrentChannel("local"));
     });
 
+    window.kenku.on("DISCORD_CHANNEL_JOINED", (args) => {
+      dispatch(setCurrentChannel(args[0]));
+    });
+
     return () => {
       window.kenku.removeAllListeners("DISCORD_GUILDS");
       window.kenku.removeAllListeners("DISCORD_CHANNEL_LEFT");
+      window.kenku.removeAllListeners("DISCORD_CHANNEL_JOINED");
     };
   }, [dispatch]);
 

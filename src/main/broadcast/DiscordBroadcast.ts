@@ -1,5 +1,5 @@
 import { ipcMain, app } from "electron";
-import Discord from "@owlbear-rodeo/discord.js";
+import Discord, { VoiceConnection } from "@owlbear-rodeo/discord.js";
 
 type VoiceChannel = {
   id: string;
@@ -101,12 +101,13 @@ export class DiscordBroadcast {
     if (channelId !== "local") {
       const channel = await this.client.channels.fetch(channelId);
       if (channel instanceof Discord.VoiceChannel) {
-        const connection = await channel.join();
-        connection.play(this.broadcast);
-        connection.once("disconnect", () => {
+        try {
+          const connection = await channel.join();
+          connection.play(this.broadcast);
+          event.reply("DISCORD_CHANNEL_JOINED", channelId);
+        } catch {
           event.reply("DISCORD_CHANNEL_LEFT", channelId);
-        });
-        event.reply("DISCORD_CHANNEL_JOINED", channelId);
+        }
       }
     }
   };

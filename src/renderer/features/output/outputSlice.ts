@@ -5,13 +5,20 @@ export type VoiceChannel = {
   name: string;
 };
 
-export interface OutputState {
+export type Guild = {
+  id: string;
+  name: string;
+  icon: string;
   voiceChannels: VoiceChannel[];
+};
+
+export interface OutputState {
+  guilds: Guild[];
   currentChannel: string;
 }
 
 const initialState: OutputState = {
-  voiceChannels: [{ id: "local", name: "This Computer" }],
+  guilds: [],
   currentChannel: "local",
 };
 
@@ -19,8 +26,8 @@ export const outputSlice = createSlice({
   name: "output",
   initialState,
   reducers: {
-    setVoiceChannels: (state, action: PayloadAction<VoiceChannel[]>) => {
-      state.voiceChannels = action.payload;
+    setGuilds: (state, action: PayloadAction<Guild[]>) => {
+      state.guilds = action.payload;
     },
     setCurrentChannel: (state, action: PayloadAction<string>) => {
       state.currentChannel = action.payload;
@@ -28,6 +35,6 @@ export const outputSlice = createSlice({
   },
 });
 
-export const { setVoiceChannels, setCurrentChannel } = outputSlice.actions;
+export const { setGuilds, setCurrentChannel } = outputSlice.actions;
 
 export default outputSlice.reducer;

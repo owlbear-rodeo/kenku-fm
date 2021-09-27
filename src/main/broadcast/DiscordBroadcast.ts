@@ -1,6 +1,18 @@
 import { ipcMain, app } from "electron";
 import Discord from "@owlbear-rodeo/discord.js";
 
+type VoiceChannel = {
+  id: string;
+  name: string;
+};
+
+type Guild = {
+  id: string;
+  name: string;
+  icon: string;
+  voiceChannels: VoiceChannel[];
+};
+
 export class DiscordBroadcast {
   client: Discord.Client;
   broadcast: Discord.VoiceBroadcast;
@@ -31,16 +43,29 @@ export class DiscordBroadcast {
     }
 
     try {
-      const onReady = () => {
+      const onReady = async () => {
         event.reply("DISCORD_READY");
         event.reply("MESSAGE", "Connected");
-        const voiceChannels = [{ id: "local", name: "This Computer" }];
-        this.client.channels.cache.forEach((channel) => {
-          if (channel.type === "voice") {
-            voiceChannels.push({ id: channel.id, name: (channel as any).name });
-          }
-        });
-        event.reply("DISCORD_VOICE_CHANNELS", voiceChannels);
+        let guilds: Guild[] = [];
+        for (let guild of this.client.guilds.cache.array()) {
+          const preview = await this.client.fetchGuildPreview(guild);
+          let voiceChannels: VoiceChannel[] = [];
+          guild.channels.cache.forEach((channel) => {
+            if (channel.type === "voice") {
+              voiceChannels.push({
+                id: channel.id,
+                name: channel.name,
+              });
+            }
+          });
+          guilds.push({
+            id: guild.id,
+            name: preview.name,
+            icon: preview.iconURL(),
+            voiceChannels,
+          });
+        }
+        event.reply("DISCORD_GUILDS", guilds);
       };
       const ready = this.client.readyTimestamp !== null;
       if (!ready) {
@@ -48,7 +73,7 @@ export class DiscordBroadcast {
       }
       await this.client.login(token);
       if (ready) {
-        onReady();
+        await onReady();
       }
     } catch (err) {
       event.reply("DISCORD_DISCONNECTED");
@@ -61,9 +86,7 @@ export class DiscordBroadcast {
       connection.disconnect();
     });
     event.reply("DISCORD_DISCONNECTED");
-    event.reply("DISCORD_VOICE_CHANNELS", [
-      { id: "local", name: "This Computer" },
-    ]);
+    event.reply("DISCORD_GUILDS", []);
     event.reply("DISCORD_CHANNEL_JOINED", "local");
     this.client.destroy();
   };

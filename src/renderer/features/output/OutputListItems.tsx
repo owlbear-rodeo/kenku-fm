@@ -1,19 +1,23 @@
+import React, { useState, useEffect } from "react";
+
 import Collapse from "@mui/material/Collapse";
 import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
-import ListItemIcon from "@mui/material/ListItemIcon";
+import ListSubheader from "@mui/material/ListSubheader";
+import ListItem from "@mui/material/ListItem";
+import ListItemAvatar from "@mui/material/ListItemAvatar";
+import Avatar from "@mui/material/Avatar";
 
 import ExpandLess from "@mui/icons-material/ExpandLessRounded";
 import ExpandMore from "@mui/icons-material/ExpandMoreRounded";
-import VolumeIcon from "@mui/icons-material/VolumeUpRounded";
 
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
-import { setVoiceChannels, setCurrentChannel } from "./outputSlice";
+import { setGuilds, setCurrentChannel } from "./outputSlice";
 
-import React, { useState, useEffect } from "react";
+import { OutputListItem } from "./OutputListItem";
 
 export function OutputListItems() {
   const [open, setOpen] = useState(true);
@@ -26,9 +30,9 @@ export function OutputListItems() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    window.kenku.on("DISCORD_VOICE_CHANNELS", (args) => {
-      const voiceChannels = args[0];
-      dispatch(setVoiceChannels(voiceChannels));
+    window.kenku.on("DISCORD_GUILDS", (args) => {
+      const guilds = args[0];
+      dispatch(setGuilds(guilds));
     });
 
     window.kenku.on("DISCORD_CHANNEL_LEFT", () => {
@@ -36,7 +40,7 @@ export function OutputListItems() {
     });
 
     return () => {
-      window.kenku.removeAllListeners("DISCORD_VOICE_CHANNELS");
+      window.kenku.removeAllListeners("DISCORD_GUILDS");
       window.kenku.removeAllListeners("DISCORD_CHANNEL_LEFT");
     };
   }, [dispatch]);
@@ -56,30 +60,44 @@ export function OutputListItems() {
       </ListItemButton>
       <Collapse in={open} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
-          {output.voiceChannels.map((channel) => (
-            <React.Fragment key={channel.id}>
-              <ListItemButton
-                selected={output.currentChannel === channel.id}
-                dense
-                sx={{ px: 2 }}
-                onClick={() => handleChannelChange(channel.id)}
-              >
-                <ListItemIcon
-                  sx={{
-                    minWidth: "36px",
-                    color:
-                      output.currentChannel === channel.id
-                        ? "primary.main"
-                        : undefined,
-                  }}
-                >
-                  <VolumeIcon />
-                </ListItemIcon>
-                <ListItemText primary={channel.name} />
-              </ListItemButton>
-              {channel.id === "local" && output.voiceChannels.length > 1 && (
-                <Divider variant="middle" />
+          <OutputListItem
+            voiceChannel={{ id: "local", name: "This Computer" }}
+            selected={output.currentChannel === "local"}
+            onClick={handleChannelChange}
+          />
+          <Divider variant="middle" />
+          {output.guilds.map((guild) => (
+            <React.Fragment key={guild.id}>
+              {output.guilds.length > 1 && (
+                <ListItem alignItems="center">
+                  <ListItemAvatar
+                    sx={{ minWidth: "36px", marginTop: 0, marginLeft: "8px" }}
+                  >
+                    <Avatar
+                      sx={{ width: "24px", height: "24px" }}
+                      alt={guild.name}
+                      src={guild.icon}
+                    />
+                  </ListItemAvatar>
+                  <ListSubheader
+                    sx={{
+                      backgroundColor: "inherit",
+                      lineHeight: "36px",
+                      padding: 0,
+                    }}
+                  >
+                    {guild.name}
+                  </ListSubheader>
+                </ListItem>
               )}
+              {guild.voiceChannels.map((channel) => (
+                <OutputListItem
+                  voiceChannel={channel}
+                  selected={output.currentChannel === channel.id}
+                  onClick={handleChannelChange}
+                  key={channel.id}
+                />
+              ))}
             </React.Fragment>
           ))}
         </List>

@@ -86,3 +86,6 @@ typings/
 
 # Electron-Forge
 out/
+
+# terraform 
+.terraform/

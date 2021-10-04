@@ -1,6 +1,7 @@
-resource "aws_s3_bucket" "published_versions" {
-  bucket = "kenku-fm-${terraform.workspace}"
+resource "digitalocean_spaces_bucket" "published_versions" {
+  name   = "kenku-fm-${terraform.workspace}"
   acl    = "private"
+  region = var.region
 
   versioning {
     enabled = false

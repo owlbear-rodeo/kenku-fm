@@ -1,9 +1,9 @@
 terraform {
 
   required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 3.0"
+    digitalocean = {
+      source  = "digitalocean/digitalocean"
+      version = "~> 2.0"
     }
   }
 
@@ -16,13 +16,7 @@ terraform {
   }
 }
 
-provider "aws" {
-  region = "us-east-1"
 
-  default_tags {    
-      tags = {      
-          app = "kenku-fm"      
-          version = "${terraform.workspace}"
-        }  
-    }
+provider "digitalocean" {
+  token = var.do_token
 }

@@ -26,7 +26,8 @@ type Channel =
   | "DISCORD_CHANNEL_JOINED"
   | "DISCORD_CHANNEL_LEFT"
   | "SHOW_CONTROLS"
-  | "BROWSER_VIEW_DID_NAVIGATE";
+  | "BROWSER_VIEW_DID_NAVIGATE"
+  | "REMOTE_OPEN_URL";
 
 const validChannels: Channel[] = [
   "ERROR",
@@ -39,6 +40,7 @@ const validChannels: Channel[] = [
   "DISCORD_CHANNEL_LEFT",
   "SHOW_CONTROLS",
   "BROWSER_VIEW_DID_NAVIGATE",
+  "REMOTE_OPEN_URL",
 ];
 
 const api = {

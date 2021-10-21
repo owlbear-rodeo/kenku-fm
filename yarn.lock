@@ -946,6 +946,11 @@
   resolved "https://registry.npmjs.org/@types/minimatch/-/minimatch-3.0.5.tgz"
   integrity sha512-Klz949h02Gz2uZCMGwDUSDS1YBlTdDDgbWHi+81l29tQALUtvz4rAYi5uoVhE5Lagoq6DeqAUlbrHvW/mXDgdQ==
 
+"@types/node-osc@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@types/node-osc/-/node-osc-6.0.0.tgz#6d22d0b94bf632c13fc6c4886de3518079b825e7"
+  integrity sha512-25DwJOFe1KueUZz2oIURT3qCMQ28Jdvy9JqGz8d0mKM1Mlx0agHD9N3S0hMKajVCjw7TGtf3gGjbl5gDCFfIWQ==
+
 "@types/node@*":
   version "16.9.0"
   resolved "https://registry.npmjs.org/@types/node/-/node-16.9.0.tgz"
@@ -1656,6 +1661,11 @@ binary-extensions@^2.0.0:
   version "2.2.0"
   resolved "https://registry.npmjs.org/binary-extensions/-/binary-extensions-2.2.0.tgz"
   integrity sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==
+
+binpack@~0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/binpack/-/binpack-0.1.0.tgz#bd3d0974c3f2a0446e17df4f60b55a72a205a97e"
+  integrity sha1-vT0JdMPyoERuF99PYLVacqIFqX4=
 
 bl@^4.1.0:
   version "4.1.0"
@@ -5218,6 +5228,13 @@ node-loader@^2.0.0:
   dependencies:
     loader-utils "^2.0.0"
 
+node-osc@^6.1.10:
+  version "6.1.10"
+  resolved "https://registry.yarnpkg.com/node-osc/-/node-osc-6.1.10.tgz#f618281f1f4fe91a41bc1414f58322369011e1ed"
+  integrity sha512-HiDNie6meSzfUcmso8jGyeQ1TTWC2G9FI/vO57H5JaNGAUCCh9X8wDzTZy0KpDTSBxxNC2Rgr8kCC7f0oJ/gww==
+  dependencies:
+    osc-min "^1.1.1"
+
 node-releases@^1.1.75:
   version "1.1.75"
   resolved "https://registry.npmjs.org/node-releases/-/node-releases-1.1.75.tgz"
@@ -5440,6 +5457,13 @@ os-tmpdir@~1.0.2:
   version "1.0.2"
   resolved "https://registry.npmjs.org/os-tmpdir/-/os-tmpdir-1.0.2.tgz"
   integrity sha1-u+Z0BseaqFxc/sdm/lc0VV36EnQ=
+
+osc-min@^1.1.1:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/osc-min/-/osc-min-1.1.2.tgz#3dcaff10f804c39b7080cf4c10fd7a4103cd9037"
+  integrity sha512-8DbiO8ME85R75stgNVCZtHxB9MNBBNcyy+isNBXrsFeinXGjwNAauvKVmGlfRas5VJWC/mhzIx7spR2gFvWxvg==
+  dependencies:
+    binpack "~0"
 
 p-cancelable@^1.0.0:
   version "1.1.0"

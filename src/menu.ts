@@ -1,9 +1,16 @@
-import { app, Menu, MenuItem, BrowserWindow } from "electron";
+import { app, Menu, MenuItem, BrowserWindow, dialog } from "electron";
 import store from "./main/store";
+import Remote from "./main/Remote";
 
 const isMac = process.platform === "darwin";
 
 const SHOW_CONTROLS_ID = "SHOW_CONTROLS";
+const ENABLE_REMOTE_ID = "ENABLE_REMOTE";
+
+const remote = new Remote();
+if (store.get("enableRemote")) {
+  remote.start();
+}
 
 const template: any = [
   // { role: 'appMenu' }
@@ -95,6 +102,35 @@ const template: any = [
             { role: "window" },
           ]
         : [{ role: "close" }]),
+    ],
+  },
+  {
+    label: "Remote",
+    submenu: [
+      {
+        type: "checkbox",
+        label: "Enable Remote",
+        click: (item: MenuItem) => {
+          store.set("enableRemote", item.checked);
+          if (item.checked) {
+            remote.start();
+          } else {
+            remote.stop();
+          }
+        },
+        checked: store.get("enableRemote"),
+        id: ENABLE_REMOTE_ID,
+      },
+      {
+        label: "Remote Info",
+        click: async (_: MenuItem, window: BrowserWindow | undefined) => {
+          dialog.showMessageBox(undefined, {
+            message: remote.getInfo(),
+            type: "info",
+            title: "Remote Info",
+          });
+        },
+      },
     ],
   },
   {

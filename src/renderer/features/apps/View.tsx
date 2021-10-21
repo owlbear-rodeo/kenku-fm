@@ -40,6 +40,18 @@ export function View({ url }: ViewProps) {
   }, []);
 
   useEffect(() => {
+    window.kenku.on("REMOTE_OPEN_URL", (args) => {
+      const url = args[0];
+      setCustomURL(args[0]);
+      window.kenku.loadURL(viewId, url);
+    });
+
+    return () => {
+      window.kenku.removeAllListeners("REMOTE_OPEN_URL");
+    };
+  }, [viewId]);
+
+  useEffect(() => {
     let id: number | undefined = undefined;
     window.kenku
       .createBrowserView(

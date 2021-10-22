@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
@@ -12,12 +12,22 @@ import { BrowserViewControls } from "./BrowserViewControls";
 
 import { drawerWidth } from "../../common/ActionDrawer";
 
+function getBounds(controls: HTMLDivElement | null) {
+  return {
+    x: drawerWidth,
+    y: controls?.clientHeight || 0,
+    width: window.innerWidth - drawerWidth,
+    height: window.innerHeight,
+  };
+}
+
 export function BrowserViews() {
   const dispatch = useDispatch();
   const apps = useSelector((state: RootState) => state.apps);
   const browserViews = useSelector((state: RootState) => state.browserViews);
 
   const [showControls, setShowControls] = useState(false);
+  const controlsRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     window.kenku.on("SHOW_CONTROLS", (args) => {
@@ -46,15 +56,16 @@ export function BrowserViews() {
     );
 
     async function createBrowserView() {
+      const bounds = getBounds(controlsRef.current);
       const id = await window.kenku.createBrowserView(
         app.url,
-        drawerWidth,
-        // showControls ? 73 : 0,
-        0,
-        window.innerWidth - drawerWidth,
-        window.innerHeight
+        bounds.x,
+        bounds.y,
+        bounds.width,
+        bounds.height
       );
       dispatch(addBrowserView({ id, appId: app.id, url: app.url }));
+      dispatch(selectBrowserView(id));
     }
 
     if (browserViews.selectedBrowserView) {
@@ -66,15 +77,36 @@ export function BrowserViews() {
     } else {
       dispatch(selectBrowserView(view.id));
       window.kenku.showBrowserView(view.id);
+      const bounds = getBounds(controlsRef.current);
+      window.kenku.setBrowserViewBounds(
+        view.id,
+        bounds.x,
+        bounds.y,
+        bounds.width,
+        bounds.height
+      );
     }
   }, [apps.selectedApp]);
+
+  useEffect(() => {
+    if (browserViews.selectedBrowserView) {
+      const bounds = getBounds(controlsRef.current);
+      window.kenku.setBrowserViewBounds(
+        browserViews.selectedBrowserView,
+        bounds.x,
+        bounds.y,
+        bounds.width,
+        bounds.height
+      );
+    }
+  }, [showControls]);
 
   function handleURLChange(url: string) {
     dispatch(editBrowserView({ id: browserViews.selectedBrowserView, url }));
   }
 
   const selectedBrowserView =
-    browserViews.selectedBrowserView &&
+    browserViews.selectedBrowserView !== undefined &&
     browserViews.browserViews.byId[browserViews.selectedBrowserView];
 
   return showControls && selectedBrowserView ? (
@@ -82,6 +114,7 @@ export function BrowserViews() {
       viewId={selectedBrowserView.id}
       url={selectedBrowserView.url}
       onURLChange={handleURLChange}
+      ref={controlsRef}
     />
   ) : null;
 }

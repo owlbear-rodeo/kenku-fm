@@ -40,6 +40,10 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     );
     ipcMain.on("BROWSER_VIEW_HIDE_BROWSER_VIEW", this._handleHideBrowserView);
     ipcMain.on("BROWSER_VIEW_SHOW_BROWSER_VIEW", this._handleShowBrowserView);
+    ipcMain.on(
+      "BROWSER_VIEW_SET_BROWSER_VIEW_BOUNDS",
+      this._handleSetBrowserViewBounds
+    );
     ipcMain.handle(
       "BROWSER_VIEW_GET_MEDIA_SOURCE_ID",
       this._handleGetMediaSourceId
@@ -71,6 +75,10 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     );
     ipcMain.off("BROWSER_VIEW_HIDE_BROWSER_VIEW", this._handleHideBrowserView);
     ipcMain.off("BROWSER_VIEW_SHOW_BROWSER_VIEW", this._handleShowBrowserView);
+    ipcMain.off(
+      "BROWSER_VIEW_SET_BROWSER_VIEW_BOUNDS",
+      this._handleSetBrowserViewBounds
+    );
     ipcMain.removeHandler("BROWSER_VIEW_GET_MEDIA_SOURCE_ID");
     ipcMain.off("BROWSER_VIEW_LOAD_URL", this._handleLoadURL);
     ipcMain.off("BROWSER_VIEW_GO_FORWARD", this._handleGoForward);
@@ -130,6 +138,15 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
 
   _handleShowBrowserView = (_: Electron.IpcMainEvent, id: number) =>
     this.showBrowserView(id);
+
+  _handleSetBrowserViewBounds = (
+    _: Electron.IpcMainEvent,
+    id: number,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ) => this.setBrowserViewBounds(id, x, y, width, height);
 
   _handleGetMediaSourceId = async (
     event: Electron.IpcMainEvent,
@@ -214,6 +231,20 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
   showBrowserView(id: number) {
     if (this.views[id]) {
       this.window.setBrowserView(this.views[id]);
+    }
+  }
+
+  setBrowserViewBounds(
+    id: number,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ) {
+    try {
+      this.views[id]?.setBounds({ x, y, width, height });
+    } catch (err) {
+      console.error(err);
     }
   }
 

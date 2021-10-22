@@ -72,6 +72,15 @@ const api = {
   showBrowserView: (id: number) => {
     viewManager.showBrowserView(id);
   },
+  setBrowserViewBounds: (
+    id: number,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ) => {
+    viewManager.setBrowserViewBounds(id, x, y, width, height);
+  },
   loadURL: (id: number, url: string) => {
     viewManager.loadURL(id, url);
   },

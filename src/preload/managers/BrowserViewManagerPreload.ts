@@ -75,6 +75,23 @@ export class BrowserViewManagerPreload {
     ipcRenderer.send("BROWSER_VIEW_SHOW_BROWSER_VIEW", id);
   }
 
+  setBrowserViewBounds(
+    id: number,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ) {
+    ipcRenderer.send(
+      "BROWSER_VIEW_SET_BROWSER_VIEW_BOUNDS",
+      id,
+      x,
+      y,
+      width,
+      height
+    );
+  }
+
   loadURL(id: number, url: string) {
     ipcRenderer.send("BROWSER_VIEW_LOAD_URL", id, url);
   }

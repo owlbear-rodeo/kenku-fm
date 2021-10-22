@@ -5,7 +5,6 @@ import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
-import ListSubheader from "@mui/material/ListSubheader";
 import ListItem from "@mui/material/ListItem";
 import ListItemAvatar from "@mui/material/ListItemAvatar";
 import Avatar from "@mui/material/Avatar";
@@ -84,15 +83,20 @@ export function OutputListItems() {
                       src={guild.icon}
                     />
                   </ListItemAvatar>
-                  <ListSubheader
+                  <ListItemText
                     sx={{
                       backgroundColor: "inherit",
-                      lineHeight: "36px",
+                      color: "rgba(255, 255, 255, 0.7)",
                       padding: 0,
+                    }}
+                    primaryTypographyProps={{
+                      sx: {
+                        fontSize: "0.875rem",
+                      },
                     }}
                   >
                     {guild.name}
-                  </ListSubheader>
+                  </ListItemText>
                 </ListItem>
               )}
               {guild.voiceChannels.map((channel) => (

@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import {
   addBrowserView,
   editBrowserView,
+  removeBrowserView,
   selectBrowserView,
 } from "./browserViewsSlice";
 
@@ -48,8 +49,22 @@ export function BrowserViews() {
 
   useEffect(() => {
     if (apps.selectedApp === undefined) {
+      // Remove browser views that have been deleted
+      const views = Object.values(browserViews.browserViews.byId);
+      const appIds = apps.apps.allIds;
+      const viewAppIds = views.map((view) => view.appId);
+      const diff = [...viewAppIds].filter((id) => !appIds.includes(id));
+      for (let id of diff) {
+        const view = views.find((view) => view.appId === id);
+        if (view) {
+          dispatch(removeBrowserView(view.id));
+          window.kenku.removeBrowserView(view.id);
+        }
+      }
       return;
     }
+
+    // Create or select a browser view
     const app = apps.apps.byId[apps.selectedApp];
     const view = Object.values(browserViews.browserViews.byId).find(
       (browserView) => browserView.appId === apps.selectedApp

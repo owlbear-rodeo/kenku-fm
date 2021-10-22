@@ -66,6 +66,12 @@ const api = {
   removeBrowserView: (id: number) => {
     viewManager.removeBrowserView(id);
   },
+  hideBrowserView: (id: number) => {
+    viewManager.hideBrowserView(id);
+  },
+  showBrowserView: (id: number) => {
+    viewManager.showBrowserView(id);
+  },
   loadURL: (id: number, url: string) => {
     viewManager.loadURL(id, url);
   },

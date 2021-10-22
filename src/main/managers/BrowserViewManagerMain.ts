@@ -38,6 +38,8 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
       "BROWSER_VIEW_REMOVE_ALL_BROWSER_VIEWS",
       this._handleRemoveAllBrowserViews
     );
+    ipcMain.on("BROWSER_VIEW_HIDE_BROWSER_VIEW", this._handleHideBrowserView);
+    ipcMain.on("BROWSER_VIEW_SHOW_BROWSER_VIEW", this._handleShowBrowserView);
     ipcMain.handle(
       "BROWSER_VIEW_GET_MEDIA_SOURCE_ID",
       this._handleGetMediaSourceId
@@ -67,6 +69,8 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
       "BROWSER_VIEW_REMOVE_ALL_BROWSER_VIEWS",
       this._handleRemoveAllBrowserViews
     );
+    ipcMain.off("BROWSER_VIEW_HIDE_BROWSER_VIEW", this._handleHideBrowserView);
+    ipcMain.off("BROWSER_VIEW_SHOW_BROWSER_VIEW", this._handleShowBrowserView);
     ipcMain.removeHandler("BROWSER_VIEW_GET_MEDIA_SOURCE_ID");
     ipcMain.off("BROWSER_VIEW_LOAD_URL", this._handleLoadURL);
     ipcMain.off("BROWSER_VIEW_GO_FORWARD", this._handleGoForward);
@@ -120,6 +124,12 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     this.removeBrowserView(id);
 
   _handleRemoveAllBrowserViews = () => this.removeAllBrowserViews();
+
+  _handleHideBrowserView = (_: Electron.IpcMainEvent, id: number) =>
+    this.hideBrowserView(id);
+
+  _handleShowBrowserView = (_: Electron.IpcMainEvent, id: number) =>
+    this.showBrowserView(id);
 
   _handleGetMediaSourceId = async (
     event: Electron.IpcMainEvent,
@@ -192,6 +202,18 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
       this.window.removeBrowserView(this.views[id]);
       (this.views[id].webContents as any).destroy();
       delete this.views[id];
+    }
+  }
+
+  hideBrowserView(id: number) {
+    if (this.views[id]) {
+      this.window.removeBrowserView(this.views[id]);
+    }
+  }
+
+  showBrowserView(id: number) {
+    if (this.views[id]) {
+      this.window.setBrowserView(this.views[id]);
     }
   }
 

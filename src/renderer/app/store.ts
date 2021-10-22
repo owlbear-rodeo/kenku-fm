@@ -3,6 +3,7 @@ import connectionReducer from "../features/connection/connectionSlice";
 import outputReducer from "../features/output/outputSlice";
 import settingsReducer from "../features/settings/settingsSlice";
 import appsReducer from "../features/apps/appsSlice";
+import browserViewsReducer from "../features/browserViews/browserViewsSlice";
 
 import {
   persistStore,
@@ -21,6 +22,7 @@ const rootReducer = combineReducers({
   output: outputReducer,
   settings: settingsReducer,
   apps: appsReducer,
+  browserViews: browserViewsReducer,
 });
 
 const persistConfig = {

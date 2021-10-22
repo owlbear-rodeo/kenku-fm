@@ -67,6 +67,14 @@ export class BrowserViewManagerPreload {
     }
   }
 
+  hideBrowserView(id: number) {
+    ipcRenderer.send("BROWSER_VIEW_HIDE_BROWSER_VIEW", id);
+  }
+
+  showBrowserView(id: number) {
+    ipcRenderer.send("BROWSER_VIEW_SHOW_BROWSER_VIEW", id);
+  }
+
   loadURL(id: number, url: string) {
     ipcRenderer.send("BROWSER_VIEW_LOAD_URL", id, url);
   }

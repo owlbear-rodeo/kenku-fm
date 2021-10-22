@@ -109,12 +109,13 @@ export function BrowserViews() {
     browserViews.selectedBrowserView !== undefined &&
     browserViews.browserViews.byId[browserViews.selectedBrowserView];
 
-  return showControls && selectedBrowserView ? (
+  return showControls ? (
     <BrowserViewControls
-      viewId={selectedBrowserView.id}
-      url={selectedBrowserView.url}
+      viewId={selectedBrowserView?.id || -1}
+      url={selectedBrowserView?.url || ""}
       onURLChange={handleURLChange}
       ref={controlsRef}
+      disabled={!Boolean(selectedBrowserView)}
     />
   ) : null;
 }

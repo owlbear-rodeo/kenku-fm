@@ -12,10 +12,11 @@ type BrowserViewControlsProps = {
   viewId: number;
   url: string;
   onURLChange: (url: string) => void;
+  disabled?: boolean;
 };
 
 export const BrowserViewControls = React.forwardRef(
-  ({ viewId, url, onURLChange }: BrowserViewControlsProps, ref) => {
+  ({ viewId, url, onURLChange, disabled }: BrowserViewControlsProps, ref) => {
     function handleSubmit(e: React.FormEvent) {
       e.preventDefault();
       window.kenku.loadURL(viewId, url);
@@ -46,10 +47,10 @@ export const BrowserViewControls = React.forwardRef(
         ref={ref}
       >
         <Stack direction="row" spacing={1} sx={{ p: 2 }}>
-          <IconButton onClick={handleBack}>
+          <IconButton onClick={handleBack} disabled={disabled}>
             <ArrowBackRounded />
           </IconButton>
-          <IconButton onClick={handleForward}>
+          <IconButton onClick={handleForward} disabled={disabled}>
             <ArrowForwardRounded />
           </IconButton>
           <form onSubmit={handleSubmit} style={{ flexGrow: 1 }}>
@@ -63,9 +64,10 @@ export const BrowserViewControls = React.forwardRef(
               size="small"
               fullWidth
               onChange={handleURLChange}
+              disabled={disabled}
             />
           </form>
-          <IconButton onClick={handleReload}>
+          <IconButton onClick={handleReload} disabled={disabled}>
             <RefreshRounded />
           </IconButton>
         </Stack>

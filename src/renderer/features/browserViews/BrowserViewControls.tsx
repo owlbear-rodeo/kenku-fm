@@ -2,7 +2,7 @@ import React from "react";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
+import InputBase from "@mui/material/InputBase";
 
 import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
 import ArrowForwardRounded from "@mui/icons-material/ArrowForwardRounded";
@@ -46,28 +46,33 @@ export const BrowserViewControls = React.forwardRef(
         }}
         ref={ref}
       >
-        <Stack direction="row" spacing={1} sx={{ p: 2 }}>
-          <IconButton onClick={handleBack} disabled={disabled}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{ py: 1, px: 2, alignItems: "center" }}
+        >
+          <IconButton onClick={handleBack} disabled={disabled} size="small">
             <ArrowBackRounded />
           </IconButton>
-          <IconButton onClick={handleForward} disabled={disabled}>
+          <IconButton onClick={handleForward} disabled={disabled} size="small">
             <ArrowForwardRounded />
           </IconButton>
           <form onSubmit={handleSubmit} style={{ flexGrow: 1 }}>
-            <TextField
-              variant="outlined"
-              label="url"
-              value={url}
-              InputLabelProps={{
-                shrink: true,
+            <InputBase
+              sx={{
+                bgcolor: "rgba(0, 0, 0, 0.15)",
+                px: 2,
+                borderRadius: "16px",
               }}
-              size="small"
+              placeholder={disabled ? "" : "Enter a URL"}
+              inputProps={{ "aria-label": "enter a URL" }}
+              value={url}
               fullWidth
               onChange={handleURLChange}
               disabled={disabled}
             />
           </form>
-          <IconButton onClick={handleReload} disabled={disabled}>
+          <IconButton onClick={handleReload} disabled={disabled} size="small">
             <RefreshRounded />
           </IconButton>
         </Stack>

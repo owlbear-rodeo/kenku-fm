@@ -14,6 +14,7 @@ import { useSelector } from "react-redux";
 
 import { AppListItem } from "./AppListItem";
 import { AppAdd } from "./AppAdd";
+import { RemoteApp } from "../remote/RemoteApp";
 
 export function AppListItems() {
   const apps = useSelector((state: RootState) => state.apps);
@@ -39,8 +40,9 @@ export function AppListItems() {
         </IconButton>
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItemButton>
-      <Collapse in={open} timeout="auto" unmountOnExit>
+      <Collapse in={open} timeout="auto">
         <List component="div" disablePadding>
+          <RemoteApp />
           {apps.apps.allIds.map((id) => (
             <AppListItem
               app={apps.apps.byId[id]}

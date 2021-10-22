@@ -8,7 +8,7 @@ const SHOW_CONTROLS_ID = "SHOW_CONTROLS";
 const ENABLE_REMOTE_ID = "ENABLE_REMOTE";
 
 const remote = new Remote();
-if (store.get("enableRemote")) {
+if (store.get("remoteEnabled")) {
   remote.start();
 }
 
@@ -111,19 +111,19 @@ const template: any = [
         type: "checkbox",
         label: "Enable Remote",
         click: (item: MenuItem) => {
-          store.set("enableRemote", item.checked);
+          store.set("remoteEnabled", item.checked);
           if (item.checked) {
             remote.start();
           } else {
             remote.stop();
           }
         },
-        checked: store.get("enableRemote"),
+        checked: store.get("remoteEnabled"),
         id: ENABLE_REMOTE_ID,
       },
       {
         label: "Remote Info",
-        click: async (_: MenuItem, window: BrowserWindow | undefined) => {
+        click: () => {
           dialog.showMessageBox(undefined, {
             message: remote.getInfo(),
             type: "info",

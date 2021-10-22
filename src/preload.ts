@@ -7,8 +7,9 @@ const viewManager = new BrowserViewManagerPreload();
 
 window.addEventListener("load", () => {
   viewManager.load();
-  // Hydrate saved options
+  // Re-hydrate saved options
   ipcRenderer.emit("SHOW_CONTROLS", undefined, store.get("showControls"));
+  ipcRenderer.emit("REMOTE_ENABLED", undefined, store.get("remoteEnabled"));
 });
 
 window.addEventListener("beforeunload", () => {
@@ -27,6 +28,7 @@ type Channel =
   | "DISCORD_CHANNEL_LEFT"
   | "SHOW_CONTROLS"
   | "BROWSER_VIEW_DID_NAVIGATE"
+  | "REMOTE_ENABLED"
   | "REMOTE_OPEN_URL";
 
 const validChannels: Channel[] = [
@@ -40,6 +42,7 @@ const validChannels: Channel[] = [
   "DISCORD_CHANNEL_LEFT",
   "SHOW_CONTROLS",
   "BROWSER_VIEW_DID_NAVIGATE",
+  "REMOTE_ENABLED",
   "REMOTE_OPEN_URL",
 ];
 

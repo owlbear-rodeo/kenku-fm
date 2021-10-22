@@ -1,6 +1,6 @@
 type Store = {
   showControls: boolean;
-  enableRemote: boolean;
+  remoteEnabled: boolean;
   remoteHost: string;
   remotePort: number;
 };

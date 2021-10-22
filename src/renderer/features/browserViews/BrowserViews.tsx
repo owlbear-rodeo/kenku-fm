@@ -25,6 +25,7 @@ function getBounds(controls: HTMLDivElement | null) {
 export function BrowserViews() {
   const dispatch = useDispatch();
   const apps = useSelector((state: RootState) => state.apps);
+  const remote = useSelector((state: RootState) => state.remote);
   const browserViews = useSelector((state: RootState) => state.browserViews);
 
   const [showControls, setShowControls] = useState(false);
@@ -48,10 +49,14 @@ export function BrowserViews() {
   }, []);
 
   useEffect(() => {
+    const allApps = Object.values(apps.apps.byId);
+    if (remote.enabled) {
+      allApps.push(remote.app);
+    }
     if (apps.selectedApp === undefined) {
       // Remove browser views that have been deleted
       const views = Object.values(browserViews.browserViews.byId);
-      const appIds = apps.apps.allIds;
+      const appIds = allApps.map((app) => app.id);
       const viewAppIds = views.map((view) => view.appId);
       const diff = [...viewAppIds].filter((id) => !appIds.includes(id));
       for (let id of diff) {
@@ -65,7 +70,11 @@ export function BrowserViews() {
     }
 
     // Create or select a browser view
-    const app = apps.apps.byId[apps.selectedApp];
+    const app = allApps.find((app) => app.id === apps.selectedApp);
+    if (!app) {
+      return;
+    }
+    console.log(allApps, remote);
     const view = Object.values(browserViews.browserViews.byId).find(
       (browserView) => browserView.appId === apps.selectedApp
     );
@@ -101,7 +110,7 @@ export function BrowserViews() {
         bounds.height
       );
     }
-  }, [apps.selectedApp]);
+  }, [apps.selectedApp, remote.enabled]);
 
   useEffect(() => {
     if (browserViews.selectedBrowserView) {

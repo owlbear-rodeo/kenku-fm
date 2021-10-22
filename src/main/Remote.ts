@@ -22,12 +22,22 @@ export default class Remote {
         }
       }
     });
+
+    const windows = BrowserWindow.getAllWindows();
+    for (let window of windows) {
+      window.webContents.send("REMOTE_ENABLED", true);
+    }
   }
 
   stop() {
     if (this.oscServer) {
       this.oscServer.close();
       this.oscServer = null;
+
+      const windows = BrowserWindow.getAllWindows();
+      for (let window of windows) {
+        window.webContents.send("REMOTE_ENABLED", false);
+      }
     }
   }
 

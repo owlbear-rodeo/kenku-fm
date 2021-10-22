@@ -5,7 +5,7 @@ Store.initRenderer();
 const store = new Store<StoreType>({
   defaults: {
     showControls: false,
-    enableRemote: false,
+    remoteEnabled: false,
     remoteHost: "127.0.0.1",
     remotePort: 3333,
   },

@@ -4,6 +4,7 @@ import outputReducer from "../features/output/outputSlice";
 import settingsReducer from "../features/settings/settingsSlice";
 import appsReducer from "../features/apps/appsSlice";
 import browserViewsReducer from "../features/browserViews/browserViewsSlice";
+import remoteReducer from "../features/remote/remoteSlice";
 
 import {
   persistStore,
@@ -23,6 +24,7 @@ const rootReducer = combineReducers({
   settings: settingsReducer,
   apps: appsReducer,
   browserViews: browserViewsReducer,
+  remote: remoteReducer,
 });
 
 const persistConfig = {

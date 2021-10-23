@@ -74,7 +74,6 @@ export function BrowserViews() {
     if (!app) {
       return;
     }
-    console.log(allApps, remote);
     const view = Object.values(browserViews.browserViews.byId).find(
       (browserView) => browserView.appId === apps.selectedApp
     );

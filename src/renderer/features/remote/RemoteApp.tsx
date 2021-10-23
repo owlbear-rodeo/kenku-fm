@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { setRemoteURL, setRemoteEnabled } from "./remoteSlice";
 import { selectApp } from "../apps/appsSlice";
 
-import { AppListItem } from "../apps/AppListItem";
+import { RemoteListItem } from "./RemoteListItem";
 
 export function RemoteApp() {
   const dispatch = useDispatch();
@@ -49,7 +49,7 @@ export function RemoteApp() {
   }
 
   return (
-    <AppListItem
+    <RemoteListItem
       app={remote.app}
       selected={apps.selectedApp === remote.app.id}
       key={remote.app.id}

@@ -8,6 +8,8 @@ import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
 import ArrowForwardRounded from "@mui/icons-material/ArrowForwardRounded";
 import RefreshRounded from "@mui/icons-material/RefreshRounded";
 
+import { getDropURL } from "../../common/drop";
+
 type BrowserViewControlsProps = {
   viewId: number;
   url: string;
@@ -24,6 +26,14 @@ export const BrowserViewControls = React.forwardRef(
 
     function handleURLChange(e: React.ChangeEvent<HTMLInputElement>) {
       onURLChange(e.target.value);
+    }
+
+    function handleURLDrop(event: React.DragEvent<HTMLInputElement>) {
+      event.preventDefault();
+      const url = getDropURL(event.dataTransfer);
+      if (url) {
+        onURLChange(url);
+      }
     }
 
     function handleBack() {
@@ -70,6 +80,7 @@ export const BrowserViewControls = React.forwardRef(
               fullWidth
               onChange={handleURLChange}
               disabled={disabled}
+              onDrop={handleURLDrop}
             />
           </form>
           <IconButton onClick={handleReload} disabled={disabled} size="small">

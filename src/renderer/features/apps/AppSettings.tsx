@@ -9,6 +9,8 @@ import Button from "@mui/material/Button";
 import { useDispatch } from "react-redux";
 import { App, editApp } from "./appsSlice";
 
+import { getDropURL } from "../../common/drop";
+
 type AppSettingsProps = {
   app: App;
   open: boolean;
@@ -20,6 +22,14 @@ export function AppSettings({ app, open, onClose }: AppSettingsProps) {
 
   function handleURLChange(event: React.ChangeEvent<HTMLInputElement>) {
     dispatch(editApp({ id: app.id, url: event.target.value }));
+  }
+
+  function handleURLDrop(event: React.DragEvent<HTMLInputElement>) {
+    event.preventDefault();
+    const url = getDropURL(event.dataTransfer);
+    if (url) {
+      dispatch(editApp({ id: app.id, url }));
+    }
   }
 
   function handleTitleChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -49,13 +59,14 @@ export function AppSettings({ app, open, onClose }: AppSettingsProps) {
             id="url"
             label="URL"
             fullWidth
-            variant="outlined"
+            variant="standard"
             autoComplete="off"
             InputLabelProps={{
               shrink: true,
             }}
             value={app.url}
             onChange={handleURLChange}
+            onDrop={handleURLDrop}
           />
           <TextField
             margin="dense"

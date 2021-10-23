@@ -10,6 +10,8 @@ import { v4 as uuid } from "uuid";
 import { useDispatch } from "react-redux";
 import { addApp, editApp } from "./appsSlice";
 
+import { getDropURL } from "../../common/drop";
+
 type AppAddProps = {
   open: boolean;
   onClose: () => void;
@@ -30,6 +32,14 @@ export function AppAdd({ open, onClose }: AppAddProps) {
 
   function handleURLChange(event: React.ChangeEvent<HTMLInputElement>) {
     setURL(event.target.value);
+  }
+
+  function handleURLDrop(event: React.DragEvent<HTMLInputElement>) {
+    event.preventDefault();
+    const url = getDropURL(event.dataTransfer);
+    if (url) {
+      setURL(url);
+    }
   }
 
   function handleTitleChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -64,6 +74,7 @@ export function AppAdd({ open, onClose }: AppAddProps) {
             }}
             value={url}
             onChange={handleURLChange}
+            onDrop={handleURLDrop}
           />
           <TextField
             margin="dense"

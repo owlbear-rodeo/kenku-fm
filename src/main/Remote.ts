@@ -1,38 +1,50 @@
-import { Server } from "node-osc";
 import { BrowserWindow } from "electron";
 import store from "./store";
+import Fastify, { FastifyInstance } from "fastify";
+
+type OpenRequest = {
+  url: string;
+};
 
 export default class Remote {
-  oscServer: Server | null = null;
+  fastify: FastifyInstance | null = null;
   host = store.get("remoteHost");
   port = store.get("remotePort");
 
-  start(callback?: () => void) {
-    this.oscServer = new Server(this.port, this.host, callback);
+  start() {
+    this.fastify = Fastify();
 
-    this.oscServer.on("message", function (msg) {
-      if (
-        msg.length === 2 &&
-        msg[0] === "/open" &&
-        typeof msg[1] === "string"
-      ) {
+    this.fastify.post<{ Body: OpenRequest; Reply: OpenRequest }>(
+      "/open",
+      (request, reply) => {
+        const url = request.body.url || "";
         const windows = BrowserWindow.getAllWindows();
         for (let window of windows) {
-          window.webContents.send("REMOTE_OPEN_URL", msg[1]);
+          window.webContents.send("REMOTE_OPEN_URL", url);
+        }
+        reply.status(200).send(request.body);
+      }
+    );
+
+    this.fastify.listen(this.port, this.host, (err) => {
+      const windows = BrowserWindow.getAllWindows();
+      if (err) {
+        for (let window of windows) {
+          window.webContents.send("ERROR", err.message);
+        }
+        this.stop();
+      } else {
+        for (let window of windows) {
+          window.webContents.send("REMOTE_ENABLED", true);
         }
       }
     });
-
-    const windows = BrowserWindow.getAllWindows();
-    for (let window of windows) {
-      window.webContents.send("REMOTE_ENABLED", true);
-    }
   }
 
   stop() {
-    if (this.oscServer) {
-      this.oscServer.close();
-      this.oscServer = null;
+    if (this.fastify) {
+      this.fastify.close();
+      this.fastify = null;
 
       const windows = BrowserWindow.getAllWindows();
       for (let window of windows) {
@@ -42,7 +54,7 @@ export default class Remote {
   }
 
   getInfo() {
-    return `Running: ${this.oscServer !== null}\nHost: ${this.host}\nPort: ${
+    return `Running: ${this.fastify !== null}\nHost: ${this.host}\nPort: ${
       this.port
     }`;
   }

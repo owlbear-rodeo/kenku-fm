@@ -61,7 +61,7 @@
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.0.1",
     "env-cmd": "^10.1.0",
-    "node-osc": "^6.1.10",
+    "fastify": "^3.22.1",
     "opusscript": "^0.0.8",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",

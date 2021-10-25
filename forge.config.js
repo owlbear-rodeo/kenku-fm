@@ -71,6 +71,14 @@ const config = {
                 js: "./src/preload.ts",
               },
             },
+            {
+              html: "./src/remote/index.html",
+              js: "./src/remote/renderer.ts",
+              name: "remote_window",
+              preload: {
+                js: "./src/remote/preload.ts",
+              },
+            },
           ],
         },
         devContentSecurityPolicy: "",

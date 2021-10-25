@@ -1,13 +1,13 @@
 import { app, Menu, MenuItem, BrowserWindow, dialog } from "electron";
 import store from "./main/store";
-import Remote from "./main/Remote";
+import { RemoteManager } from "./main/managers/RemoteManager";
 
 const isMac = process.platform === "darwin";
 
 const SHOW_CONTROLS_ID = "SHOW_CONTROLS";
 const ENABLE_REMOTE_ID = "ENABLE_REMOTE";
 
-const remote = new Remote();
+const remote = new RemoteManager();
 if (store.get("remoteEnabled")) {
   remote.start();
 }

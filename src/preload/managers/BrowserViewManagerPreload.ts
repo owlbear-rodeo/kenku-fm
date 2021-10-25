@@ -43,7 +43,8 @@ export class BrowserViewManagerPreload {
     x: number,
     y: number,
     width: number,
-    height: number
+    height: number,
+    preload?: string
   ): Promise<number> {
     const viewId = ipcRenderer.sendSync(
       "BROWSER_VIEW_CREATE_BROWSER_VIEW",
@@ -51,7 +52,8 @@ export class BrowserViewManagerPreload {
       x,
       y,
       width,
-      height
+      height,
+      preload
     );
     this._startStream(viewId);
     return viewId;

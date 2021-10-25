@@ -114,9 +114,10 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     x: number,
     y: number,
     width: number,
-    height: number
+    height: number,
+    preload?: string
   ) => {
-    const id = this.createBrowserView(url, x, y, width, height);
+    const id = this.createBrowserView(url, x, y, width, height, preload);
     this.views[id].webContents.on(
       "did-start-navigation",
       (_, url, __, isMainFrame) => {
@@ -178,9 +179,14 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     x: number,
     y: number,
     width: number,
-    height: number
+    height: number,
+    preload?: string
   ): number {
-    const view = new BrowserView();
+    const view = new BrowserView({
+      webPreferences: {
+        preload,
+      },
+    });
     this.window.setBrowserView(view);
 
     view.setBounds({

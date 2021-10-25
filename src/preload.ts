@@ -28,8 +28,7 @@ type Channel =
   | "DISCORD_CHANNEL_LEFT"
   | "SHOW_CONTROLS"
   | "BROWSER_VIEW_DID_NAVIGATE"
-  | "REMOTE_ENABLED"
-  | "REMOTE_OPEN_URL";
+  | "REMOTE_ENABLED";
 
 const validChannels: Channel[] = [
   "ERROR",
@@ -43,7 +42,6 @@ const validChannels: Channel[] = [
   "SHOW_CONTROLS",
   "BROWSER_VIEW_DID_NAVIGATE",
   "REMOTE_ENABLED",
-  "REMOTE_OPEN_URL",
 ];
 
 const api = {
@@ -62,9 +60,10 @@ const api = {
     x: number,
     y: number,
     width: number,
-    height: number
+    height: number,
+    preload?: string
   ): Promise<number> => {
-    return viewManager.createBrowserView(url, x, y, width, height);
+    return viewManager.createBrowserView(url, x, y, width, height, preload);
   },
   removeBrowserView: (id: number) => {
     viewManager.removeBrowserView(id);
@@ -109,6 +108,16 @@ const api = {
   },
   appIcon: async (appURL: string): Promise<string> => {
     return ipcRenderer.invoke("APP_ICON_REQUEST", appURL);
+  },
+  remoteGetURL: (): string => {
+    return ipcRenderer.sendSync("REMOTE_GET_URL");
+  },
+  remoteGetPreloadURL: (): string => {
+    return ipcRenderer.sendSync("REMOTE_GET_PRELOAD_URL");
+  },
+  /** Registers a the remote view with the remote manager so it can send it commands  */
+  remoteRegisterView: (viewId: number) => {
+    ipcRenderer.send("REMOTE_REGISTER_VIEW", viewId);
   },
 };
 

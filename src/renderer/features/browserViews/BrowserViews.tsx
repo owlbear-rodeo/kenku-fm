@@ -80,13 +80,19 @@ export function BrowserViews() {
 
     async function createBrowserView() {
       const bounds = getBounds(controlsRef.current);
+      const isRemote = app.id === remote.app.id;
       const id = await window.kenku.createBrowserView(
         app.url,
         bounds.x,
         bounds.y,
         bounds.width,
-        bounds.height
+        bounds.height,
+        // Add the remote preload script
+        isRemote ? remote.app.preload : undefined
       );
+      if (isRemote) {
+        window.kenku.remoteRegisterView(id);
+      }
       dispatch(addBrowserView({ id, appId: app.id, url: app.url }));
       dispatch(selectBrowserView(id));
     }

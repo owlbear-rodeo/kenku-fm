@@ -85,6 +85,50 @@ export function App() {
     };
   }, []);
 
+  useEffect(() => {
+    window.remote.on("REMOTE_PLAYBACK_PLAY_PAUSE", () => {
+      if (trackRef.current) {
+        if (trackRef.current.playing()) {
+          trackRef.current.pause();
+          setPlaying(false);
+        } else {
+          trackRef.current.play();
+          setPlaying(true);
+        }
+      }
+    });
+
+    window.remote.on("REMOTE_PLAYBACK_MUTE", () => {
+      setMuted((muted) => {
+        Howler.mute(!muted);
+        return !muted;
+      });
+    });
+
+    window.remote.on("REMOTE_PLAYBACK_INCREASE_VOLUME", () => {
+      setVolume((volume) => {
+        const newVolume = Math.min(volume + 0.05, 1);
+        Howler.volume(newVolume);
+        return newVolume;
+      });
+    });
+
+    window.remote.on("REMOTE_PLAYBACK_DECREASE_VOLUME", () => {
+      setVolume((volume) => {
+        const newVolume = Math.max(volume - 0.05, 0);
+        Howler.volume(newVolume);
+        return newVolume;
+      });
+    });
+
+    return () => {
+      window.remote.removeAllListeners("REMOTE_PLAYBACK_PLAY_PAUSE");
+      window.remote.removeAllListeners("REMOTE_PLAYBACK_MUTE");
+      window.remote.removeAllListeners("REMOTE_PLAYBACK_INCREASE_VOLUME");
+      window.remote.removeAllListeners("REMOTE_PLAYBACK_DECREASE_VOLUME");
+    };
+  }, []);
+
   function handleSeek(to: number) {
     if (playback) {
       setPlayback({ ...playback, current: to });

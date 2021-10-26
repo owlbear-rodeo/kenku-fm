@@ -48,6 +48,46 @@ export class RemoteManager {
       }
     );
 
+    this.fastify.post("/playback/play-pause", (_, reply) => {
+      if (this.registeredViewId) {
+        const view = webContents.fromId(this.registeredViewId);
+        if (view) {
+          view.send("REMOTE_PLAYBACK_PLAY_PAUSE");
+        }
+      }
+      reply.status(200).send();
+    });
+
+    this.fastify.post("/playback/mute", (_, reply) => {
+      if (this.registeredViewId) {
+        const view = webContents.fromId(this.registeredViewId);
+        if (view) {
+          view.send("REMOTE_PLAYBACK_MUTE");
+        }
+      }
+      reply.status(200).send();
+    });
+
+    this.fastify.post("/playback/increase-volume", (_, reply) => {
+      if (this.registeredViewId) {
+        const view = webContents.fromId(this.registeredViewId);
+        if (view) {
+          view.send("REMOTE_PLAYBACK_INCREASE_VOLUME");
+        }
+      }
+      reply.status(200).send();
+    });
+
+    this.fastify.post("/playback/decrease-volume", (_, reply) => {
+      if (this.registeredViewId) {
+        const view = webContents.fromId(this.registeredViewId);
+        if (view) {
+          view.send("REMOTE_PLAYBACK_DECREASE_VOLUME");
+        }
+      }
+      reply.status(200).send();
+    });
+
     this.fastify.listen(this.port, this.host, (err) => {
       const windows = BrowserWindow.getAllWindows();
       if (err) {

@@ -75,6 +75,20 @@ export function App() {
         }
         animationRef.current = requestAnimationFrame(animatePlayback);
       });
+
+      // Update UI based off of native controls
+      const sound = (track as any)._sounds[0];
+      const node = sound._node;
+      node.onpause = () => {
+        setPlaying(false);
+        sound._paused = true;
+        sound._seek = node.currentTime;
+      };
+      node.onplaying = () => {
+        setPlaying(true);
+        sound._paused = false;
+        sound._seek = node.currentTime;
+      };
     });
 
     return () => {

@@ -177,7 +177,11 @@ export function Player({
       <Widget>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Typography sx={{ width: "100%" }} textAlign="center" noWrap>
-            <b>{track?.title || "Play a track to get started"}</b>
+            <b>
+              {track && track.title !== undefined
+                ? track.title
+                : "Play a track to get started"}
+            </b>
           </Typography>
         </Box>
         <TimeSlider

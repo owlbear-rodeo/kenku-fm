@@ -4,7 +4,7 @@ export function getDropURL(dataTransfer: DataTransfer): string | undefined {
     const file = files[0];
     const path = (file as any).path;
     if (path) {
-      return `file://${encodeURI(path)}`;
+      return `file://${encodeURIComponent(path).replace(/%2F/g, "/")}`;
     }
   }
 }

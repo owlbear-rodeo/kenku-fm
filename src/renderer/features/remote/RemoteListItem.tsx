@@ -19,9 +19,7 @@ export function RemoteListItem() {
     window.kenku.on("REMOTE_ENABLED", (args) => {
       const enabled = args[0];
       dispatch(setEnabled(enabled));
-      if (enabled) {
-        dispatch(selectApp(remote.app.id));
-      } else {
+      if (!enabled) {
         dispatch(selectApp(undefined));
       }
     });

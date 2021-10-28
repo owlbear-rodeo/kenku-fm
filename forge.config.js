@@ -28,7 +28,7 @@ const config = {
       name: "@electron-forge/maker-dmg",
       config: {
         background: path.join(__dirname, "src", "assets", "dmg-background.png"),
-        icon: path.join(__dirname, "src", "assets", "setup.ico"),
+        icon: path.join(__dirname, "src", "assets", "setup.icns"),
       },
     },
     {

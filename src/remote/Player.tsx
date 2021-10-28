@@ -12,6 +12,8 @@ import VolumeDown from "@mui/icons-material/VolumeDownRounded";
 import VolumeOff from "@mui/icons-material/VolumeOffRounded";
 import Repeat from "@mui/icons-material/RepeatRounded";
 import RepeatOne from "@mui/icons-material/RepeatOneRounded";
+import Link from "@mui/material/Link";
+
 import { Playback, Track } from "./App";
 
 const WallPaper = styled("div")({
@@ -172,16 +174,14 @@ export function Player({
   const time = timeOverride === null ? playback?.current || 0 : timeOverride;
   const duration = playback?.duration || 0;
 
+  const noTrack = track?.title === undefined;
+
   return (
     <Box sx={{ width: "100%", overflow: "hidden" }}>
       <Widget>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Typography sx={{ width: "100%" }} textAlign="center" noWrap>
-            <b>
-              {track && track.title !== undefined
-                ? track.title
-                : "Play a track to get started"}
-            </b>
+            <b>{noTrack ? "Play a track to get started" : track.title}</b>
           </Typography>
         </Box>
         <TimeSlider
@@ -253,6 +253,26 @@ export function Player({
             {loop ? <RepeatOne /> : <Repeat />}
           </IconButton>
         </Stack>
+        {noTrack && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Link
+              href="https://kenku.fm/docs/using-kenku-remote"
+              variant="caption"
+              textAlign="center"
+              target="_blank"
+              rel="noopener noreferrer"
+              py={2}
+            >
+              How do I use the Remote App?
+            </Link>
+          </Box>
+        )}
       </Widget>
       <WallPaper />
       <Overlay />

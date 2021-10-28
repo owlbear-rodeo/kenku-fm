@@ -104,7 +104,7 @@ export function Settings({ open, onClose }: SettingsProps) {
             )}
           </Button>
           <Link
-            href="https://kenku.fm/getting-started#discord"
+            href="https://kenku.fm/docs/getting-a-discord-token"
             variant="caption"
             textAlign="center"
             target="_blank"

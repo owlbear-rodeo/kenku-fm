@@ -1,4 +1,4 @@
-import { BrowserView, BrowserWindow, ipcMain } from "electron";
+import { BrowserView, BrowserWindow, ipcMain, shell } from "electron";
 import { PassThrough } from "stream";
 import { TypedEmitter } from "tiny-typed-emitter";
 import { Readable } from "stream";
@@ -126,6 +126,10 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
         }
       }
     );
+    this.views[id].webContents.on("new-window", (event, url) => {
+      event.preventDefault();
+      shell.openExternal(url);
+    });
     event.returnValue = id;
   };
 

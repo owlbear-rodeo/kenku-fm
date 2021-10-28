@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
 import {
   addBrowserView,
+  BrowserView,
   editBrowserView,
   removeBrowserView,
   selectBrowserView,
@@ -28,8 +29,18 @@ export function BrowserViews() {
   const remote = useSelector((state: RootState) => state.remote);
   const browserViews = useSelector((state: RootState) => state.browserViews);
 
+  const selectedBrowserView = useMemo(
+    () => browserViews.browserViews.byId[browserViews.selectedBrowserView],
+    [browserViews]
+  );
+
   const [showControls, setShowControls] = useState(false);
   const controlsRef = useRef<HTMLDivElement | null>(null);
+
+  const isRemote = useMemo(
+    () => selectedBrowserView?.appId === remote.app.id,
+    [selectedBrowserView, remote.app]
+  );
 
   useEffect(() => {
     window.kenku.on("SHOW_CONTROLS", (args) => {
@@ -115,7 +126,7 @@ export function BrowserViews() {
         bounds.height
       );
     }
-  }, [apps.selectedApp, remote.enabled]);
+  }, [apps.selectedApp, remote]);
 
   useEffect(() => {
     if (browserViews.selectedBrowserView) {
@@ -128,17 +139,13 @@ export function BrowserViews() {
         bounds.height
       );
     }
-  }, [showControls]);
+  }, [showControls, isRemote]);
 
   function handleURLChange(url: string) {
     dispatch(editBrowserView({ id: browserViews.selectedBrowserView, url }));
   }
 
-  const selectedBrowserView =
-    browserViews.selectedBrowserView !== undefined &&
-    browserViews.browserViews.byId[browserViews.selectedBrowserView];
-
-  return showControls ? (
+  return showControls && !isRemote ? (
     <BrowserViewControls
       viewId={selectedBrowserView?.id || -1}
       url={selectedBrowserView?.url || ""}

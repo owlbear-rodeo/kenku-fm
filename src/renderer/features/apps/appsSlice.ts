@@ -51,9 +51,19 @@ export const appsSlice = createSlice({
         ...action.payload,
       };
     },
+    moveApp: (
+      state,
+      action: PayloadAction<{ active: string; over: string }>
+    ) => {
+      const oldIndex = state.apps.allIds.indexOf(action.payload.active);
+      const newIndex = state.apps.allIds.indexOf(action.payload.over);
+      state.apps.allIds.splice(oldIndex, 1);
+      state.apps.allIds.splice(newIndex, 0, action.payload.active);
+    },
   },
 });
 
-export const { addApp, removeApp, selectApp, editApp } = appsSlice.actions;
+export const { addApp, removeApp, selectApp, editApp, moveApp } =
+  appsSlice.actions;
 
 export default appsSlice.reducer;

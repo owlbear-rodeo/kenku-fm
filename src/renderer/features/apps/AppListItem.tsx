@@ -15,9 +15,10 @@ import { AppSettings } from "./AppSettings";
 type AppListItemProps = {
   app: App;
   selected: boolean;
+  shadow?: Boolean;
 };
 
-export function AppListItem({ app, selected }: AppListItemProps) {
+export function AppListItem({ app, selected, shadow }: AppListItemProps) {
   const dispatch = useDispatch();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -58,7 +59,7 @@ export function AppListItem({ app, selected }: AppListItemProps) {
       <ListItemButton
         dense
         selected={selected}
-        sx={{ px: 2 }}
+        sx={{ px: 2, boxShadow: shadow ? 10 : "none" }}
         onClick={select}
         onDoubleClick={openSettings}
       >

@@ -22,7 +22,7 @@ jobs:
           name: Install dpkg and fakeroot
           command: |
             sudo apt-get update -y
-            sudo apt-get install -y dpkg fakeroot
+            sudo apt-get install -y dpkg fakeroot rpm
 
       - save_cache:
           key: dependency-cache-{{ checksum "package.json" }}

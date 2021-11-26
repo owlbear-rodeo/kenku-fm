@@ -9,28 +9,28 @@ jobs:
       - run:
           name: Update NPM
           command: "sudo npm install -g npm"
-      # - restore_cache:
-      #     key: dependency-cache-{{ checksum "package.json" }}
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
       - run:
           name: Login to Github Packages
           command: |
             npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
       - run:
           name: Install Dependencies
-          command: npm install
+          command: yarn install --non-interactive
       - run:
           name: Install dpkg and fakeroot
           command: |
             sudo apt-get update -y
             sudo apt-get install -y dpkg fakeroot rpm
 
-      # - save_cache:
-      #     key: dependency-cache-{{ checksum "package.json" }}
-      #     paths:
-      #       - ./node_modules
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
       - run:
           name: Generate Builds
-          command: npm run make
+          command: yarn make
 
       - store_artifacts:
           path: ~/repo/out/make

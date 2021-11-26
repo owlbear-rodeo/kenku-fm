@@ -12,6 +12,10 @@ jobs:
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
+          name: Publish to GitHub Packages
+          command: |
+            npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
+      - run:
           name: Install Dependencies
           command: npm install
       - run:

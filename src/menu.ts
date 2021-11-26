@@ -1,15 +1,15 @@
 import { app, Menu, MenuItem, BrowserWindow, dialog } from "electron";
 import store from "./main/store";
-import { RemoteManager } from "./main/managers/RemoteManager";
+import { PlayerManager } from "./main/managers/PlayerManager";
 
 const isMac = process.platform === "darwin";
 
 const SHOW_CONTROLS_ID = "SHOW_CONTROLS";
 const ENABLE_REMOTE_ID = "ENABLE_REMOTE";
 
-const remote = new RemoteManager();
+const player = new PlayerManager();
 if (store.get("remoteEnabled")) {
-  remote.start();
+  player.startRemote();
 }
 
 const template: any = [
@@ -113,9 +113,9 @@ const template: any = [
         click: (item: MenuItem) => {
           store.set("remoteEnabled", item.checked);
           if (item.checked) {
-            remote.start();
+            player.startRemote();
           } else {
-            remote.stop();
+            player.stopRemote();
           }
         },
         checked: store.get("remoteEnabled"),
@@ -125,7 +125,7 @@ const template: any = [
         label: "Remote Info",
         click: () => {
           dialog.showMessageBox(undefined, {
-            message: remote.getInfo(),
+            message: player.getRemoteInfo(),
             type: "info",
             title: "Remote Info",
           });

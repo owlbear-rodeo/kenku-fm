@@ -1,9 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Howl, Howler } from "howler";
-
-import Box from "@mui/material/Box";
-
-import { Player } from "./Player";
 
 export interface Playback {
   current: number;
@@ -15,7 +11,7 @@ export interface Track {
   title: string;
 }
 
-export function App() {
+export function usePlayback() {
   const trackRef = useRef<Howl | null>(null);
   const animationRef = useRef<number | null>(null);
 
@@ -27,7 +23,7 @@ export function App() {
   const [playback, setPlayback] = useState<Playback | null>(null);
 
   useEffect(() => {
-    window.remote.on("REMOTE_PLAY", (args) => {
+    window.player.on("PLAYER_REMOTE_PLAY", (args) => {
       const url = args[0];
       const title = args[1];
       const loop = args[2];
@@ -92,7 +88,7 @@ export function App() {
     });
 
     return () => {
-      window.remote.removeAllListeners("REMOTE_PLAY");
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAY");
       if (animationRef.current !== null) {
         cancelAnimationFrame(animationRef.current);
       }
@@ -100,7 +96,7 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    window.remote.on("REMOTE_PLAYBACK_PLAY_PAUSE", () => {
+    window.player.on("PLAYER_REMOTE_PLAYBACK_PLAY_PAUSE", () => {
       if (trackRef.current) {
         if (trackRef.current.playing()) {
           trackRef.current.pause();
@@ -112,14 +108,14 @@ export function App() {
       }
     });
 
-    window.remote.on("REMOTE_PLAYBACK_MUTE", () => {
+    window.player.on("PLAYER_REMOTE_PLAYBACK_MUTE", () => {
       setMuted((muted) => {
         Howler.mute(!muted);
         return !muted;
       });
     });
 
-    window.remote.on("REMOTE_PLAYBACK_INCREASE_VOLUME", () => {
+    window.player.on("PLAYER_REMOTE_PLAYBACK_INCREASE_VOLUME", () => {
       setVolume((volume) => {
         const newVolume = Math.min(volume + 0.05, 1);
         Howler.volume(newVolume);
@@ -127,7 +123,7 @@ export function App() {
       });
     });
 
-    window.remote.on("REMOTE_PLAYBACK_DECREASE_VOLUME", () => {
+    window.player.on("PLAYER_REMOTE_PLAYBACK_DECREASE_VOLUME", () => {
       setVolume((volume) => {
         const newVolume = Math.max(volume - 0.05, 0);
         Howler.volume(newVolume);
@@ -136,10 +132,14 @@ export function App() {
     });
 
     return () => {
-      window.remote.removeAllListeners("REMOTE_PLAYBACK_PLAY_PAUSE");
-      window.remote.removeAllListeners("REMOTE_PLAYBACK_MUTE");
-      window.remote.removeAllListeners("REMOTE_PLAYBACK_INCREASE_VOLUME");
-      window.remote.removeAllListeners("REMOTE_PLAYBACK_DECREASE_VOLUME");
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_PLAY_PAUSE");
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_MUTE");
+      window.player.removeAllListeners(
+        "PLAYER_REMOTE_PLAYBACK_INCREASE_VOLUME"
+      );
+      window.player.removeAllListeners(
+        "PLAYER_REMOTE_PLAYBACK_DECREASE_VOLUME"
+      );
     };
   }, []);
 
@@ -174,32 +174,17 @@ export function App() {
     Howler.mute(muted);
   }
 
-  return (
-    <Box
-      sx={{
-        position: "absolute",
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Player
-        playing={playing}
-        volume={volume}
-        muted={muted}
-        loop={loop}
-        track={track}
-        playback={playback}
-        onSeek={handleSeek}
-        onPlay={handlePlay}
-        onVolumeChange={handleVolumeChange}
-        onLoop={handleLoop}
-        onMute={handleMute}
-      />
-    </Box>
-  );
+  return {
+    playing,
+    setPlaying: handlePlay,
+    volume,
+    setVolume: handleVolumeChange,
+    muted,
+    setMuted: handleMute,
+    loop,
+    setLoop: handleLoop,
+    track,
+    playback,
+    seek: handleSeek,
+  };
 }

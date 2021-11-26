@@ -4,7 +4,6 @@ import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
 import {
   addBrowserView,
-  BrowserView,
   editBrowserView,
   removeBrowserView,
   selectBrowserView,
@@ -26,7 +25,7 @@ function getBounds(controls: HTMLDivElement | null) {
 export function BrowserViews() {
   const dispatch = useDispatch();
   const apps = useSelector((state: RootState) => state.apps);
-  const remote = useSelector((state: RootState) => state.remote);
+  const player = useSelector((state: RootState) => state.player);
   const browserViews = useSelector((state: RootState) => state.browserViews);
 
   const selectedBrowserView = useMemo(
@@ -37,9 +36,9 @@ export function BrowserViews() {
   const [showControls, setShowControls] = useState(false);
   const controlsRef = useRef<HTMLDivElement | null>(null);
 
-  const isRemote = useMemo(
-    () => selectedBrowserView?.appId === remote.app.id,
-    [selectedBrowserView, remote.app]
+  const isPlayer = useMemo(
+    () => selectedBrowserView?.appId === player.app.id,
+    [selectedBrowserView, player.app]
   );
 
   useEffect(() => {
@@ -61,9 +60,7 @@ export function BrowserViews() {
 
   useEffect(() => {
     const allApps = Object.values(apps.apps.byId);
-    if (remote.enabled) {
-      allApps.push(remote.app);
-    }
+    allApps.push(player.app);
     if (apps.selectedApp === undefined) {
       // Remove browser views that have been deleted
       const views = Object.values(browserViews.browserViews.byId);
@@ -91,18 +88,18 @@ export function BrowserViews() {
 
     async function createBrowserView() {
       const bounds = getBounds(controlsRef.current);
-      const isRemote = app.id === remote.app.id;
+      const isPlayer = app.id === player.app.id;
       const id = await window.kenku.createBrowserView(
         app.url,
         bounds.x,
         bounds.y,
         bounds.width,
         bounds.height,
-        // Add the remote preload script
-        isRemote ? remote.app.preload : undefined
+        // Add the player preload script
+        isPlayer ? player.app.preload : undefined
       );
-      if (isRemote) {
-        window.kenku.remoteRegisterView(id);
+      if (isPlayer) {
+        window.kenku.playerRegisterView(id);
       }
       dispatch(addBrowserView({ id, appId: app.id, url: app.url }));
       dispatch(selectBrowserView(id));
@@ -126,7 +123,7 @@ export function BrowserViews() {
         bounds.height
       );
     }
-  }, [apps.selectedApp, remote]);
+  }, [apps.selectedApp, player]);
 
   useEffect(() => {
     if (browserViews.selectedBrowserView) {
@@ -139,13 +136,13 @@ export function BrowserViews() {
         bounds.height
       );
     }
-  }, [showControls, isRemote]);
+  }, [showControls, isPlayer]);
 
   function handleURLChange(url: string) {
     dispatch(editBrowserView({ id: browserViews.selectedBrowserView, url }));
   }
 
-  return showControls && !isRemote ? (
+  return showControls && !isPlayer ? (
     <BrowserViewControls
       viewId={selectedBrowserView?.id || -1}
       url={selectedBrowserView?.url || ""}

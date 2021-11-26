@@ -1,18 +1,18 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 type Channel =
-  | "REMOTE_PLAY"
-  | "REMOTE_PLAYBACK_PLAY_PAUSE"
-  | "REMOTE_PLAYBACK_MUTE"
-  | "REMOTE_PLAYBACK_INCREASE_VOLUME"
-  | "REMOTE_PLAYBACK_DECREASE_VOLUME";
+  | "PLAYER_REMOTE_PLAY"
+  | "PLAYER_REMOTE_PLAYBACK_PLAY_PAUSE"
+  | "PLAYER_REMOTE_PLAYBACK_MUTE"
+  | "PLAYER_REMOTE_PLAYBACK_INCREASE_VOLUME"
+  | "PLAYER_REMOTE_PLAYBACK_DECREASE_VOLUME";
 
 const validChannels: Channel[] = [
-  "REMOTE_PLAY",
-  "REMOTE_PLAYBACK_PLAY_PAUSE",
-  "REMOTE_PLAYBACK_MUTE",
-  "REMOTE_PLAYBACK_INCREASE_VOLUME",
-  "REMOTE_PLAYBACK_DECREASE_VOLUME",
+  "PLAYER_REMOTE_PLAY",
+  "PLAYER_REMOTE_PLAYBACK_PLAY_PAUSE",
+  "PLAYER_REMOTE_PLAYBACK_MUTE",
+  "PLAYER_REMOTE_PLAYBACK_INCREASE_VOLUME",
+  "PLAYER_REMOTE_PLAYBACK_DECREASE_VOLUME",
 ];
 
 const api = {
@@ -31,8 +31,8 @@ const api = {
 
 declare global {
   interface Window {
-    remote: typeof api;
+    player: typeof api;
   }
 }
 
-contextBridge.exposeInMainWorld("remote", api);
+contextBridge.exposeInMainWorld("player", api);

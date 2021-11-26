@@ -9,7 +9,11 @@ window.addEventListener("load", () => {
   viewManager.load();
   // Re-hydrate saved options
   ipcRenderer.emit("SHOW_CONTROLS", undefined, store.get("showControls"));
-  ipcRenderer.emit("REMOTE_ENABLED", undefined, store.get("remoteEnabled"));
+  ipcRenderer.emit(
+    "PLAYER_REMOTE_ENABLED",
+    undefined,
+    store.get("remoteEnabled")
+  );
 });
 
 window.addEventListener("beforeunload", () => {
@@ -28,7 +32,7 @@ type Channel =
   | "DISCORD_CHANNEL_LEFT"
   | "SHOW_CONTROLS"
   | "BROWSER_VIEW_DID_NAVIGATE"
-  | "REMOTE_ENABLED";
+  | "PLAYER_REMOTE_ENABLED";
 
 const validChannels: Channel[] = [
   "ERROR",
@@ -41,7 +45,7 @@ const validChannels: Channel[] = [
   "DISCORD_CHANNEL_LEFT",
   "SHOW_CONTROLS",
   "BROWSER_VIEW_DID_NAVIGATE",
-  "REMOTE_ENABLED",
+  "PLAYER_REMOTE_ENABLED",
 ];
 
 const api = {
@@ -109,15 +113,15 @@ const api = {
   appIcon: async (appURL: string): Promise<string> => {
     return ipcRenderer.invoke("APP_ICON_REQUEST", appURL);
   },
-  remoteGetURL: (): string => {
-    return ipcRenderer.sendSync("REMOTE_GET_URL");
+  playerGetURL: (): string => {
+    return ipcRenderer.sendSync("PLAYER_GET_URL");
   },
-  remoteGetPreloadURL: (): string => {
-    return ipcRenderer.sendSync("REMOTE_GET_PRELOAD_URL");
+  playerGetPreloadURL: (): string => {
+    return ipcRenderer.sendSync("PLAYER_GET_PRELOAD_URL");
   },
-  /** Registers a the remote view with the remote manager so it can send it commands  */
-  remoteRegisterView: (viewId: number) => {
-    ipcRenderer.send("REMOTE_REGISTER_VIEW", viewId);
+  /** Registers a player view with the remote manager so it can send it commands  */
+  playerRegisterView: (viewId: number) => {
+    ipcRenderer.send("PLAYER_REGISTER_VIEW", viewId);
   },
 };
 

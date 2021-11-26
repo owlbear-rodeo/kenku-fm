@@ -2,8 +2,8 @@ import { ipcMain, BrowserWindow, webContents } from "electron";
 import store from "../store";
 import Fastify, { FastifyInstance } from "fastify";
 
-declare const REMOTE_WINDOW_WEBPACK_ENTRY: string;
-declare const REMOTE_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
+declare const PLAYER_WINDOW_WEBPACK_ENTRY: string;
+declare const PLAYER_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
 type PlayRequest = {
   url: string;
@@ -11,25 +11,25 @@ type PlayRequest = {
   loop: boolean;
 };
 
-export class RemoteManager {
+export class PlayerManager {
   registeredViewId?: number;
   fastify: FastifyInstance | null = null;
   host = store.get("remoteHost");
   port = store.get("remotePort");
 
   constructor() {
-    ipcMain.on("REMOTE_GET_URL", this._handleGetURL);
-    ipcMain.on("REMOTE_GET_PRELOAD_URL", this._handleGetPreloadURL);
-    ipcMain.on("REMOTE_REGISTER_VIEW", this._handleRegisterView);
+    ipcMain.on("PLAYER_GET_URL", this._handleGetURL);
+    ipcMain.on("PLAYER_GET_PRELOAD_URL", this._handleGetPreloadURL);
+    ipcMain.on("PLAYER_REGISTER_VIEW", this._handleRegisterView);
   }
 
   destroy() {
-    ipcMain.off("REMOTE_GET_URL", this._handleGetURL);
-    ipcMain.off("REMOTE_GET_PRELOAD_URL", this._handleGetPreloadURL);
-    ipcMain.off("REMOTE_REGISTER_VIEW", this._handleRegisterView);
+    ipcMain.off("PLAYER_GET_URL", this._handleGetURL);
+    ipcMain.off("PLAYER_GET_PRELOAD_URL", this._handleGetPreloadURL);
+    ipcMain.off("PLAYER_REGISTER_VIEW", this._handleRegisterView);
   }
 
-  start() {
+  startRemote() {
     this.fastify = Fastify();
 
     this.fastify.post<{ Body: PlayRequest; Reply: PlayRequest }>(
@@ -41,7 +41,7 @@ export class RemoteManager {
         if (this.registeredViewId) {
           const view = webContents.fromId(this.registeredViewId);
           if (view) {
-            view.send("REMOTE_PLAY", url, title, loop);
+            view.send("PLAYER_REMOTE_PLAY", url, title, loop);
           }
         }
         reply.status(200).send(request.body);
@@ -52,7 +52,7 @@ export class RemoteManager {
       if (this.registeredViewId) {
         const view = webContents.fromId(this.registeredViewId);
         if (view) {
-          view.send("REMOTE_PLAYBACK_PLAY_PAUSE");
+          view.send("PLAYER_REMOTE_PLAYBACK_PLAY_PAUSE");
         }
       }
       reply.status(200).send();
@@ -62,7 +62,7 @@ export class RemoteManager {
       if (this.registeredViewId) {
         const view = webContents.fromId(this.registeredViewId);
         if (view) {
-          view.send("REMOTE_PLAYBACK_MUTE");
+          view.send("PLAYER_REMOTE_PLAYBACK_MUTE");
         }
       }
       reply.status(200).send();
@@ -72,7 +72,7 @@ export class RemoteManager {
       if (this.registeredViewId) {
         const view = webContents.fromId(this.registeredViewId);
         if (view) {
-          view.send("REMOTE_PLAYBACK_INCREASE_VOLUME");
+          view.send("PLAYER_REMOTE_PLAYBACK_INCREASE_VOLUME");
         }
       }
       reply.status(200).send();
@@ -82,7 +82,7 @@ export class RemoteManager {
       if (this.registeredViewId) {
         const view = webContents.fromId(this.registeredViewId);
         if (view) {
-          view.send("REMOTE_PLAYBACK_DECREASE_VOLUME");
+          view.send("PLAYER_REMOTE_PLAYBACK_DECREASE_VOLUME");
         }
       }
       reply.status(200).send();
@@ -94,39 +94,39 @@ export class RemoteManager {
         for (let window of windows) {
           window.webContents.send("ERROR", err.message);
         }
-        this.stop();
+        this.stopRemote();
       } else {
         for (let window of windows) {
-          window.webContents.send("REMOTE_ENABLED", true);
+          window.webContents.send("PLAYER_REMOTE_ENABLED", true);
         }
       }
     });
   }
 
-  stop() {
+  stopRemote() {
     if (this.fastify) {
       this.fastify.close();
       this.fastify = null;
 
       const windows = BrowserWindow.getAllWindows();
       for (let window of windows) {
-        window.webContents.send("REMOTE_ENABLED", false);
+        window.webContents.send("PLAYER_REMOTE_ENABLED", false);
       }
     }
   }
 
-  getInfo() {
+  getRemoteInfo() {
     return `Running: ${this.fastify !== null}\nHost: ${this.host}\nPort: ${
       this.port
     }`;
   }
 
   _handleGetURL = (event: Electron.IpcMainEvent) => {
-    event.returnValue = REMOTE_WINDOW_WEBPACK_ENTRY;
+    event.returnValue = PLAYER_WINDOW_WEBPACK_ENTRY;
   };
 
   _handleGetPreloadURL = (event: Electron.IpcMainEvent) => {
-    event.returnValue = REMOTE_WINDOW_PRELOAD_WEBPACK_ENTRY;
+    event.returnValue = PLAYER_WINDOW_PRELOAD_WEBPACK_ENTRY;
   };
 
   _handleRegisterView = (_: Electron.IpcMainEvent, viewId: number) => {

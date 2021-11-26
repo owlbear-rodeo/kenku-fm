@@ -1,10 +1,5 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
-import connectionReducer from "../features/connection/connectionSlice";
-import outputReducer from "../features/output/outputSlice";
-import settingsReducer from "../features/settings/settingsSlice";
-import appsReducer from "../features/apps/appsSlice";
-import browserViewsReducer from "../features/browserViews/browserViewsSlice";
-import playerReducer from "../features/player/playerSlice";
+import playlistsReducer from "../features/playlists/playlistsSlice";
 
 import {
   persistStore,
@@ -19,19 +14,14 @@ import {
 import storage from "redux-persist/lib/storage";
 
 const rootReducer = combineReducers({
-  connection: connectionReducer,
-  output: outputReducer,
-  settings: settingsReducer,
-  apps: appsReducer,
-  browserViews: browserViewsReducer,
-  player: playerReducer,
+  playlists: playlistsReducer,
 });
 
 const persistConfig = {
-  key: "root",
+  key: "player",
   version: 1,
   storage,
-  whitelist: ["apps", "settings"],
+  whitelist: ["playlists"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

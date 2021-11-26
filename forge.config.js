@@ -73,11 +73,11 @@ const config = {
               },
             },
             {
-              html: "./src/remote/index.html",
-              js: "./src/remote/renderer.ts",
-              name: "remote_window",
+              html: "./src/player/index.html",
+              js: "./src/player/renderer.ts",
+              name: "player_window",
               preload: {
-                js: "./src/remote/preload.ts",
+                js: "./src/player/preload.ts",
               },
             },
           ],

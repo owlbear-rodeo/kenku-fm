@@ -4,7 +4,6 @@ import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import IconButton from "@mui/material/IconButton";
-import Box from "@mui/material/Box";
 
 import ExpandLess from "@mui/icons-material/ExpandLessRounded";
 import ExpandMore from "@mui/icons-material/ExpandMoreRounded";
@@ -34,7 +33,7 @@ import { moveApp } from "./appsSlice";
 
 import { AppListItem } from "./AppListItem";
 import { AppAdd } from "./AppAdd";
-import { RemoteListItem } from "../remote/RemoteListItem";
+import { PlayerListItem } from "../player/PlayerListItem";
 import { SortableItem } from "./SortableItem";
 
 export function AppListItems() {
@@ -91,7 +90,7 @@ export function AppListItems() {
       </ListItemButton>
       <Collapse in={open} timeout="auto">
         <List component="div" disablePadding>
-          <RemoteListItem />
+          <PlayerListItem />
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}

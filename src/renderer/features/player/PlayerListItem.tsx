@@ -6,37 +6,30 @@ import Box from "@mui/material/Box";
 
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
-import { setEnabled } from "./remoteSlice";
+import { enableRemote } from "./playerSlice";
 import { selectApp } from "../apps/appsSlice";
 
-export function RemoteListItem() {
+export function PlayerListItem() {
   const dispatch = useDispatch();
 
   const apps = useSelector((state: RootState) => state.apps);
-  const remote = useSelector((state: RootState) => state.remote);
+  const player = useSelector((state: RootState) => state.player);
 
   useEffect(() => {
-    window.kenku.on("REMOTE_ENABLED", (args) => {
+    window.kenku.on("PLAYER_REMOTE_ENABLED", (args) => {
       const enabled = args[0];
-      dispatch(setEnabled(enabled));
-      if (!enabled) {
-        dispatch(selectApp(undefined));
-      }
+      dispatch(enableRemote(enabled));
     });
 
     return () => {
-      window.kenku.removeAllListeners("REMOTE_ENABLED");
+      window.kenku.removeAllListeners("PLAYER_REMOTE_ENABLED");
     };
-  }, [remote.app]);
+  }, [player.app]);
 
-  const selected = apps.selectedApp === remote.app.id;
+  const selected = apps.selectedApp === player.app.id;
 
   function select() {
-    !selected && dispatch(selectApp(remote.app.id));
-  }
-
-  if (!remote.enabled) {
-    return null;
+    !selected && dispatch(selectApp(player.app.id));
   }
 
   return (
@@ -49,9 +42,9 @@ export function RemoteListItem() {
           marginRight: 1,
         }}
       >
-        <img src={remote.app.icon} />
+        <img src={player.app.icon} />
       </Box>
-      <ListItemText primary={remote.app.title} />
+      <ListItemText primary={player.app.title} />
     </ListItemButton>
   );
 }

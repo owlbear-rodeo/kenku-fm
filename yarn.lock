@@ -300,6 +300,16 @@
   optionalDependencies:
     electron-winstaller "^5.0.0"
 
+"@electron-forge/maker-zip@^6.0.0-beta.61":
+  version "6.0.0-beta.61"
+  resolved "https://registry.yarnpkg.com/@electron-forge/maker-zip/-/maker-zip-6.0.0-beta.61.tgz#426bb34bbc3665e2cf94f8d48045de0db6fee529"
+  integrity sha512-rpi+JTVvzrAzjVM4BDgwRZg03NG78ReS3SUprEYB7KN0ePOT5YKqTkcI3Apt+Ud4nFWd5OTryXmFRR1/YiTrwA==
+  dependencies:
+    "@electron-forge/maker-base" "6.0.0-beta.61"
+    "@electron-forge/shared-types" "6.0.0-beta.61"
+    cross-zip "^4.0.0"
+    fs-extra "^10.0.0"
+
 "@electron-forge/plugin-base@6.0.0-beta.61":
   version "6.0.0-beta.61"
   resolved "https://registry.yarnpkg.com/@electron-forge/plugin-base/-/plugin-base-6.0.0-beta.61.tgz#c6403589530ccd1a3419eeb57468513ee8f684fe"
@@ -2385,6 +2395,11 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.1, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
     path-key "^3.1.0"
     shebang-command "^2.0.0"
     which "^2.0.1"
+
+cross-zip@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/cross-zip/-/cross-zip-4.0.0.tgz#c29bfb2c001659a6d480ae9596f3bee83b48a230"
+  integrity sha512-MEzGfZo0rqE10O/B+AEcCSJLZsrWuRUvmqJTqHNqBtALhaJc3E3ixLGLJNTRzEA2K34wbmOHC4fwYs9sVsdcCA==
 
 css-loader@^6.0.0:
   version "6.2.0"

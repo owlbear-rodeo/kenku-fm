@@ -145,6 +145,8 @@ export function Player({
           display: "flex",
           flexDirection: "column",
           p: 2,
+          backgroundColor: "rgba(34, 38, 57, 0.8)",
+          backdropFilter: "blur(10px)",
         }}
       >
         <Stack direction="row">

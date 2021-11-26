@@ -49,7 +49,13 @@ export function Playlists() {
         container
         spacing={{ xs: 2, md: 3 }}
         columns={{ xs: 4, sm: 9, md: 12, lg: 10 }}
-        sx={{ px: 2, pb: "143px", overflowY: "auto" }}
+        sx={{
+          px: 2,
+          pb: "143px",
+          overflowY: "auto",
+          maskImage:
+            "linear-gradient(to bottom, transparent, black 16px, black calc(100% - 16px), transparent)",
+        }}
       >
         {items.map((playlist) => (
           <Grid item xs={2} sm={3} md={3} lg={2} key={playlist.id}>

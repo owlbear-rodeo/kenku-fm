@@ -78,56 +78,85 @@ export function Playlist({ playlist, onPlay }: PlaylistProps) {
         height: "100vh",
       }}
     >
+      <Box
+        sx={{
+          backgroundImage: `url("${image}")`,
+          backgroundSize: "cover",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          pointerEvents: "none",
+        }}
+      />
+      <Box
+        sx={{
+          backgroundImage:
+            "linear-gradient(0deg, #ffffff44 30%,  #00000088 100%)",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          pointerEvents: "none",
+        }}
+      />
       <Stack
         p={4}
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        sx={{
-          backgroundImage: `url("${image}")`,
-          backgroundSize: "cover",
-          position: "relative",
-        }}
+        sx={{ zIndex: 1 }}
       >
-        <Box
-          sx={{
-            backgroundImage:
-              "linear-gradient(0deg, #00000088 30%, #ffffff44 100%)",
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            pointerEvents: "none",
-          }}
-        />
         <IconButton
           onClick={() => dispatch(selectPlaylist(undefined))}
           id="more-button"
           aria-controls="playlist-menu"
           aria-haspopup="true"
+          sx={{ mr: "40px" }}
         >
           <Back />
         </IconButton>
         <Typography sx={{ zIndex: 1 }} variant="h3">
           {playlist.title}
         </Typography>
-        <IconButton onClick={handleMenuClick}>
-          <MoreVert />
-        </IconButton>
-      </Stack>
-      <Paper sx={{ mx: "auto", mt: 2, mb: 0, borderRadius: "30px" }}>
-        <Tooltip title="Add Track">
-          <IconButton size="large" onClick={() => setAddOpen(true)}>
-            <Add />
+        <Box>
+          <Tooltip title="Add Track">
+            <IconButton onClick={() => setAddOpen(true)}>
+              <Add />
+            </IconButton>
+          </Tooltip>
+          <IconButton onClick={handleMenuClick}>
+            <MoreVert />
           </IconButton>
-        </Tooltip>
-      </Paper>
-      <List sx={{ width: "100%", maxWidth: 360, margin: "0 auto" }}>
-        {items.map((item) => (
-          <TrackItem key={item.id} track={item} playlist={playlist} />
-        ))}
-      </List>
+        </Box>
+      </Stack>
+      <Box
+        sx={{
+          pb: "143px",
+          overflowY: "auto",
+          maskImage:
+            "linear-gradient(to bottom, transparent, black 60px, black calc(100% - 64px), transparent)",
+          position: "absolute",
+          width: "100%",
+          height: "calc(100% - 60px)",
+          paddingTop: "60px",
+          top: "60px",
+        }}
+      >
+        <List
+          sx={{
+            width: "100%",
+            maxWidth: 360,
+            margin: "0 auto",
+          }}
+        >
+          {items.map((item) => (
+            <TrackItem key={item.id} track={item} playlist={playlist} />
+          ))}
+        </List>
+      </Box>
       <TrackAdd
         playlistId={playlist.id}
         open={addOpen}

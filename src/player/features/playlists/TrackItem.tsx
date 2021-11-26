@@ -50,7 +50,13 @@ export function TrackItem({ track, playlist }: TrackItemProps) {
 
   return (
     <ListItem key={track.id} disablePadding>
-      <Paper sx={{ width: "100%", m: 0.5 }}>
+      <Paper
+        sx={{
+          width: "100%",
+          m: 0.5,
+          backgroundColor: "rgba(34, 38, 57, 0.8)",
+        }}
+      >
         <ListItemButton role={undefined} sx={{ m: 0 }} dense>
           <ListItemText primary={track.title} />
           <IconButton aria-label="play" onClick={() => {}}>

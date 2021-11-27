@@ -98,6 +98,20 @@ export const appsSlice = createSlice({
       state.playlists.allIds.splice(oldIndex, 1);
       state.playlists.allIds.splice(newIndex, 0, action.payload.active);
     },
+    moveTrack: (
+      state,
+      action: PayloadAction<{
+        playlistId: string;
+        active: string;
+        over: string;
+      }>
+    ) => {
+      const playlist = state.playlists.byId[action.payload.playlistId];
+      const oldIndex = playlist.tracks.indexOf(action.payload.active);
+      const newIndex = playlist.tracks.indexOf(action.payload.over);
+      playlist.tracks.splice(oldIndex, 1);
+      playlist.tracks.splice(newIndex, 0, action.payload.active);
+    },
   },
 });
 
@@ -110,6 +124,7 @@ export const {
   addTrack,
   removeTrack,
   editTrack,
+  moveTrack,
 } = appsSlice.actions;
 
 export default appsSlice.reducer;

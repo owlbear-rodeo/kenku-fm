@@ -5,13 +5,11 @@ import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
 import Add from "@mui/icons-material/AddRounded";
 import Tooltip from "@mui/material/Tooltip";
-import List from "@mui/material/List";
 import Box from "@mui/material/Box";
 import Back from "@mui/icons-material/ChevronLeftRounded";
 import MoreVert from "@mui/icons-material/MoreVertRounded";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import Paper from "@mui/material/Paper";
 
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -22,7 +20,7 @@ import {
 } from "./playlistsSlice";
 import { TrackAdd } from "./TrackAdd";
 import { PlaylistSettings } from "./PlaylistSettings";
-import { TrackItem } from "./TrackItem";
+import { PlaylistTracks } from "./PlaylistTracks";
 
 import { isBackground, backgrounds } from "../../backgrounds";
 
@@ -132,36 +130,7 @@ export function Playlist({ playlist, onPlay }: PlaylistProps) {
           </IconButton>
         </Box>
       </Stack>
-      <Box
-        sx={{
-          pb: "143px",
-          overflowY: "auto",
-          maskImage:
-            "linear-gradient(to bottom, transparent, black 60px, black calc(100% - 64px), transparent)",
-          position: "absolute",
-          width: "100%",
-          height: "calc(100% - 60px)",
-          paddingTop: "60px",
-          top: "60px",
-        }}
-      >
-        <List
-          sx={{
-            width: "100%",
-            maxWidth: 360,
-            margin: "0 auto",
-          }}
-        >
-          {items.map((item) => (
-            <TrackItem
-              key={item.id}
-              track={item}
-              playlist={playlist}
-              onPlay={onPlay}
-            />
-          ))}
-        </List>
-      </Box>
+      <PlaylistTracks items={items} playlist={playlist} onPlay={onPlay} />
       <TrackAdd
         playlistId={playlist.id}
         open={addOpen}

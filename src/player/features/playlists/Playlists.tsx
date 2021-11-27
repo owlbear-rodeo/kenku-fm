@@ -7,19 +7,55 @@ import IconButton from "@mui/material/IconButton";
 import AddRounded from "@mui/icons-material/AddRounded";
 import Tooltip from "@mui/material/Tooltip";
 
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+} from "@dnd-kit/core";
+import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
+
 import { PlaylistItem } from "./PlaylistItem";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import { selectPlaylist } from "./playlistsSlice";
+import { selectPlaylist, movePlaylist } from "./playlistsSlice";
 import { PlaylistAdd } from "./PlaylistAdd";
+import { SortableItem } from "./SortableItem";
 
 export function Playlists() {
   const dispatch = useDispatch();
   const playlists = useSelector((state: RootState) => state.playlists);
 
+  const pointerSensor = useSensor(PointerSensor, {
+    activationConstraint: { distance: 10 },
+  });
+  const keyboardSensor = useSensor(KeyboardSensor);
+
+  const sensors = useSensors(pointerSensor, keyboardSensor);
+
   const items = playlists.playlists.allIds.map(
     (id) => playlists.playlists.byId[id]
   );
+
+  const [dragId, setDragId] = useState<string | null>(null);
+  function handleDragStart(event: DragStartEvent) {
+    setDragId(event.active.id);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+      dispatch(movePlaylist({ active: active.id, over: over.id }));
+    }
+
+    setDragId(null);
+  }
 
   const [addOpen, setAddOpen] = useState(false);
 
@@ -57,14 +93,33 @@ export function Playlists() {
             "linear-gradient(to bottom, transparent, black 16px, black calc(100% - 16px), transparent)",
         }}
       >
-        {items.map((playlist) => (
-          <Grid item xs={2} sm={3} md={3} lg={2} key={playlist.id}>
-            <PlaylistItem
-              playlist={playlist}
-              onSelect={(id) => dispatch(selectPlaylist(id))}
-            />
-          </Grid>
-        ))}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={items} strategy={rectSortingStrategy}>
+            {items.map((playlist) => (
+              <Grid item xs={2} sm={3} md={3} lg={2} key={playlist.id}>
+                <SortableItem id={playlist.id}>
+                  <PlaylistItem
+                    playlist={playlist}
+                    onSelect={(id) => dispatch(selectPlaylist(id))}
+                  />
+                </SortableItem>
+              </Grid>
+            ))}
+            <DragOverlay>
+              {dragId ? (
+                <PlaylistItem
+                  playlist={playlists.playlists.byId[dragId]}
+                  onSelect={() => {}}
+                />
+              ) : null}
+            </DragOverlay>
+          </SortableContext>
+        </DndContext>
       </Grid>
       <PlaylistAdd open={addOpen} onClose={() => setAddOpen(false)} />
     </Container>

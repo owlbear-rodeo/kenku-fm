@@ -28,6 +28,7 @@ export function PlaylistItem({ playlist, onSelect }: PlaylistItemProps) {
           height="100"
           image={image}
           alt={"Background"}
+          sx={{ pointerEvents: "none" }}
         />
       </CardActionArea>
       <Box

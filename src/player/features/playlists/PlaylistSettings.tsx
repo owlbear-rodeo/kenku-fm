@@ -8,6 +8,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 
 import { useDispatch } from "react-redux";
 import { editPlaylist, Playlist } from "./playlistsSlice";
+import { ImageSelector } from "./ImageSelector";
 
 type PlaylistSettingsProps = {
   playlist: Playlist;
@@ -24,6 +25,10 @@ export function PlaylistSettings({
 
   function handleTitleChange(event: React.ChangeEvent<HTMLInputElement>) {
     dispatch(editPlaylist({ id: playlist.id, title: event.target.value }));
+  }
+
+  function handleBackgroundChange(background: string) {
+    dispatch(editPlaylist({ id: playlist.id, background }));
   }
 
   function handleSubmit(event: React.FormEvent) {
@@ -48,6 +53,10 @@ export function PlaylistSettings({
             }}
             value={playlist.title}
             onChange={handleTitleChange}
+          />
+          <ImageSelector
+            value={playlist.background}
+            onChange={handleBackgroundChange}
           />
         </DialogContent>
         <DialogActions>

@@ -11,7 +11,8 @@ import { v4 as uuid } from "uuid";
 import { useDispatch } from "react-redux";
 import { addPlaylist } from "./playlistsSlice";
 
-import { getRandomBackground } from "../../backgrounds";
+import { backgrounds } from "../../backgrounds";
+import { ImageSelector } from "./ImageSelector";
 
 type PlaylistAddProps = {
   open: boolean;
@@ -22,6 +23,7 @@ export function PlaylistAdd({ open, onClose }: PlaylistAddProps) {
   const dispatch = useDispatch();
 
   const [title, setTitle] = useState("");
+  const [background, setBackground] = useState(Object.keys(backgrounds)[0]);
 
   useEffect(() => {
     if (!open) {
@@ -36,9 +38,7 @@ export function PlaylistAdd({ open, onClose }: PlaylistAddProps) {
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const id = uuid();
-    dispatch(
-      addPlaylist({ id, title, background: getRandomBackground(), tracks: [] })
-    );
+    dispatch(addPlaylist({ id, title, background, tracks: [] }));
     onClose();
   }
 
@@ -61,6 +61,7 @@ export function PlaylistAdd({ open, onClose }: PlaylistAddProps) {
             value={title}
             onChange={handleTitleChange}
           />
+          <ImageSelector value={background} onChange={setBackground} />
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>

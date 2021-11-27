@@ -17,9 +17,10 @@ import { TrackSettings } from "./TrackSettings";
 type TrackItemProps = {
   track: Track;
   playlist: Playlist;
+  onPlay: (id: string) => void;
 };
 
-export function TrackItem({ track, playlist }: TrackItemProps) {
+export function TrackItem({ track, playlist, onPlay }: TrackItemProps) {
   const dispatch = useDispatch();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -59,7 +60,7 @@ export function TrackItem({ track, playlist }: TrackItemProps) {
       >
         <ListItemButton role={undefined} sx={{ m: 0 }} dense>
           <ListItemText primary={track.title} />
-          <IconButton aria-label="play" onClick={() => {}}>
+          <IconButton aria-label="play" onClick={() => onPlay(track.id)}>
             <PlayArrow />
           </IconButton>
           <IconButton onClick={handleMenuClick}>

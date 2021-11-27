@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useMemo, useState } from "react";
 
 import Box from "@mui/material/Box";
 import styled from "@mui/material/styles/styled";
@@ -9,6 +9,7 @@ import { Playlists } from "../features/playlists/Playlists";
 import { Playlist } from "../features/playlists/Playlist";
 import { useSelector } from "react-redux";
 import { RootState } from "./store";
+import { shuffleArray } from "../common/shuffle";
 
 const WallPaper = styled("div")({
   position: "absolute",
@@ -21,6 +22,12 @@ const WallPaper = styled("div")({
   zIndex: -1,
 });
 
+type Queue = {
+  current: number;
+  tracks: string[];
+  playlistId: string;
+};
+
 export function App() {
   const playlists = useSelector((state: RootState) => state.playlists);
 
@@ -28,25 +35,143 @@ export function App() {
     playlists.selectedPlaylist &&
     playlists.playlists.byId[playlists.selectedPlaylist];
 
+  const [queue, setQueue] = useState<Queue | null>(null);
+
+  function handlePlay(trackId: string, playlistId: string) {
+    const playlist = playlists.playlists.byId[playlistId];
+    const track = playlists.tracks[trackId];
+    if (playlist && track) {
+      let tracks = [...playlist.tracks];
+      if (shuffle) {
+        // Remove track to play, shuffle the rest and insert it back at the start
+        const trackIndex = tracks.indexOf(trackId);
+        tracks.splice(trackIndex, 1);
+        shuffleArray(tracks);
+        tracks.unshift(trackId);
+      }
+      setQueue({ tracks, current: tracks.indexOf(trackId), playlistId });
+      play(track.url, track.title);
+    }
+  }
+
+  function handlePlaybackEnd() {
+    if ((repeat === "track" || repeat === "playlist") && queue) {
+      let index = queue.current;
+      if (repeat === "playlist") {
+        index = (index + 1) % queue.tracks.length;
+      }
+      const id = queue.tracks[index];
+      if (id) {
+        const track = playlists.tracks[id];
+        if (track) {
+          play(track.url, track.title);
+          setQueue({ ...queue, current: index });
+        }
+      }
+    }
+  }
+
+  function handleShuffle(shuffle: boolean) {
+    setShuffle(shuffle);
+    // If we have a queue shuffle / unshuffle it
+    if (queue) {
+      if (shuffle) {
+        const tracks = [...queue.tracks];
+        const trackIndex = queue.current;
+        const trackId = tracks[trackIndex];
+        if (trackId) {
+          tracks.splice(trackIndex, 1);
+          shuffleArray(tracks);
+          tracks.unshift(trackId);
+          setQueue({ ...queue, tracks, current: 0 });
+        }
+      } else {
+        const trackId = queue.tracks[queue.current];
+        const playlist = playlists.playlists.byId[queue.playlistId];
+        if (playlist && trackId) {
+          const tracks = [...playlist.tracks];
+          setQueue({
+            tracks: tracks,
+            current: tracks.indexOf(trackId),
+            playlistId: playlist.id,
+          });
+        }
+      }
+    }
+  }
+
+  function handleNext() {
+    if (repeat === "off") {
+      setPlaying(false);
+      seek(0);
+    } else if (repeat === "track") {
+      seek(0);
+    } else if (repeat === "playlist" && queue) {
+      let index = (queue.current + 1) % queue.tracks.length;
+      const id = queue.tracks[index];
+      if (id) {
+        const track = playlists.tracks[id];
+        if (track) {
+          play(track.url, track.title);
+          setQueue({ ...queue, current: index });
+        }
+      }
+    }
+  }
+
+  function handlePrevious() {
+    if (repeat === "off") {
+      setPlaying(false);
+      seek(0);
+    } else if (repeat === "track") {
+      seek(0);
+    } else if (repeat === "playlist" && queue) {
+      let index = queue.current;
+      // Only go to previous if at the start of the track
+      if (playback.current < 5) {
+        index -= 1;
+      }
+      if (index < 0) {
+        index = queue.tracks.length - 1;
+      }
+      const id = queue.tracks[index];
+      if (id) {
+        const track = playlists.tracks[id];
+        if (track) {
+          play(track.url, track.title);
+          setQueue({ ...queue, current: index });
+        }
+      }
+    }
+  }
+
   const {
     playing,
     volume,
     muted,
-    loop,
+    shuffle,
+    repeat,
     track,
     playback,
     seek,
     setPlaying,
     setVolume,
-    setLoop,
+    setShuffle,
+    setRepeat,
     setMuted,
-  } = usePlayback();
+    play,
+  } = usePlayback(handlePlaybackEnd);
 
   return (
     <Box>
       <WallPaper />
       {selectedPlaylist ? (
-        <Playlist playlist={selectedPlaylist} onPlay={() => {}} />
+        <Playlist
+          playlist={selectedPlaylist}
+          onPlay={(id) => {
+            handlePlay(id, selectedPlaylist.id);
+          }}
+        />
       ) : (
         <Playlists />
       )}
@@ -54,14 +179,18 @@ export function App() {
         playing={playing}
         volume={volume}
         muted={muted}
-        loop={loop}
+        shuffle={shuffle}
+        repeat={repeat}
         track={track}
         playback={playback}
         onSeek={seek}
         onPlay={setPlaying}
         onVolumeChange={setVolume}
-        onLoop={setLoop}
+        onShuffle={handleShuffle}
+        onRepeat={setRepeat}
         onMute={setMuted}
+        onNext={handleNext}
+        onPrevious={handlePrevious}
       />
     </Box>
   );

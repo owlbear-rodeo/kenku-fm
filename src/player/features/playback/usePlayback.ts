@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Howl, Howler } from "howler";
 
 export interface Playback {
@@ -11,16 +11,88 @@ export interface Track {
   title: string;
 }
 
-export function usePlayback() {
+export type Repeat = "off" | "track" | "playlist";
+
+export function usePlayback(onEnd?: () => void) {
   const trackRef = useRef<Howl | null>(null);
   const animationRef = useRef<number | null>(null);
 
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
-  const [loop, setLoop] = useState(true);
+  const [shuffle, setShuffle] = useState(false);
+  const [repeat, setRepeat] = useState<Repeat>("playlist");
   const [track, setTrack] = useState<Track | null>(null);
   const [playback, setPlayback] = useState<Playback | null>(null);
+
+  useEffect(() => {
+    function handleEnd() {
+      onEnd?.();
+    }
+    const track = trackRef.current;
+    track?.on("end", handleEnd);
+    return () => {
+      track?.off("end", handleEnd);
+    };
+  });
+
+  const play = useCallback((url: string, title: string) => {
+    const howl = new Howl({
+      src: url,
+      html5: true,
+      autoplay: true,
+    });
+
+    const prevTrack = trackRef.current;
+
+    howl.once("load", () => {
+      trackRef.current = howl;
+
+      setTrack({ url, title });
+      // Fade out previous track and fade in new track
+      if (prevTrack) {
+        prevTrack.fade(1, 0, 1000);
+        prevTrack.once("fade", () => {
+          prevTrack.unload();
+        });
+      }
+      howl.fade(0, 1, 1000);
+      // Update playback
+      setPlaying(true);
+      // Create playback animation
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      let prevTime = performance.now();
+      function animatePlayback(time: number) {
+        animationRef.current = requestAnimationFrame(animatePlayback);
+        // Limit update to 1 time per second
+        const delta = time - prevTime;
+        if (howl.playing() && delta > 1000) {
+          setPlayback({
+            current: Math.floor(howl.seek()),
+            duration: Math.floor(howl.duration()),
+          });
+          prevTime = time;
+        }
+      }
+      animationRef.current = requestAnimationFrame(animatePlayback);
+    });
+
+    // Update UI based off of native controls
+    const sound = (howl as any)._sounds[0];
+    const node = sound._node;
+    node.onpause = () => {
+      setPlaying(false);
+      sound._paused = true;
+      sound._seek = node.currentTime;
+    };
+    node.onplaying = () => {
+      setPlaying(true);
+      sound._paused = false;
+      sound._seek = node.currentTime;
+    };
+  }, []);
 
   useEffect(() => {
     window.player.on("PLAYER_REMOTE_PLAY", (args) => {
@@ -28,72 +100,14 @@ export function usePlayback() {
       const title = args[1];
       const loop = args[2];
 
-      const track = new Howl({
-        src: url,
-        html5: true,
-        loop: loop,
-        autoplay: true,
-      });
-
-      const prevTrack = trackRef.current;
-
-      track.once("load", () => {
-        trackRef.current = track;
-
-        setTrack({ url, title });
-        setLoop(loop);
-        // Fade out previous track and fade in new track
-        if (prevTrack) {
-          prevTrack.fade(1, 0, 1000);
-          prevTrack.once("fade", () => {
-            prevTrack.unload();
-          });
-        }
-        track.fade(0, 1, 1000);
-        // Update playback
-        setPlaying(true);
-        // Create playback animation
-        if (animationRef.current !== null) {
-          cancelAnimationFrame(animationRef.current);
-        }
-        let prevTime = performance.now();
-        function animatePlayback(time: number) {
-          animationRef.current = requestAnimationFrame(animatePlayback);
-          // Limit update to 1 time per second
-          const delta = time - prevTime;
-          if (track.playing() && delta > 1000) {
-            setPlayback({
-              current: Math.floor(track.seek()),
-              duration: Math.floor(track.duration()),
-            });
-            prevTime = time;
-          }
-        }
-        animationRef.current = requestAnimationFrame(animatePlayback);
-      });
-
-      // Update UI based off of native controls
-      const sound = (track as any)._sounds[0];
-      const node = sound._node;
-      node.onpause = () => {
-        setPlaying(false);
-        sound._paused = true;
-        sound._seek = node.currentTime;
-      };
-      node.onplaying = () => {
-        setPlaying(true);
-        sound._paused = false;
-        sound._seek = node.currentTime;
-      };
+      play(url, title);
+      setRepeat(loop);
     });
 
     return () => {
       window.player.removeAllListeners("PLAYER_REMOTE_PLAY");
-      if (animationRef.current !== null) {
-        cancelAnimationFrame(animationRef.current);
-      }
     };
-  }, []);
+  }, [play]);
 
   useEffect(() => {
     window.player.on("PLAYER_REMOTE_PLAYBACK_PLAY_PAUSE", () => {
@@ -164,9 +178,12 @@ export function usePlayback() {
     Howler.volume(volume);
   }
 
-  function handleLoop(loop: boolean) {
-    setLoop(loop);
-    trackRef.current?.loop(loop);
+  function handleSuffle(shuffle: boolean) {
+    setShuffle(shuffle);
+  }
+
+  function handleRepeat(repeat: Repeat) {
+    setRepeat(repeat);
   }
 
   function handleMute(muted: boolean) {
@@ -181,10 +198,13 @@ export function usePlayback() {
     setVolume: handleVolumeChange,
     muted,
     setMuted: handleMute,
-    loop,
-    setLoop: handleLoop,
+    shuffle,
+    setShuffle: handleSuffle,
+    repeat,
+    setRepeat: handleRepeat,
     track,
     playback,
     seek: handleSeek,
+    play,
   };
 }

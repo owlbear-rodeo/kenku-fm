@@ -11,14 +11,14 @@ import Pause from "@mui/icons-material/PauseRounded";
 import PlayArrow from "@mui/icons-material/PlayArrowRounded";
 import VolumeDown from "@mui/icons-material/VolumeDownRounded";
 import VolumeOff from "@mui/icons-material/VolumeOffRounded";
-import Repeat from "@mui/icons-material/RepeatRounded";
+import RepeatIcon from "@mui/icons-material/RepeatRounded";
 import RepeatOne from "@mui/icons-material/RepeatOneRounded";
 import Shuffle from "@mui/icons-material/ShuffleRounded";
 import Next from "@mui/icons-material/SkipNextRounded";
 import Previous from "@mui/icons-material/SkipPreviousRounded";
 import Container from "@mui/material/Container";
 
-import { Playback, Track } from "./usePlayback";
+import { Playback, Repeat, Track } from "./usePlayback";
 
 const TimeSlider = styled(Slider)({
   color: "#fff",
@@ -68,28 +68,36 @@ type PlayerProps = {
   playing: boolean;
   volume: number;
   muted: boolean;
-  loop: boolean;
+  shuffle: boolean;
+  repeat: Repeat;
   track: Track | null;
   playback: Playback | null;
   onSeek?: (to: number) => void;
   onPlay?: (play: boolean) => void;
   onVolumeChange?: (value: number) => void;
-  onLoop?: (loop: boolean) => void;
+  onShuffle?: (shuffle: boolean) => void;
+  onRepeat?: (loop: Repeat) => void;
   onMute?: (mute: boolean) => void;
+  onNext?: () => void;
+  onPrevious?: () => void;
 };
 
 export function Player({
   playing,
   volume,
   muted,
-  loop,
+  shuffle,
+  repeat,
   track,
   playback,
   onSeek,
   onPlay,
   onVolumeChange,
-  onLoop,
+  onShuffle,
+  onRepeat,
   onMute,
+  onNext,
+  onPrevious,
 }: PlayerProps) {
   function formatDuration(value: number) {
     const minute = Math.floor(value / 60);
@@ -116,8 +124,22 @@ export function Player({
     onPlay?.(!playing);
   }
 
-  function handleLoop() {
-    onLoop?.(!loop);
+  function handleShuffle() {
+    onShuffle?.(!shuffle);
+  }
+
+  function handlRepeat() {
+    switch (repeat) {
+      case "off":
+        onRepeat?.("playlist");
+        break;
+      case "playlist":
+        onRepeat?.("track");
+        break;
+      case "track":
+        onRepeat?.("off");
+        break;
+    }
   }
 
   function handleMute() {
@@ -151,12 +173,7 @@ export function Player({
       >
         <Stack direction="row">
           <Box sx={{ display: "flex", alignItems: "center", width: "30%" }}>
-            <Typography
-              variant="caption"
-              sx={{ width: "100%" }}
-              textAlign="center"
-              noWrap
-            >
+            <Typography variant="caption" sx={{ width: "100%" }} noWrap>
               {noTrack ? "" : track.title}
             </Typography>
           </Box>
@@ -169,10 +186,14 @@ export function Player({
               flexGrow: 1,
             }}
           >
-            <IconButton aria-label="shuffle">
-              <Shuffle />
+            <IconButton aria-label="shuffle" onClick={handleShuffle}>
+              <Shuffle color={shuffle ? "primary" : undefined} />
             </IconButton>
-            <IconButton disabled={!Boolean(playback)} aria-label="previous">
+            <IconButton
+              disabled={!Boolean(playback)}
+              aria-label="previous"
+              onClick={() => onPrevious()}
+            >
               <Previous />
             </IconButton>
             <IconButton
@@ -186,14 +207,21 @@ export function Player({
                 <PlayArrow sx={{ fontSize: "3rem" }} />
               )}
             </IconButton>
-            <IconButton disabled={!Boolean(playback)} aria-label="next">
+            <IconButton
+              disabled={!Boolean(playback)}
+              aria-label="next"
+              onClick={() => onNext()}
+            >
               <Next />
             </IconButton>
-            <IconButton
-              aria-label={loop ? "no loop" : "loop"}
-              onClick={handleLoop}
-            >
-              {loop ? <RepeatOne /> : <Repeat />}
+            <IconButton aria-label={`repeat ${repeat}`} onClick={handlRepeat}>
+              {repeat === "off" ? (
+                <RepeatIcon />
+              ) : repeat === "playlist" ? (
+                <RepeatIcon color="primary" />
+              ) : (
+                <RepeatOne color="primary" />
+              )}
             </IconButton>
           </Box>
           <Stack

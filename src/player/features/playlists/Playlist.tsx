@@ -153,7 +153,12 @@ export function Playlist({ playlist, onPlay }: PlaylistProps) {
           }}
         >
           {items.map((item) => (
-            <TrackItem key={item.id} track={item} playlist={playlist} />
+            <TrackItem
+              key={item.id}
+              track={item}
+              playlist={playlist}
+              onPlay={onPlay}
+            />
           ))}
         </List>
       </Box>

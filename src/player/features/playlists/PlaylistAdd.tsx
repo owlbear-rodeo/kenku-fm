@@ -65,7 +65,7 @@ export function PlaylistAdd({ open, onClose }: PlaylistAddProps) {
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>
-          <Button disabled={!title} type="submit">
+          <Button disabled={!title || !background} type="submit">
             Add
           </Button>
         </DialogActions>

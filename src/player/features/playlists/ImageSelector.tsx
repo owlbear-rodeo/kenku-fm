@@ -76,7 +76,7 @@ export function ImageSelector({ value, onChange }: ImageSelectorProps) {
               height: "100%",
               borderRadius: "16px",
               borderStyle: value === key ? "solid" : "none",
-              borderWidth: "1px",
+              borderWidth: "2px",
               borderColor: "primary.main",
             }}
             onClick={() => onChange(key)}

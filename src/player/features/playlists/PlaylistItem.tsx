@@ -14,9 +14,14 @@ import { Playlist } from "./playlistsSlice";
 type PlaylistItemProps = {
   playlist: Playlist;
   onSelect: (id: string) => void;
+  onPlay: (id: string) => void;
 };
 
-export function PlaylistItem({ playlist, onSelect }: PlaylistItemProps) {
+export function PlaylistItem({
+  playlist,
+  onSelect,
+  onPlay,
+}: PlaylistItemProps) {
   const image = isBackground(playlist.background)
     ? backgrounds[playlist.background]
     : playlist.background;
@@ -58,7 +63,11 @@ export function PlaylistItem({ playlist, onSelect }: PlaylistItemProps) {
         <Typography variant="h5" component="div">
           {playlist.title}
         </Typography>
-        <IconButton aria-label="play/pause" sx={{ pointerEvents: "all" }}>
+        <IconButton
+          aria-label="play/pause"
+          sx={{ pointerEvents: "all" }}
+          onClick={() => onPlay(playlist.id)}
+        >
           <PlayArrowIcon sx={{ fontSize: "2rem" }} />
         </IconButton>
       </Box>

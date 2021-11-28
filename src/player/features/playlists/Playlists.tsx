@@ -27,7 +27,11 @@ import { selectPlaylist, movePlaylist } from "./playlistsSlice";
 import { PlaylistAdd } from "./PlaylistAdd";
 import { SortableItem } from "./SortableItem";
 
-export function Playlists() {
+type PlaylistsProps = {
+  onPlay: (id: string) => void;
+};
+
+export function Playlists({ onPlay }: PlaylistsProps) {
   const dispatch = useDispatch();
   const playlists = useSelector((state: RootState) => state.playlists);
 
@@ -106,6 +110,7 @@ export function Playlists() {
                   <PlaylistItem
                     playlist={playlist}
                     onSelect={(id) => dispatch(selectPlaylist(id))}
+                    onPlay={onPlay}
                   />
                 </SortableItem>
               </Grid>
@@ -115,6 +120,7 @@ export function Playlists() {
                 <PlaylistItem
                   playlist={playlists.playlists.byId[dragId]}
                   onSelect={() => {}}
+                  onPlay={() => {}}
                 />
               ) : null}
             </DragOverlay>

@@ -173,7 +173,17 @@ export function App() {
           }}
         />
       ) : (
-        <Playlists />
+        <Playlists
+          onPlay={(playlistId) => {
+            const playlist = playlists.playlists.byId[playlistId];
+            if (playlist) {
+              const trackId = playlist.tracks[0];
+              if (trackId) {
+                handlePlay(trackId, playlistId);
+              }
+            }
+          }}
+        />
       )}
       <Player
         playing={playing}

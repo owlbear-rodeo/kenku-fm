@@ -11,6 +11,7 @@ import { v4 as uuid } from "uuid";
 import { useDispatch } from "react-redux";
 import { addTrack } from "./playlistsSlice";
 import { AudioSelector } from "./AudioSelector";
+import { addTrackToQueueIfNeeded } from "../playback/playbackSlice";
 
 type TrackAddProps = {
   playlistId: string;
@@ -39,6 +40,7 @@ export function TrackAdd({ playlistId, open, onClose }: TrackAddProps) {
     event.preventDefault();
     const id = uuid();
     dispatch(addTrack({ track: { id, title, url }, playlistId }));
+    dispatch(addTrackToQueueIfNeeded({ playlistId, trackId: id }));
     onClose();
   }
 

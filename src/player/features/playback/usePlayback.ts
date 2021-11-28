@@ -1,64 +1,61 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Howl, Howler } from "howler";
 
-export interface Playback {
-  current: number;
-  duration: number;
-}
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../../app/store";
+import {
+  toggleMute,
+  playPause,
+  playTrack,
+  repeat,
+  updatePlayback,
+  increaseVolume,
+  decreaseVolume,
+  updateQueue,
+  stopTrack,
+} from "./playbackSlice";
 
-export interface Track {
-  url: string;
-  title: string;
-}
-
-export type Repeat = "off" | "track" | "playlist";
-
-export function usePlayback(onEnd?: () => void) {
+export function usePlayback() {
   const trackRef = useRef<Howl | null>(null);
   const animationRef = useRef<number | null>(null);
 
-  const [playing, setPlaying] = useState(false);
-  const [volume, setVolume] = useState(1);
-  const [muted, setMuted] = useState(false);
-  const [shuffle, setShuffle] = useState(false);
-  const [repeat, setRepeat] = useState<Repeat>("playlist");
-  const [track, setTrack] = useState<Track | null>(null);
-  const [playback, setPlayback] = useState<Playback | null>(null);
-
-  useEffect(() => {
-    function handleEnd() {
-      onEnd?.();
-    }
-    const track = trackRef.current;
-    track?.on("end", handleEnd);
-    return () => {
-      track?.off("end", handleEnd);
-    };
-  });
+  const playlists = useSelector((state: RootState) => state.playlists);
+  const playback = useSelector((state: RootState) => state.playback);
+  const dispatch = useDispatch();
 
   const play = useCallback((url: string, title: string) => {
     const howl = new Howl({
       src: url,
       html5: true,
-      autoplay: true,
     });
 
-    const prevTrack = trackRef.current;
-
+    let prevTrack = trackRef.current;
+    const removePrevTrack = () => {
+      if (prevTrack) {
+        prevTrack.unload();
+        prevTrack = undefined;
+      }
+    };
+    const error = () => {
+      dispatch(stopTrack());
+      removePrevTrack();
+      trackRef.current = undefined;
+    };
+    trackRef.current = howl;
     howl.once("load", () => {
-      trackRef.current = howl;
-
-      setTrack({ url, title });
+      dispatch(
+        playTrack({
+          track: { url, title },
+          duration: Math.floor(howl.duration()),
+        })
+      );
       // Fade out previous track and fade in new track
       if (prevTrack) {
         prevTrack.fade(1, 0, 1000);
-        prevTrack.once("fade", () => {
-          prevTrack.unload();
-        });
+        prevTrack.once("fade", removePrevTrack);
       }
       howl.fade(0, 1, 1000);
       // Update playback
-      setPlaying(true);
       // Create playback animation
       if (animationRef.current !== null) {
         cancelAnimationFrame(animationRef.current);
@@ -69,30 +66,73 @@ export function usePlayback(onEnd?: () => void) {
         // Limit update to 1 time per second
         const delta = time - prevTime;
         if (howl.playing() && delta > 1000) {
-          setPlayback({
-            current: Math.floor(howl.seek()),
-            duration: Math.floor(howl.duration()),
-          });
+          dispatch(updatePlayback(Math.floor(howl.seek())));
           prevTime = time;
         }
       }
       animationRef.current = requestAnimationFrame(animatePlayback);
     });
 
+    howl.on("loaderror", error);
+
+    howl.on("playerror", error);
+
     // Update UI based off of native controls
+    // TODO: Find a way to do this that doesn't break seeking
     const sound = (howl as any)._sounds[0];
-    const node = sound._node;
-    node.onpause = () => {
-      setPlaying(false);
-      sound._paused = true;
-      sound._seek = node.currentTime;
-    };
-    node.onplaying = () => {
-      setPlaying(true);
-      sound._paused = false;
-      sound._seek = node.currentTime;
+    if (sound) {
+      // const node = sound._node;
+      // node.onpause = () => {
+      // dispatch(playPause(false));
+      //   sound._paused = true;
+      //   sound._seek = node.currentTime;
+      // };
+      // node.onplaying = () => {
+      // dispatch(playPause(true));
+      //   sound._paused = false;
+      //   sound._seek = node.currentTime;
+      // };
+    } else {
+      error();
+    }
+
+    return () => {
+      howl.unload();
     };
   }, []);
+
+  useEffect(() => {
+    // Move to next song or repeat this song on track end
+    function handleEnd() {
+      if (
+        (playback.repeat === "track" || playback.repeat === "playlist") &&
+        playback.queue
+      ) {
+        let index = playback.queue.current;
+        if (playback.repeat === "playlist") {
+          index = (index + 1) % playback.queue.tracks.length;
+        }
+        let id: string;
+        if (playback.shuffle) {
+          id = playback.queue.tracks[playback.queue.shuffled[index]];
+        } else {
+          id = playback.queue.tracks[index];
+        }
+        if (id) {
+          const track = playlists.tracks[id];
+          if (track) {
+            play(track.url, track.title);
+            dispatch(updateQueue(index));
+          }
+        }
+      }
+    }
+    const track = trackRef.current;
+    track?.on("end", handleEnd);
+    return () => {
+      track?.off("end", handleEnd);
+    };
+  }, [playback, playlists, play]);
 
   useEffect(() => {
     window.player.on("PLAYER_REMOTE_PLAY", (args) => {
@@ -101,7 +141,7 @@ export function usePlayback(onEnd?: () => void) {
       const loop = args[2];
 
       play(url, title);
-      setRepeat(loop);
+      dispatch(repeat(loop));
     });
 
     return () => {
@@ -113,36 +153,23 @@ export function usePlayback(onEnd?: () => void) {
     window.player.on("PLAYER_REMOTE_PLAYBACK_PLAY_PAUSE", () => {
       if (trackRef.current) {
         if (trackRef.current.playing()) {
-          trackRef.current.pause();
-          setPlaying(false);
+          dispatch(playPause(false));
         } else {
-          trackRef.current.play();
-          setPlaying(true);
+          dispatch(playPause(true));
         }
       }
     });
 
     window.player.on("PLAYER_REMOTE_PLAYBACK_MUTE", () => {
-      setMuted((muted) => {
-        Howler.mute(!muted);
-        return !muted;
-      });
+      dispatch(toggleMute());
     });
 
     window.player.on("PLAYER_REMOTE_PLAYBACK_INCREASE_VOLUME", () => {
-      setVolume((volume) => {
-        const newVolume = Math.min(volume + 0.05, 1);
-        Howler.volume(newVolume);
-        return newVolume;
-      });
+      dispatch(increaseVolume());
     });
 
     window.player.on("PLAYER_REMOTE_PLAYBACK_DECREASE_VOLUME", () => {
-      setVolume((volume) => {
-        const newVolume = Math.max(volume - 0.05, 0);
-        Howler.volume(newVolume);
-        return newVolume;
-      });
+      dispatch(decreaseVolume());
     });
 
     return () => {
@@ -157,54 +184,37 @@ export function usePlayback(onEnd?: () => void) {
     };
   }, []);
 
-  function handleSeek(to: number) {
-    if (playback) {
-      setPlayback({ ...playback, current: to });
+  useEffect(() => {
+    if (trackRef.current) {
+      if (playback.playing) {
+        trackRef.current.play();
+      } else {
+        trackRef.current.pause();
+      }
     }
+  }, [playback.playing, playback.track]);
+
+  useEffect(() => {
+    if (trackRef.current) {
+      if (playback.muted) {
+        Howler.mute(true);
+      } else {
+        Howler.mute(false);
+      }
+    }
+  }, [playback.muted]);
+
+  useEffect(() => {
+    Howler.volume(playback.volume);
+  }, [playback.volume]);
+
+  function seek(to: number) {
+    dispatch(updatePlayback(to));
     trackRef.current?.seek(to);
   }
 
-  function handlePlay(play: boolean) {
-    setPlaying(play);
-    if (play) {
-      trackRef.current?.play();
-    } else {
-      trackRef.current?.pause();
-    }
-  }
-
-  function handleVolumeChange(volume: number) {
-    setVolume(volume);
-    Howler.volume(volume);
-  }
-
-  function handleSuffle(shuffle: boolean) {
-    setShuffle(shuffle);
-  }
-
-  function handleRepeat(repeat: Repeat) {
-    setRepeat(repeat);
-  }
-
-  function handleMute(muted: boolean) {
-    setMuted(muted);
-    Howler.mute(muted);
-  }
-
   return {
-    playing,
-    setPlaying: handlePlay,
-    volume,
-    setVolume: handleVolumeChange,
-    muted,
-    setMuted: handleMute,
-    shuffle,
-    setShuffle: handleSuffle,
-    repeat,
-    setRepeat: handleRepeat,
-    track,
-    playback,
-    seek: handleSeek,
+    seek,
     play,
   };
 }

@@ -26,9 +26,10 @@ import { RootState } from "../../app/store";
 import { selectPlaylist, movePlaylist } from "./playlistsSlice";
 import { PlaylistAdd } from "./PlaylistAdd";
 import { SortableItem } from "./SortableItem";
+import { startQueue } from "../playback/playbackSlice";
 
 type PlaylistsProps = {
-  onPlay: (id: string) => void;
+  onPlay: (url: string, title: string) => void;
 };
 
 export function Playlists({ onPlay }: PlaylistsProps) {
@@ -62,6 +63,19 @@ export function Playlists({ onPlay }: PlaylistsProps) {
   }
 
   const [addOpen, setAddOpen] = useState(false);
+
+  function handlePlaylistPlay(playlistId: string) {
+    const playlist = playlists.playlists.byId[playlistId];
+    if (playlist) {
+      let tracks = [...playlist.tracks];
+      const trackId = tracks[0];
+      const track = playlists.tracks[trackId];
+      if (track) {
+        dispatch(startQueue({ tracks, trackId, playlistId }));
+        onPlay(track.url, track.title);
+      }
+    }
+  }
 
   return (
     <Container
@@ -110,7 +124,7 @@ export function Playlists({ onPlay }: PlaylistsProps) {
                   <PlaylistItem
                     playlist={playlist}
                     onSelect={(id) => dispatch(selectPlaylist(id))}
-                    onPlay={onPlay}
+                    onPlay={handlePlaylistPlay}
                   />
                 </SortableItem>
               </Grid>

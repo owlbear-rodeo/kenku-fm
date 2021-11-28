@@ -25,6 +25,7 @@ import { SortableItem } from "./SortableItem";
 
 import { useDispatch } from "react-redux";
 import { Playlist, Track, moveTrack } from "./playlistsSlice";
+import { moveQueueIfNeeded, startQueue } from "../playback/playbackSlice";
 
 type PlaylistTracksProps = {
   items: Track[];
@@ -59,6 +60,13 @@ export function PlaylistTracks({
     if (active.id !== over.id) {
       dispatch(
         moveTrack({ playlistId: playlist.id, active: active.id, over: over.id })
+      );
+      dispatch(
+        moveQueueIfNeeded({
+          playlistId: playlist.id,
+          active: active.id,
+          over: over.id,
+        })
       );
     }
 

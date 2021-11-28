@@ -23,10 +23,11 @@ import { PlaylistSettings } from "./PlaylistSettings";
 import { PlaylistTracks } from "./PlaylistTracks";
 
 import { isBackground, backgrounds } from "../../backgrounds";
+import { startQueue } from "../playback/playbackSlice";
 
 type PlaylistProps = {
   playlist: PlaylistType;
-  onPlay: (id: string) => void;
+  onPlay: (url: string, title: string) => void;
 };
 
 export function Playlist({ playlist, onPlay }: PlaylistProps) {
@@ -65,6 +66,15 @@ export function Playlist({ playlist, onPlay }: PlaylistProps) {
     dispatch(removePlaylist(playlist.id));
     dispatch(selectPlaylist(undefined));
     handleMenuClose();
+  }
+
+  function handleTrackPlay(trackId: string) {
+    const track = playlists.tracks[trackId];
+    if (track) {
+      let tracks = [...playlist.tracks];
+      dispatch(startQueue({ tracks, trackId, playlistId: playlist.id }));
+      onPlay(track.url, track.title);
+    }
   }
 
   return (
@@ -130,7 +140,11 @@ export function Playlist({ playlist, onPlay }: PlaylistProps) {
           </IconButton>
         </Box>
       </Stack>
-      <PlaylistTracks items={items} playlist={playlist} onPlay={onPlay} />
+      <PlaylistTracks
+        items={items}
+        playlist={playlist}
+        onPlay={handleTrackPlay}
+      />
       <TrackAdd
         playlistId={playlist.id}
         open={addOpen}

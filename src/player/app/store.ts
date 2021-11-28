@@ -1,5 +1,6 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import playlistsReducer from "../features/playlists/playlistsSlice";
+import playbackReducer from "../features/playback/playbackSlice";
 
 import {
   persistStore,
@@ -15,6 +16,7 @@ import storage from "redux-persist/lib/storage";
 
 const rootReducer = combineReducers({
   playlists: playlistsReducer,
+  playback: playbackReducer,
 });
 
 const persistConfig = {

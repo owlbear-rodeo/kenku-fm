@@ -18,7 +18,18 @@ import Next from "@mui/icons-material/SkipNextRounded";
 import Previous from "@mui/icons-material/SkipPreviousRounded";
 import Container from "@mui/material/Container";
 
-import { Playback, Repeat, Track } from "./usePlayback";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../..//app/store";
+import {
+  adjustVolume,
+  playPause,
+  mute,
+  shuffle,
+  toggleRepeat,
+  toggleMute,
+  shuffleQueue,
+  updateQueue,
+} from "./playbackSlice";
 
 const TimeSlider = styled(Slider)({
   color: "#fff",
@@ -65,40 +76,15 @@ const TinyText = styled(Typography)({
 });
 
 type PlayerProps = {
-  playing: boolean;
-  volume: number;
-  muted: boolean;
-  shuffle: boolean;
-  repeat: Repeat;
-  track: Track | null;
-  playback: Playback | null;
-  onSeek?: (to: number) => void;
-  onPlay?: (play: boolean) => void;
-  onVolumeChange?: (value: number) => void;
-  onShuffle?: (shuffle: boolean) => void;
-  onRepeat?: (loop: Repeat) => void;
-  onMute?: (mute: boolean) => void;
-  onNext?: () => void;
-  onPrevious?: () => void;
+  onPlay: (url: string, title: string) => void;
+  onSeek: (to: number) => void;
 };
 
-export function Player({
-  playing,
-  volume,
-  muted,
-  shuffle,
-  repeat,
-  track,
-  playback,
-  onSeek,
-  onPlay,
-  onVolumeChange,
-  onShuffle,
-  onRepeat,
-  onMute,
-  onNext,
-  onPrevious,
-}: PlayerProps) {
+export function Player({ onPlay, onSeek }: PlayerProps) {
+  const dispatch = useDispatch();
+  const playlists = useSelector((state: RootState) => state.playlists);
+  const playback = useSelector((state: RootState) => state.playback);
+
   function formatDuration(value: number) {
     const minute = Math.floor(value / 60);
     const secondLeft = value - minute * 60;
@@ -110,46 +96,96 @@ export function Player({
   // Commit the time value when letting go of the slider
   function handleTimeChange(_: Event, value: number | number[]) {
     setTimeOverride(null);
-    onSeek?.(value as number);
+    onSeek(value as number);
   }
 
   function handleVolumeChange(_: Event, value: number | number[]) {
-    if (muted && value > 0) {
-      onMute(false);
+    if (playback.muted && value > 0) {
+      dispatch(mute());
     }
-    onVolumeChange?.(value as number);
+    dispatch(adjustVolume(value as number));
   }
 
   function handlePlay() {
-    onPlay?.(!playing);
-  }
-
-  function handleShuffle() {
-    onShuffle?.(!shuffle);
+    dispatch(playPause(!playback.playing));
   }
 
   function handlRepeat() {
-    switch (repeat) {
-      case "off":
-        onRepeat?.("playlist");
-        break;
-      case "playlist":
-        onRepeat?.("track");
-        break;
-      case "track":
-        onRepeat?.("off");
-        break;
-    }
+    dispatch(toggleRepeat());
   }
 
   function handleMute() {
-    onMute?.(!muted);
+    dispatch(toggleMute());
   }
 
-  const time = timeOverride === null ? playback?.current || 0 : timeOverride;
-  const duration = playback?.duration || 0;
+  function handleShuffle() {
+    const newShuffle = !playback.shuffle;
+    dispatch(shuffle(newShuffle));
+    if (newShuffle) {
+      dispatch(shuffleQueue());
+    }
+  }
 
-  const noTrack = track?.title === undefined;
+  function handleNext() {
+    if (playback.repeat === "off") {
+      dispatch(playPause(false));
+      onSeek(0);
+    } else if (playback.repeat === "track") {
+      onSeek(0);
+    } else if (playback.repeat === "playlist" && playback.queue) {
+      let index = (playback.queue.current + 1) % playback.queue.tracks.length;
+      let id: string;
+      if (playback.shuffle) {
+        id = playback.queue.tracks[playback.queue.shuffled[index]];
+      } else {
+        id = playback.queue.tracks[index];
+      }
+      if (id) {
+        const track = playlists.tracks[id];
+        if (track) {
+          onPlay(track.url, track.title);
+          dispatch(updateQueue(index));
+        }
+      }
+    }
+  }
+
+  function handlePrevious() {
+    if (playback.repeat === "off") {
+      dispatch(playPause(false));
+      onSeek(0);
+    } else if (playback.repeat === "track") {
+      onSeek(0);
+    } else if (playback.repeat === "playlist" && playback.queue) {
+      let index = playback.queue.current;
+      // Only go to previous if at the start of the track
+      if (playback.playback.current < 5) {
+        index -= 1;
+      }
+      if (index < 0) {
+        index = playback.queue.tracks.length - 1;
+      }
+      let id: string;
+      if (playback.shuffle) {
+        id = playback.queue.tracks[playback.queue.shuffled[index]];
+      } else {
+        id = playback.queue.tracks[index];
+      }
+      if (id) {
+        const track = playlists.tracks[id];
+        if (track) {
+          onPlay(track.url, track.title);
+          dispatch(updateQueue(index));
+        }
+      }
+    }
+  }
+
+  const time =
+    timeOverride === null ? playback.playback?.current || 0 : timeOverride;
+  const duration = playback.playback?.duration || 0;
+
+  const noTrack = playback.track?.title === undefined;
 
   return (
     <Container
@@ -174,7 +210,7 @@ export function Player({
         <Stack direction="row">
           <Box sx={{ display: "flex", alignItems: "center", width: "30%" }}>
             <Typography variant="caption" sx={{ width: "100%" }} noWrap>
-              {noTrack ? "" : track.title}
+              {noTrack ? "" : playback.track.title}
             </Typography>
           </Box>
           <Box
@@ -187,37 +223,40 @@ export function Player({
             }}
           >
             <IconButton aria-label="shuffle" onClick={handleShuffle}>
-              <Shuffle color={shuffle ? "primary" : undefined} />
+              <Shuffle color={playback.shuffle ? "primary" : undefined} />
             </IconButton>
             <IconButton
-              disabled={!Boolean(playback)}
+              disabled={!Boolean(playback.playback)}
               aria-label="previous"
-              onClick={() => onPrevious()}
+              onClick={handlePrevious}
             >
               <Previous />
             </IconButton>
             <IconButton
-              aria-label={playing ? "pause" : "play"}
+              aria-label={playback.playing ? "pause" : "play"}
               onClick={handlePlay}
-              disabled={!Boolean(playback)}
+              disabled={!Boolean(playback.playback)}
             >
-              {playing ? (
+              {playback.playing ? (
                 <Pause sx={{ fontSize: "3rem" }} />
               ) : (
                 <PlayArrow sx={{ fontSize: "3rem" }} />
               )}
             </IconButton>
             <IconButton
-              disabled={!Boolean(playback)}
+              disabled={!Boolean(playback.playback)}
               aria-label="next"
-              onClick={() => onNext()}
+              onClick={handleNext}
             >
               <Next />
             </IconButton>
-            <IconButton aria-label={`repeat ${repeat}`} onClick={handlRepeat}>
-              {repeat === "off" ? (
+            <IconButton
+              aria-label={`repeat ${playback.repeat}`}
+              onClick={handlRepeat}
+            >
+              {playback.repeat === "off" ? (
                 <RepeatIcon />
-              ) : repeat === "playlist" ? (
+              ) : playback.repeat === "playlist" ? (
                 <RepeatIcon color="primary" />
               ) : (
                 <RepeatOne color="primary" />
@@ -231,14 +270,14 @@ export function Player({
             alignItems="center"
           >
             <IconButton
-              aria-label={muted ? "unmute" : "mute"}
+              aria-label={playback.muted ? "unmute" : "mute"}
               onClick={handleMute}
             >
-              {muted ? <VolumeOff /> : <VolumeDown />}
+              {playback.muted ? <VolumeOff /> : <VolumeDown />}
             </IconButton>
             <VolumeSlider
               aria-label="Volume"
-              value={muted ? 0 : volume}
+              value={playback.muted ? 0 : playback.volume}
               step={0.01}
               min={0}
               max={1}
@@ -254,7 +293,7 @@ export function Player({
             min={0}
             step={1}
             max={duration}
-            disabled={!Boolean(playback)}
+            disabled={!Boolean(playback.playback)}
             onChange={(_, value) => setTimeOverride(value as number)}
             onChangeCommitted={handleTimeChange}
           />

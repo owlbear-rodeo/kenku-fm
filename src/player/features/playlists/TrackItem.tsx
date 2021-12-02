@@ -73,7 +73,16 @@ export function TrackItem({ track, playlist, onPlay }: TrackItemProps) {
         }}
       >
         <ListItemButton role={undefined} sx={{ m: 0 }} dense>
-          <ListItemText primary={track.title} />
+          <ListItemText
+            primary={track.title}
+            sx={{
+              ".MuiListItemText-primary": {
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              },
+            }}
+          />
           <IconButton
             aria-label={playing ? "pause" : "play"}
             onClick={handlePlayPause}

@@ -3,6 +3,7 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import PlayArrow from "@mui/icons-material/PlayArrowRounded";
+import Pause from "@mui/icons-material/PauseRounded";
 import IconButton from "@mui/material/IconButton";
 import Paper from "@mui/material/Paper";
 
@@ -11,8 +12,10 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 
 import { Track, removeTrack, Playlist } from "./playlistsSlice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { TrackSettings } from "./TrackSettings";
+import { RootState } from "../../app/store";
+import { playPause } from "../playback/playbackSlice";
 
 type TrackItemProps = {
   track: Track;
@@ -21,6 +24,7 @@ type TrackItemProps = {
 };
 
 export function TrackItem({ track, playlist, onPlay }: TrackItemProps) {
+  const playback = useSelector((state: RootState) => state.playback);
   const dispatch = useDispatch();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -49,6 +53,16 @@ export function TrackItem({ track, playlist, onPlay }: TrackItemProps) {
     handleMenuClose();
   }
 
+  function handlePlayPause() {
+    if (playback.track?.id === track.id) {
+      dispatch(playPause(!playback.playing));
+    } else {
+      onPlay(track.id);
+    }
+  }
+
+  const playing = playback.track?.id === track.id && playback.playing;
+
   return (
     <ListItem key={track.id} disablePadding>
       <Paper
@@ -60,8 +74,11 @@ export function TrackItem({ track, playlist, onPlay }: TrackItemProps) {
       >
         <ListItemButton role={undefined} sx={{ m: 0 }} dense>
           <ListItemText primary={track.title} />
-          <IconButton aria-label="play" onClick={() => onPlay(track.id)}>
-            <PlayArrow />
+          <IconButton
+            aria-label={playing ? "pause" : "play"}
+            onClick={handlePlayPause}
+          >
+            {playing ? <Pause /> : <PlayArrow />}
           </IconButton>
           <IconButton onClick={handleMenuClick}>
             <MoreVert />

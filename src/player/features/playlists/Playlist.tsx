@@ -127,10 +127,10 @@ export function Playlist({ playlist, onPlay }: PlaylistProps) {
         >
           <Back />
         </IconButton>
-        <Typography sx={{ zIndex: 1 }} variant="h3">
+        <Typography sx={{ zIndex: 1 }} variant="h3" noWrap>
           {playlist.title}
         </Typography>
-        <Box>
+        <Stack direction="row">
           <Tooltip title="Add Track">
             <IconButton onClick={() => setAddOpen(true)}>
               <Add />
@@ -139,7 +139,7 @@ export function Playlist({ playlist, onPlay }: PlaylistProps) {
           <IconButton onClick={handleMenuClick}>
             <MoreVert />
           </IconButton>
-        </Box>
+        </Stack>
       </Stack>
       <PlaylistTracks
         items={items}

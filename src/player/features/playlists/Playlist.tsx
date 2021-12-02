@@ -161,25 +161,29 @@ export function Playlist({ playlist, onPlay }: PlaylistProps) {
           playlist={playlist}
           onPlay={handleTrackPlay}
         />
-        <Menu
-          id="playlist-menu"
-          anchorEl={anchorEl}
-          open={menuOpen}
-          onClose={handleMenuClose}
-          MenuListProps={{
-            "aria-labelledby": "more-button",
-          }}
+        <Backdrop
+          open={dragging}
+          sx={{ zIndex: 100, bgcolor: "rgba(0, 0, 0, 0.8)" }}
+          {...overlayListeners}
         >
-          <MenuItem onClick={handleEdit}>Edit</MenuItem>
-          <MenuItem onClick={handleCopyID}>Copy ID</MenuItem>
-          <MenuItem onClick={handleDelete}>Delete</MenuItem>
-        </Menu>
-        <Backdrop open={dragging} sx={{ zIndex: 100 }} {...overlayListeners}>
           <Typography sx={{ pointerEvents: "none" }}>
             Drop the tracks here...
           </Typography>
         </Backdrop>
       </Container>
+      <Menu
+        id="playlist-menu"
+        anchorEl={anchorEl}
+        open={menuOpen}
+        onClose={handleMenuClose}
+        MenuListProps={{
+          "aria-labelledby": "more-button",
+        }}
+      >
+        <MenuItem onClick={handleEdit}>Edit</MenuItem>
+        <MenuItem onClick={handleCopyID}>Copy ID</MenuItem>
+        <MenuItem onClick={handleDelete}>Delete</MenuItem>
+      </Menu>
       <TrackAdd
         playlistId={playlist.id}
         open={addOpen}

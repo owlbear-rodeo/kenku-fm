@@ -85,6 +85,7 @@ export function PlaylistTracks({
         height: "calc(100% - 60px)",
         paddingTop: "60px",
         top: "60px",
+        left: 0,
       }}
     >
       <List

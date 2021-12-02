@@ -209,9 +209,32 @@ export function Player({ onPlay, onSeek }: PlayerProps) {
         }}
       >
         <Stack direction="row">
-          <Box sx={{ display: "flex", alignItems: "center", width: "30%" }}>
-            <Typography variant="caption" sx={{ width: "100%" }} noWrap>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "30%",
+              flexDirection: "column",
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{ width: "100%" }}
+              noWrap
+              gutterBottom
+            >
               {noTrack ? "" : playback.track.title}
+            </Typography>
+            <Typography
+              variant="caption"
+              color="rgba(255, 255, 255, 0.8)"
+              sx={{ width: "100%" }}
+              noWrap
+            >
+              {noTrack
+                ? ""
+                : playlists.playlists.byId[playback.queue.playlistId]?.title}
             </Typography>
           </Box>
           <Box

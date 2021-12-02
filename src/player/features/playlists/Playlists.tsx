@@ -92,7 +92,9 @@ export function Playlists({ onPlay }: PlaylistsProps) {
         justifyContent="space-between"
         alignItems="center"
       >
-        <Typography variant="h3">Playlists</Typography>
+        <Typography variant="h3" noWrap>
+          Playlists
+        </Typography>
         <Tooltip title="Add Playlist">
           <IconButton onClick={() => setAddOpen(true)}>
             <AddRounded />

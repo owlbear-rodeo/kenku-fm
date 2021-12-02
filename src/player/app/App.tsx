@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 
 import Box from "@mui/material/Box";
 import styled from "@mui/material/styles/styled";
@@ -9,6 +9,8 @@ import { Playlists } from "../features/playlists/Playlists";
 import { Playlist } from "../features/playlists/Playlist";
 import { useSelector } from "react-redux";
 import { RootState } from "./store";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 
 const WallPaper = styled("div")({
   position: "absolute",
@@ -22,13 +24,18 @@ const WallPaper = styled("div")({
 });
 
 export function App() {
+  const [errorMessage, setErrorMessage] = useState<string>();
   const playlists = useSelector((state: RootState) => state.playlists);
 
   const selectedPlaylist =
     playlists.selectedPlaylist &&
     playlists.playlists.byId[playlists.selectedPlaylist];
 
-  const { seek, play } = usePlayback();
+  const handleError = useCallback((message: string) => {
+    setErrorMessage(message);
+  }, []);
+
+  const { seek, play } = usePlayback(handleError);
 
   return (
     <Box>
@@ -39,6 +46,14 @@ export function App() {
         <Playlists onPlay={play} />
       )}
       <Player onSeek={seek} onPlay={play} />
+      <Snackbar
+        open={Boolean(errorMessage)}
+        autoHideDuration={4000}
+        onClose={() => setErrorMessage(undefined)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert severity="error">{errorMessage}</Alert>
+      </Snackbar>
     </Box>
   );
 }

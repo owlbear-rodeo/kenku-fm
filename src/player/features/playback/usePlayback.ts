@@ -15,7 +15,7 @@ import {
   stopTrack,
 } from "./playbackSlice";
 
-export function usePlayback() {
+export function usePlayback(onError: (message: string) => void) {
   const trackRef = useRef<Howl | null>(null);
   const animationRef = useRef<number | null>(null);
 
@@ -23,83 +23,87 @@ export function usePlayback() {
   const playback = useSelector((state: RootState) => state.playback);
   const dispatch = useDispatch();
 
-  const play = useCallback((url: string, title: string) => {
-    const howl = new Howl({
-      src: url,
-      html5: true,
-    });
+  const play = useCallback(
+    (url: string, title: string) => {
+      const howl = new Howl({
+        src: url,
+        html5: true,
+      });
 
-    let prevTrack = trackRef.current;
-    const removePrevTrack = () => {
-      if (prevTrack) {
-        prevTrack.unload();
-        prevTrack = undefined;
-      }
-    };
-    const error = () => {
-      dispatch(stopTrack());
-      removePrevTrack();
-      trackRef.current = undefined;
-    };
-    trackRef.current = howl;
-    howl.once("load", () => {
-      dispatch(
-        playTrack({
-          track: { url, title },
-          duration: Math.floor(howl.duration()),
-        })
-      );
-      // Fade out previous track and fade in new track
-      if (prevTrack) {
-        prevTrack.fade(1, 0, 1000);
-        prevTrack.once("fade", removePrevTrack);
-      }
-      howl.fade(0, 1, 1000);
-      // Update playback
-      // Create playback animation
-      if (animationRef.current !== null) {
-        cancelAnimationFrame(animationRef.current);
-      }
-      let prevTime = performance.now();
-      function animatePlayback(time: number) {
-        animationRef.current = requestAnimationFrame(animatePlayback);
-        // Limit update to 1 time per second
-        const delta = time - prevTime;
-        if (howl.playing() && delta > 1000) {
-          dispatch(updatePlayback(Math.floor(howl.seek())));
-          prevTime = time;
+      let prevTrack = trackRef.current;
+      const removePrevTrack = () => {
+        if (prevTrack) {
+          prevTrack.unload();
+          prevTrack = undefined;
         }
+      };
+      const error = () => {
+        dispatch(stopTrack());
+        removePrevTrack();
+        trackRef.current = undefined;
+        onError(`Unable to play track: ${title}`);
+      };
+      trackRef.current = howl;
+      howl.once("load", () => {
+        dispatch(
+          playTrack({
+            track: { url, title },
+            duration: Math.floor(howl.duration()),
+          })
+        );
+        // Fade out previous track and fade in new track
+        if (prevTrack) {
+          prevTrack.fade(1, 0, 1000);
+          prevTrack.once("fade", removePrevTrack);
+        }
+        howl.fade(0, 1, 1000);
+        // Update playback
+        // Create playback animation
+        if (animationRef.current !== null) {
+          cancelAnimationFrame(animationRef.current);
+        }
+        let prevTime = performance.now();
+        function animatePlayback(time: number) {
+          animationRef.current = requestAnimationFrame(animatePlayback);
+          // Limit update to 1 time per second
+          const delta = time - prevTime;
+          if (howl.playing() && delta > 1000) {
+            dispatch(updatePlayback(Math.floor(howl.seek())));
+            prevTime = time;
+          }
+        }
+        animationRef.current = requestAnimationFrame(animatePlayback);
+      });
+
+      howl.on("loaderror", error);
+
+      howl.on("playerror", error);
+
+      // Update UI based off of native controls
+      // TODO: Find a way to do this that doesn't break seeking
+      const sound = (howl as any)._sounds[0];
+      if (sound) {
+        // const node = sound._node;
+        // node.onpause = () => {
+        // dispatch(playPause(false));
+        //   sound._paused = true;
+        //   sound._seek = node.currentTime;
+        // };
+        // node.onplaying = () => {
+        // dispatch(playPause(true));
+        //   sound._paused = false;
+        //   sound._seek = node.currentTime;
+        // };
+      } else {
+        error();
       }
-      animationRef.current = requestAnimationFrame(animatePlayback);
-    });
 
-    howl.on("loaderror", error);
-
-    howl.on("playerror", error);
-
-    // Update UI based off of native controls
-    // TODO: Find a way to do this that doesn't break seeking
-    const sound = (howl as any)._sounds[0];
-    if (sound) {
-      // const node = sound._node;
-      // node.onpause = () => {
-      // dispatch(playPause(false));
-      //   sound._paused = true;
-      //   sound._seek = node.currentTime;
-      // };
-      // node.onplaying = () => {
-      // dispatch(playPause(true));
-      //   sound._paused = false;
-      //   sound._seek = node.currentTime;
-      // };
-    } else {
-      error();
-    }
-
-    return () => {
-      howl.unload();
-    };
-  }, []);
+      return () => {
+        howl.unload();
+      };
+    },
+    [onError]
+  );
 
   useEffect(() => {
     // Move to next song or repeat this song on track end

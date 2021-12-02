@@ -4,12 +4,16 @@ import CardMedia from "@mui/material/CardMedia";
 import Typography from "@mui/material/Typography";
 import CardActionArea from "@mui/material/CardActionArea";
 import PlayArrowIcon from "@mui/icons-material/PlayArrowRounded";
+import PauseIcon from "@mui/icons-material/PauseRounded";
 import IconButton from "@mui/material/IconButton";
 import Box from "@mui/material/Box";
 
 import { backgrounds, isBackground } from "../../backgrounds";
 
 import { Playlist } from "./playlistsSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../../app/store";
+import { playPause } from "../playback/playbackSlice";
 
 type PlaylistItemProps = {
   playlist: Playlist;
@@ -22,9 +26,24 @@ export function PlaylistItem({
   onSelect,
   onPlay,
 }: PlaylistItemProps) {
+  const playback = useSelector((state: RootState) => state.playback);
+  const dispatch = useDispatch();
+
   const image = isBackground(playlist.background)
     ? backgrounds[playlist.background]
     : playlist.background;
+
+  const playing =
+    playback.playing && playback.queue?.playlistId === playlist.id;
+
+  function handlePlay() {
+    if (playback.queue?.playlistId === playlist.id) {
+      dispatch(playPause(!playback.playing));
+    } else {
+      onPlay(playlist.id);
+    }
+  }
+
   return (
     <Card sx={{ position: "relative" }}>
       <CardActionArea onClick={() => onSelect(playlist.id)}>
@@ -66,9 +85,13 @@ export function PlaylistItem({
         <IconButton
           aria-label="play/pause"
           sx={{ pointerEvents: "all" }}
-          onClick={() => onPlay(playlist.id)}
+          onClick={handlePlay}
         >
-          <PlayArrowIcon sx={{ fontSize: "2rem" }} />
+          {playing ? (
+            <PauseIcon sx={{ fontSize: "2rem" }} />
+          ) : (
+            <PlayArrowIcon sx={{ fontSize: "2rem" }} />
+          )}
         </IconButton>
       </Box>
     </Card>

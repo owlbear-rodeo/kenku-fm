@@ -23,13 +23,13 @@ import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { PlaylistItem } from "./PlaylistItem";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import { selectPlaylist, movePlaylist } from "./playlistsSlice";
+import { selectPlaylist, movePlaylist, Track } from "./playlistsSlice";
 import { PlaylistAdd } from "./PlaylistAdd";
 import { SortableItem } from "./SortableItem";
 import { startQueue } from "../playback/playbackSlice";
 
 type PlaylistsProps = {
-  onPlay: (url: string, title: string) => void;
+  onPlay: (track: Track) => void;
 };
 
 export function Playlists({ onPlay }: PlaylistsProps) {
@@ -72,7 +72,7 @@ export function Playlists({ onPlay }: PlaylistsProps) {
       const track = playlists.tracks[trackId];
       if (track) {
         dispatch(startQueue({ tracks, trackId, playlistId }));
-        onPlay(track.url, track.title);
+        onPlay(track);
       }
     }
   }

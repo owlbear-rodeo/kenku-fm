@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Howl, Howler } from "howler";
+import { v4 as uuid } from "uuid";
 
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -14,6 +15,7 @@ import {
   updateQueue,
   stopTrack,
 } from "./playbackSlice";
+import { Track } from "../playlists/playlistsSlice";
 
 export function usePlayback(onError: (message: string) => void) {
   const trackRef = useRef<Howl | null>(null);
@@ -24,9 +26,9 @@ export function usePlayback(onError: (message: string) => void) {
   const dispatch = useDispatch();
 
   const play = useCallback(
-    (url: string, title: string) => {
+    (track: Track) => {
       const howl = new Howl({
-        src: url,
+        src: track.url,
         html5: true,
       });
 
@@ -41,13 +43,13 @@ export function usePlayback(onError: (message: string) => void) {
         dispatch(stopTrack());
         removePrevTrack();
         trackRef.current = undefined;
-        onError(`Unable to play track: ${title}`);
+        onError(`Unable to play track: ${track.title}`);
       };
       trackRef.current = howl;
       howl.once("load", () => {
         dispatch(
           playTrack({
-            track: { url, title },
+            track,
             duration: Math.floor(howl.duration()),
           })
         );
@@ -125,7 +127,7 @@ export function usePlayback(onError: (message: string) => void) {
         if (id) {
           const track = playlists.tracks[id];
           if (track) {
-            play(track.url, track.title);
+            play(track);
             dispatch(updateQueue(index));
           }
         }
@@ -144,7 +146,7 @@ export function usePlayback(onError: (message: string) => void) {
       const title = args[1];
       const loop = args[2];
 
-      play(url, title);
+      play({ url, title, id: uuid() });
       dispatch(repeat(loop));
     });
 

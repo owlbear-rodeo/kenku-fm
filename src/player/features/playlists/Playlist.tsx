@@ -17,6 +17,7 @@ import {
   Playlist as PlaylistType,
   selectPlaylist,
   removePlaylist,
+  Track,
 } from "./playlistsSlice";
 import { TrackAdd } from "./TrackAdd";
 import { PlaylistSettings } from "./PlaylistSettings";
@@ -27,7 +28,7 @@ import { startQueue } from "../playback/playbackSlice";
 
 type PlaylistProps = {
   playlist: PlaylistType;
-  onPlay: (url: string, title: string) => void;
+  onPlay: (track: Track) => void;
 };
 
 export function Playlist({ playlist, onPlay }: PlaylistProps) {
@@ -73,7 +74,7 @@ export function Playlist({ playlist, onPlay }: PlaylistProps) {
     if (track) {
       let tracks = [...playlist.tracks];
       dispatch(startQueue({ tracks, trackId, playlistId: playlist.id }));
-      onPlay(track.url, track.title);
+      onPlay(track);
     }
   }
 

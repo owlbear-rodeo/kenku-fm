@@ -30,6 +30,7 @@ import {
   shuffleQueue,
   updateQueue,
 } from "./playbackSlice";
+import { Track } from "../playlists/playlistsSlice";
 
 const TimeSlider = styled(Slider)({
   color: "#fff",
@@ -76,7 +77,7 @@ const TinyText = styled(Typography)({
 });
 
 type PlayerProps = {
-  onPlay: (url: string, title: string) => void;
+  onPlay: (track: Track) => void;
   onSeek: (to: number) => void;
 };
 
@@ -143,7 +144,7 @@ export function Player({ onPlay, onSeek }: PlayerProps) {
       if (id) {
         const track = playlists.tracks[id];
         if (track) {
-          onPlay(track.url, track.title);
+          onPlay(track);
           dispatch(updateQueue(index));
         }
       }
@@ -174,7 +175,7 @@ export function Player({ onPlay, onSeek }: PlayerProps) {
       if (id) {
         const track = playlists.tracks[id];
         if (track) {
-          onPlay(track.url, track.title);
+          onPlay(track);
           dispatch(updateQueue(index));
         }
       }

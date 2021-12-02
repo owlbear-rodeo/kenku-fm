@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { shuffleArray } from "../../common/shuffle";
+import { Track } from "../playlists/playlistsSlice";
 
 export interface Queue {
   current: number;
@@ -12,11 +13,6 @@ export interface Queue {
 export interface Playback {
   current: number;
   duration: number;
-}
-
-export interface Track {
-  url: string;
-  title: string;
 }
 
 export type Repeat = "off" | "track" | "playlist";

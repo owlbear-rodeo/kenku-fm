@@ -107,7 +107,7 @@ export function Playlists({ onPlay }: PlaylistsProps) {
         columns={{ xs: 4, sm: 9, md: 12, lg: 10 }}
         sx={{
           px: 2,
-          pb: "143px",
+          pb: "248px",
           overflowY: "auto",
           maskImage:
             "linear-gradient(to bottom, transparent, black 16px, black calc(100% - 16px), transparent)",

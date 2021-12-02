@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { App } from "../apps/appsSlice";
 
-import icon from "../../../assets/remote-icon.png";
+import icon from "../../../assets/player-icon.png";
 
 export interface PlayerState {
   app: App & { preload: string };
@@ -20,8 +20,8 @@ const initialState: PlayerState = {
   remoteEnabled: false,
 };
 
-export const remoteSlice = createSlice({
-  name: "remote",
+export const playerSlice = createSlice({
+  name: "player",
   initialState,
   reducers: {
     enableRemote: (state, action: PayloadAction<boolean>) => {
@@ -30,6 +30,6 @@ export const remoteSlice = createSlice({
   },
 });
 
-export const { enableRemote } = remoteSlice.actions;
+export const { enableRemote } = playerSlice.actions;
 
-export default remoteSlice.reducer;
+export default playerSlice.reducer;

@@ -70,6 +70,18 @@ export const playlistsSlice = createSlice({
       state.playlists.byId[playlistId].tracks.unshift(track.id);
       state.tracks[track.id] = track;
     },
+    addTracks: (
+      state,
+      action: PayloadAction<{ tracks: Track[]; playlistId: string }>
+    ) => {
+      const { tracks, playlistId } = action.payload;
+      state.playlists.byId[playlistId].tracks.unshift(
+        ...tracks.map((track) => track.id)
+      );
+      for (let track of tracks) {
+        state.tracks[track.id] = track;
+      }
+    },
     removeTrack: (
       state,
       action: PayloadAction<{ trackId: string; playlistId: string }>
@@ -122,6 +134,7 @@ export const {
   editPlaylist,
   movePlaylist,
   addTrack,
+  addTracks,
   removeTrack,
   editTrack,
   moveTrack,

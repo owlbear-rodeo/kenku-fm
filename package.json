@@ -62,6 +62,7 @@
     "@owlbear-rodeo/discord.js": "^12.5.4",
     "@owlbear-rodeo/page-icon": "^0.5.1",
     "@reduxjs/toolkit": "^1.6.1",
+    "case": "^1.6.3",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.0.1",
     "env-cmd": "^10.1.0",

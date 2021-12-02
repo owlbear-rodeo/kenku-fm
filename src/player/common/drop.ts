@@ -1,3 +1,5 @@
+import Case from "case";
+
 export function encodeFilePath(path: string) {
   return `file://${encodeURIComponent(path)
     .replace(/(%2F)|(%5C)/g, "/")
@@ -13,4 +15,16 @@ export function getDropURL(dataTransfer: DataTransfer): string | undefined {
       return encodeFilePath(path);
     }
   }
+}
+
+export function cleanFileName(name: string): string {
+  // Remove file extension
+  let clean = name.substr(0, name.lastIndexOf(".")) || name;
+  // Clean string
+  clean = clean.replace(/ +/g, " ");
+  clean = clean.trim();
+  // Capitalize and remove underscores
+  clean = Case.capital(clean);
+
+  return clean;
 }

@@ -10,6 +10,7 @@ import Back from "@mui/icons-material/ChevronLeftRounded";
 import MoreVert from "@mui/icons-material/MoreVertRounded";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import Backdrop from "@mui/material/Backdrop";
 
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -18,6 +19,7 @@ import {
   selectPlaylist,
   removePlaylist,
   Track,
+  addTracks,
 } from "./playlistsSlice";
 import { TrackAdd } from "./TrackAdd";
 import { PlaylistSettings } from "./PlaylistSettings";
@@ -25,6 +27,7 @@ import { PlaylistTracks } from "./PlaylistTracks";
 
 import { isBackground, backgrounds } from "../../backgrounds";
 import { startQueue } from "../playback/playbackSlice";
+import { useDrop } from "./useDrop";
 
 type PlaylistProps = {
   playlist: PlaylistType;
@@ -78,97 +81,115 @@ export function Playlist({ playlist, onPlay }: PlaylistProps) {
     }
   }
 
+  const { dragging, containerListeners, overlayListeners } = useDrop(
+    (directories) => {
+      const tracks: Track[] = [];
+      for (let directory of Object.values(directories)) {
+        tracks.push(...directory.tracks);
+      }
+      dispatch(addTracks({ tracks, playlistId: playlist.id }));
+    }
+  );
+
   return (
-    <Container
-      sx={{
-        padding: "0px !important",
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-      }}
-    >
-      <Box
+    <>
+      <Container
         sx={{
-          backgroundImage: `url("${image}")`,
-          backgroundSize: "cover",
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          pointerEvents: "none",
+          padding: "0px !important",
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh",
         }}
-      />
-      <Box
-        sx={{
-          backgroundImage:
-            "linear-gradient(0deg, #ffffff44 30%,  #00000088 100%)",
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          pointerEvents: "none",
-        }}
-      />
-      <Stack
-        p={4}
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        sx={{ zIndex: 1 }}
+        {...containerListeners}
       >
-        <IconButton
-          onClick={() => dispatch(selectPlaylist(undefined))}
-          id="more-button"
-          aria-controls="playlist-menu"
-          aria-haspopup="true"
-          sx={{ mr: "40px" }}
+        <Box
+          sx={{
+            backgroundImage: `url("${image}")`,
+            backgroundSize: "cover",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            pointerEvents: "none",
+          }}
+        />
+        <Box
+          sx={{
+            backgroundImage:
+              "linear-gradient(0deg, #ffffff44 30%,  #00000088 100%)",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            pointerEvents: "none",
+          }}
+        />
+        <Stack
+          p={4}
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ zIndex: 1 }}
         >
-          <Back />
-        </IconButton>
-        <Typography sx={{ zIndex: 1 }} variant="h3" noWrap>
-          {playlist.title}
-        </Typography>
-        <Stack direction="row">
-          <Tooltip title="Add Track">
-            <IconButton onClick={() => setAddOpen(true)}>
-              <Add />
-            </IconButton>
-          </Tooltip>
-          <IconButton onClick={handleMenuClick}>
-            <MoreVert />
+          <IconButton
+            onClick={() => dispatch(selectPlaylist(undefined))}
+            id="more-button"
+            aria-controls="playlist-menu"
+            aria-haspopup="true"
+            sx={{ mr: "40px" }}
+          >
+            <Back />
           </IconButton>
+          <Typography sx={{ zIndex: 1 }} variant="h3" noWrap>
+            {playlist.title}
+          </Typography>
+          <Stack direction="row">
+            <Tooltip title="Add Track">
+              <IconButton onClick={() => setAddOpen(true)}>
+                <Add />
+              </IconButton>
+            </Tooltip>
+            <IconButton onClick={handleMenuClick}>
+              <MoreVert />
+            </IconButton>
+          </Stack>
         </Stack>
-      </Stack>
-      <PlaylistTracks
-        items={items}
-        playlist={playlist}
-        onPlay={handleTrackPlay}
-      />
+        <PlaylistTracks
+          items={items}
+          playlist={playlist}
+          onPlay={handleTrackPlay}
+        />
+        <Menu
+          id="playlist-menu"
+          anchorEl={anchorEl}
+          open={menuOpen}
+          onClose={handleMenuClose}
+          MenuListProps={{
+            "aria-labelledby": "more-button",
+          }}
+        >
+          <MenuItem onClick={handleEdit}>Edit</MenuItem>
+          <MenuItem onClick={handleCopyID}>Copy ID</MenuItem>
+          <MenuItem onClick={handleDelete}>Delete</MenuItem>
+        </Menu>
+        <Backdrop open={dragging} sx={{ zIndex: 100 }} {...overlayListeners}>
+          <Typography sx={{ pointerEvents: "none" }}>
+            Drop the tracks here...
+          </Typography>
+        </Backdrop>
+      </Container>
       <TrackAdd
         playlistId={playlist.id}
         open={addOpen}
         onClose={() => setAddOpen(false)}
       />
-      <Menu
-        id="playlist-menu"
-        anchorEl={anchorEl}
-        open={menuOpen}
-        onClose={handleMenuClose}
-        MenuListProps={{
-          "aria-labelledby": "more-button",
-        }}
-      >
-        <MenuItem onClick={handleEdit}>Edit</MenuItem>
-        <MenuItem onClick={handleCopyID}>Copy ID</MenuItem>
-        <MenuItem onClick={handleDelete}>Delete</MenuItem>
-      </Menu>
       <PlaylistSettings
         playlist={playlist}
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
       />
-    </Container>
+    </>
   );
 }

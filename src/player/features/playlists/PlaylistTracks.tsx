@@ -25,7 +25,7 @@ import { SortableItem } from "./SortableItem";
 
 import { useDispatch } from "react-redux";
 import { Playlist, Track, moveTrack } from "./playlistsSlice";
-import { moveQueueIfNeeded, startQueue } from "../playback/playbackSlice";
+import { moveQueueIfNeeded } from "../playback/playbackSlice";
 
 type PlaylistTracksProps = {
   items: Track[];

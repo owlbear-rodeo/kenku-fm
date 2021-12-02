@@ -11,12 +11,14 @@ import Pause from "@mui/icons-material/PauseRounded";
 import PlayArrow from "@mui/icons-material/PlayArrowRounded";
 import VolumeDown from "@mui/icons-material/VolumeDownRounded";
 import VolumeOff from "@mui/icons-material/VolumeOffRounded";
+import VolumeUp from "@mui/icons-material/VolumeUp";
 import RepeatIcon from "@mui/icons-material/RepeatRounded";
 import RepeatOne from "@mui/icons-material/RepeatOneRounded";
 import Shuffle from "@mui/icons-material/ShuffleRounded";
 import Next from "@mui/icons-material/SkipNextRounded";
 import Previous from "@mui/icons-material/SkipPreviousRounded";
 import Container from "@mui/material/Container";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../..//app/store";
@@ -188,6 +190,147 @@ export function Player({ onPlay, onSeek }: PlayerProps) {
 
   const noTrack = playback.track?.title === undefined;
 
+  const large = useMediaQuery("(min-width: 500px)");
+
+  const title = (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: large ? "30%" : "100%",
+        flexDirection: "column",
+      }}
+    >
+      <Typography
+        variant="body2"
+        sx={{ width: "100%", textAlign: large ? undefined : "center" }}
+        noWrap
+        gutterBottom
+      >
+        {noTrack ? "" : playback.track.title}
+      </Typography>
+      <Typography
+        variant="caption"
+        color="rgba(255, 255, 255, 0.8)"
+        sx={{ width: "100%", textAlign: large ? undefined : "center" }}
+        noWrap
+      >
+        {noTrack
+          ? ""
+          : playlists.playlists.byId[playback.queue.playlistId]?.title}
+      </Typography>
+    </Box>
+  );
+
+  const controls = (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        mt: -1,
+        flexGrow: 1,
+      }}
+    >
+      <IconButton aria-label="shuffle" onClick={handleShuffle}>
+        <Shuffle color={playback.shuffle ? "primary" : undefined} />
+      </IconButton>
+      <IconButton
+        disabled={!Boolean(playback.playback)}
+        aria-label="previous"
+        onClick={handlePrevious}
+      >
+        <Previous />
+      </IconButton>
+      <IconButton
+        aria-label={playback.playing ? "pause" : "play"}
+        onClick={handlePlay}
+        disabled={!Boolean(playback.playback)}
+      >
+        {playback.playing ? (
+          <Pause sx={{ fontSize: "3rem" }} />
+        ) : (
+          <PlayArrow sx={{ fontSize: "3rem" }} />
+        )}
+      </IconButton>
+      <IconButton
+        disabled={!Boolean(playback.playback)}
+        aria-label="next"
+        onClick={handleNext}
+      >
+        <Next />
+      </IconButton>
+      <IconButton
+        aria-label={`repeat ${playback.repeat}`}
+        onClick={handlRepeat}
+      >
+        {playback.repeat === "off" ? (
+          <RepeatIcon />
+        ) : playback.repeat === "playlist" ? (
+          <RepeatIcon color="primary" />
+        ) : (
+          <RepeatOne color="primary" />
+        )}
+      </IconButton>
+    </Box>
+  );
+  const volume = (
+    <Stack
+      spacing={2}
+      direction="row"
+      sx={{ mb: 1, px: 1, width: large ? "30%" : "100%" }}
+      alignItems="center"
+    >
+      <IconButton
+        aria-label={playback.muted ? "unmute" : "mute"}
+        onClick={handleMute}
+      >
+        {playback.muted ? <VolumeOff /> : <VolumeDown />}
+      </IconButton>
+      <VolumeSlider
+        aria-label="Volume"
+        value={playback.muted ? 0 : playback.volume}
+        step={0.01}
+        min={0}
+        max={1}
+        onChange={handleVolumeChange}
+      />
+      {!large && (
+        <Box px={2} height="24px">
+          <VolumeUp sx={{ color: "rgba(255,255,255,0.4)" }} />
+        </Box>
+      )}
+    </Stack>
+  );
+
+  const timeSlider = (
+    <Box>
+      <TimeSlider
+        aria-label="time-indicator"
+        size="small"
+        value={time}
+        min={0}
+        step={1}
+        max={duration}
+        disabled={!Boolean(playback.playback)}
+        onChange={(_, value) => setTimeOverride(value as number)}
+        onChangeCommitted={handleTimeChange}
+      />
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mt: -2,
+        }}
+      >
+        <TinyText>{formatDuration(time)}</TinyText>
+        <TinyText>-{formatDuration(duration - time)}</TinyText>
+      </Box>
+    </Box>
+  );
+
   return (
     <Container
       sx={{
@@ -208,131 +351,23 @@ export function Player({ onPlay, onSeek }: PlayerProps) {
           backdropFilter: "blur(10px)",
         }}
       >
-        <Stack direction="row">
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "30%",
-              flexDirection: "column",
-            }}
-          >
-            <Typography
-              variant="body2"
-              sx={{ width: "100%" }}
-              noWrap
-              gutterBottom
-            >
-              {noTrack ? "" : playback.track.title}
-            </Typography>
-            <Typography
-              variant="caption"
-              color="rgba(255, 255, 255, 0.8)"
-              sx={{ width: "100%" }}
-              noWrap
-            >
-              {noTrack
-                ? ""
-                : playlists.playlists.byId[playback.queue.playlistId]?.title}
-            </Typography>
-          </Box>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              mt: -1,
-              flexGrow: 1,
-            }}
-          >
-            <IconButton aria-label="shuffle" onClick={handleShuffle}>
-              <Shuffle color={playback.shuffle ? "primary" : undefined} />
-            </IconButton>
-            <IconButton
-              disabled={!Boolean(playback.playback)}
-              aria-label="previous"
-              onClick={handlePrevious}
-            >
-              <Previous />
-            </IconButton>
-            <IconButton
-              aria-label={playback.playing ? "pause" : "play"}
-              onClick={handlePlay}
-              disabled={!Boolean(playback.playback)}
-            >
-              {playback.playing ? (
-                <Pause sx={{ fontSize: "3rem" }} />
-              ) : (
-                <PlayArrow sx={{ fontSize: "3rem" }} />
-              )}
-            </IconButton>
-            <IconButton
-              disabled={!Boolean(playback.playback)}
-              aria-label="next"
-              onClick={handleNext}
-            >
-              <Next />
-            </IconButton>
-            <IconButton
-              aria-label={`repeat ${playback.repeat}`}
-              onClick={handlRepeat}
-            >
-              {playback.repeat === "off" ? (
-                <RepeatIcon />
-              ) : playback.repeat === "playlist" ? (
-                <RepeatIcon color="primary" />
-              ) : (
-                <RepeatOne color="primary" />
-              )}
-            </IconButton>
-          </Box>
-          <Stack
-            spacing={2}
-            direction="row"
-            sx={{ mb: 1, px: 1, width: "30%" }}
-            alignItems="center"
-          >
-            <IconButton
-              aria-label={playback.muted ? "unmute" : "mute"}
-              onClick={handleMute}
-            >
-              {playback.muted ? <VolumeOff /> : <VolumeDown />}
-            </IconButton>
-            <VolumeSlider
-              aria-label="Volume"
-              value={playback.muted ? 0 : playback.volume}
-              step={0.01}
-              min={0}
-              max={1}
-              onChange={handleVolumeChange}
-            />
-          </Stack>
-        </Stack>
-        <Box>
-          <TimeSlider
-            aria-label="time-indicator"
-            size="small"
-            value={time}
-            min={0}
-            step={1}
-            max={duration}
-            disabled={!Boolean(playback.playback)}
-            onChange={(_, value) => setTimeOverride(value as number)}
-            onChangeCommitted={handleTimeChange}
-          />
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              mt: -2,
-            }}
-          >
-            <TinyText>{formatDuration(time)}</TinyText>
-            <TinyText>-{formatDuration(duration - time)}</TinyText>
-          </Box>
-        </Box>
+        {large ? (
+          <>
+            <Stack direction="row">
+              {title}
+              {controls}
+              {volume}
+            </Stack>
+            {timeSlider}
+          </>
+        ) : (
+          <>
+            {title}
+            {timeSlider}
+            {controls}
+            {volume}
+          </>
+        )}
       </Paper>
     </Container>
   );

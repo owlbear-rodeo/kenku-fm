@@ -76,7 +76,7 @@ export function PlaylistTracks({
   return (
     <Box
       sx={{
-        pb: "143px",
+        pb: "240px",
         overflowY: "auto",
         maskImage:
           "linear-gradient(to bottom, transparent, black 60px, black calc(100% - 64px), transparent)",

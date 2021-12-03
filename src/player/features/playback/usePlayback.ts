@@ -113,13 +113,18 @@ export function usePlayback(onError: (message: string) => void) {
     trackRef.current?.seek(to);
   }, []);
 
+  const stop = useCallback(() => {
+    dispatch(playPause(false));
+    dispatch(updatePlayback(0));
+    trackRef.current?.stop();
+  }, []);
+
   const next = useCallback(() => {
     if (!playback.playback) {
       return;
     }
     if (playback.repeat === "off") {
-      dispatch(playPause(false));
-      seek(0);
+      stop();
     } else if (playback.repeat === "track") {
       seek(0);
     } else if (playback.repeat === "playlist" && playback.queue) {
@@ -131,22 +136,27 @@ export function usePlayback(onError: (message: string) => void) {
         id = playback.queue.tracks[index];
       }
       if (id) {
-        const track = playlists.tracks[id];
-        if (track) {
-          play(track);
-          dispatch(updateQueue(index));
+        if (id === playback.track?.id) {
+          // Playing the same track just restart it
+          seek(0);
+        } else {
+          // Play the previous track
+          const previousTrack = playlists.tracks[id];
+          if (previousTrack) {
+            play(previousTrack);
+            dispatch(updateQueue(index));
+          }
         }
       }
     }
-  }, [playback, playlists, seek, play]);
+  }, [playback, playlists, seek, play, stop]);
 
   const previous = useCallback(() => {
     if (!playback.playback) {
       return;
     }
     if (playback.repeat === "off") {
-      dispatch(playPause(false));
-      seek(0);
+      stop();
     } else if (playback.repeat === "track") {
       seek(0);
     } else if (playback.repeat === "playlist" && playback.queue) {
@@ -165,26 +175,31 @@ export function usePlayback(onError: (message: string) => void) {
         id = playback.queue.tracks[index];
       }
       if (id) {
-        const track = playlists.tracks[id];
-        if (track) {
-          play(track);
-          dispatch(updateQueue(index));
+        if (id === playback.track?.id) {
+          // Playing the same track just restart it
+          seek(0);
+        } else {
+          // Play the next track
+          const nextTrack = playlists.tracks[id];
+          if (nextTrack) {
+            play(nextTrack);
+            dispatch(updateQueue(index));
+          }
         }
       }
     }
-  }, [playback, playlists, seek, play]);
+  }, [playback, playlists, seek, play, stop]);
 
   useEffect(() => {
+    const track = trackRef.current;
     // Move to next song or repeat this song on track end
     function handleEnd() {
-      if (
-        (playback.repeat === "track" || playback.repeat === "playlist") &&
-        playback.queue
-      ) {
-        let index = playback.queue.current;
-        if (playback.repeat === "playlist") {
-          index = (index + 1) % playback.queue.tracks.length;
-        }
+      if (playback.repeat === "track") {
+        seek(0);
+        track?.play();
+      } else if (playback.repeat === "playlist" && playback.queue) {
+        const index =
+          (playback.queue.current + 1) % playback.queue.tracks.length;
         let id: string;
         if (playback.shuffle) {
           id = playback.queue.tracks[playback.queue.shuffled[index]];
@@ -192,20 +207,26 @@ export function usePlayback(onError: (message: string) => void) {
           id = playback.queue.tracks[index];
         }
         if (id) {
-          const track = playlists.tracks[id];
-          if (track) {
-            play(track);
-            dispatch(updateQueue(index));
+          if (id === playback.track?.id) {
+            // Playing the same track just restart it
+            seek(0);
+            track?.play();
+          } else {
+            // Play the next track
+            const nextTrack = playlists.tracks[id];
+            if (nextTrack) {
+              play(nextTrack);
+              dispatch(updateQueue(index));
+            }
           }
         }
       }
     }
-    const track = trackRef.current;
     track?.on("end", handleEnd);
     return () => {
       track?.off("end", handleEnd);
     };
-  }, [playback, playlists, play]);
+  }, [playback, playlists, play, seek]);
 
   useEffect(() => {
     window.player.on("PLAYER_REMOTE_PLAY_URL", (args) => {
@@ -384,5 +405,6 @@ export function usePlayback(onError: (message: string) => void) {
     play,
     next,
     previous,
+    stop,
   };
 }

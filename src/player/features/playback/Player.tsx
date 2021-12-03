@@ -27,12 +27,9 @@ import {
   playPause,
   mute,
   shuffle,
-  toggleRepeat,
-  toggleMute,
   shuffleQueue,
-  updateQueue,
+  repeat,
 } from "./playbackSlice";
-import { Track } from "../playlists/playlistsSlice";
 
 const TimeSlider = styled(Slider)({
   color: "#fff",
@@ -79,11 +76,12 @@ const TinyText = styled(Typography)({
 });
 
 type PlayerProps = {
-  onPlay: (track: Track) => void;
+  onNext: () => void;
+  onPrevious: () => void;
   onSeek: (to: number) => void;
 };
 
-export function Player({ onPlay, onSeek }: PlayerProps) {
+export function Player({ onNext, onPrevious, onSeek }: PlayerProps) {
   const dispatch = useDispatch();
   const playlists = useSelector((state: RootState) => state.playlists);
   const playback = useSelector((state: RootState) => state.playback);
@@ -114,11 +112,21 @@ export function Player({ onPlay, onSeek }: PlayerProps) {
   }
 
   function handlRepeat() {
-    dispatch(toggleRepeat());
+    switch (playback.repeat) {
+      case "off":
+        dispatch(repeat("playlist"));
+        break;
+      case "playlist":
+        dispatch(repeat("track"));
+        break;
+      case "track":
+        dispatch(repeat("off"));
+        break;
+    }
   }
 
   function handleMute() {
-    dispatch(toggleMute());
+    dispatch(mute(!playback.muted));
   }
 
   function handleShuffle() {
@@ -126,61 +134,6 @@ export function Player({ onPlay, onSeek }: PlayerProps) {
     dispatch(shuffle(newShuffle));
     if (newShuffle) {
       dispatch(shuffleQueue());
-    }
-  }
-
-  function handleNext() {
-    if (playback.repeat === "off") {
-      dispatch(playPause(false));
-      onSeek(0);
-    } else if (playback.repeat === "track") {
-      onSeek(0);
-    } else if (playback.repeat === "playlist" && playback.queue) {
-      let index = (playback.queue.current + 1) % playback.queue.tracks.length;
-      let id: string;
-      if (playback.shuffle) {
-        id = playback.queue.tracks[playback.queue.shuffled[index]];
-      } else {
-        id = playback.queue.tracks[index];
-      }
-      if (id) {
-        const track = playlists.tracks[id];
-        if (track) {
-          onPlay(track);
-          dispatch(updateQueue(index));
-        }
-      }
-    }
-  }
-
-  function handlePrevious() {
-    if (playback.repeat === "off") {
-      dispatch(playPause(false));
-      onSeek(0);
-    } else if (playback.repeat === "track") {
-      onSeek(0);
-    } else if (playback.repeat === "playlist" && playback.queue) {
-      let index = playback.queue.current;
-      // Only go to previous if at the start of the track
-      if (playback.playback.current < 5) {
-        index -= 1;
-      }
-      if (index < 0) {
-        index = playback.queue.tracks.length - 1;
-      }
-      let id: string;
-      if (playback.shuffle) {
-        id = playback.queue.tracks[playback.queue.shuffled[index]];
-      } else {
-        id = playback.queue.tracks[index];
-      }
-      if (id) {
-        const track = playlists.tracks[id];
-        if (track) {
-          onPlay(track);
-          dispatch(updateQueue(index));
-        }
-      }
     }
   }
 
@@ -239,7 +192,7 @@ export function Player({ onPlay, onSeek }: PlayerProps) {
       <IconButton
         disabled={!Boolean(playback.playback)}
         aria-label="previous"
-        onClick={handlePrevious}
+        onClick={() => onPrevious()}
       >
         <Previous />
       </IconButton>
@@ -257,7 +210,7 @@ export function Player({ onPlay, onSeek }: PlayerProps) {
       <IconButton
         disabled={!Boolean(playback.playback)}
         aria-label="next"
-        onClick={handleNext}
+        onClick={() => onNext()}
       >
         <Next />
       </IconButton>

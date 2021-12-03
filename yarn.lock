@@ -859,6 +859,11 @@
     redux-thunk "^2.3.0"
     reselect "^4.0.0"
 
+"@sinclair/typebox@^0.23.0":
+  version "0.23.0"
+  resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.23.0.tgz#67da07e1e3be6d18f861728ba0a83cc7fee462e3"
+  integrity sha512-G8+yjtQlXVBOSWqsi8ezmmt2Y4VyR+FJOvYV/3DwKcJiAvyU+WcSA9chS5X3H+2VN3L/MEHm/puenGo9S6kbcw==
+
 "@sindresorhus/is@^0.14.0":
   version "0.14.0"
   resolved "https://registry.npmjs.org/@sindresorhus/is/-/is-0.14.0.tgz"

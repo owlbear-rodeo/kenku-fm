@@ -35,7 +35,7 @@ export function App() {
     setErrorMessage(message);
   }, []);
 
-  const { seek, play } = usePlayback(handleError);
+  const { seek, play, next, previous } = usePlayback(handleError);
 
   return (
     <Box>
@@ -45,7 +45,7 @@ export function App() {
       ) : (
         <Playlists onPlay={play} />
       )}
-      <Player onSeek={seek} onPlay={play} />
+      <Player onSeek={seek} onNext={next} onPrevious={previous} />
       <Snackbar
         open={Boolean(errorMessage)}
         autoHideDuration={4000}

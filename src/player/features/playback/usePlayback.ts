@@ -5,15 +5,16 @@ import { v4 as uuid } from "uuid";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import {
-  toggleMute,
   playPause,
   playTrack,
   repeat,
   updatePlayback,
-  increaseVolume,
-  decreaseVolume,
   updateQueue,
   stopTrack,
+  mute,
+  adjustVolume,
+  shuffle,
+  startQueue,
 } from "./playbackSlice";
 import { Track } from "../playlists/playlistsSlice";
 
@@ -107,6 +108,72 @@ export function usePlayback(onError: (message: string) => void) {
     [onError]
   );
 
+  const seek = useCallback((to: number) => {
+    dispatch(updatePlayback(to));
+    trackRef.current?.seek(to);
+  }, []);
+
+  const next = useCallback(() => {
+    if (!playback.playback) {
+      return;
+    }
+    if (playback.repeat === "off") {
+      dispatch(playPause(false));
+      seek(0);
+    } else if (playback.repeat === "track") {
+      seek(0);
+    } else if (playback.repeat === "playlist" && playback.queue) {
+      let index = (playback.queue.current + 1) % playback.queue.tracks.length;
+      let id: string;
+      if (playback.shuffle) {
+        id = playback.queue.tracks[playback.queue.shuffled[index]];
+      } else {
+        id = playback.queue.tracks[index];
+      }
+      if (id) {
+        const track = playlists.tracks[id];
+        if (track) {
+          play(track);
+          dispatch(updateQueue(index));
+        }
+      }
+    }
+  }, [playback, playlists, seek, play]);
+
+  const previous = useCallback(() => {
+    if (!playback.playback) {
+      return;
+    }
+    if (playback.repeat === "off") {
+      dispatch(playPause(false));
+      seek(0);
+    } else if (playback.repeat === "track") {
+      seek(0);
+    } else if (playback.repeat === "playlist" && playback.queue) {
+      let index = playback.queue.current;
+      // Only go to previous if at the start of the track
+      if (playback.playback.current < 5) {
+        index -= 1;
+      }
+      if (index < 0) {
+        index = playback.queue.tracks.length - 1;
+      }
+      let id: string;
+      if (playback.shuffle) {
+        id = playback.queue.tracks[playback.queue.shuffled[index]];
+      } else {
+        id = playback.queue.tracks[index];
+      }
+      if (id) {
+        const track = playlists.tracks[id];
+        if (track) {
+          play(track);
+          dispatch(updateQueue(index));
+        }
+      }
+    }
+  }, [playback, playlists, seek, play]);
+
   useEffect(() => {
     // Move to next song or repeat this song on track end
     function handleEnd() {
@@ -141,54 +208,152 @@ export function usePlayback(onError: (message: string) => void) {
   }, [playback, playlists, play]);
 
   useEffect(() => {
-    window.player.on("PLAYER_REMOTE_PLAY", (args) => {
+    window.player.on("PLAYER_REMOTE_PLAY_URL", (args) => {
       const url = args[0];
       const title = args[1];
-      const loop = args[2];
-
-      play({ url, title, id: uuid() });
-      dispatch(repeat(loop));
+      const track = { url, title, id: uuid() };
+      play(track);
+      dispatch(
+        startQueue({
+          tracks: [track.id],
+          playlistId: "",
+          trackId: track.id,
+        })
+      );
     });
 
     return () => {
-      window.player.removeAllListeners("PLAYER_REMOTE_PLAY");
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAY_URL");
     };
   }, [play]);
 
   useEffect(() => {
-    window.player.on("PLAYER_REMOTE_PLAYBACK_PLAY_PAUSE", () => {
-      if (trackRef.current) {
-        if (trackRef.current.playing()) {
-          dispatch(playPause(false));
-        } else {
-          dispatch(playPause(true));
+    window.player.on("PLAYER_REMOTE_PLAY_ID", (args) => {
+      const id = args[0];
+      if (id in playlists.tracks) {
+        const track = playlists.tracks[id];
+        // Find playlist assosiated with this track and start a queue
+        for (let playlist of Object.values(playlists.playlists.byId)) {
+          const tracks = [...playlist.tracks];
+          if (tracks.includes(track.id)) {
+            dispatch(
+              startQueue({ tracks, trackId: track.id, playlistId: playlist.id })
+            );
+            break;
+          }
+        }
+        play(track);
+      } else if (id in playlists.playlists.byId) {
+        const playlist = playlists.playlists.byId[id];
+        const tracks = [...playlist.tracks];
+        const trackId = tracks[0];
+        const track = playlists.tracks[trackId];
+        if (track) {
+          play(track);
+          dispatch(startQueue({ tracks, trackId, playlistId: playlist.id }));
         }
       }
     });
 
-    window.player.on("PLAYER_REMOTE_PLAYBACK_MUTE", () => {
-      dispatch(toggleMute());
-    });
+    return () => {
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAY_ID");
+    };
+  }, [play, playlists]);
 
-    window.player.on("PLAYER_REMOTE_PLAYBACK_INCREASE_VOLUME", () => {
-      dispatch(increaseVolume());
-    });
-
-    window.player.on("PLAYER_REMOTE_PLAYBACK_DECREASE_VOLUME", () => {
-      dispatch(decreaseVolume());
+  useEffect(() => {
+    window.player.on("PLAYER_REMOTE_PLAYBACK_REQUEST", () => {
+      window.player.playbackReply({
+        playing: playback.playing,
+        volume: playback.volume,
+        muted: playback.muted,
+        shuffle: playback.shuffle,
+        repeat: playback.repeat,
+        track:
+          playback.track && playback.playback && playback.queue
+            ? {
+                ...playback.track,
+                duration: playback.playback.duration,
+                playlist: playback.queue.playlistId
+                  ? {
+                      id: playback.queue.playlistId,
+                      title:
+                        playlists.playlists.byId[playback.queue.playlistId]
+                          ?.title,
+                    }
+                  : undefined,
+              }
+            : undefined,
+        progress: playback.playback?.current,
+      });
     });
 
     return () => {
-      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_PLAY_PAUSE");
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_REQUEST");
+    };
+  }, [playback]);
+
+  useEffect(() => {
+    window.player.on("PLAYER_REMOTE_PLAYBACK_PLAY", () => {
+      if (trackRef.current) {
+        dispatch(playPause(true));
+      }
+    });
+
+    window.player.on("PLAYER_REMOTE_PLAYBACK_PAUSE", () => {
+      if (trackRef.current) {
+        dispatch(playPause(false));
+      }
+    });
+
+    window.player.on("PLAYER_REMOTE_PLAYBACK_MUTE", (args) => {
+      const muted = args[0];
+      dispatch(mute(muted));
+    });
+
+    window.player.on("PLAYER_REMOTE_PLAYBACK_VOLUME", (args) => {
+      const volume = args[0];
+      dispatch(adjustVolume(volume));
+    });
+
+    window.player.on("PLAYER_REMOTE_PLAYBACK_SHUFFLE", (args) => {
+      const shuffled = args[0];
+      dispatch(shuffle(shuffled));
+    });
+
+    window.player.on("PLAYER_REMOTE_PLAYBACK_REPEAT", (args) => {
+      const repeated = args[0];
+      dispatch(repeat(repeated));
+    });
+
+    return () => {
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_PLAY");
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_PAUSE");
       window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_MUTE");
-      window.player.removeAllListeners(
-        "PLAYER_REMOTE_PLAYBACK_INCREASE_VOLUME"
-      );
-      window.player.removeAllListeners(
-        "PLAYER_REMOTE_PLAYBACK_DECREASE_VOLUME"
-      );
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_VOLUME");
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_SHUFFLE");
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_REPEAT");
     };
   }, []);
+
+  useEffect(() => {
+    window.player.on("PLAYER_REMOTE_PLAYBACK_NEXT", () => {
+      next();
+    });
+
+    return () => {
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_NEXT");
+    };
+  }, [next]);
+
+  useEffect(() => {
+    window.player.on("PLAYER_REMOTE_PLAYBACK_PREVIOUS", () => {
+      previous();
+    });
+
+    return () => {
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_PREVIOUS");
+    };
+  }, [previous]);
 
   useEffect(() => {
     if (trackRef.current) {
@@ -214,13 +379,10 @@ export function usePlayback(onError: (message: string) => void) {
     Howler.volume(playback.volume);
   }, [playback.volume]);
 
-  function seek(to: number) {
-    dispatch(updatePlayback(to));
-    trackRef.current?.seek(to);
-  }
-
   return {
     seek,
     play,
+    next,
+    previous,
   };
 }

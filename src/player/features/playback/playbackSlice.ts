@@ -142,33 +142,11 @@ export const playbackSlice = createSlice({
     adjustVolume: (state, action: PayloadAction<number>) => {
       state.volume = action.payload;
     },
-    decreaseVolume: (state) => {
-      state.volume = Math.min(state.volume + -0.05, 1);
-    },
-    increaseVolume: (state) => {
-      state.volume = Math.min(state.volume + 0.05, 1);
-    },
-    toggleMute: (state) => {
-      state.muted = !state.muted;
-    },
     mute: (state, action: PayloadAction<boolean>) => {
       state.muted = action.payload;
     },
     shuffle: (state, action: PayloadAction<boolean>) => {
       state.shuffle = action.payload;
-    },
-    toggleRepeat: (state) => {
-      switch (state.repeat) {
-        case "off":
-          state.repeat = "playlist";
-          break;
-        case "playlist":
-          state.repeat = "track";
-          break;
-        case "track":
-          state.repeat = "off";
-          break;
-      }
     },
     repeat: (state, action: PayloadAction<Repeat>) => {
       state.repeat = action.payload;
@@ -187,12 +165,8 @@ export const {
   playPause,
   updatePlayback,
   adjustVolume,
-  decreaseVolume,
-  increaseVolume,
-  toggleMute,
   mute,
   shuffle,
-  toggleRepeat,
   repeat,
 } = playbackSlice.actions;
 

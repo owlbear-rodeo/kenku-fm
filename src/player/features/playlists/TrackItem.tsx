@@ -72,7 +72,12 @@ export function TrackItem({ track, playlist, onPlay }: TrackItemProps) {
           backgroundColor: "rgba(34, 38, 57, 0.8)",
         }}
       >
-        <ListItemButton role={undefined} sx={{ m: 0 }} dense>
+        <ListItemButton
+          role={undefined}
+          sx={{ m: 0, borderRadius: "16px" }}
+          dense
+          selected={playback.track?.id === track.id}
+        >
           <ListItemText
             primary={track.title}
             sx={{

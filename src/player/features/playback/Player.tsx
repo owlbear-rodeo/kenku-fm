@@ -27,7 +27,6 @@ import {
   playPause,
   mute,
   shuffle,
-  shuffleQueue,
   repeat,
 } from "./playbackSlice";
 
@@ -132,9 +131,6 @@ export function Player({ onNext, onPrevious, onSeek }: PlayerProps) {
   function handleShuffle() {
     const newShuffle = !playback.shuffle;
     dispatch(shuffle(newShuffle));
-    if (newShuffle) {
-      dispatch(shuffleQueue());
-    }
   }
 
   const time =

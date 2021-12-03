@@ -69,16 +69,6 @@ export const playbackSlice = createSlice({
         state.queue.current = action.payload;
       }
     },
-    shuffleQueue: (state) => {
-      if (state.queue) {
-        // Find and remove the current track, shuffle the rest and insert it back at the start
-        const trackIndex = state.queue.current;
-        const shuffledIndex = state.queue.shuffled.indexOf(trackIndex);
-        state.queue.shuffled.splice(shuffledIndex, 1);
-        shuffleArray(state.queue.shuffled);
-        state.queue.shuffled.unshift(trackIndex);
-      }
-    },
     moveQueueIfNeeded: (
       state,
       action: PayloadAction<{
@@ -146,7 +136,25 @@ export const playbackSlice = createSlice({
       state.muted = action.payload;
     },
     shuffle: (state, action: PayloadAction<boolean>) => {
-      state.shuffle = action.payload;
+      const shuffle = action.payload;
+      // Update the queue to reflect the new shuffle state
+      if (state.queue) {
+        const currentIndex = state.shuffle
+          ? state.queue.shuffled[state.queue.current]
+          : state.queue.current;
+        if (shuffle) {
+          // Find and remove the current track, shuffle the rest and insert it back at the start
+          const shuffledIndex = state.queue.shuffled.indexOf(currentIndex);
+          state.queue.shuffled.splice(shuffledIndex, 1);
+          shuffleArray(state.queue.shuffled);
+          state.queue.shuffled.unshift(currentIndex);
+          state.queue.current = 0;
+        } else {
+          // Reset the queue index
+          state.queue.current = currentIndex;
+        }
+      }
+      state.shuffle = shuffle;
     },
     repeat: (state, action: PayloadAction<Repeat>) => {
       state.repeat = action.payload;
@@ -157,7 +165,6 @@ export const playbackSlice = createSlice({
 export const {
   startQueue,
   updateQueue,
-  shuffleQueue,
   moveQueueIfNeeded,
   addTrackToQueueIfNeeded,
   playTrack,

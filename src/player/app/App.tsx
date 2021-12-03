@@ -2,15 +2,16 @@ import React, { useCallback, useState } from "react";
 
 import Box from "@mui/material/Box";
 import styled from "@mui/material/styles/styled";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 
 import { Player } from "../features/playback/Player";
 import { usePlayback } from "../features/playback/usePlayback";
+import { useRemote } from "../features/remote/useRemote";
 import { Playlists } from "../features/playlists/Playlists";
 import { Playlist } from "../features/playlists/Playlist";
 import { useSelector } from "react-redux";
 import { RootState } from "./store";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
 
 const WallPaper = styled("div")({
   position: "absolute",
@@ -36,6 +37,7 @@ export function App() {
   }, []);
 
   const { seek, play, next, previous } = usePlayback(handleError);
+  useRemote(play, seek, next, previous);
 
   return (
     <Box>

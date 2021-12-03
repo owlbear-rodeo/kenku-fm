@@ -31,6 +31,11 @@ const ShuffleRequest = Type.Object({
 });
 type ShuffleRequestType = Static<typeof ShuffleRequest>;
 
+const SeekRequest = Type.Object({
+  to: Type.Number(),
+});
+type SeekRequestType = Static<typeof SeekRequest>;
+
 async function waitForPlaybackReply(): Promise<PlaybackReply> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
@@ -132,6 +137,31 @@ export const playback: (manager: PlayerManager) => FastifyPluginCallback =
             "PLAYER_REMOTE_PLAYBACK_VOLUME",
             Math.max(Math.min(request.body.volume, 1), 0)
           );
+          reply.status(200).send(request.body);
+        } else {
+          reply.status(503).send(VIEW_ERROR);
+        }
+      }
+    );
+
+    fastify.put<{
+      Body: SeekRequestType;
+      Reply: SeekRequestType | ReplyError;
+    }>(
+      "/seek",
+      {
+        schema: {
+          body: SeekRequest,
+          response: {
+            200: SeekRequest,
+          },
+        },
+      },
+
+      (request, reply) => {
+        const view = manager.getView();
+        if (view) {
+          view.send("PLAYER_REMOTE_PLAYBACK_SEEK", request.body.to);
           reply.status(200).send(request.body);
         } else {
           reply.status(503).send(VIEW_ERROR);

@@ -7,6 +7,7 @@ import Alert from "@mui/material/Alert";
 
 import { Player } from "../features/playback/Player";
 import { usePlayback } from "../features/playback/usePlayback";
+import { useMediaSession } from "../features/playback/useMediaSession";
 import { useRemote } from "../features/remote/useRemote";
 import { Playlists } from "../features/playlists/Playlists";
 import { Playlist } from "../features/playlists/Playlist";
@@ -36,7 +37,8 @@ export function App() {
     setErrorMessage(message);
   }, []);
 
-  const { seek, play, next, previous } = usePlayback(handleError);
+  const { seek, play, next, previous, stop } = usePlayback(handleError);
+  useMediaSession(seek, next, previous, stop);
   useRemote(play, seek, next, previous);
 
   return (

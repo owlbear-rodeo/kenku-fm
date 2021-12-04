@@ -3,9 +3,8 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import IconButton from "@mui/material/IconButton";
 import Box from "@mui/material/Box";
-import Popover from "@mui/material/Popover";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import MoreIcon from "@mui/icons-material/MoreHorizRounded";
 
 import { useDispatch } from "react-redux";
@@ -80,10 +79,10 @@ export function AppListItem({ app, selected, shadow }: AppListItemProps) {
           <MoreIcon />
         </IconButton>
       </ListItemButton>
-      <Popover
+      <Menu
         id={moreId}
-        open={moreOpen}
         anchorEl={more}
+        open={moreOpen}
         onClose={handleMoreClose}
         anchorOrigin={{
           vertical: "bottom",
@@ -94,19 +93,9 @@ export function AppListItem({ app, selected, shadow }: AppListItemProps) {
           horizontal: "right",
         }}
       >
-        <List>
-          <ListItem disablePadding>
-            <ListItemButton onClick={openSettings}>
-              <ListItemText primary="Edit" />
-            </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton onClick={handleRemove}>
-              <ListItemText primary="Delete" />
-            </ListItemButton>
-          </ListItem>
-        </List>
-      </Popover>
+        <MenuItem onClick={openSettings}>Edit</MenuItem>
+        <MenuItem onClick={handleRemove}>Delete</MenuItem>
+      </Menu>
       <AppSettings app={app} open={settingsOpen} onClose={closeSettings} />
     </>
   );

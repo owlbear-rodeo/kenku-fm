@@ -22,82 +22,69 @@ export function usePlayback(onError: (message: string) => void) {
 
   const play = useCallback(
     (track: Track) => {
-      const howl = new Howl({
-        src: track.url,
-        html5: true,
-      });
-
       let prevTrack = trackRef.current;
-      const removePrevTrack = () => {
+      function removePrevTrack() {
         if (prevTrack) {
           prevTrack.unload();
           prevTrack = undefined;
         }
-      };
-      const error = () => {
+      }
+      function error() {
+        trackRef.current = undefined;
         dispatch(stopTrack());
         removePrevTrack();
-        trackRef.current = undefined;
         onError(`Unable to play track: ${track.title}`);
-      };
-      trackRef.current = howl;
-      howl.once("load", () => {
-        dispatch(
-          playTrack({
-            track,
-            duration: Math.floor(howl.duration()),
-          })
-        );
-        // Fade out previous track and fade in new track
-        if (prevTrack) {
-          prevTrack.fade(1, 0, 1000);
-          prevTrack.once("fade", removePrevTrack);
-        }
-        howl.fade(0, 1, 1000);
-        // Update playback
-        // Create playback animation
-        if (animationRef.current !== null) {
-          cancelAnimationFrame(animationRef.current);
-        }
-        let prevTime = performance.now();
-        function animatePlayback(time: number) {
-          animationRef.current = requestAnimationFrame(animatePlayback);
-          // Limit update to 1 time per second
-          const delta = time - prevTime;
-          if (howl.playing() && delta > 1000) {
-            dispatch(updatePlayback(Math.floor(howl.seek())));
-            prevTime = time;
-          }
-        }
-        animationRef.current = requestAnimationFrame(animatePlayback);
-      });
-
-      howl.on("loaderror", error);
-
-      howl.on("playerror", error);
-
-      // Update UI based off of native controls
-      // TODO: Find a way to do this that doesn't break seeking
-      const sound = (howl as any)._sounds[0];
-      if (sound) {
-        // const node = sound._node;
-        // node.onpause = () => {
-        // dispatch(playPause(false));
-        //   sound._paused = true;
-        //   sound._seek = node.currentTime;
-        // };
-        // node.onplaying = () => {
-        // dispatch(playPause(true));
-        //   sound._paused = false;
-        //   sound._seek = node.currentTime;
-        // };
-      } else {
-        error();
       }
 
-      return () => {
-        howl.unload();
-      };
+      try {
+        const howl = new Howl({
+          src: track.url,
+          html5: true,
+        });
+
+        trackRef.current = howl;
+        howl.once("load", () => {
+          dispatch(
+            playTrack({
+              track,
+              duration: Math.floor(howl.duration()),
+            })
+          );
+          // Fade out previous track and fade in new track
+          if (prevTrack) {
+            prevTrack.fade(1, 0, 1000);
+            prevTrack.once("fade", removePrevTrack);
+          }
+          howl.fade(0, 1, 1000);
+          // Update playback
+          // Create playback animation
+          if (animationRef.current !== null) {
+            cancelAnimationFrame(animationRef.current);
+          }
+          let prevTime = performance.now();
+          function animatePlayback(time: number) {
+            animationRef.current = requestAnimationFrame(animatePlayback);
+            // Limit update to 1 time per second
+            const delta = time - prevTime;
+            if (howl.playing() && delta > 1000) {
+              dispatch(updatePlayback(Math.floor(howl.seek())));
+              prevTime = time;
+            }
+          }
+          animationRef.current = requestAnimationFrame(animatePlayback);
+        });
+
+        howl.on("loaderror", error);
+
+        howl.on("playerror", error);
+
+        const sound = (howl as any)._sounds[0];
+        if (!sound) {
+          error();
+        }
+      } catch {
+        error();
+      }
     },
     [onError]
   );

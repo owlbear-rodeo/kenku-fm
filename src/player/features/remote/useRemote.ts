@@ -29,7 +29,6 @@ export function useRemote(
       const url = args[0];
       const title = args[1];
       const track = { url, title, id: uuid() };
-      play(track);
       dispatch(
         startQueue({
           tracks: [track.id],
@@ -37,6 +36,7 @@ export function useRemote(
           trackId: track.id,
         })
       );
+      play(track);
     });
 
     return () => {

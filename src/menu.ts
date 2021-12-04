@@ -143,6 +143,7 @@ const template: any = [
           await shell.openExternal("https://kenku.fm");
         },
       },
+      ...(!isMac ? [{ role: "about" }] : []),
     ],
   },
 ];

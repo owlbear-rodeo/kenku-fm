@@ -72,21 +72,21 @@ export const playback: (manager: PlayerManager) => FastifyPluginCallback =
       }
     });
 
-    fastify.put("/play", (_, reply) => {
+    fastify.put("/play", (request, reply) => {
       const view = manager.getView();
       if (view) {
         view.send("PLAYER_REMOTE_PLAYBACK_PLAY");
-        reply.status(200).send();
+        reply.status(200).send(request.body);
       } else {
         reply.status(503).send(VIEW_ERROR);
       }
     });
 
-    fastify.put("/pause", (_, reply) => {
+    fastify.put("/pause", (request, reply) => {
       const view = manager.getView();
       if (view) {
         view.send("PLAYER_REMOTE_PLAYBACK_PAUSE");
-        reply.status(200).send();
+        reply.status(200).send(request.body);
       } else {
         reply.status(503).send(VIEW_ERROR);
       }
@@ -109,7 +109,7 @@ export const playback: (manager: PlayerManager) => FastifyPluginCallback =
         const view = manager.getView();
         if (view) {
           view.send("PLAYER_REMOTE_PLAYBACK_MUTE", request.body.mute);
-          reply.status(200).send();
+          reply.status(200).send(request.body);
         } else {
           reply.status(503).send(VIEW_ERROR);
         }
@@ -169,21 +169,21 @@ export const playback: (manager: PlayerManager) => FastifyPluginCallback =
       }
     );
 
-    fastify.post("/next", (_, reply) => {
+    fastify.post("/next", (request, reply) => {
       const view = manager.getView();
       if (view) {
         view.send("PLAYER_REMOTE_PLAYBACK_NEXT");
-        reply.status(200).send();
+        reply.status(200).send(request.body);
       } else {
         reply.status(503).send(VIEW_ERROR);
       }
     });
 
-    fastify.post("/previous", (_, reply) => {
+    fastify.post("/previous", (request, reply) => {
       const view = manager.getView();
       if (view) {
         view.send("PLAYER_REMOTE_PLAYBACK_PREVIOUS");
-        reply.status(200).send();
+        reply.status(200).send(request.body);
       } else {
         reply.status(503).send(VIEW_ERROR);
       }
@@ -230,7 +230,7 @@ export const playback: (manager: PlayerManager) => FastifyPluginCallback =
         const view = manager.getView();
         if (view) {
           view.send("PLAYER_REMOTE_PLAYBACK_SHUFFLE", request.body.shuffle);
-          reply.status(200).send();
+          reply.status(200).send(request.body);
         } else {
           reply.status(503).send(VIEW_ERROR);
         }

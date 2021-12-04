@@ -33,7 +33,7 @@ export function App() {
       <BrowserViews />
       <Snackbar
         open={Boolean(message)}
-        autoHideDuration={6000}
+        autoHideDuration={4000}
         onClose={() => setMessage(undefined)}
         message={message}
         sx={{ maxWidth: "192px" }}

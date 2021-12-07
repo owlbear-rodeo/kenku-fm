@@ -11,7 +11,7 @@ jobs:
       - checkout
       - node/install:
           install-yarn: true
-          lts: true
+          node-version: "16.13.1"
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:

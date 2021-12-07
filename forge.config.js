@@ -36,6 +36,8 @@ const config = {
       config: {
         name: "kenku_fm",
         productName: "Kenku FM",
+        homepage: "https://kenku.fm",
+        categories: "Utility",
       },
     },
     {
@@ -46,7 +48,12 @@ const config = {
     },
     {
       name: "@electron-forge/maker-rpm",
-      config: {},
+      config: {
+        name: "kenku_fm",
+        productName: "Kenku FM",
+        homepage: "https://kenku.fm",
+        categories: "Utility",
+      },
     },
   ],
   publishers: [

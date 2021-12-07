@@ -31,12 +31,12 @@ jobs:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
+      
       - run:
-          name: Generate Builds
-          command: yarn make
-
-      - store_artifacts:
-          path: ~/repo/out/make
+          name: Publish
+          command: yarn run publish
+          environment:
+            GITHUB_TOKEN: ${GITHUB_REPO_TOKEN}
 
 workflows:
   version: 2

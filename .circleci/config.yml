@@ -41,7 +41,5 @@ workflows:
     jobs:
       - build:
           filters:
-            tags:
-              only: /^\d+\.\d+\.\d+$/
             branches:
-              ignore: /.*/
+              only: circleci-project-setup

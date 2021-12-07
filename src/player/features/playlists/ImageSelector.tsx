@@ -62,7 +62,7 @@ export function ImageSelector({ value, onChange }: ImageSelectorProps) {
   }
 
   const imageSelector = (
-    <ImageList variant="masonry" cols={3} gap={8}>
+    <ImageList variant="masonry" cols={3} gap={8} sx={{ m: 0 }}>
       {Object.entries(backgrounds).map(([key, src]) => (
         <ImageListItem key={key}>
           <ImageListButton src={src} alt={key} loading="lazy" />
@@ -150,14 +150,16 @@ export function ImageSelector({ value, onChange }: ImageSelectorProps) {
           maxWidth: 500,
           width: "100%",
           height: "200px",
-          overflowY: "scroll",
           bgcolor: "rgba(0, 0, 0, 0.16)",
           borderRadius: "16px",
-          px: 2,
+          p: 1,
+          pr: 0,
           mt: 1,
         }}
       >
-        {imageType === "default" ? imageSelector : imageImporter}
+        <Box sx={{ overflowY: "scroll", height: "100%" }}>
+          {imageType === "default" ? imageSelector : imageImporter}
+        </Box>
       </Box>
     </FormGroup>
   );

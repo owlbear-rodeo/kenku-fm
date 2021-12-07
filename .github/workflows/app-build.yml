@@ -22,9 +22,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
 
-      - name: Package App
-        run: yarn make
-
       - name: Publish
         run: yarn run publish
         env:
@@ -48,9 +45,6 @@ jobs:
         run: yarn install --non-interactive
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
-
-      - name: Package App
-        run: yarn make
 
       - name: Publish
         run: yarn run publish

@@ -17,7 +17,7 @@ jobs:
             npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
       - run:
           name: Install Dependencies
-          command: yarn install --non-interactive
+          command: yarn install --non-interactive --frozen-lockfile
       - run:
           name: Install dpkg and fakeroot
           command: |
@@ -34,3 +34,14 @@ jobs:
 
       - store_artifacts:
           path: ~/repo/out/make
+
+workflows:
+  version: 2
+  deploy:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /^\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/

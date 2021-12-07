@@ -5,17 +5,20 @@ export function useHideScrollbar() {
     "hide-scrollbar"
   );
 
-  function handlePointerEnter(event: React.PointerEvent<HTMLDivElement>) {
-    setClassName(undefined);
+  function handlePointerLeave() {
+    setClassName("hide-scrollbar");
   }
 
-  function handlePointerLeave(event: React.PointerEvent<HTMLDivElement>) {
-    setClassName("hide-scrollbar");
+  // Check for pointer over on move to work around issue of pointer being over the component on mount
+  function handlePointerMove() {
+    if (className === "hide-scrollbar") {
+      setClassName(undefined);
+    }
   }
 
   return {
     className: className,
-    onPointerEnter: handlePointerEnter,
     onPointerLeave: handlePointerLeave,
+    onPointerMove: handlePointerMove,
   };
 }

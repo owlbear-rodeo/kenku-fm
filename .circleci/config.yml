@@ -36,7 +36,7 @@ jobs:
           name: Publish
           command: yarn run publish
           environment:
-            GITHUB_TOKEN: ${GITHUB_REPO_TOKEN}
+            GITHUB_TOKEN: $GITHUB_REPO_TOKEN
 
 workflows:
   version: 2

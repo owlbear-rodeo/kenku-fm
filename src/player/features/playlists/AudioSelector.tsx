@@ -5,7 +5,7 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
-import { getDropURL, encodeFilePath } from "../../common/drop";
+import { getDropURL, encodeFilePath } from "../../../renderer/common/drop";
 
 type AudioSelectorProps = {
   value: string;

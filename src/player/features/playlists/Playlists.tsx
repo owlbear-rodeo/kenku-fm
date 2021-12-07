@@ -38,6 +38,7 @@ import { SortableItem } from "./SortableItem";
 import { startQueue } from "../playback/playbackSlice";
 import { useDrop } from "./useDrop";
 import { getRandomBackground } from "../../backgrounds";
+import { useHideScrollbar } from "../../../renderer/common/useHideScrollbar";
 
 type PlaylistsProps = {
   onPlay: (track: Track) => void;
@@ -108,6 +109,8 @@ export function Playlists({ onPlay }: PlaylistsProps) {
     }
   );
 
+  const hideScrollbar = useHideScrollbar();
+
   return (
     <>
       <Container
@@ -145,6 +148,7 @@ export function Playlists({ onPlay }: PlaylistsProps) {
             maskImage:
               "linear-gradient(to bottom, transparent, black 16px, black calc(100% - 16px), transparent)",
           }}
+          {...hideScrollbar}
         >
           <DndContext
             sensors={sensors}

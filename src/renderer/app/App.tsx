@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import Snackbar from "@mui/material/Snackbar";
 import Stack from "@mui/material/Stack";
+
 import { ActionDrawer } from "../common/ActionDrawer";
 
 import { BrowserViews } from "../features/browserViews/BrowserViews";
@@ -28,7 +29,7 @@ export function App() {
   }, []);
 
   return (
-    <Stack direction="row" sx={{ flexGrow: 1 }}>
+    <Stack direction="row">
       <ActionDrawer />
       <BrowserViews />
       <Snackbar

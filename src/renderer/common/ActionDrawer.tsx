@@ -12,12 +12,15 @@ import { RootState } from "../app/store";
 import { useSelector } from "react-redux";
 
 import icon from "../../assets/icon.svg";
+import { useHideScrollbar } from "./useHideScrollbar";
 
 export const drawerWidth = 240;
 
 export function ActionDrawer() {
   const connection = useSelector((state: RootState) => state.connection);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const hideScrollbar = useHideScrollbar();
 
   return (
     <Box component="nav" sx={{ width: drawerWidth }}>
@@ -29,6 +32,7 @@ export function ActionDrawer() {
             width: drawerWidth,
             border: "none",
             bgcolor: "background.default",
+            overflowY: "initial",
           },
         }}
         open
@@ -52,23 +56,25 @@ export function ActionDrawer() {
             onClose={() => setSettingsOpen(false)}
           />
         </Toolbar>
-        <Stack>
-          <AppListItems />
-          <OutputListItems />
-          {connection.status === "disconnected" && (
-            <Typography variant="caption" align="center" marginY={2}>
-              Connect{" "}
-              <Link
-                component="button"
-                variant="caption"
-                onClick={() => setSettingsOpen(true)}
-              >
-                Discord
-              </Link>{" "}
-              for more outputs
-            </Typography>
-          )}
-        </Stack>
+        <Box sx={{ overflowY: "auto" }} {...hideScrollbar}>
+          <Stack>
+            <AppListItems />
+            <OutputListItems />
+            {connection.status === "disconnected" && (
+              <Typography variant="caption" align="center" marginY={2}>
+                Connect{" "}
+                <Link
+                  component="button"
+                  variant="caption"
+                  onClick={() => setSettingsOpen(true)}
+                >
+                  Discord
+                </Link>{" "}
+                for more outputs
+              </Typography>
+            )}
+          </Stack>
+        </Box>
       </Drawer>
     </Box>
   );

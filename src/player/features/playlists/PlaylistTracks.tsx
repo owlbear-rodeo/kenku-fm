@@ -27,6 +27,8 @@ import { useDispatch } from "react-redux";
 import { Playlist, Track, moveTrack } from "./playlistsSlice";
 import { moveQueueIfNeeded } from "../playback/playbackSlice";
 
+import { useHideScrollbar } from "../../../renderer/common/useHideScrollbar";
+
 type PlaylistTracksProps = {
   items: Track[];
   playlist: Playlist;
@@ -73,6 +75,8 @@ export function PlaylistTracks({
     setDragId(null);
   }
 
+  const hideScrollbar = useHideScrollbar();
+
   return (
     <Box
       sx={{
@@ -88,6 +92,7 @@ export function PlaylistTracks({
         left: 0,
         px: 2,
       }}
+      {...hideScrollbar}
     >
       <List
         sx={{

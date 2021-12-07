@@ -2,3 +2,27 @@ img {
   min-width: 0;
   width: 100%;
 }
+
+::-webkit-scrollbar {
+  width: 10px;
+  background-color: transparent;
+  border-radius: 100px;
+}
+::-webkit-scrollbar:hover {
+  background-color: rgba(255, 255, 255, 0.09);
+}
+
+::-webkit-scrollbar-thumb:vertical {
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  min-height: 10px;
+}
+::-webkit-scrollbar-thumb:vertical:active {
+  background-color: rgba(255, 255, 255, 0.61);
+}
+
+.hide-scrollbar::-webkit-scrollbar-thumb:vertical {
+  background-color: transparent;
+}

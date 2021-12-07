@@ -14,6 +14,8 @@ import { Playlist } from "../features/playlists/Playlist";
 import { useSelector } from "react-redux";
 import { RootState } from "./store";
 
+import "../../renderer/app/App.css";
+
 const WallPaper = styled("div")({
   position: "absolute",
   width: "100%",

@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { v4 as uuid } from "uuid";
 
-import { cleanFileName, encodeFilePath } from "../../common/drop";
+import { cleanFileName, encodeFilePath } from "../../../renderer/common/drop";
 import { Track } from "./playlistsSlice";
 
 const supportedFileTypes = [

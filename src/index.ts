@@ -2,6 +2,7 @@ import { app, BrowserWindow, session, shell } from "electron";
 import { FaviconManager } from "./main/managers/FaviconManager";
 import { PlaybackManager } from "./main/managers/PlaybackManager";
 import "./menu";
+import icon from "./assets/icon.png";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -20,6 +21,7 @@ const createWindow = (): void => {
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
     },
+    icon: icon,
   });
 
   const playbackManager = new PlaybackManager(mainWindow);

@@ -1,4 +1,6 @@
 version: 2.1
+orbs: 
+  node: circleci/node@4.9.0
 jobs:
   build:
     machine:
@@ -7,9 +9,9 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - run:
-          name: Update NPM
-          command: "sudo npm install -g npm"
+      - node/install:
+          install-yarn: true
+          lts: true
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:

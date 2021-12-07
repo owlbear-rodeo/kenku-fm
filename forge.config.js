@@ -37,7 +37,7 @@ const config = {
         name: "kenku_fm",
         productName: "Kenku FM",
         homepage: "https://kenku.fm",
-        icon: path.join(__dirname, "src", "assets", "256x256.png"),
+        icon: path.join(__dirname, "src", "assets", "icons", "256x256.png"),
       },
     },
     {
@@ -52,7 +52,7 @@ const config = {
         name: "kenku_fm",
         productName: "Kenku FM",
         homepage: "https://kenku.fm",
-        icon: path.join(__dirname, "src", "assets", "256x256.png"),
+        icon: path.join(__dirname, "src", "assets", "icons", "256x256.png"),
       },
     },
   ],

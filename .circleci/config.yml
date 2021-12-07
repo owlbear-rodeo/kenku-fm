@@ -1,9 +1,10 @@
 version: 2.1
 jobs:
   build:
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: arm.medium
     working_directory: ~/repo
-    docker:
-      - image: circleci/node:16
     steps:
       - checkout
       - run:

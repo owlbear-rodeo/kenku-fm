@@ -3,57 +3,44 @@ name: Build Kenku FM
 on: [workflow_dispatch]
 
 jobs:
-  # build_on_linux:
-  #   name: Build - Linux (Ubuntu)
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v2
-
-  #     - name: Setup Node
-  #       uses: actions/setup-node@master
-  #       with:
-  #         node-version: 14
-  #         registry-url: "https://npm.pkg.github.com"
-  #         scope: "@owlbear-rodeo"
-
-  #     - name: Install Dependencies
-  #       run: yarn install --ignore-scripts --non-interactive
-  #       env:
-  #         NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
-
-  #     - name: Package App
-  #       run: yarn make
-
-  #     - name: Publish
-  #       run: yarn run publish
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build_on_mac:
-    name: Build - MacOS
-    runs-on: macos-latest
+  build_on_linux:
+    name: Build - Linux (Ubuntu)
+    runs-on: ubuntu-latest
     steps:
-      - name: Codesign executable
-        run: |
-          echo -n "$MACOS_CERTIFICATE" | openssl base64 -d >> ./certificate.p12
-          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
-          security import ./certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD"
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
-        env:
-          MACOS_CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-          MACOS_CERTIFICATE_PWD: ${{ secrets.P12_PASSWORD }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-
       - name: Checkout
         uses: actions/checkout@v2
 
       - name: Setup Node
         uses: actions/setup-node@master
         with:
-          node-version: 14
+          node-version: 16
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@owlbear-rodeo"
+
+      - name: Install Dependencies
+        run: yarn install --ignore-scripts --non-interactive
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_TOKEN }}
+
+      - name: Package App
+        run: yarn make
+
+      - name: Publish
+        run: yarn run publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build_on_windows:
+    name: Build - Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@master
+        with:
+          node-version: 16
           registry-url: "https://npm.pkg.github.com"
           scope: "@owlbear-rodeo"
 
@@ -64,20 +51,29 @@ jobs:
 
       - name: Package App
         run: yarn make
-        env:
-          CI: "true"
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
 
       - name: Publish
         run: yarn run publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # build_on_windows:
-  #   name: Build - Windows
-  #   runs-on: windows-latest
+  # build_on_mac:
+  #   name: Build - MacOS
+  #   runs-on: macos-latest
   #   steps:
+  #     - name: Codesign executable
+  #       run: |
+  #         echo -n "$MACOS_CERTIFICATE" | openssl base64 -d >> ./certificate.p12
+  #         security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+  #         security default-keychain -s build.keychain
+  #         security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+  #         security import ./certificate.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD"
+  #         security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+  #       env:
+  #         MACOS_CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+  #         MACOS_CERTIFICATE_PWD: ${{ secrets.P12_PASSWORD }}
+  #         KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+
   #     - name: Checkout
   #       uses: actions/checkout@v2
 
@@ -95,6 +91,10 @@ jobs:
 
   #     - name: Package App
   #       run: yarn make
+  #       env:
+  #         CI: "true"
+  #         APPLE_ID: ${{ secrets.APPLE_ID }}
+  #         APPLE_ID_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
 
   #     - name: Publish
   #       run: yarn run publish

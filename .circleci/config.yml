@@ -15,7 +15,7 @@ jobs:
           install-yarn: true
           node-version: "16.13.1"
       - restore_cache:
-          key: dependency-cache-arm-{{ checksum "package.json" }}
+          key: dependency-cache-{{ checksum "package.json" }}
       - run:
           name: Login to Github Packages
           command: |
@@ -29,7 +29,7 @@ jobs:
             sudo apt-get update -y
             sudo apt-get install -y dpkg fakeroot rpm
       - save_cache:
-          key: dependency-cache-arm-{{ checksum "package.json" }}
+          key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
       - run:
@@ -49,7 +49,7 @@ jobs:
           install-yarn: true
           node-version: "16.13.1"
       - restore_cache:
-          key: dependency-cache-amd-{{ checksum "package.json" }}
+          key: dependency-cache-{{ checksum "package.json" }}
       - run:
           name: Login to Github Packages
           command: |
@@ -63,7 +63,7 @@ jobs:
             sudo apt-get update -y
             sudo apt-get install -y dpkg fakeroot rpm
       - save_cache:
-          key: dependency-cache-amd-{{ checksum "package.json" }}
+          key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
       - run:

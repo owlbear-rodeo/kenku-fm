@@ -14,9 +14,16 @@ import {
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 
+const playbackPersistConfig = {
+  key: "playback",
+  version: 1,
+  storage,
+  whitelist: ["volume", "muted", "shuffle", "repeat"],
+};
+
 const rootReducer = combineReducers({
   playlists: playlistsReducer,
-  playback: playbackReducer,
+  playback: persistReducer(playbackPersistConfig, playbackReducer),
 });
 
 const persistConfig = {

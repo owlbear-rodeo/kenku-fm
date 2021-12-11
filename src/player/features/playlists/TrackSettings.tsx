@@ -33,7 +33,12 @@ export function TrackSettings({ track, open, onClose }: TrackSettingsProps) {
   }
 
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      // Stop key events from propagating to prevent the track drag and drop from stealing the space bar
+      onKeyDown={(e) => e.stopPropagation()}
+    >
       <DialogTitle>Edit Track</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>

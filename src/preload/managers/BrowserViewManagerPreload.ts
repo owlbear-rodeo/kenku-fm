@@ -133,7 +133,7 @@ export class BrowserViewManagerPreload {
         ipcRenderer.send("BROWSER_VIEW_STREAM_DATA", buffer);
       });
     };
-    recorder.start(300);
+    recorder.start(60);
 
     this._audioOutputNode.connect(destination);
   }

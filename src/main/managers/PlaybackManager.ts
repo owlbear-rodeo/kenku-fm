@@ -10,11 +10,13 @@ export class PlaybackManager {
     this.viewManager = new BrowserViewManagerMain(window);
     this.viewManager.on("streamStart", (stream) => {
       this.discord.broadcast.play(stream, {
-        type: "webm/opus",
+        format: "webm",
+        // Increase frame duration to match MediaRecorder and prevent stutter
+        frameDuration: 60,
       });
     });
     this.viewManager.on("streamEnd", () => {
-      this.discord.broadcast.end();
+      this.discord.broadcast.stopPlaying();
     });
   }
 

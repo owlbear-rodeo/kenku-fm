@@ -42,9 +42,7 @@ const config = {
     },
     {
       name: "@electron-forge/maker-zip",
-      platforms: [
-        "linux"
-      ],
+      platforms: ["linux"],
     },
     {
       name: "@electron-forge/maker-rpm",
@@ -96,13 +94,6 @@ const config = {
           ],
         },
         devContentSecurityPolicy: "",
-      },
-    ],
-    [
-      "@timfish/forge-externals-plugin",
-      {
-        externals: ["opusscript", "@owlbear-rodeo/discord.js"],
-        includeDeps: true,
       },
     ],
   ],

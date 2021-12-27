@@ -11,8 +11,4 @@ module.exports = {
   resolve: {
     extensions: [".js", ".ts", ".jsx", ".tsx", ".css", ".json"],
   },
-  externals: {
-    "@owlbear-rodeo/discord.js": "commonjs2 @owlbear-rodeo/discord.js",
-    opusscript: "commonjs2 opusscript",
-  },
 };

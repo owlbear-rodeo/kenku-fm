@@ -1,32 +1,10 @@
 import { ipcMain, BrowserWindow, webContents } from "electron";
 import store from "../store";
 import Fastify, { FastifyInstance } from "fastify";
-import { Static, Type } from "@sinclair/typebox";
 import { registerRemote } from "../remote";
 
 declare const PLAYER_WINDOW_WEBPACK_ENTRY: string;
 declare const PLAYER_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
-
-const PlayURLRequest = Type.Object({
-  url: Type.String(),
-  title: Type.String(),
-});
-type PlayURLRequestType = Static<typeof PlayURLRequest>;
-
-const PlayIDRequest = Type.Object({
-  id: Type.String(),
-});
-type PlayIDRequestType = Static<typeof PlayIDRequest>;
-
-const MuteRequest = Type.Object({
-  mute: Type.Boolean(),
-});
-type MuteRequestType = Static<typeof MuteRequest>;
-
-const VolumeRequest = Type.Object({
-  volume: Type.Number(),
-});
-type VolumeRequestType = Static<typeof VolumeRequest>;
 
 export class PlayerManager {
   registeredViewId?: number;

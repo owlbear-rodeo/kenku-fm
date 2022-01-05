@@ -5,7 +5,7 @@ import Stack from "@mui/material/Stack";
 
 import { ActionDrawer } from "../common/ActionDrawer";
 
-import { BrowserViews } from "../features/browserViews/BrowserViews";
+import { Tabs } from "../features/tabs/Tabs";
 
 import "./App.css";
 
@@ -31,7 +31,7 @@ export function App() {
   return (
     <Stack direction="row">
       <ActionDrawer />
-      <BrowserViews />
+      <Tabs />
       <Snackbar
         open={Boolean(message)}
         autoHideDuration={4000}

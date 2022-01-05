@@ -3,7 +3,7 @@ import connectionReducer from "../features/connection/connectionSlice";
 import outputReducer from "../features/output/outputSlice";
 import settingsReducer from "../features/settings/settingsSlice";
 import bookmarksReducer from "../features/bookmarks/bookmarksSlice";
-import browserViewsReducer from "../features/browserViews/browserViewsSlice";
+import tabsReducer from "../features/tabs/tabsSlice";
 import playerReducer from "../features/player/playerSlice";
 
 import {
@@ -23,7 +23,7 @@ const rootReducer = combineReducers({
   output: outputReducer,
   settings: settingsReducer,
   bookmarks: bookmarksReducer,
-  browserViews: browserViewsReducer,
+  tabs: tabsReducer,
   player: playerReducer,
 });
 

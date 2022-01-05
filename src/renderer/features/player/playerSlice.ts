@@ -1,17 +1,17 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { Bookmark } from "../bookmarks/bookmarksSlice";
+import { Tab } from "../tabs/tabsSlice";
 
 import icon from "../../../assets/player-icon.png";
 
 export interface PlayerState {
-  app: Bookmark & { preload: string };
+  tab: Tab & { preload: string };
   remoteEnabled: boolean;
 }
 
 const initialState: PlayerState = {
-  app: {
-    id: "__player__",
+  tab: {
+    id: -1,
     icon: icon,
     url: window.kenku.playerGetURL(),
     preload: window.kenku.playerGetPreloadURL(),
@@ -27,9 +27,12 @@ export const playerSlice = createSlice({
     enableRemote: (state, action: PayloadAction<boolean>) => {
       state.remoteEnabled = action.payload;
     },
+    setPlayerId: (state, action: PayloadAction<number>) => {
+      state.tab.id = action.payload;
+    },
   },
 });
 
-export const { enableRemote } = playerSlice.actions;
+export const { enableRemote, setPlayerId } = playerSlice.actions;
 
 export default playerSlice.reducer;

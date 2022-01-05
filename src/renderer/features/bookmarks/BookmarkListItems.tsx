@@ -33,7 +33,6 @@ import { moveBookmark } from "./bookmarksSlice";
 
 import { BookmarkListItem } from "./BookmarkListItem";
 import { AddBookmark } from "./AddBookmark";
-import { PlayerListItem } from "../player/PlayerListItem";
 import { SortableItem } from "./SortableItem";
 
 export function BookmarkListItems() {
@@ -79,7 +78,7 @@ export function BookmarkListItems() {
   return (
     <>
       <ListItemButton onClick={toggleOpen}>
-        <ListItemText primary="Apps" />
+        <ListItemText primary="Bookmarks" />
         <IconButton
           onClick={(e) => {
             e.stopPropagation();
@@ -92,7 +91,6 @@ export function BookmarkListItems() {
       </ListItemButton>
       <Collapse in={open} timeout="auto">
         <List component="div" disablePadding>
-          <PlayerListItem />
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -105,17 +103,13 @@ export function BookmarkListItems() {
             >
               {items.map((bookmark) => (
                 <SortableItem key={bookmark.id} id={bookmark.id}>
-                  <BookmarkListItem
-                    bookmark={bookmark}
-                    selected={bookmarks.selectedBookmark === bookmark.id}
-                  />
+                  <BookmarkListItem bookmark={bookmark} />
                 </SortableItem>
               ))}
               <DragOverlay>
                 {dragId ? (
                   <BookmarkListItem
                     bookmark={bookmarks.bookmarks.byId[dragId]}
-                    selected={bookmarks.selectedBookmark === dragId}
                     shadow
                   />
                 ) : null}

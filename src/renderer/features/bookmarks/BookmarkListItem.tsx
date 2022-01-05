@@ -8,26 +8,39 @@ import MenuItem from "@mui/material/MenuItem";
 import MoreIcon from "@mui/icons-material/MoreHorizRounded";
 
 import { useDispatch } from "react-redux";
-import { Bookmark, selectBookmark, removeBookmark } from "./bookmarksSlice";
+import { Bookmark, removeBookmark } from "./bookmarksSlice";
 import { BookmarkSettings } from "./BookmarkSettings";
+import { addTab, selectTab } from "../tabs/tabsSlice";
+import { getBounds } from "../tabs/getBounds";
 
 type BookmarkListItemProps = {
   bookmark: Bookmark;
-  selected: boolean;
   shadow?: Boolean;
 };
 
-export function BookmarkListItem({
-  bookmark,
-  selected,
-  shadow,
-}: BookmarkListItemProps) {
+export function BookmarkListItem({ bookmark, shadow }: BookmarkListItemProps) {
   const dispatch = useDispatch();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  function select() {
-    !selected && dispatch(selectBookmark(bookmark.id));
+  async function select() {
+    const bounds = getBounds();
+    const id = await window.kenku.createBrowserView(
+      bookmark.url,
+      bounds.x,
+      bounds.y,
+      bounds.width,
+      bounds.height
+    );
+    dispatch(
+      addTab({
+        id,
+        url: bookmark.url,
+        title: bookmark.title,
+        icon: bookmark.icon,
+      })
+    );
+    dispatch(selectTab(id));
   }
 
   function handleRemove() {
@@ -61,7 +74,6 @@ export function BookmarkListItem({
     <>
       <ListItemButton
         dense
-        selected={selected}
         sx={{ px: 2, boxShadow: shadow ? 10 : "none" }}
         onClick={select}
         onDoubleClick={openSettings}

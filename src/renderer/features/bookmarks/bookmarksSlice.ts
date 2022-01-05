@@ -12,7 +12,6 @@ export interface BookmarksState {
     byId: Record<string, Bookmark>;
     allIds: string[];
   };
-  selectedBookmark?: string;
 }
 
 const initialState: BookmarksState = {
@@ -35,12 +34,6 @@ export const bookmarksSlice = createSlice({
       state.bookmarks.allIds = state.bookmarks.allIds.filter(
         (id) => id !== action.payload
       );
-      if (action.payload === state.selectedBookmark) {
-        state.selectedBookmark = undefined;
-      }
-    },
-    selectBookmark: (state, action: PayloadAction<string>) => {
-      state.selectedBookmark = action.payload;
     },
     editBookmark: (state, action: PayloadAction<Partial<Bookmark>>) => {
       if (!action.payload.id) {
@@ -63,12 +56,7 @@ export const bookmarksSlice = createSlice({
   },
 });
 
-export const {
-  addBookmark,
-  removeBookmark,
-  selectBookmark,
-  editBookmark,
-  moveBookmark,
-} = bookmarksSlice.actions;
+export const { addBookmark, removeBookmark, editBookmark, moveBookmark } =
+  bookmarksSlice.actions;
 
 export default bookmarksSlice.reducer;

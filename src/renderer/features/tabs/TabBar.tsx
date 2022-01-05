@@ -16,6 +16,7 @@ export function TabBar() {
         flexDirection: "row",
         display: "flex",
         alignItems: "center",
+        px: 1,
       }}
     >
       <PlayerTab />
@@ -27,7 +28,7 @@ export function TabBar() {
           allowClose
         />
       ))}
-      <IconButton sx={{ mx: 1 }}>
+      <IconButton sx={{ mx: 1 }} size="small">
         <AddIcon />
       </IconButton>
     </List>

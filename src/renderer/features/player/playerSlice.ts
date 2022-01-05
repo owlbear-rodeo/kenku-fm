@@ -1,11 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { App } from "../apps/appsSlice";
+import { Bookmark } from "../bookmarks/bookmarksSlice";
 
 import icon from "../../../assets/player-icon.png";
 
 export interface PlayerState {
-  app: App & { preload: string };
+  app: Bookmark & { preload: string };
   remoteEnabled: boolean;
 }
 

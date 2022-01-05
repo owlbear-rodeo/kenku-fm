@@ -8,26 +8,30 @@ import MenuItem from "@mui/material/MenuItem";
 import MoreIcon from "@mui/icons-material/MoreHorizRounded";
 
 import { useDispatch } from "react-redux";
-import { App, selectApp, removeApp } from "./appsSlice";
-import { AppSettings } from "./AppSettings";
+import { Bookmark, selectBookmark, removeBookmark } from "./bookmarksSlice";
+import { BookmarkSettings } from "./BookmarkSettings";
 
-type AppListItemProps = {
-  app: App;
+type BookmarkListItemProps = {
+  bookmark: Bookmark;
   selected: boolean;
   shadow?: Boolean;
 };
 
-export function AppListItem({ app, selected, shadow }: AppListItemProps) {
+export function BookmarkListItem({
+  bookmark,
+  selected,
+  shadow,
+}: BookmarkListItemProps) {
   const dispatch = useDispatch();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   function select() {
-    !selected && dispatch(selectApp(app.id));
+    !selected && dispatch(selectBookmark(bookmark.id));
   }
 
   function handleRemove() {
-    dispatch(removeApp(app.id));
+    dispatch(removeBookmark(bookmark.id));
   }
 
   function openSettings() {
@@ -62,7 +66,7 @@ export function AppListItem({ app, selected, shadow }: AppListItemProps) {
         onClick={select}
         onDoubleClick={openSettings}
       >
-        {app.icon && (
+        {bookmark.icon && (
           <Box
             sx={{
               width: "24px",
@@ -71,10 +75,10 @@ export function AppListItem({ app, selected, shadow }: AppListItemProps) {
               marginRight: 1,
             }}
           >
-            <img src={app.icon} />
+            <img src={bookmark.icon} />
           </Box>
         )}
-        <ListItemText primary={app.title} />
+        <ListItemText primary={bookmark.title} />
         <IconButton size="small" onClick={handleMoreClick}>
           <MoreIcon />
         </IconButton>
@@ -96,7 +100,11 @@ export function AppListItem({ app, selected, shadow }: AppListItemProps) {
         <MenuItem onClick={openSettings}>Edit</MenuItem>
         <MenuItem onClick={handleRemove}>Delete</MenuItem>
       </Menu>
-      <AppSettings app={app} open={settingsOpen} onClose={closeSettings} />
+      <BookmarkSettings
+        bookmark={bookmark}
+        open={settingsOpen}
+        onClose={closeSettings}
+      />
     </>
   );
 }

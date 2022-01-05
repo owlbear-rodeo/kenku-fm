@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 export interface BrowserView {
   id: number;
   url: string;
-  appId: string;
+  bookmarkId: string;
 }
 
 export interface BrowserViewsState {

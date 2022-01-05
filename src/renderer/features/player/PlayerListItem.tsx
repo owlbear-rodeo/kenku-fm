@@ -7,12 +7,12 @@ import Box from "@mui/material/Box";
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
 import { enableRemote } from "./playerSlice";
-import { selectApp } from "../apps/appsSlice";
+import { selectBookmark } from "../bookmarks/bookmarksSlice";
 
 export function PlayerListItem() {
   const dispatch = useDispatch();
 
-  const apps = useSelector((state: RootState) => state.apps);
+  const bookmarks = useSelector((state: RootState) => state.bookmarks);
   const player = useSelector((state: RootState) => state.player);
 
   useEffect(() => {
@@ -26,10 +26,10 @@ export function PlayerListItem() {
     };
   }, [player.app]);
 
-  const selected = apps.selectedApp === player.app.id;
+  const selected = bookmarks.selectedBookmark === player.app.id;
 
   function select() {
-    !selected && dispatch(selectApp(player.app.id));
+    !selected && dispatch(selectBookmark(player.app.id));
   }
 
   return (

@@ -24,7 +24,7 @@ function getBounds(controls: HTMLDivElement | null) {
 
 export function BrowserViews() {
   const dispatch = useDispatch();
-  const apps = useSelector((state: RootState) => state.apps);
+  const bookmarks = useSelector((state: RootState) => state.bookmarks);
   const player = useSelector((state: RootState) => state.player);
   const browserViews = useSelector((state: RootState) => state.browserViews);
 
@@ -37,7 +37,7 @@ export function BrowserViews() {
   const controlsRef = useRef<HTMLDivElement | null>(null);
 
   const isPlayer = useMemo(
-    () => selectedBrowserView?.appId === player.app.id,
+    () => selectedBrowserView?.bookmarkId === player.app.id,
     [selectedBrowserView, player.app]
   );
 
@@ -59,16 +59,16 @@ export function BrowserViews() {
   }, []);
 
   useEffect(() => {
-    const allApps = Object.values(apps.apps.byId);
-    allApps.push(player.app);
-    if (apps.selectedApp === undefined) {
+    const allBookmarks = Object.values(bookmarks.bookmarks.byId);
+    allBookmarks.push(player.app);
+    if (bookmarks.selectedBookmark === undefined) {
       // Remove browser views that have been deleted
       const views = Object.values(browserViews.browserViews.byId);
-      const appIds = allApps.map((app) => app.id);
-      const viewAppIds = views.map((view) => view.appId);
+      const appIds = allBookmarks.map((app) => app.id);
+      const viewAppIds = views.map((view) => view.bookmarkId);
       const diff = [...viewAppIds].filter((id) => !appIds.includes(id));
       for (let id of diff) {
-        const view = views.find((view) => view.appId === id);
+        const view = views.find((view) => view.bookmarkId === id);
         if (view) {
           dispatch(removeBrowserView(view.id));
           window.kenku.removeBrowserView(view.id);
@@ -78,12 +78,14 @@ export function BrowserViews() {
     }
 
     // Create or select a browser view
-    const app = allApps.find((app) => app.id === apps.selectedApp);
+    const app = allBookmarks.find(
+      (app) => app.id === bookmarks.selectedBookmark
+    );
     if (!app) {
       return;
     }
     const view = Object.values(browserViews.browserViews.byId).find(
-      (browserView) => browserView.appId === apps.selectedApp
+      (browserView) => browserView.bookmarkId === bookmarks.selectedBookmark
     );
 
     async function createBrowserView() {
@@ -101,7 +103,7 @@ export function BrowserViews() {
       if (isPlayer) {
         window.kenku.playerRegisterView(id);
       }
-      dispatch(addBrowserView({ id, appId: app.id, url: app.url }));
+      dispatch(addBrowserView({ id, bookmarkId: app.id, url: app.url }));
       dispatch(selectBrowserView(id));
     }
 
@@ -123,7 +125,7 @@ export function BrowserViews() {
         bounds.height
       );
     }
-  }, [apps.selectedApp, player]);
+  }, [bookmarks.selectedBookmark, player]);
 
   useEffect(() => {
     if (browserViews.selectedBrowserView) {

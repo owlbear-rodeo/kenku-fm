@@ -29,17 +29,17 @@ import {
 import { RootState } from "../../app/store";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
-import { moveApp } from "./appsSlice";
+import { moveBookmark } from "./bookmarksSlice";
 
-import { AppListItem } from "./AppListItem";
-import { AppAdd } from "./AppAdd";
+import { BookmarkListItem } from "./BookmarkListItem";
+import { AddBookmark } from "./AddBookmark";
 import { PlayerListItem } from "../player/PlayerListItem";
 import { SortableItem } from "./SortableItem";
 
-export function AppListItems() {
+export function BookmarkListItems() {
   const dispatch = useDispatch();
 
-  const apps = useSelector((state: RootState) => state.apps);
+  const bookmarks = useSelector((state: RootState) => state.bookmarks);
 
   const pointerSensor = useSensor(PointerSensor, {
     activationConstraint: { distance: 10 },
@@ -57,7 +57,9 @@ export function AppListItems() {
     setOpen(!open);
   }
 
-  const items = apps.apps.allIds.map((id) => apps.apps.byId[id]);
+  const items = bookmarks.bookmarks.allIds.map(
+    (id) => bookmarks.bookmarks.byId[id]
+  );
 
   const [dragId, setDragId] = useState<string | null>(null);
   function handleDragStart(event: DragStartEvent) {
@@ -68,7 +70,7 @@ export function AppListItems() {
     const { active, over } = event;
 
     if (active.id !== over.id) {
-      dispatch(moveApp({ active: active.id, over: over.id }));
+      dispatch(moveBookmark({ active: active.id, over: over.id }));
     }
 
     setDragId(null);
@@ -101,19 +103,19 @@ export function AppListItems() {
               items={items}
               strategy={verticalListSortingStrategy}
             >
-              {items.map((app) => (
-                <SortableItem key={app.id} id={app.id}>
-                  <AppListItem
-                    app={app}
-                    selected={apps.selectedApp === app.id}
+              {items.map((bookmark) => (
+                <SortableItem key={bookmark.id} id={bookmark.id}>
+                  <BookmarkListItem
+                    bookmark={bookmark}
+                    selected={bookmarks.selectedBookmark === bookmark.id}
                   />
                 </SortableItem>
               ))}
               <DragOverlay>
                 {dragId ? (
-                  <AppListItem
-                    app={apps.apps.byId[dragId]}
-                    selected={apps.selectedApp === dragId}
+                  <BookmarkListItem
+                    bookmark={bookmarks.bookmarks.byId[dragId]}
+                    selected={bookmarks.selectedBookmark === dragId}
                     shadow
                   />
                 ) : null}
@@ -122,7 +124,7 @@ export function AppListItems() {
           </DndContext>
         </List>
       </Collapse>
-      <AppAdd open={addOpen} onClose={() => setAddOpen(false)} />
+      <AddBookmark open={addOpen} onClose={() => setAddOpen(false)} />
     </>
   );
 }

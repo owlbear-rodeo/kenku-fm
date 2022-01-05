@@ -2,7 +2,7 @@ import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import connectionReducer from "../features/connection/connectionSlice";
 import outputReducer from "../features/output/outputSlice";
 import settingsReducer from "../features/settings/settingsSlice";
-import appsReducer from "../features/apps/appsSlice";
+import bookmarksReducer from "../features/bookmarks/bookmarksSlice";
 import browserViewsReducer from "../features/browserViews/browserViewsSlice";
 import playerReducer from "../features/player/playerSlice";
 
@@ -22,7 +22,7 @@ const rootReducer = combineReducers({
   connection: connectionReducer,
   output: outputReducer,
   settings: settingsReducer,
-  apps: appsReducer,
+  bookmarks: bookmarksReducer,
   browserViews: browserViewsReducer,
   player: playerReducer,
 });
@@ -31,7 +31,7 @@ const persistConfig = {
   key: "root",
   version: 1,
   storage,
-  whitelist: ["apps", "settings"],
+  whitelist: ["bookmarks", "settings"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

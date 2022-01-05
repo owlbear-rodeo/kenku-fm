@@ -1,64 +1,60 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-import { v4 as uuid } from "uuid";
 
 import { useDispatch } from "react-redux";
-import { addApp, editApp } from "./appsSlice";
+import { Bookmark, editBookmark } from "./bookmarksSlice";
 
 import { getDropURL } from "../../common/drop";
 
-type AppAddProps = {
+type BookmarkSettingsProps = {
+  bookmark: Bookmark;
   open: boolean;
   onClose: () => void;
 };
 
-export function AppAdd({ open, onClose }: AppAddProps) {
+export function BookmarkSettings({
+  bookmark,
+  open,
+  onClose,
+}: BookmarkSettingsProps) {
   const dispatch = useDispatch();
 
-  const [url, setURL] = useState("");
-  const [title, setTitle] = useState("");
-
-  useEffect(() => {
-    if (!open) {
-      setURL("");
-      setTitle("");
-    }
-  }, [open]);
-
   function handleURLChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setURL(event.target.value);
+    dispatch(editBookmark({ id: bookmark.id, url: event.target.value }));
   }
 
   function handleURLDrop(event: React.DragEvent<HTMLInputElement>) {
     event.preventDefault();
     const url = getDropURL(event.dataTransfer);
     if (url) {
-      setURL(url);
+      dispatch(editBookmark({ id: bookmark.id, url }));
     }
   }
 
   function handleTitleChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setTitle(event.target.value);
+    dispatch(editBookmark({ id: bookmark.id, title: event.target.value }));
   }
 
-  function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    const id = uuid();
-    dispatch(addApp({ id, url, title, icon: "" }));
-    window.kenku.appIcon(url).then((icon) => {
-      dispatch(editApp({ id, icon }));
+  function handleClose() {
+    window.kenku.appIcon(bookmark.url).then((icon) => {
+      dispatch(editBookmark({ id: bookmark.id, icon }));
     });
     onClose();
   }
 
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    handleClose();
+  }
+
   return (
-    <Dialog fullScreen sx={{ width: 240 }} open={open} onClose={onClose}>
-      <DialogTitle>Add App</DialogTitle>
+    <Dialog fullScreen sx={{ width: 240 }} open={open} onClose={handleClose}>
+      <DialogTitle>Edit Bookmark</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <TextField
@@ -72,7 +68,7 @@ export function AppAdd({ open, onClose }: AppAddProps) {
             InputLabelProps={{
               shrink: true,
             }}
-            value={url}
+            value={bookmark.url}
             onChange={handleURLChange}
             onDrop={handleURLDrop}
           />
@@ -86,15 +82,12 @@ export function AppAdd({ open, onClose }: AppAddProps) {
             InputLabelProps={{
               shrink: true,
             }}
-            value={title}
+            value={bookmark.title}
             onChange={handleTitleChange}
           />
         </DialogContent>
-        <DialogActions sx={{ p: 2, justifyContent: "space-between" }}>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button disabled={!url} type="submit">
-            Add
-          </Button>
+        <DialogActions sx={{ p: 2 }}>
+          <Button type="submit">Done</Button>
         </DialogActions>
       </form>
     </Dialog>

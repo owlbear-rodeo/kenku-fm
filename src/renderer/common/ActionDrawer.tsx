@@ -5,7 +5,7 @@ import IconButton from "@mui/material/IconButton";
 import SettingsIcon from "@mui/icons-material/SettingsRounded";
 import { Toolbar, Stack, Typography, Link } from "@mui/material";
 import { OutputListItems } from "../features/output/OutputListItems";
-import { AppListItems } from "../features/apps/AppListItems";
+import { BookmarkListItems } from "../features/bookmarks/BookmarkListItems";
 import { Settings } from "../features/settings/Settings";
 
 import { RootState } from "../app/store";
@@ -58,7 +58,7 @@ export function ActionDrawer() {
         </Toolbar>
         <Box sx={{ overflowY: "auto" }} {...hideScrollbar}>
           <Stack>
-            <AppListItems />
+            <BookmarkListItems />
             <OutputListItems />
             {connection.status === "disconnected" && (
               <Typography variant="caption" align="center" marginY={2}>

@@ -9,11 +9,22 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 import Link from "@mui/material/Link";
+import Divider from "@mui/material/Divider";
+import Typography from "@mui/material/Typography";
 
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
 import { setStatus } from "../connection/connectionSlice";
-import { setDiscordToken } from "./settingsSlice";
+import {
+  setDiscordToken,
+  setRemoteEnabled,
+  setRemoteHost,
+  setRemotePort,
+  setShowControls,
+} from "./settingsSlice";
+import FormGroup from "@mui/material/FormGroup";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Switch from "@mui/material/Switch";
 
 type SettingsProps = {
   open: boolean;
@@ -38,11 +49,41 @@ export function Settings({ open, onClose }: SettingsProps) {
     }
   }
 
+  function handleRemoteToggle() {
+    const enabled = !settings.remoteEnabled;
+    if (enabled) {
+      window.kenku.playerStartRemote(settings.remoteHost, settings.remotePort);
+    } else {
+      window.kenku.playerStopRemote();
+    }
+    dispatch(setRemoteEnabled(enabled));
+  }
+
+  function handleRemoteHostChange(event: React.ChangeEvent<HTMLInputElement>) {
+    dispatch(setRemoteHost(event.target.value));
+  }
+
+  function handleRemotePortChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const port = Number.parseInt(event.target.value);
+    if (!isNaN(port)) {
+      dispatch(setRemotePort(port));
+    }
+  }
+
+  function handleShowControlsToggle() {
+    dispatch(setShowControls(!settings.showControls));
+  }
+
   useEffect(() => {
     if (settings.discordToken) {
       dispatch(setStatus("connecting"));
       window.kenku.connect(settings.discordToken);
     }
+
+    if (settings.remoteEnabled) {
+      window.kenku.playerStartRemote(settings.remoteHost, settings.remotePort);
+    }
+
     return () => {
       window.kenku.disconnect();
     };
@@ -64,16 +105,14 @@ export function Settings({ open, onClose }: SettingsProps) {
 
   return (
     <Dialog fullScreen sx={{ width: 240 }} open={open} onClose={onClose}>
-      <DialogActions sx={{ p: 2 }}>
-        <Button onClick={onClose}>Done</Button>
-      </DialogActions>
-      <DialogTitle>Connection</DialogTitle>
+      <DialogTitle>Settings</DialogTitle>
       <DialogContent>
-        <DialogContentText>Enter your bot's token</DialogContentText>
+        <DialogContentText>Discord</DialogContentText>
         <Stack spacing={1}>
           <TextField
             autoFocus
             margin="dense"
+            size="small"
             id="token"
             label="Token"
             type="password"
@@ -86,6 +125,7 @@ export function Settings({ open, onClose }: SettingsProps) {
             value={settings.discordToken}
             onChange={handleDiscordTokenChange}
             disabled={connection.status !== "disconnected"}
+            helperText="Enter your bot's token"
           />
           <Button
             disabled={
@@ -94,6 +134,7 @@ export function Settings({ open, onClose }: SettingsProps) {
             onClick={handleDiscordConnect}
             fullWidth
             variant="outlined"
+            size="small"
           >
             {connection.status === "connecting" ? (
               <CircularProgress size={24} />
@@ -114,7 +155,71 @@ export function Settings({ open, onClose }: SettingsProps) {
             Where do I get my token?
           </Link>
         </Stack>
+        <Divider sx={{ mb: 2 }} />
+        <DialogContentText>Remote</DialogContentText>
+        <Stack spacing={1}>
+          <Stack direction="row">
+            <TextField
+              margin="dense"
+              size="small"
+              id="remote-host"
+              label="Host"
+              variant="standard"
+              autoComplete="off"
+              InputLabelProps={{
+                shrink: true,
+              }}
+              inputProps={{ pattern: "d{1,3}.d{1,3}.d{1,3}.d{1,3}" }}
+              value={settings.remoteHost}
+              onChange={handleRemoteHostChange}
+              disabled={settings.remoteEnabled}
+              sx={{ mr: 0.5 }}
+            />
+            <TextField
+              margin="dense"
+              size="small"
+              id="remote-port"
+              label="Port"
+              variant="standard"
+              autoComplete="off"
+              InputLabelProps={{
+                shrink: true,
+              }}
+              inputProps={{ pattern: "d+" }}
+              value={settings.remotePort}
+              onChange={handleRemotePortChange}
+              disabled={settings.remoteEnabled}
+              sx={{ ml: 0.5 }}
+            />
+          </Stack>
+          <Button
+            onClick={handleRemoteToggle}
+            fullWidth
+            variant="outlined"
+            size="small"
+          >
+            {settings.remoteEnabled ? "Stop Remote" : "Start Remote"}
+          </Button>
+        </Stack>
+        <Divider sx={{ mb: 2 }} />
+        <DialogContentText>General</DialogContentText>
+        <Stack spacing={1}>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={settings.showControls}
+                  onChange={handleShowControlsToggle}
+                />
+              }
+              label={<Typography variant="caption">Show URL Bar</Typography>}
+            />
+          </FormGroup>
+        </Stack>
       </DialogContent>
+      <DialogActions sx={{ p: 2 }}>
+        <Button onClick={onClose}>Done</Button>
+      </DialogActions>
     </Dialog>
   );
 }

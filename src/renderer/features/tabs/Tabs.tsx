@@ -21,10 +21,9 @@ export function Tabs() {
   const dispatch = useDispatch();
   const player = useSelector((state: RootState) => state.player);
   const tabs = useSelector((state: RootState) => state.tabs);
+  const settings = useSelector((state: RootState) => state.settings);
 
   const selectedTab = useMemo(() => tabs.tabs.byId[tabs.selectedTab], [tabs]);
-
-  const [showControls, setShowControls] = useState(false);
 
   const isPlayer = useMemo(
     () => tabs.selectedTab === player.tab.id,
@@ -32,10 +31,6 @@ export function Tabs() {
   );
 
   useEffect(() => {
-    window.kenku.on("SHOW_CONTROLS", (args) => {
-      const show = args[0];
-      setShowControls(show);
-    });
     window.kenku.on("BROWSER_VIEW_DID_NAVIGATE", (args) => {
       const viewId = args[0];
       const url = args[1];
@@ -75,7 +70,6 @@ export function Tabs() {
     });
 
     return () => {
-      window.kenku.removeAllListeners("SHOW_CONTROLS");
       window.kenku.removeAllListeners("BROWSER_VIEW_DID_NAVIGATE");
       window.kenku.removeAllListeners("BROWSER_VIEW_TITLE_UPDATED");
       window.kenku.removeAllListeners("BROWSER_VIEW_FAVICON_UPDATED");
@@ -95,7 +89,7 @@ export function Tabs() {
         bounds.height
       );
     }
-  }, [showControls, isPlayer, tabs.selectedTab]);
+  }, [settings.showControls, isPlayer, tabs.selectedTab]);
 
   function handleURLChange(url: string) {
     dispatch(editTab({ id: tabs.selectedTab, url }));
@@ -104,7 +98,7 @@ export function Tabs() {
   return (
     <Stack sx={{ flexGrow: 1, minWidth: 0 }} id="controls">
       <TabBar />
-      {showControls && !isPlayer && (
+      {settings.showControls && !isPlayer && (
         <URLBar
           viewId={selectedTab?.id || -1}
           url={selectedTab?.url || ""}

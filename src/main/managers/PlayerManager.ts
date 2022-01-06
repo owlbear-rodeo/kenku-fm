@@ -1,5 +1,4 @@
 import { ipcMain, BrowserWindow, webContents } from "electron";
-import store from "../store";
 import Fastify, { FastifyInstance } from "fastify";
 import { registerRemote } from "../remote";
 
@@ -9,19 +8,23 @@ declare const PLAYER_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 export class PlayerManager {
   registeredViewId?: number;
   fastify: FastifyInstance | null = null;
-  host = store.get("remoteHost");
-  port = store.get("remotePort");
+  host = "127.0.0.1";
+  port = 3333;
 
   constructor() {
     ipcMain.on("PLAYER_GET_URL", this._handleGetURL);
     ipcMain.on("PLAYER_GET_PRELOAD_URL", this._handleGetPreloadURL);
     ipcMain.on("PLAYER_REGISTER_VIEW", this._handleRegisterView);
+    ipcMain.on("PLAYER_START_REMOTE", this._handleStartRemote);
+    ipcMain.on("PLAYER_STOP_REMOTE", this._handleStopRemote);
   }
 
   destroy() {
     ipcMain.off("PLAYER_GET_URL", this._handleGetURL);
     ipcMain.off("PLAYER_GET_PRELOAD_URL", this._handleGetPreloadURL);
     ipcMain.off("PLAYER_REGISTER_VIEW", this._handleRegisterView);
+    ipcMain.off("PLAYER_START_REMOTE", this._handleStartRemote);
+    ipcMain.off("PLAYER_STOP_REMOTE", this._handleStopRemote);
   }
 
   getView() {
@@ -30,7 +33,10 @@ export class PlayerManager {
     }
   }
 
-  startRemote() {
+  startRemote(host: string, port: number) {
+    this.host = host;
+    this.port = port;
+
     this.fastify = Fastify();
 
     registerRemote(this);
@@ -67,6 +73,18 @@ export class PlayerManager {
       this.port
     }`;
   }
+
+  _handleStartRemote = (
+    event: Electron.IpcMainEvent,
+    host: string,
+    port: number
+  ) => this.startRemote(host, port);
+
+  _handleStopRemote = (
+    event: Electron.IpcMainEvent,
+    host: string,
+    port: number
+  ) => this.stopRemote();
 
   _handleGetURL = (event: Electron.IpcMainEvent) => {
     event.returnValue = PLAYER_WINDOW_WEBPACK_ENTRY;

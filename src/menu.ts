@@ -1,16 +1,6 @@
-import { app, Menu, MenuItem, BrowserWindow, dialog } from "electron";
-import store from "./main/store";
-import { PlayerManager } from "./main/managers/PlayerManager";
+import { app, Menu } from "electron";
 
 const isMac = process.platform === "darwin";
-
-const SHOW_CONTROLS_ID = "SHOW_CONTROLS";
-const ENABLE_REMOTE_ID = "ENABLE_REMOTE";
-
-const player = new PlayerManager();
-if (store.get("remoteEnabled")) {
-  player.startRemote();
-}
 
 const template: any = [
   // { role: 'appMenu' }
@@ -67,18 +57,6 @@ const template: any = [
     submenu: [
       ...(app.isPackaged ? [] : [{ role: "toggleDevTools" }]),
       { role: "togglefullscreen" },
-      {
-        type: "checkbox",
-        label: "Show Controls",
-        click: (item: MenuItem, window: BrowserWindow | undefined) => {
-          if (window) {
-            window.webContents.send("SHOW_CONTROLS", item.checked);
-          }
-          store.set("showControls", item.checked);
-        },
-        checked: store.get("showControls"),
-        id: SHOW_CONTROLS_ID,
-      },
     ],
   },
   // { role: 'windowMenu' }
@@ -95,35 +73,6 @@ const template: any = [
             { role: "window" },
           ]
         : [{ role: "close" }]),
-    ],
-  },
-  {
-    label: "Remote",
-    submenu: [
-      {
-        type: "checkbox",
-        label: "Enable Remote",
-        click: (item: MenuItem) => {
-          store.set("remoteEnabled", item.checked);
-          if (item.checked) {
-            player.startRemote();
-          } else {
-            player.stopRemote();
-          }
-        },
-        checked: store.get("remoteEnabled"),
-        id: ENABLE_REMOTE_ID,
-      },
-      {
-        label: "Remote Info",
-        click: () => {
-          dialog.showMessageBox(undefined, {
-            message: player.getRemoteInfo(),
-            type: "info",
-            title: "Remote Info",
-          });
-        },
-      },
     ],
   },
   {

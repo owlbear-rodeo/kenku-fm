@@ -1,23 +1,16 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 import { BrowserViewManagerPreload } from "./preload/managers/BrowserViewManagerPreload";
-import store from "./preload/store";
 
 const viewManager = new BrowserViewManagerPreload();
 
 window.addEventListener("load", () => {
   viewManager.load();
-  // Re-hydrate saved options
-  ipcRenderer.emit("SHOW_CONTROLS", undefined, store.get("showControls"));
-  ipcRenderer.emit(
-    "PLAYER_REMOTE_ENABLED",
-    undefined,
-    store.get("remoteEnabled")
-  );
 });
 
 window.addEventListener("beforeunload", () => {
   ipcRenderer.send("DISCORD_DISCONNECT");
+  ipcRenderer.send("PLAYER_STOP_REMOTE");
   viewManager.destroy();
 });
 
@@ -133,6 +126,12 @@ const api = {
   /** Registers a player view with the remote manager so it can send it commands  */
   playerRegisterView: (viewId: number) => {
     ipcRenderer.send("PLAYER_REGISTER_VIEW", viewId);
+  },
+  playerStartRemote: (host: string, port: number) => {
+    ipcRenderer.send("PLAYER_START_REMOTE", host, port);
+  },
+  playerStopRemote: () => {
+    ipcRenderer.send("PLAYER_STOP_REMOTE");
   },
 };
 

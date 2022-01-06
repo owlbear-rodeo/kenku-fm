@@ -9,6 +9,7 @@ import playerReducer from "../features/player/playerSlice";
 import {
   persistStore,
   persistReducer,
+  createMigrate,
   FLUSH,
   REHYDRATE,
   PAUSE,
@@ -27,11 +28,29 @@ const rootReducer = combineReducers({
   player: playerReducer,
 });
 
+const migrations: any = {
+  2: (state: RootState): RootState => {
+    return {
+      ...state,
+      settings: {
+        ...state.settings,
+        showControls: true,
+        remoteEnabled: false,
+        remoteHost: "127.0.0.1",
+        remotePort: 3333,
+        showInputs: false,
+        allowMultiInputOutput: false,
+      },
+    };
+  },
+};
+
 const persistConfig = {
   key: "root",
-  version: 1,
+  version: 2,
   storage,
   whitelist: ["bookmarks", "settings"],
+  migrate: createMigrate(migrations, { debug: false }),
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

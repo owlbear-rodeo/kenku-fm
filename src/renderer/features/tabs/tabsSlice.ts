@@ -57,9 +57,19 @@ export const tabsSlice = createSlice({
         };
       }
     },
+    moveTab: (
+      state,
+      action: PayloadAction<{ active: number; over: number }>
+    ) => {
+      const oldIndex = state.tabs.allIds.indexOf(action.payload.active);
+      const newIndex = state.tabs.allIds.indexOf(action.payload.over);
+      state.tabs.allIds.splice(oldIndex, 1);
+      state.tabs.allIds.splice(newIndex, 0, action.payload.active);
+    },
   },
 });
 
-export const { addTab, removeTab, selectTab, editTab } = tabsSlice.actions;
+export const { addTab, removeTab, selectTab, editTab, moveTab } =
+  tabsSlice.actions;
 
 export default tabsSlice.reducer;

@@ -14,9 +14,10 @@ type TabType = {
   tab: Tab;
   selected?: boolean;
   allowClose?: boolean;
+  shadow?: boolean;
 };
 
-export function TabItem({ tab, selected, allowClose }: TabType) {
+export function TabItem({ tab, selected, allowClose, shadow }: TabType) {
   const playerTabId = useSelector((state: RootState) => state.player.tab.id);
   const tabIds = useSelector((state: RootState) => state.tabs.tabs.allIds);
   const dispatch = useDispatch();
@@ -66,6 +67,7 @@ export function TabItem({ tab, selected, allowClose }: TabType) {
           minWidth: 0,
           mx: 0.5,
           my: 0,
+          boxShadow: shadow ? 4 : "none",
         }}
         role={undefined}
         dense

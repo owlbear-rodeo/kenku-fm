@@ -33,7 +33,7 @@ import { moveBookmark } from "./bookmarksSlice";
 
 import { BookmarkListItem } from "./BookmarkListItem";
 import { AddBookmark } from "./AddBookmark";
-import { SortableItem } from "./SortableItem";
+import { SortableItem } from "../../common/SortableItem";
 
 export function BookmarkListItems() {
   const dispatch = useDispatch();

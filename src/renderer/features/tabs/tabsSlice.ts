@@ -5,6 +5,7 @@ export interface Tab {
   url: string;
   title: string;
   icon: string;
+  playingMedia?: boolean;
 }
 
 export interface TabsState {

@@ -5,6 +5,7 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Box from "@mui/material/Box";
 import CloseIcon from "@mui/icons-material/CloseRounded";
+import VolumeIcon from "@mui/icons-material/VolumeUpRounded";
 
 import { Tab, selectTab, removeTab } from "./tabsSlice";
 import { RootState } from "../../app/store";
@@ -25,29 +26,41 @@ export function TabItem({ tab, selected, allowClose, shadow }: TabType) {
   return (
     <ListItem
       secondaryAction={
-        allowClose && (
-          <IconButton
-            edge="end"
-            aria-label="close"
-            size="small"
-            onClick={() => {
-              // Find previous tab so we can select when closing the tab
-              const prevTabIndex = tabIds.indexOf(tab.id) - 1;
-              const prevTabId = tabIds[prevTabIndex] || playerTabId; // If there's no previous use the kenku player tab
+        <>
+          {tab.playingMedia && (
+            <IconButton
+              edge="end"
+              aria-label="media playing"
+              size="small"
+              disabled
+            >
+              <VolumeIcon sx={{ fontSize: "1rem" }} />
+            </IconButton>
+          )}
+          {allowClose && (
+            <IconButton
+              edge="end"
+              aria-label="close"
+              size="small"
+              onClick={() => {
+                // Find previous tab so we can select when closing the tab
+                const prevTabIndex = tabIds.indexOf(tab.id) - 1;
+                const prevTabId = tabIds[prevTabIndex] || playerTabId; // If there's no previous use the kenku player tab
 
-              // Remove tab and select previous
-              dispatch(removeTab(tab.id));
-              window.kenku.removeBrowserView(tab.id);
+                // Remove tab and select previous
+                dispatch(removeTab(tab.id));
+                window.kenku.removeBrowserView(tab.id);
 
-              // Only change if this is the selected app
-              if (selected) {
-                dispatch(selectTab(prevTabId));
-              }
-            }}
-          >
-            <CloseIcon sx={{ fontSize: "1rem" }} />
-          </IconButton>
-        )
+                // Only change if this is the selected app
+                if (selected) {
+                  dispatch(selectTab(prevTabId));
+                }
+              }}
+            >
+              <CloseIcon sx={{ fontSize: "1rem" }} />
+            </IconButton>
+          )}
+        </>
       }
       sx={{
         minWidth: "62px",
@@ -55,7 +68,7 @@ export function TabItem({ tab, selected, allowClose, shadow }: TabType) {
           right: "12px",
         },
         "& .MuiListItemButton-root": {
-          pr: allowClose ? "38px" : undefined,
+          pr: allowClose ? (tab.playingMedia ? "62px" : "38px") : undefined,
         },
       }}
       disablePadding

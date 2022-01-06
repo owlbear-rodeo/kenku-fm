@@ -30,9 +30,13 @@ export const playerSlice = createSlice({
     setPlayerId: (state, action: PayloadAction<number>) => {
       state.tab.id = action.payload;
     },
+    setMediaPlaying: (state, action: PayloadAction<boolean>) => {
+      state.tab.playingMedia = action.payload;
+    },
   },
 });
 
-export const { enableRemote, setPlayerId } = playerSlice.actions;
+export const { enableRemote, setPlayerId, setMediaPlaying } =
+  playerSlice.actions;
 
 export default playerSlice.reducer;

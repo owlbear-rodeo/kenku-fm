@@ -8,6 +8,7 @@ import { editTab } from "./tabsSlice";
 import { URLBar } from "./URLBar";
 import { TabBar } from "./TabBar";
 import { getBounds } from "./getBounds";
+import { setMediaPlaying } from "../player/playerSlice";
 
 export function Tabs() {
   const dispatch = useDispatch();
@@ -36,12 +37,34 @@ export function Tabs() {
     window.kenku.on("BROWSER_VIEW_TITLE_UPDATED", (args) => {
       const viewId = args[0];
       const title = args[1];
+      if (viewId === player.tab.id) {
+        return;
+      }
       dispatch(editTab({ id: viewId, title }));
     });
     window.kenku.on("BROWSER_VIEW_FAVICON_UPDATED", (args) => {
       const viewId = args[0];
       const favicons = args[1];
+      if (viewId === player.tab.id) {
+        return;
+      }
       dispatch(editTab({ id: viewId, icon: favicons[0] || "" }));
+    });
+    window.kenku.on("BROWSER_VIEW_MEDIA_STARTED_PLAYING", (args) => {
+      const viewId = args[0];
+      if (viewId === player.tab.id) {
+        dispatch(setMediaPlaying(true));
+      } else {
+        dispatch(editTab({ id: viewId, playingMedia: true }));
+      }
+    });
+    window.kenku.on("BROWSER_VIEW_MEDIA_PAUSED", (args) => {
+      const viewId = args[0];
+      if (viewId === player.tab.id) {
+        dispatch(setMediaPlaying(false));
+      } else {
+        dispatch(editTab({ id: viewId, playingMedia: false }));
+      }
     });
 
     return () => {
@@ -50,7 +73,7 @@ export function Tabs() {
       window.kenku.removeAllListeners("BROWSER_VIEW_TITLE_UPDATED");
       window.kenku.removeAllListeners("BROWSER_VIEW_FAVICON_UPDATED");
     };
-  }, []);
+  }, [player.tab.id]);
 
   useEffect(() => {
     if (tabs.selectedTab) {

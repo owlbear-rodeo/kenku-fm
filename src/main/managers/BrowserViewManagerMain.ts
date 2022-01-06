@@ -132,6 +132,12 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     this.views[id].webContents.on("page-favicon-updated", (_, favicons) => {
       event.reply("BROWSER_VIEW_FAVICON_UPDATED", id, favicons);
     });
+    this.views[id].webContents.on("media-started-playing", () => {
+      event.reply("BROWSER_VIEW_MEDIA_STARTED_PLAYING", id);
+    });
+    this.views[id].webContents.on("media-paused", () => {
+      event.reply("BROWSER_VIEW_MEDIA_PAUSED", id);
+    });
     this.views[id].webContents.on("new-window", (event, url) => {
       event.preventDefault();
       shell.openExternal(url);

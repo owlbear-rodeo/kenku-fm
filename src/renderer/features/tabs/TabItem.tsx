@@ -82,7 +82,15 @@ export function TabItem({ tab, selected, allowClose, shadow }: TabType) {
           right: "12px",
         },
         "& .MuiListItemButton-root": {
-          pr: allowClose ? (tab.playingMedia > 0 ? "62px" : "38px") : 2,
+          pr:
+            // Both close and media controls enabled
+            allowClose && tab.playingMedia > 0
+              ? "62px"
+              : // Either close or media controls enabled
+              allowClose || tab.playingMedia > 0
+              ? "38px"
+              : // None enabled
+                2,
         },
       }}
       disablePadding

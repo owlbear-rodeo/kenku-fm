@@ -37,7 +37,11 @@ export function TabItem({ tab, selected, allowClose }: TabType) {
               // Remove tab and select previous
               dispatch(removeTab(tab.id));
               window.kenku.removeBrowserView(tab.id);
-              dispatch(selectTab(prevTabId));
+
+              // Only change if this is the selected app
+              if (selected) {
+                dispatch(selectTab(prevTabId));
+              }
             }}
           >
             <CloseIcon />

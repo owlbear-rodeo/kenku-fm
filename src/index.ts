@@ -23,6 +23,8 @@ const createWindow = (): void => {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
     },
     icon: icon,
+    minWidth: 500,
+    minHeight: 375,
   });
 
   const playbackManager = new PlaybackManager(mainWindow);

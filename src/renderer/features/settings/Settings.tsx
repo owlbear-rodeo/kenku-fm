@@ -201,8 +201,8 @@ export function Settings({ open, onClose }: SettingsProps) {
             {settings.remoteEnabled ? "Stop Remote" : "Start Remote"}
           </Button>
         </Stack>
-        <Divider sx={{ mb: 2 }} />
-        <DialogContentText>General</DialogContentText>
+        <Divider sx={{ my: 2 }} />
+        <DialogContentText>Other</DialogContentText>
         <Stack spacing={1}>
           <FormGroup>
             <FormControlLabel
@@ -212,7 +212,10 @@ export function Settings({ open, onClose }: SettingsProps) {
                   onChange={handleShowControlsToggle}
                 />
               }
-              label={<Typography variant="caption">Show URL Bar</Typography>}
+              sx={{ marginLeft: "-8px" }}
+              label={
+                <Typography variant="caption">Show Tab URL Bar</Typography>
+              }
             />
           </FormGroup>
         </Stack>

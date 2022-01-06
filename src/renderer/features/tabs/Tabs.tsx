@@ -38,11 +38,17 @@ export function Tabs() {
       const title = args[1];
       dispatch(editTab({ id: viewId, title }));
     });
+    window.kenku.on("BROWSER_VIEW_FAVICON_UPDATED", (args) => {
+      const viewId = args[0];
+      const favicons = args[1];
+      dispatch(editTab({ id: viewId, icon: favicons[0] || "" }));
+    });
 
     return () => {
       window.kenku.removeAllListeners("SHOW_CONTROLS");
       window.kenku.removeAllListeners("BROWSER_VIEW_DID_NAVIGATE");
       window.kenku.removeAllListeners("BROWSER_VIEW_TITLE_UPDATED");
+      window.kenku.removeAllListeners("BROWSER_VIEW_FAVICON_UPDATED");
     };
   }, []);
 

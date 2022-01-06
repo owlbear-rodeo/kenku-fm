@@ -2,12 +2,24 @@ import React, { useEffect, useState } from "react";
 
 import Snackbar from "@mui/material/Snackbar";
 import Stack from "@mui/material/Stack";
+import styled from "@mui/material/styles/styled";
 
 import { ActionDrawer } from "../common/ActionDrawer";
 
 import { Tabs } from "../features/tabs/Tabs";
 
 import "./App.css";
+
+const WallPaper = styled("div")({
+  position: "absolute",
+  width: "100%",
+  height: "100%",
+  top: 0,
+  left: 0,
+  overflow: "hidden",
+  background: "linear-gradient(#2D3143 0%, #1e2231 100%)",
+  zIndex: -1,
+});
 
 export function App() {
   const [message, setMessage] = useState<string>();
@@ -30,6 +42,7 @@ export function App() {
 
   return (
     <Stack direction="row">
+      <WallPaper />
       <ActionDrawer />
       <Tabs />
       <Snackbar

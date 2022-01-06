@@ -44,8 +44,9 @@ export function ActionDrawer() {
             px: 1,
           }}
           disableGutters
+          variant="dense"
         >
-          <Box sx={{ width: "48px", height: "48px", mx: 1 }}>
+          <Box sx={{ width: "36px", height: "36px", m: 1 }}>
             <img src={icon} />
           </Box>
           <IconButton onClick={() => setSettingsOpen(true)}>

@@ -23,7 +23,7 @@ export function ActionDrawer() {
   const hideScrollbar = useHideScrollbar();
 
   return (
-    <Box component="nav" sx={{ width: drawerWidth }}>
+    <Box component="nav" sx={{ width: drawerWidth, flexShrink: 0 }}>
       <Drawer
         variant="permanent"
         sx={{

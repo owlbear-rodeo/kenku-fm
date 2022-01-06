@@ -58,7 +58,7 @@ export function Tabs() {
   }
 
   return (
-    <Stack sx={{ flexGrow: 1 }} id="controls">
+    <Stack sx={{ flexGrow: 1, minWidth: 0 }} id="controls">
       <TabBar />
       {showControls && !isPlayer && (
         <URLBar

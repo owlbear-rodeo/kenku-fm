@@ -48,12 +48,24 @@ export function TabItem({ tab, selected, allowClose }: TabType) {
           </IconButton>
         )
       }
+      sx={{
+        minWidth: 0,
+        "& .MuiListItemSecondaryAction-root": {
+          right: "8px",
+        },
+        "& .MuiListItemButton-root": {
+          pr: allowClose ? "38px" : undefined,
+        },
+      }}
       disablePadding
     >
       <ListItemButton
         sx={{
           backgroundImage:
             "linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))",
+          minWidth: 0,
+          mx: 0.5,
+          my: 0,
         }}
         role={undefined}
         dense
@@ -63,8 +75,10 @@ export function TabItem({ tab, selected, allowClose }: TabType) {
         {tab.icon && (
           <Box
             sx={{
-              width: "24px",
-              height: "24px",
+              minWidth: "16px",
+              minHeight: "16px",
+              maxWidth: "16px",
+              maxHeight: "16px",
               objectFit: "cover",
               marginRight: 1,
             }}
@@ -78,7 +92,6 @@ export function TabItem({ tab, selected, allowClose }: TabType) {
             ".MuiListItemText-primary": {
               whiteSpace: "nowrap",
               overflow: "hidden",
-              textOverflow: "ellipsis",
             },
           }}
         />

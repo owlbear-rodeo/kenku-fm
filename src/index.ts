@@ -3,6 +3,7 @@ import { FaviconManager } from "./main/managers/FaviconManager";
 import { PlaybackManager } from "./main/managers/PlaybackManager";
 import "./menu";
 import icon from "./assets/icon.png";
+import { getUserAgent } from "./main/userAgent";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -43,9 +44,8 @@ const createWindow = (): void => {
 
 const spoofUserAgent = () => {
   session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
-    // Google blocks sign in on CEF so spoof Firefox
-    details.requestHeaders["User-Agent"] =
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:92.0) Gecko/20100101 Firefox/92.0";
+    // Google blocks sign in on CEF so spoof user agent
+    details.requestHeaders["User-Agent"] = getUserAgent();
     callback({ cancel: false, requestHeaders: details.requestHeaders });
   });
 };

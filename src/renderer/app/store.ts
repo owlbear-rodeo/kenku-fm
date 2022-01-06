@@ -34,12 +34,13 @@ const migrations: any = {
       ...state,
       settings: {
         ...state.settings,
-        showControls: true,
+        urlBarEnabled: true,
         remoteEnabled: false,
         remoteHost: "127.0.0.1",
         remotePort: 3333,
-        showInputs: false,
-        allowMultiInputOutput: false,
+        externalInputsEnabled: false,
+        multipleInputsEnabled: false,
+        multipleOutputsEnabled: false,
       },
     };
   },

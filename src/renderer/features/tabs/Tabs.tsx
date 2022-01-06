@@ -89,7 +89,7 @@ export function Tabs() {
         bounds.height
       );
     }
-  }, [settings.showControls, isPlayer, tabs.selectedTab]);
+  }, [settings.urlBarEnabled, isPlayer, tabs.selectedTab]);
 
   function handleURLChange(url: string) {
     dispatch(editTab({ id: tabs.selectedTab, url }));
@@ -98,7 +98,7 @@ export function Tabs() {
   return (
     <Stack sx={{ flexGrow: 1, minWidth: 0 }} id="controls">
       <TabBar />
-      {settings.showControls && !isPlayer && (
+      {settings.urlBarEnabled && !isPlayer && (
         <URLBar
           viewId={selectedTab?.id || -1}
           url={selectedTab?.url || ""}

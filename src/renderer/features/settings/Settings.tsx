@@ -20,7 +20,7 @@ import {
   setRemoteEnabled,
   setRemoteHost,
   setRemotePort,
-  setShowControls,
+  setURLBarEnabled,
 } from "./settingsSlice";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -71,7 +71,7 @@ export function Settings({ open, onClose }: SettingsProps) {
   }
 
   function handleShowControlsToggle() {
-    dispatch(setShowControls(!settings.showControls));
+    dispatch(setURLBarEnabled(!settings.urlBarEnabled));
   }
 
   useEffect(() => {
@@ -208,7 +208,7 @@ export function Settings({ open, onClose }: SettingsProps) {
             <FormControlLabel
               control={
                 <Switch
-                  checked={settings.showControls}
+                  checked={settings.urlBarEnabled}
                   onChange={handleShowControlsToggle}
                 />
               }

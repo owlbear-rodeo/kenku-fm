@@ -1,12 +1,11 @@
 import React from "react";
 import List from "@mui/material/List";
-import IconButton from "@mui/material/IconButton";
-import AddIcon from "@mui/icons-material/AddRounded";
 
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { TabItem } from "./TabItem";
 import { PlayerTab } from "../player/PlayerTab";
+import { AddTabButton } from "./AddTabButton";
 
 export function TabBar() {
   const tabState = useSelector((state: RootState) => state.tabs);
@@ -28,9 +27,7 @@ export function TabBar() {
           allowClose
         />
       ))}
-      <IconButton sx={{ mx: 1 }} size="small">
-        <AddIcon />
-      </IconButton>
+      <AddTabButton />
     </List>
   );
 }

@@ -196,6 +196,16 @@ export function Settings({ open, onClose }: SettingsProps) {
       >
         {settings.remoteEnabled ? "Stop Remote" : "Start Remote"}
       </Button>
+      <Link
+        href="https://www.kenku.fm/docs/using-kenku-remote"
+        variant="caption"
+        textAlign="center"
+        target="_blank"
+        rel="noopener noreferrer"
+        py={2}
+      >
+        What is Kenku Remote?
+      </Link>
     </Stack>
   );
 
@@ -285,7 +295,7 @@ export function Settings({ open, onClose }: SettingsProps) {
         <Divider sx={{ mb: 2 }} />
         <DialogContentText>Remote</DialogContentText>
         {remoteSettings}
-        <Divider sx={{ my: 2 }} />
+        <Divider sx={{ mb: 2 }} />
         <DialogContentText>Other</DialogContentText>
         {otherSettings}
       </DialogContent>

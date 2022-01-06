@@ -44,14 +44,14 @@ export function TabItem({ tab, selected, allowClose }: TabType) {
               }
             }}
           >
-            <CloseIcon />
+            <CloseIcon sx={{ fontSize: "1rem" }} />
           </IconButton>
         )
       }
       sx={{
-        minWidth: "48px",
+        minWidth: "62px",
         "& .MuiListItemSecondaryAction-root": {
-          right: "8px",
+          right: "12px",
         },
         "& .MuiListItemButton-root": {
           pr: allowClose ? "38px" : undefined,

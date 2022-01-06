@@ -3,12 +3,19 @@ import Stack from "@mui/material/Stack";
 
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
-import { editTab } from "./tabsSlice";
+import {
+  decreaseTabPlayingMedia,
+  editTab,
+  increaseTabPlayingMedia,
+} from "./tabsSlice";
 
 import { URLBar } from "./URLBar";
 import { TabBar } from "./TabBar";
 import { getBounds } from "./getBounds";
-import { setMediaPlaying } from "../player/playerSlice";
+import {
+  decreasePlayingMedia,
+  increasePlayingMedia,
+} from "../player/playerSlice";
 
 export function Tabs() {
   const dispatch = useDispatch();
@@ -53,17 +60,17 @@ export function Tabs() {
     window.kenku.on("BROWSER_VIEW_MEDIA_STARTED_PLAYING", (args) => {
       const viewId = args[0];
       if (viewId === player.tab.id) {
-        dispatch(setMediaPlaying(true));
+        dispatch(increasePlayingMedia());
       } else {
-        dispatch(editTab({ id: viewId, playingMedia: true }));
+        dispatch(increaseTabPlayingMedia(viewId));
       }
     });
     window.kenku.on("BROWSER_VIEW_MEDIA_PAUSED", (args) => {
       const viewId = args[0];
       if (viewId === player.tab.id) {
-        dispatch(setMediaPlaying(false));
+        dispatch(decreasePlayingMedia());
       } else {
-        dispatch(editTab({ id: viewId, playingMedia: false }));
+        dispatch(decreaseTabPlayingMedia(viewId));
       }
     });
 
@@ -72,6 +79,8 @@ export function Tabs() {
       window.kenku.removeAllListeners("BROWSER_VIEW_DID_NAVIGATE");
       window.kenku.removeAllListeners("BROWSER_VIEW_TITLE_UPDATED");
       window.kenku.removeAllListeners("BROWSER_VIEW_FAVICON_UPDATED");
+      window.kenku.removeAllListeners("BROWSER_VIEW_MEDIA_STARTED_PLAYING");
+      window.kenku.removeAllListeners("BROWSER_VIEW_MEDIA_PAUSED");
     };
   }, [player.tab.id]);
 

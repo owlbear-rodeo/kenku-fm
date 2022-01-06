@@ -5,9 +5,10 @@ import { CSS } from "@dnd-kit/utilities";
 type SortableItemProps = {
   id: string;
   children: React.ReactNode;
+  style?: React.CSSProperties;
 };
 
-export function SortableItem({ id, children }: SortableItemProps) {
+export function SortableItem({ id, style, children }: SortableItemProps) {
   const {
     attributes,
     listeners,
@@ -17,16 +18,18 @@ export function SortableItem({ id, children }: SortableItemProps) {
     isDragging,
   } = useSortable({ id });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0 : 1,
-    width: "100%",
-    minWidth: 0,
-  };
-
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div
+      ref={setNodeRef}
+      style={{
+        ...(style || {}),
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0 : 1,
+      }}
+      {...attributes}
+      {...listeners}
+    >
       {children}
     </div>
   );

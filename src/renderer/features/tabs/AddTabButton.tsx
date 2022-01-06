@@ -25,6 +25,8 @@ export function AddTabButton() {
         url: "",
         title: "New Tab",
         icon: "",
+        playingMedia: 0,
+        muted: false,
       })
     );
     dispatch(selectTab(id));

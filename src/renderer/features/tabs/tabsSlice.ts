@@ -5,7 +5,9 @@ export interface Tab {
   url: string;
   title: string;
   icon: string;
-  playingMedia?: boolean;
+  /** The number of media tracks playing on this tab */
+  playingMedia: number;
+  muted: boolean;
 }
 
 export interface TabsState {
@@ -67,10 +69,26 @@ export const tabsSlice = createSlice({
       state.tabs.allIds.splice(oldIndex, 1);
       state.tabs.allIds.splice(newIndex, 0, action.payload.active);
     },
+    increaseTabPlayingMedia: (state, action: PayloadAction<number>) => {
+      state.tabs.byId[action.payload].playingMedia += 1;
+    },
+    decreaseTabPlayingMedia: (state, action: PayloadAction<number>) => {
+      state.tabs.byId[action.payload].playingMedia = Math.max(
+        state.tabs.byId[action.payload].playingMedia - 1,
+        0
+      );
+    },
   },
 });
 
-export const { addTab, removeTab, selectTab, editTab, moveTab } =
-  tabsSlice.actions;
+export const {
+  addTab,
+  removeTab,
+  selectTab,
+  editTab,
+  moveTab,
+  increaseTabPlayingMedia,
+  decreaseTabPlayingMedia,
+} = tabsSlice.actions;
 
 export default tabsSlice.reducer;

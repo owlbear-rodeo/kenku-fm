@@ -107,6 +107,9 @@ const api = {
   reload: (id: number) => {
     viewManager.reload(id);
   },
+  setMuted: (id: number, muted: boolean) => {
+    viewManager.setMuted(id, muted);
+  },
   on: (channel: Channel, callback: (...args: any[]) => any) => {
     if (validChannels.includes(channel)) {
       const newCallback = (_: any, ...args: any[]) => callback(args);

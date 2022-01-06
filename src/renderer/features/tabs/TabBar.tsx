@@ -136,7 +136,11 @@ export function TabBar() {
           strategy={horizontalListSortingStrategy}
         >
           {items.map((tab) => (
-            <SortableItem key={tab.id} id={`${tab.id}`}>
+            <SortableItem
+              key={tab.id}
+              id={`${tab.id}`}
+              style={{ width: "100%", minWidth: "76px" }}
+            >
               {getTabComponent(tab)}
             </SortableItem>
           ))}

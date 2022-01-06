@@ -6,10 +6,12 @@ import ListItemText from "@mui/material/ListItemText";
 import Box from "@mui/material/Box";
 import CloseIcon from "@mui/icons-material/CloseRounded";
 import VolumeIcon from "@mui/icons-material/VolumeUpRounded";
+import VolumeOffIcon from "@mui/icons-material/VolumeOffRounded";
 
-import { Tab, selectTab, removeTab } from "./tabsSlice";
+import { Tab, selectTab, removeTab, editTab } from "./tabsSlice";
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
+import { setMuted } from "../player/playerSlice";
 
 type TabType = {
   tab: Tab;
@@ -27,14 +29,26 @@ export function TabItem({ tab, selected, allowClose, shadow }: TabType) {
     <ListItem
       secondaryAction={
         <>
-          {tab.playingMedia && (
+          {tab.playingMedia > 0 && (
             <IconButton
               edge="end"
-              aria-label="media playing"
+              aria-label={tab.muted ? "unmute" : "mute"}
               size="small"
-              disabled
+              onClick={() => {
+                const muted = !tab.muted;
+                window.kenku.setMuted(tab.id, muted);
+                if (tab.id === playerTabId) {
+                  dispatch(setMuted(muted));
+                } else {
+                  dispatch(editTab({ id: tab.id, muted }));
+                }
+              }}
             >
-              <VolumeIcon sx={{ fontSize: "1rem" }} />
+              {tab.muted ? (
+                <VolumeOffIcon sx={{ fontSize: "1rem" }} />
+              ) : (
+                <VolumeIcon sx={{ fontSize: "1rem" }} />
+              )}
             </IconButton>
           )}
           {allowClose && (
@@ -63,12 +77,12 @@ export function TabItem({ tab, selected, allowClose, shadow }: TabType) {
         </>
       }
       sx={{
-        minWidth: "62px",
+        minWidth: "76px",
         "& .MuiListItemSecondaryAction-root": {
           right: "12px",
         },
         "& .MuiListItemButton-root": {
-          pr: allowClose ? (tab.playingMedia ? "62px" : "38px") : undefined,
+          pr: allowClose ? (tab.playingMedia > 0 ? "62px" : "38px") : undefined,
         },
       }}
       disablePadding

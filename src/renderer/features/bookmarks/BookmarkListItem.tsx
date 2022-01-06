@@ -38,6 +38,8 @@ export function BookmarkListItem({ bookmark, shadow }: BookmarkListItemProps) {
         url: bookmark.url,
         title: bookmark.title,
         icon: bookmark.icon,
+        playingMedia: 0,
+        muted: false,
       })
     );
     dispatch(selectTab(id));

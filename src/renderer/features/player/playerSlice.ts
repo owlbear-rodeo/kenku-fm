@@ -16,6 +16,8 @@ const initialState: PlayerState = {
     url: window.kenku.playerGetURL(),
     preload: window.kenku.playerGetPreloadURL(),
     title: "Kenku Player",
+    playingMedia: 0,
+    muted: false,
   },
   remoteEnabled: false,
 };
@@ -30,13 +32,24 @@ export const playerSlice = createSlice({
     setPlayerId: (state, action: PayloadAction<number>) => {
       state.tab.id = action.payload;
     },
-    setMediaPlaying: (state, action: PayloadAction<boolean>) => {
-      state.tab.playingMedia = action.payload;
+    increasePlayingMedia: (state) => {
+      state.tab.playingMedia += 1;
+    },
+    decreasePlayingMedia: (state) => {
+      state.tab.playingMedia = Math.max(state.tab.playingMedia - 1, 0);
+    },
+    setMuted: (state, action: PayloadAction<boolean>) => {
+      state.tab.muted = action.payload;
     },
   },
 });
 
-export const { enableRemote, setPlayerId, setMediaPlaying } =
-  playerSlice.actions;
+export const {
+  enableRemote,
+  setPlayerId,
+  increasePlayingMedia,
+  decreasePlayingMedia,
+  setMuted,
+} = playerSlice.actions;
 
 export default playerSlice.reducer;

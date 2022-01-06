@@ -15,9 +15,11 @@ export class BrowserViewManagerPreload {
   _audioOutputElement: HTMLAudioElement;
   /** Raw media streams for each browser view containing webp/opus audio */
   _mediaStreams: Record<number, MediaStream>;
+  _mediaStreamOutputs: Record<number, GainNode>;
 
   constructor() {
     this._mediaStreams = {};
+    this._mediaStreamOutputs = {};
 
     this._audioContext = new AudioContext({ latencyHint: "playback" });
     this._audioOutputNode = this._audioContext.createGain();
@@ -110,6 +112,15 @@ export class BrowserViewManagerPreload {
     ipcRenderer.send("BROWSER_VIEW_RELOAD", id);
   }
 
+  setMuted(id: number, muted: boolean) {
+    // Mute the audio context node
+    // Note: we can't use `webContents.setAudioMuted()` as we are capturing a
+    // separate audio stream then what is being sent to the user
+    if (this._mediaStreamOutputs[id]) {
+      this._mediaStreamOutputs[id].gain.value = muted ? 0 : 1;
+    }
+  }
+
   /**
    * Toggle the playback of the view audio in the current window
    * @param {boolean} loopback
@@ -158,8 +169,13 @@ export class BrowserViewManagerPreload {
       );
       this._mediaStreams[viewId] = stream;
 
+      const output = this._audioContext.createGain();
+      this._mediaStreamOutputs[viewId] = output;
+
       const audioSource = this._audioContext.createMediaStreamSource(stream);
-      audioSource.connect(this._audioOutputNode);
+      audioSource.connect(output);
+
+      output.connect(this._audioOutputNode);
     } catch (error) {
       console.error(`Unable to start stream for web view ${viewId}`);
       console.error(error);

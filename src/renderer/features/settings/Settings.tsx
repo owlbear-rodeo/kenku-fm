@@ -17,6 +17,9 @@ import { useSelector, useDispatch } from "react-redux";
 import { setStatus } from "../connection/connectionSlice";
 import {
   setDiscordToken,
+  setExternalInputsEnabled,
+  setMultipleInputsEnabled,
+  setMultipleOutputsEnabled,
   setRemoteEnabled,
   setRemoteHost,
   setRemotePort,
@@ -49,39 +52,10 @@ export function Settings({ open, onClose }: SettingsProps) {
     }
   }
 
-  function handleRemoteToggle() {
-    const enabled = !settings.remoteEnabled;
-    if (enabled) {
-      window.kenku.playerStartRemote(settings.remoteHost, settings.remotePort);
-    } else {
-      window.kenku.playerStopRemote();
-    }
-    dispatch(setRemoteEnabled(enabled));
-  }
-
-  function handleRemoteHostChange(event: React.ChangeEvent<HTMLInputElement>) {
-    dispatch(setRemoteHost(event.target.value));
-  }
-
-  function handleRemotePortChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const port = Number.parseInt(event.target.value);
-    if (!isNaN(port)) {
-      dispatch(setRemotePort(port));
-    }
-  }
-
-  function handleShowControlsToggle() {
-    dispatch(setURLBarEnabled(!settings.urlBarEnabled));
-  }
-
   useEffect(() => {
     if (settings.discordToken) {
       dispatch(setStatus("connecting"));
       window.kenku.connect(settings.discordToken);
-    }
-
-    if (settings.remoteEnabled) {
-      window.kenku.playerStartRemote(settings.remoteHost, settings.remotePort);
     }
 
     return () => {
@@ -103,122 +77,217 @@ export function Settings({ open, onClose }: SettingsProps) {
     };
   }, [dispatch]);
 
+  const discordSettings = (
+    <Stack spacing={1}>
+      <TextField
+        autoFocus
+        margin="dense"
+        size="small"
+        id="token"
+        label="Token"
+        type="password"
+        fullWidth
+        variant="standard"
+        autoComplete="off"
+        InputLabelProps={{
+          shrink: true,
+        }}
+        value={settings.discordToken}
+        onChange={handleDiscordTokenChange}
+        disabled={connection.status !== "disconnected"}
+        helperText="Enter your bot's token"
+      />
+      <Button
+        disabled={connection.status === "connecting" || !settings.discordToken}
+        onClick={handleDiscordConnect}
+        fullWidth
+        variant="outlined"
+        size="small"
+      >
+        {connection.status === "connecting" ? (
+          <CircularProgress size={24} />
+        ) : connection.status === "ready" ? (
+          "Disconnect"
+        ) : (
+          "Connect"
+        )}
+      </Button>
+      <Link
+        href="https://kenku.fm/docs/getting-a-discord-token"
+        variant="caption"
+        textAlign="center"
+        target="_blank"
+        rel="noopener noreferrer"
+        py={2}
+      >
+        Where do I get my token?
+      </Link>
+    </Stack>
+  );
+
+  function handleRemoteToggle() {
+    const enabled = !settings.remoteEnabled;
+    if (enabled) {
+      window.kenku.playerStartRemote(settings.remoteHost, settings.remotePort);
+    } else {
+      window.kenku.playerStopRemote();
+    }
+    dispatch(setRemoteEnabled(enabled));
+  }
+
+  function handleRemoteHostChange(event: React.ChangeEvent<HTMLInputElement>) {
+    dispatch(setRemoteHost(event.target.value));
+  }
+
+  function handleRemotePortChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const port = Number.parseInt(event.target.value);
+    if (!isNaN(port)) {
+      dispatch(setRemotePort(port));
+    }
+  }
+
+  useEffect(() => {
+    if (settings.remoteEnabled) {
+      window.kenku.playerStartRemote(settings.remoteHost, settings.remotePort);
+    }
+  }, []);
+
+  const remoteSettings = (
+    <Stack spacing={1}>
+      <Stack direction="row">
+        <TextField
+          margin="dense"
+          size="small"
+          id="remote-host"
+          label="Host"
+          variant="standard"
+          autoComplete="off"
+          InputLabelProps={{
+            shrink: true,
+          }}
+          inputProps={{ pattern: "d{1,3}.d{1,3}.d{1,3}.d{1,3}" }}
+          value={settings.remoteHost}
+          onChange={handleRemoteHostChange}
+          disabled={settings.remoteEnabled}
+          sx={{ mr: 0.5 }}
+        />
+        <TextField
+          margin="dense"
+          size="small"
+          id="remote-port"
+          label="Port"
+          variant="standard"
+          autoComplete="off"
+          InputLabelProps={{
+            shrink: true,
+          }}
+          inputProps={{ pattern: "d+" }}
+          value={settings.remotePort}
+          onChange={handleRemotePortChange}
+          disabled={settings.remoteEnabled}
+          sx={{ ml: 0.5 }}
+        />
+      </Stack>
+      <Button
+        onClick={handleRemoteToggle}
+        fullWidth
+        variant="outlined"
+        size="small"
+      >
+        {settings.remoteEnabled ? "Stop Remote" : "Start Remote"}
+      </Button>
+    </Stack>
+  );
+
+  function handleShowControlsToggle() {
+    dispatch(setURLBarEnabled(!settings.urlBarEnabled));
+  }
+
+  function handleExternalInputsToggle() {
+    dispatch(setExternalInputsEnabled(!settings.externalInputsEnabled));
+  }
+
+  function handleMultipleInputsToggle() {
+    dispatch(setMultipleInputsEnabled(!settings.multipleInputsEnabled));
+  }
+
+  function handleMultipleOutputsToggle() {
+    dispatch(setMultipleOutputsEnabled(!settings.multipleOutputsEnabled));
+  }
+
+  const otherSettings = (
+    <Stack spacing={1}>
+      <FormGroup>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.urlBarEnabled}
+              onChange={handleShowControlsToggle}
+            />
+          }
+          sx={{ marginLeft: "-8px" }}
+          label={<Typography variant="caption">Show Tab URL Bar</Typography>}
+        />
+      </FormGroup>
+      <FormGroup>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.multipleOutputsEnabled}
+              onChange={handleMultipleOutputsToggle}
+            />
+          }
+          sx={{ marginLeft: "-8px" }}
+          label={<Typography variant="caption">Multiple Outputs</Typography>}
+        />
+      </FormGroup>
+      <FormGroup>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.externalInputsEnabled}
+              onChange={handleExternalInputsToggle}
+            />
+          }
+          sx={{ marginLeft: "-8px" }}
+          label={<Typography variant="caption">External Inputs</Typography>}
+        />
+      </FormGroup>
+      <FormGroup>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={settings.multipleInputsEnabled}
+              onChange={handleMultipleInputsToggle}
+            />
+          }
+          disabled={!settings.externalInputsEnabled}
+          sx={{ marginLeft: "-8px" }}
+          label={
+            <Typography
+              variant="caption"
+              sx={{ opacity: settings.externalInputsEnabled ? undefined : 0.5 }}
+            >
+              Multiple Inputs
+            </Typography>
+          }
+        />
+      </FormGroup>
+    </Stack>
+  );
+
   return (
     <Dialog fullScreen sx={{ width: 240 }} open={open} onClose={onClose}>
       <DialogTitle>Settings</DialogTitle>
       <DialogContent>
         <DialogContentText>Discord</DialogContentText>
-        <Stack spacing={1}>
-          <TextField
-            autoFocus
-            margin="dense"
-            size="small"
-            id="token"
-            label="Token"
-            type="password"
-            fullWidth
-            variant="standard"
-            autoComplete="off"
-            InputLabelProps={{
-              shrink: true,
-            }}
-            value={settings.discordToken}
-            onChange={handleDiscordTokenChange}
-            disabled={connection.status !== "disconnected"}
-            helperText="Enter your bot's token"
-          />
-          <Button
-            disabled={
-              connection.status === "connecting" || !settings.discordToken
-            }
-            onClick={handleDiscordConnect}
-            fullWidth
-            variant="outlined"
-            size="small"
-          >
-            {connection.status === "connecting" ? (
-              <CircularProgress size={24} />
-            ) : connection.status === "ready" ? (
-              "Disconnect"
-            ) : (
-              "Connect"
-            )}
-          </Button>
-          <Link
-            href="https://kenku.fm/docs/getting-a-discord-token"
-            variant="caption"
-            textAlign="center"
-            target="_blank"
-            rel="noopener noreferrer"
-            py={2}
-          >
-            Where do I get my token?
-          </Link>
-        </Stack>
+        {discordSettings}
         <Divider sx={{ mb: 2 }} />
         <DialogContentText>Remote</DialogContentText>
-        <Stack spacing={1}>
-          <Stack direction="row">
-            <TextField
-              margin="dense"
-              size="small"
-              id="remote-host"
-              label="Host"
-              variant="standard"
-              autoComplete="off"
-              InputLabelProps={{
-                shrink: true,
-              }}
-              inputProps={{ pattern: "d{1,3}.d{1,3}.d{1,3}.d{1,3}" }}
-              value={settings.remoteHost}
-              onChange={handleRemoteHostChange}
-              disabled={settings.remoteEnabled}
-              sx={{ mr: 0.5 }}
-            />
-            <TextField
-              margin="dense"
-              size="small"
-              id="remote-port"
-              label="Port"
-              variant="standard"
-              autoComplete="off"
-              InputLabelProps={{
-                shrink: true,
-              }}
-              inputProps={{ pattern: "d+" }}
-              value={settings.remotePort}
-              onChange={handleRemotePortChange}
-              disabled={settings.remoteEnabled}
-              sx={{ ml: 0.5 }}
-            />
-          </Stack>
-          <Button
-            onClick={handleRemoteToggle}
-            fullWidth
-            variant="outlined"
-            size="small"
-          >
-            {settings.remoteEnabled ? "Stop Remote" : "Start Remote"}
-          </Button>
-        </Stack>
+        {remoteSettings}
         <Divider sx={{ my: 2 }} />
         <DialogContentText>Other</DialogContentText>
-        <Stack spacing={1}>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={settings.urlBarEnabled}
-                  onChange={handleShowControlsToggle}
-                />
-              }
-              sx={{ marginLeft: "-8px" }}
-              label={
-                <Typography variant="caption">Show Tab URL Bar</Typography>
-              }
-            />
-          </FormGroup>
-        </Stack>
+        {otherSettings}
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose}>Done</Button>

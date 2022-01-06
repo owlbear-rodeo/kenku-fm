@@ -43,6 +43,15 @@ export const connectionSlice = createSlice({
     setRemotePort: (state, action: PayloadAction<number>) => {
       state.remotePort = action.payload;
     },
+    setExternalInputsEnabled: (state, action: PayloadAction<boolean>) => {
+      state.externalInputsEnabled = action.payload;
+    },
+    setMultipleInputsEnabled: (state, action: PayloadAction<boolean>) => {
+      state.multipleInputsEnabled = action.payload;
+    },
+    setMultipleOutputsEnabled: (state, action: PayloadAction<boolean>) => {
+      state.multipleOutputsEnabled = action.payload;
+    },
   },
 });
 
@@ -52,6 +61,9 @@ export const {
   setRemoteEnabled,
   setRemoteHost,
   setRemotePort,
+  setExternalInputsEnabled,
+  setMultipleInputsEnabled,
+  setMultipleOutputsEnabled,
 } = connectionSlice.actions;
 
 export default connectionSlice.reducer;

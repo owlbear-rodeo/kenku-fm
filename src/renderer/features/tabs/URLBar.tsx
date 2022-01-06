@@ -20,7 +20,7 @@ type URLBarProps = {
 export function URLBar({ viewId, url, onURLChange, disabled }: URLBarProps) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    window.kenku.loadURL(viewId, url);
+    window.kenku.loadURL(viewId, prependHttp(url));
   }
 
   function handleURLChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -88,4 +88,14 @@ export function URLBar({ viewId, url, onURLChange, disabled }: URLBarProps) {
       <Divider />
     </Stack>
   );
+}
+
+function prependHttp(url: string, { https = true } = {}) {
+  url = url.trim();
+
+  if (/^\.*\/|^(?!localhost)\w+?:/.test(url)) {
+    return url;
+  }
+
+  return url.replace(/^(?!(?:\w+?:)?\/\/)/, https ? "https://" : "http://");
 }

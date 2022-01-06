@@ -49,7 +49,7 @@ export function TabItem({ tab, selected, allowClose }: TabType) {
         )
       }
       sx={{
-        minWidth: 0,
+        minWidth: "48px",
         "& .MuiListItemSecondaryAction-root": {
           right: "8px",
         },

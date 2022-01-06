@@ -122,6 +122,7 @@ export function TabBar() {
         display: "flex",
         alignItems: "center",
         px: 1,
+        overflowX: "auto",
       }}
     >
       <PlayerTab />

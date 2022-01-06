@@ -50,10 +50,12 @@ export const tabsSlice = createSlice({
       if (!action.payload.id) {
         throw Error("Id needed in editBrowserView payload");
       }
-      state.tabs.byId[action.payload.id] = {
-        ...state.tabs.byId[action.payload.id],
-        ...action.payload,
-      };
+      if (action.payload.id in state.tabs.byId) {
+        state.tabs.byId[action.payload.id] = {
+          ...state.tabs.byId[action.payload.id],
+          ...action.payload,
+        };
+      }
     },
   },
 });

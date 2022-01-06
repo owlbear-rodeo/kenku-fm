@@ -126,6 +126,9 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
         }
       }
     );
+    this.views[id].webContents.on("page-title-updated", (_, title) => {
+      event.reply("BROWSER_VIEW_TITLE_UPDATED", id, title);
+    });
     this.views[id].webContents.on("new-window", (event, url) => {
       event.preventDefault();
       shell.openExternal(url);

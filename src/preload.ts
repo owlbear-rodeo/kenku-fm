@@ -32,6 +32,7 @@ type Channel =
   | "DISCORD_CHANNEL_LEFT"
   | "SHOW_CONTROLS"
   | "BROWSER_VIEW_DID_NAVIGATE"
+  | "BROWSER_VIEW_TITLE_UPDATED"
   | "PLAYER_REMOTE_ENABLED";
 
 const validChannels: Channel[] = [
@@ -45,6 +46,7 @@ const validChannels: Channel[] = [
   "DISCORD_CHANNEL_LEFT",
   "SHOW_CONTROLS",
   "BROWSER_VIEW_DID_NAVIGATE",
+  "BROWSER_VIEW_TITLE_UPDATED",
   "PLAYER_REMOTE_ENABLED",
 ];
 

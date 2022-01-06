@@ -33,10 +33,16 @@ export function Tabs() {
       const url = args[1];
       dispatch(editTab({ id: viewId, url }));
     });
+    window.kenku.on("BROWSER_VIEW_TITLE_UPDATED", (args) => {
+      const viewId = args[0];
+      const title = args[1];
+      dispatch(editTab({ id: viewId, title }));
+    });
 
     return () => {
       window.kenku.removeAllListeners("SHOW_CONTROLS");
       window.kenku.removeAllListeners("BROWSER_VIEW_DID_NAVIGATE");
+      window.kenku.removeAllListeners("BROWSER_VIEW_TITLE_UPDATED");
     };
   }, []);
 

@@ -202,7 +202,6 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     view.setAutoResize({
       width: true,
       height: true,
-      vertical: true,
     });
 
     try {

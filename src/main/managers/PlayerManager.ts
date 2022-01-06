@@ -9,7 +9,7 @@ export class PlayerManager {
   registeredViewId?: number;
   fastify: FastifyInstance | null = null;
   host = "127.0.0.1";
-  port = 3333;
+  port = "3333";
 
   constructor() {
     ipcMain.on("PLAYER_GET_URL", this._handleGetURL);
@@ -33,7 +33,7 @@ export class PlayerManager {
     }
   }
 
-  startRemote(host: string, port: number) {
+  startRemote(host: string, port: string) {
     this.host = host;
     this.port = port;
 
@@ -74,17 +74,10 @@ export class PlayerManager {
     }`;
   }
 
-  _handleStartRemote = (
-    event: Electron.IpcMainEvent,
-    host: string,
-    port: number
-  ) => this.startRemote(host, port);
+  _handleStartRemote = (_: Electron.IpcMainEvent, host: string, port: string) =>
+    this.startRemote(host, port);
 
-  _handleStopRemote = (
-    event: Electron.IpcMainEvent,
-    host: string,
-    port: number
-  ) => this.stopRemote();
+  _handleStopRemote = () => this.stopRemote();
 
   _handleGetURL = (event: Electron.IpcMainEvent) => {
     event.returnValue = PLAYER_WINDOW_WEBPACK_ENTRY;

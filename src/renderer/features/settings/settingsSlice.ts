@@ -7,7 +7,7 @@ export interface SettingsState {
   urlBarEnabled: boolean;
   remoteEnabled: boolean;
   remoteHost: string;
-  remotePort: number;
+  remotePort: string;
   externalInputsEnabled: boolean;
   multipleInputsEnabled: boolean;
   multipleOutputsEnabled: boolean;
@@ -18,7 +18,7 @@ const initialState: SettingsState = {
   urlBarEnabled: true,
   remoteEnabled: false,
   remoteHost: "127.0.0.1",
-  remotePort: 3333,
+  remotePort: "3333",
   externalInputsEnabled: false,
   multipleInputsEnabled: false,
   multipleOutputsEnabled: false,
@@ -40,7 +40,7 @@ export const connectionSlice = createSlice({
     setRemoteHost: (state, action: PayloadAction<string>) => {
       state.remoteHost = action.payload;
     },
-    setRemotePort: (state, action: PayloadAction<number>) => {
+    setRemotePort: (state, action: PayloadAction<string>) => {
       state.remotePort = action.payload;
     },
     setExternalInputsEnabled: (state, action: PayloadAction<boolean>) => {

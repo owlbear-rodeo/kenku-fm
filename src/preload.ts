@@ -127,7 +127,7 @@ const api = {
   playerRegisterView: (viewId: number) => {
     ipcRenderer.send("PLAYER_REGISTER_VIEW", viewId);
   },
-  playerStartRemote: (host: string, port: number) => {
+  playerStartRemote: (host: string, port: string) => {
     ipcRenderer.send("PLAYER_START_REMOTE", host, port);
   },
   playerStopRemote: () => {

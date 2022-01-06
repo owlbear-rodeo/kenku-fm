@@ -140,10 +140,7 @@ export function Settings({ open, onClose }: SettingsProps) {
   }
 
   function handleRemotePortChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const port = Number.parseInt(event.target.value);
-    if (!isNaN(port)) {
-      dispatch(setRemotePort(port));
-    }
+    dispatch(setRemotePort(event.target.value));
   }
 
   useEffect(() => {
@@ -193,6 +190,7 @@ export function Settings({ open, onClose }: SettingsProps) {
         fullWidth
         variant="outlined"
         size="small"
+        disabled={!settings.remoteHost || !settings.remotePort}
       >
         {settings.remoteEnabled ? "Stop Remote" : "Start Remote"}
       </Button>

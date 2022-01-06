@@ -57,7 +57,7 @@ export function URLBar({ viewId, url, onURLChange, disabled }: URLBarProps) {
       <Stack
         direction="row"
         spacing={1}
-        sx={{ py: 1, px: 2, alignItems: "center" }}
+        sx={{ py: 0.5, px: 2, alignItems: "center" }}
       >
         <IconButton onClick={handleBack} disabled={disabled} size="small">
           <ArrowBackRounded />

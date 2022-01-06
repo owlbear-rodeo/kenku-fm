@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
 import { enableRemote, setPlayerId } from "./playerSlice";
-import { Tab } from "../tabs/Tab";
+import { TabItem } from "../tabs/TabItem";
 import { getBounds } from "../tabs/getBounds";
 import { selectTab } from "../tabs/tabsSlice";
 
@@ -45,5 +45,7 @@ export function PlayerTab() {
     };
   }, []);
 
-  return <Tab tab={player.tab} selected={tabs.selectedTab === player.tab.id} />;
+  return (
+    <TabItem tab={player.tab} selected={tabs.selectedTab === player.tab.id} />
+  );
 }

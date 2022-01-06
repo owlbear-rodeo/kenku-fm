@@ -5,7 +5,7 @@ import AddIcon from "@mui/icons-material/AddRounded";
 
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import { Tab } from "./Tab";
+import { TabItem } from "./TabItem";
 import { PlayerTab } from "../player/PlayerTab";
 
 export function TabBar() {
@@ -21,7 +21,7 @@ export function TabBar() {
     >
       <PlayerTab />
       {tabState.tabs.allIds.map((tabId) => (
-        <Tab
+        <TabItem
           key={tabId}
           tab={tabState.tabs.byId[tabId]}
           selected={tabState.selectedTab === tabId}

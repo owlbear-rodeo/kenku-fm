@@ -9,7 +9,6 @@ import CloseIcon from "@mui/icons-material/CloseRounded";
 import { Tab, selectTab, removeTab } from "./tabsSlice";
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
-import { getBounds } from "./getBounds";
 
 type TabType = {
   tab: Tab;
@@ -17,7 +16,7 @@ type TabType = {
   allowClose?: boolean;
 };
 
-export function Tab({ tab, selected, allowClose }: TabType) {
+export function TabItem({ tab, selected, allowClose }: TabType) {
   const playerTabId = useSelector((state: RootState) => state.player.tab.id);
   const tabIds = useSelector((state: RootState) => state.tabs.tabs.allIds);
   const dispatch = useDispatch();

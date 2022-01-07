@@ -34,6 +34,11 @@ export function OutputListItem({
           </Box>
         )
       }
+      sx={{
+        "& .MuiListItemButton-root": {
+          pr: tick ? "32px" : undefined,
+        },
+      }}
     >
       <ListItemButton
         selected={selected}

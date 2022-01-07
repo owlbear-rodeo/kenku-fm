@@ -1,5 +1,4 @@
 import React from "react";
-import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import InputBase from "@mui/material/InputBase";
@@ -85,7 +84,6 @@ export function URLBar({ viewId, url, onURLChange, disabled }: URLBarProps) {
           <RefreshRounded />
         </IconButton>
       </Stack>
-      <Divider />
     </Stack>
   );
 }

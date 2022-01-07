@@ -123,12 +123,16 @@ export function OutputListItems() {
           <OutputListItem
             voiceChannel={{ id: "local", name: "This Computer" }}
             selected={output.outputs.includes("local")}
+            tick={
+              settings.multipleOutputsEnabled &&
+              output.outputs.includes("local")
+            }
             onClick={handleChannelChange}
           />
           <Divider variant="middle" />
           {output.guilds.map((guild) => (
-            <React.Fragment key={guild.id}>
-              {output.guilds.length > 1 && (
+            <List key={guild.id} sx={{ py: 0 }}>
+              {output.guilds.length > 0 && (
                 <ListItem alignItems="center">
                   <ListItemAvatar
                     sx={{ minWidth: "36px", marginTop: 0, marginLeft: "8px" }}
@@ -159,11 +163,15 @@ export function OutputListItems() {
                 <OutputListItem
                   voiceChannel={channel}
                   selected={output.outputs.includes(channel.id)}
+                  tick={
+                    settings.multipleOutputsEnabled &&
+                    output.outputs.includes(channel.id)
+                  }
                   onClick={handleChannelChange}
                   key={channel.id}
                 />
               ))}
-            </React.Fragment>
+            </List>
           ))}
         </List>
       </Collapse>

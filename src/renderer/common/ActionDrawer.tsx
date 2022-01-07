@@ -5,6 +5,7 @@ import IconButton from "@mui/material/IconButton";
 import SettingsIcon from "@mui/icons-material/SettingsRounded";
 import { Toolbar, Stack, Typography, Link } from "@mui/material";
 import { OutputListItems } from "../features/output/OutputListItems";
+import { InputListItems } from "../features/input/InputListItems";
 import { BookmarkListItems } from "../features/bookmarks/BookmarkListItems";
 import { Settings } from "../features/settings/Settings";
 
@@ -17,6 +18,7 @@ import { useHideScrollbar } from "./useHideScrollbar";
 export const drawerWidth = 240;
 
 export function ActionDrawer() {
+  const settings = useSelector((state: RootState) => state.settings);
   const connection = useSelector((state: RootState) => state.connection);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -60,6 +62,7 @@ export function ActionDrawer() {
         <Box sx={{ overflowY: "auto" }} {...hideScrollbar}>
           <Stack>
             <BookmarkListItems />
+            {settings.externalInputsEnabled && <InputListItems />}
             <OutputListItems />
             {connection.status === "disconnected" && (
               <Typography variant="caption" align="center" marginY={2}>

@@ -5,6 +5,7 @@ import settingsReducer from "../features/settings/settingsSlice";
 import bookmarksReducer from "../features/bookmarks/bookmarksSlice";
 import tabsReducer from "../features/tabs/tabsSlice";
 import playerReducer from "../features/player/playerSlice";
+import inputReducer from "../features/input/inputSlice";
 
 import {
   persistStore,
@@ -26,6 +27,7 @@ const rootReducer = combineReducers({
   bookmarks: bookmarksReducer,
   tabs: tabsReducer,
   player: playerReducer,
+  input: inputReducer,
 });
 
 const migrations: any = {

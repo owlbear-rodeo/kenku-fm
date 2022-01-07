@@ -138,6 +138,12 @@ const api = {
   playerStopRemote: () => {
     ipcRenderer.send("PLAYER_STOP_REMOTE");
   },
+  startExternalAudioCapture: (deviceId: string) => {
+    return viewManager.startExternalAudioCapture(deviceId);
+  },
+  stopExternalAudioCapture: (deviceId: string) => {
+    viewManager.stopExternalAudioCapture(deviceId);
+  },
 };
 
 declare global {

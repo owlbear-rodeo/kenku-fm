@@ -17,9 +17,16 @@ export class BrowserViewManagerPreload {
   _mediaStreams: Record<number, MediaStream>;
   _mediaStreamOutputs: Record<number, GainNode>;
 
+  /** Raw media stream for each external audio source e.g. microphone or virtual audio cables */
+  _externalAudioStreams: Record<string, MediaStream>;
+  _externalAudioStreamOutputs: Record<string, GainNode>;
+
   constructor() {
     this._mediaStreams = {};
     this._mediaStreamOutputs = {};
+
+    this._externalAudioStreams = {};
+    this._externalAudioStreamOutputs = {};
 
     this._audioContext = new AudioContext({ latencyHint: "playback" });
     this._audioOutputNode = this._audioContext.createGain();
@@ -32,6 +39,11 @@ export class BrowserViewManagerPreload {
 
   destroy() {
     for (let stream of Object.values(this._mediaStreams)) {
+      for (let track of stream.getTracks()) {
+        track.stop();
+      }
+    }
+    for (let stream of Object.values(this._externalAudioStreams)) {
       for (let track of stream.getTracks()) {
         track.stop();
       }
@@ -127,6 +139,43 @@ export class BrowserViewManagerPreload {
    */
   setLoopback(loopback: boolean) {
     this._audioOutputElement.muted = !loopback;
+  }
+
+  async startExternalAudioCapture(deviceId: string) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          deviceId: deviceId,
+        },
+        video: false,
+      });
+
+      this._externalAudioStreams[deviceId] = stream;
+
+      const output = this._audioContext.createGain();
+      this._externalAudioStreamOutputs[deviceId] = output;
+
+      const audioSource = this._audioContext.createMediaStreamSource(stream);
+      audioSource.connect(output);
+
+      output.connect(this._audioOutputNode);
+    } catch (error) {
+      console.error(
+        `Unable to start stream for external audio device ${deviceId}`
+      );
+      console.error(error);
+    }
+  }
+
+  stopExternalAudioCapture(deviceId: string) {
+    const stream = this._externalAudioStreams[deviceId];
+    if (stream) {
+      for (let track of stream.getTracks()) {
+        track.stop();
+      }
+      delete this._externalAudioStreams[deviceId];
+      delete this._externalAudioStreamOutputs[deviceId];
+    }
   }
 
   _setupPlayback() {

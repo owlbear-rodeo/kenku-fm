@@ -143,12 +143,18 @@ export class BrowserViewManagerPreload {
 
   async startExternalAudioCapture(deviceId: string) {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      const streamConfig = {
         audio: {
           deviceId: deviceId,
+          noiseSuppression: false,
+          autoGainControl: false,
+          echoCancellation: false,
         },
         video: false,
-      });
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(
+        streamConfig as any
+      );
 
       this._externalAudioStreams[deviceId] = stream;
 

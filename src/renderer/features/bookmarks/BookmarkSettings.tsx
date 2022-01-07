@@ -53,7 +53,14 @@ export function BookmarkSettings({
   }
 
   return (
-    <Dialog fullScreen sx={{ width: 240 }} open={open} onClose={handleClose}>
+    <Dialog
+      fullScreen
+      sx={{ width: 240 }}
+      open={open}
+      onClose={handleClose}
+      // Stop key events from propagating to prevent the track drag and drop from stealing the space bar
+      onKeyDown={(e) => e.stopPropagation()}
+    >
       <DialogTitle>Edit Bookmark</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>

@@ -115,7 +115,9 @@ export function OutputListItems() {
   return (
     <>
       <ListItemButton onClick={toggleOpen}>
-        <ListItemText primary="Output" />
+        <ListItemText
+          primary={settings.multipleOutputsEnabled ? "Outputs" : "Output"}
+        />
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItemButton>
       <Collapse in={open} timeout="auto" unmountOnExit>

@@ -10,7 +10,7 @@ import ExpandMore from "@mui/icons-material/ExpandMoreRounded";
 
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
-import { addInput, removeInput, setDevices, setInput } from "./inputSlice";
+import { addInput, removeInput, setDevices } from "./inputSlice";
 
 import { InputListItem } from "./InputListItem";
 
@@ -66,7 +66,9 @@ export function InputListItems() {
   return (
     <>
       <ListItemButton onClick={toggleOpen}>
-        <ListItemText primary="Input" />
+        <ListItemText
+          primary={settings.multipleInputsEnabled ? "Inputs" : "Input"}
+        />
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItemButton>
       <Collapse in={open} timeout="auto" unmountOnExit>

@@ -21,7 +21,7 @@ import {
   setMultipleInputsEnabled,
   setMultipleOutputsEnabled,
   setRemoteEnabled,
-  setRemoteHost,
+  setRemoteAddress,
   setRemotePort,
   setURLBarEnabled,
 } from "./settingsSlice";
@@ -128,15 +128,20 @@ export function Settings({ open, onClose }: SettingsProps) {
   function handleRemoteToggle() {
     const enabled = !settings.remoteEnabled;
     if (enabled) {
-      window.kenku.playerStartRemote(settings.remoteHost, settings.remotePort);
+      window.kenku.playerStartRemote(
+        settings.remoteAddress,
+        settings.remotePort
+      );
     } else {
       window.kenku.playerStopRemote();
     }
     dispatch(setRemoteEnabled(enabled));
   }
 
-  function handleRemoteHostChange(event: React.ChangeEvent<HTMLInputElement>) {
-    dispatch(setRemoteHost(event.target.value));
+  function handleRemoteAddressChange(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    dispatch(setRemoteAddress(event.target.value));
   }
 
   function handleRemotePortChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -145,7 +150,10 @@ export function Settings({ open, onClose }: SettingsProps) {
 
   useEffect(() => {
     if (settings.remoteEnabled) {
-      window.kenku.playerStartRemote(settings.remoteHost, settings.remotePort);
+      window.kenku.playerStartRemote(
+        settings.remoteAddress,
+        settings.remotePort
+      );
     }
   }, []);
 
@@ -155,16 +163,16 @@ export function Settings({ open, onClose }: SettingsProps) {
         <TextField
           margin="dense"
           size="small"
-          id="remote-host"
-          label="Host"
+          id="remote-address"
+          label="Address"
           variant="standard"
           autoComplete="off"
           InputLabelProps={{
             shrink: true,
           }}
           inputProps={{ pattern: "d{1,3}.d{1,3}.d{1,3}.d{1,3}" }}
-          value={settings.remoteHost}
-          onChange={handleRemoteHostChange}
+          value={settings.remoteAddress}
+          onChange={handleRemoteAddressChange}
           disabled={settings.remoteEnabled}
           sx={{ mr: 0.5 }}
         />
@@ -190,7 +198,7 @@ export function Settings({ open, onClose }: SettingsProps) {
         fullWidth
         variant="outlined"
         size="small"
-        disabled={!settings.remoteHost || !settings.remotePort}
+        disabled={!settings.remoteAddress || !settings.remotePort}
       >
         {settings.remoteEnabled ? "Stop Remote" : "Start Remote"}
       </Button>

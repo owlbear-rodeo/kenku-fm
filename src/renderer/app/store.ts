@@ -36,7 +36,7 @@ const migrations: any = {
         ...state.settings,
         urlBarEnabled: true,
         remoteEnabled: false,
-        remoteHost: "127.0.0.1",
+        remoteAddress: "127.0.0.1",
         remotePort: "3333",
         externalInputsEnabled: false,
         multipleInputsEnabled: false,

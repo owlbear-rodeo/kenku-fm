@@ -8,7 +8,7 @@ declare const PLAYER_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 export class PlayerManager {
   registeredViewId?: number;
   fastify: FastifyInstance | null = null;
-  host = "127.0.0.1";
+  address = "127.0.0.1";
   port = "3333";
 
   constructor() {
@@ -33,15 +33,15 @@ export class PlayerManager {
     }
   }
 
-  startRemote(host: string, port: string) {
-    this.host = host;
+  startRemote(address: string, port: string) {
+    this.address = address;
     this.port = port;
 
     this.fastify = Fastify();
 
     registerRemote(this);
 
-    this.fastify.listen(this.port, this.host, (err) => {
+    this.fastify.listen(this.port, this.address, (err) => {
       const windows = BrowserWindow.getAllWindows();
       if (err) {
         for (let window of windows) {
@@ -69,13 +69,16 @@ export class PlayerManager {
   }
 
   getRemoteInfo() {
-    return `Running: ${this.fastify !== null}\nHost: ${this.host}\nPort: ${
-      this.port
-    }`;
+    return `Running: ${this.fastify !== null}\nAddress: ${
+      this.address
+    }\nPort: ${this.port}`;
   }
 
-  _handleStartRemote = (_: Electron.IpcMainEvent, host: string, port: string) =>
-    this.startRemote(host, port);
+  _handleStartRemote = (
+    _: Electron.IpcMainEvent,
+    address: string,
+    port: string
+  ) => this.startRemote(address, port);
 
   _handleStopRemote = () => this.stopRemote();
 

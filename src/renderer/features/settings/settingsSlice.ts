@@ -6,7 +6,7 @@ export interface SettingsState {
   discordToken: string;
   urlBarEnabled: boolean;
   remoteEnabled: boolean;
-  remoteHost: string;
+  remoteAddress: string;
   remotePort: string;
   externalInputsEnabled: boolean;
   multipleInputsEnabled: boolean;
@@ -17,7 +17,7 @@ const initialState: SettingsState = {
   discordToken: "",
   urlBarEnabled: true,
   remoteEnabled: false,
-  remoteHost: "127.0.0.1",
+  remoteAddress: "127.0.0.1",
   remotePort: "3333",
   externalInputsEnabled: false,
   multipleInputsEnabled: false,
@@ -37,8 +37,8 @@ export const connectionSlice = createSlice({
     setRemoteEnabled: (state, action: PayloadAction<boolean>) => {
       state.remoteEnabled = action.payload;
     },
-    setRemoteHost: (state, action: PayloadAction<string>) => {
-      state.remoteHost = action.payload;
+    setRemoteAddress: (state, action: PayloadAction<string>) => {
+      state.remoteAddress = action.payload;
     },
     setRemotePort: (state, action: PayloadAction<string>) => {
       state.remotePort = action.payload;
@@ -59,7 +59,7 @@ export const {
   setDiscordToken,
   setURLBarEnabled,
   setRemoteEnabled,
-  setRemoteHost,
+  setRemoteAddress,
   setRemotePort,
   setExternalInputsEnabled,
   setMultipleInputsEnabled,

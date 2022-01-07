@@ -6,6 +6,7 @@ import Box from "@mui/material/Box";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import MoreIcon from "@mui/icons-material/MoreHorizRounded";
+import ListItem from "@mui/material/ListItem";
 
 import { useDispatch } from "react-redux";
 import { Bookmark, removeBookmark } from "./bookmarksSlice";
@@ -61,7 +62,6 @@ export function BookmarkListItem({ bookmark, shadow }: BookmarkListItemProps) {
   const [more, setMore] = React.useState<HTMLButtonElement | null>(null);
 
   function handleMoreClick(event: React.MouseEvent<HTMLButtonElement>) {
-    event.stopPropagation();
     setMore(event.currentTarget);
   }
 
@@ -74,29 +74,35 @@ export function BookmarkListItem({ bookmark, shadow }: BookmarkListItemProps) {
 
   return (
     <>
-      <ListItemButton
-        dense
-        sx={{ px: 2, boxShadow: shadow ? 10 : "none" }}
-        onClick={select}
-        onDoubleClick={openSettings}
+      <ListItem
+        disablePadding
+        secondaryAction={
+          <IconButton size="small" onClick={handleMoreClick}>
+            <MoreIcon />
+          </IconButton>
+        }
       >
-        {bookmark.icon && (
-          <Box
-            sx={{
-              width: "24px",
-              height: "24px",
-              objectFit: "cover",
-              marginRight: 1,
-            }}
-          >
-            <img src={bookmark.icon} />
-          </Box>
-        )}
-        <ListItemText primary={bookmark.title} />
-        <IconButton size="small" onClick={handleMoreClick}>
-          <MoreIcon />
-        </IconButton>
-      </ListItemButton>
+        <ListItemButton
+          dense
+          sx={{ px: 2, boxShadow: shadow ? 10 : "none" }}
+          onClick={select}
+          onDoubleClick={openSettings}
+        >
+          {bookmark.icon && (
+            <Box
+              sx={{
+                width: "24px",
+                height: "24px",
+                objectFit: "cover",
+                marginRight: 1,
+              }}
+            >
+              <img src={bookmark.icon} />
+            </Box>
+          )}
+          <ListItemText primary={bookmark.title} />
+        </ListItemButton>
+      </ListItem>
       <Menu
         id={moreId}
         anchorEl={more}

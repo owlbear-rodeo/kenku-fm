@@ -108,11 +108,19 @@ export class DiscordBroadcast {
             this.broadcast.remove(connection);
             this.client.leaveVoiceChannel(channelId);
             event.reply("DISCORD_CHANNEL_LEFT", channelId);
+            event.reply(
+              "ERROR",
+              `Error connecting to voice channel: ${e.message}`
+            );
           });
         } catch (e) {
           console.error(e);
           this.client.leaveVoiceChannel(channelId);
           event.reply("DISCORD_CHANNEL_LEFT", channelId);
+          event.reply(
+            "ERROR",
+            `Error connecting to voice channel: ${e.message}`
+          );
         }
       }
     }

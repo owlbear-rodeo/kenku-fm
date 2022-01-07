@@ -14,12 +14,12 @@ export type Guild = {
 
 export interface OutputState {
   guilds: Guild[];
-  currentChannel: string;
+  outputs: string[];
 }
 
 const initialState: OutputState = {
   guilds: [],
-  currentChannel: "local",
+  outputs: ["local"],
 };
 
 export const outputSlice = createSlice({
@@ -29,12 +29,24 @@ export const outputSlice = createSlice({
     setGuilds: (state, action: PayloadAction<Guild[]>) => {
       state.guilds = action.payload;
     },
-    setCurrentChannel: (state, action: PayloadAction<string>) => {
-      state.currentChannel = action.payload;
+    setOutput: (state, action: PayloadAction<string>) => {
+      state.outputs = [action.payload];
+    },
+    addOutput: (state, action: PayloadAction<string>) => {
+      if (state.outputs.includes(action.payload)) {
+        return;
+      }
+      state.outputs.push(action.payload);
+    },
+    removeOutput: (state, action: PayloadAction<string>) => {
+      state.outputs = state.outputs.filter(
+        (channel) => channel !== action.payload
+      );
     },
   },
 });
 
-export const { setGuilds, setCurrentChannel } = outputSlice.actions;
+export const { setGuilds, setOutput, addOutput, removeOutput } =
+  outputSlice.actions;
 
 export default outputSlice.reducer;

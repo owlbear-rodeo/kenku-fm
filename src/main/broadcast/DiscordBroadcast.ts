@@ -20,12 +20,14 @@ export class DiscordBroadcast {
     ipcMain.on("DISCORD_CONNECT", this._handleConnect);
     ipcMain.on("DISCORD_DISCONNECT", this._handleDisconnect);
     ipcMain.on("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
+    ipcMain.on("DISCORD_LEAVE_CHANNEL", this._handleLeaveChannel);
   }
 
   destroy() {
     ipcMain.off("DISCORD_CONNECT", this._handleConnect);
     ipcMain.off("DISCORD_DISCONNECT", this._handleDisconnect);
     ipcMain.off("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
+    ipcMain.off("DISCORD_LEAVE_CHANNEL", this._handleLeaveChannel);
     this.client?.disconnect({ reconnect: false });
     this.client = undefined;
   }
@@ -94,17 +96,19 @@ export class DiscordBroadcast {
     event: Electron.IpcMainEvent,
     channelId: string
   ) => {
-    this.client?.voiceConnections.forEach((connection) => {
-      this.broadcast.remove(connection);
-      this.client.leaveVoiceChannel(connection.channelID);
-    });
-    if (channelId !== "local" && this.client) {
+    if (this.client) {
       const channel = this.client.getChannel(channelId);
-      if (channel instanceof Eris.VoiceChannel) {
+      if (channel && channel instanceof Eris.VoiceChannel) {
         try {
           const connection = await channel.join();
           this.broadcast.add(connection);
           event.reply("DISCORD_CHANNEL_JOINED", channelId);
+          connection.on("error", (e) => {
+            console.error(e);
+            this.broadcast.remove(connection);
+            this.client.leaveVoiceChannel(channelId);
+            event.reply("DISCORD_CHANNEL_LEFT", channelId);
+          });
         } catch (e) {
           console.error(e);
           this.client.leaveVoiceChannel(channelId);
@@ -112,5 +116,18 @@ export class DiscordBroadcast {
         }
       }
     }
+  };
+
+  _handleLeaveChannel = async (
+    event: Electron.IpcMainEvent,
+    channelId: string
+  ) => {
+    this.client.voiceConnections.forEach((connection) => {
+      if (connection.channelID === channelId) {
+        this.broadcast.remove(connection);
+      }
+    });
+    this.client?.leaveVoiceChannel(channelId);
+    event.reply("DISCORD_CHANNEL_LEFT", channelId);
   };
 }

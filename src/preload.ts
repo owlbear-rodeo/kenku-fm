@@ -58,7 +58,12 @@ const api = {
   },
   joinChannel: (channelId: string) => {
     ipcRenderer.send("DISCORD_JOIN_CHANNEL", channelId);
-    viewManager.setLoopback(channelId === "local");
+  },
+  leaveChannel: (channelId: string) => {
+    ipcRenderer.send("DISCORD_LEAVE_CHANNEL", channelId);
+  },
+  setLoopack: (loopback: boolean) => {
+    viewManager.setLoopback(loopback);
   },
   createBrowserView: (
     url: string,

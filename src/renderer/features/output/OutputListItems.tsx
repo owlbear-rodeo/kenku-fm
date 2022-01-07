@@ -14,7 +14,7 @@ import ExpandMore from "@mui/icons-material/ExpandMoreRounded";
 
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
-import { setGuilds, setCurrentChannel } from "./outputSlice";
+import { addOutput, removeOutput, setGuilds, setOutput } from "./outputSlice";
 
 import { OutputListItem } from "./OutputListItem";
 
@@ -26,6 +26,7 @@ export function OutputListItems() {
   }
 
   const output = useSelector((state: RootState) => state.output);
+  const settings = useSelector((state: RootState) => state.settings);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -34,12 +35,13 @@ export function OutputListItems() {
       dispatch(setGuilds(guilds));
     });
 
-    window.kenku.on("DISCORD_CHANNEL_LEFT", () => {
-      dispatch(setCurrentChannel("local"));
+    window.kenku.on("DISCORD_CHANNEL_LEFT", (args) => {
+      const id = args[0];
+      dispatch(removeOutput(id));
     });
 
     window.kenku.on("DISCORD_CHANNEL_JOINED", (args) => {
-      dispatch(setCurrentChannel(args[0]));
+      dispatch(addOutput(args[0]));
     });
 
     return () => {
@@ -50,8 +52,62 @@ export function OutputListItems() {
   }, [dispatch]);
 
   function handleChannelChange(channelId: string) {
-    if (channelId !== output.currentChannel) {
-      dispatch(setCurrentChannel(channelId));
+    if (settings.multipleOutputsEnabled) {
+      // Already selected
+      if (output.outputs.includes(channelId)) {
+        dispatch(removeOutput(channelId));
+        if (channelId === "local") {
+          window.kenku.setLoopack(false);
+        } else {
+          window.kenku.leaveChannel(channelId);
+        }
+      } else {
+        // Not selected
+        dispatch(addOutput(channelId));
+        if (channelId === "local") {
+          window.kenku.setLoopack(true);
+        } else {
+          // Check if the channel is in the same guild as one already selected
+          const channelsToGuild: Record<string, string> = {};
+          for (let guild of output.guilds) {
+            for (let channel of guild.voiceChannels) {
+              channelsToGuild[channel.id] = guild.id;
+            }
+          }
+          const currentGuild = channelsToGuild[channelId];
+          let guildChannel: string;
+          for (let id of output.outputs) {
+            const guild = channelsToGuild[id];
+            if (guild === currentGuild) {
+              guildChannel = id;
+            }
+          }
+          // Discord only allows for one channel to be joined per guild so we need to leave
+          // a channel if it's in the same guild as the one we're about to join
+          if (guildChannel) {
+            dispatch(removeOutput(guildChannel));
+            window.kenku.leaveChannel(guildChannel);
+          }
+
+          window.kenku.joinChannel(channelId);
+        }
+      }
+    } else {
+      const prev = output.outputs[0];
+
+      // Already selected so return early
+      if (prev === channelId) {
+        return;
+      }
+
+      if (prev) {
+        if (prev === "local") {
+          window.kenku.setLoopack(false);
+        } else {
+          window.kenku.leaveChannel(prev);
+        }
+      }
+      dispatch(setOutput(channelId));
       window.kenku.joinChannel(channelId);
     }
   }
@@ -66,7 +122,7 @@ export function OutputListItems() {
         <List component="div" disablePadding>
           <OutputListItem
             voiceChannel={{ id: "local", name: "This Computer" }}
-            selected={output.currentChannel === "local"}
+            selected={output.outputs.includes("local")}
             onClick={handleChannelChange}
           />
           <Divider variant="middle" />
@@ -102,7 +158,7 @@ export function OutputListItems() {
               {guild.voiceChannels.map((channel) => (
                 <OutputListItem
                   voiceChannel={channel}
-                  selected={output.currentChannel === channel.id}
+                  selected={output.outputs.includes(channel.id)}
                   onClick={handleChannelChange}
                   key={channel.id}
                 />

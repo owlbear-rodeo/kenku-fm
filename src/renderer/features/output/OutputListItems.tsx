@@ -108,7 +108,11 @@ export function OutputListItems() {
         }
       }
       dispatch(setOutput(channelId));
-      window.kenku.joinChannel(channelId);
+      if (channelId === "local") {
+        window.kenku.setLoopack(true);
+      } else {
+        window.kenku.joinChannel(channelId);
+      }
     }
   }
 

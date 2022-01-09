@@ -1,4 +1,4 @@
-import { app, BrowserWindow, session, shell } from "electron";
+import { app, BrowserWindow, components, session, shell } from "electron";
 import { FaviconManager } from "./main/managers/FaviconManager";
 import { PlaybackManager } from "./main/managers/PlaybackManager";
 import { PlayerManager } from "./main/managers/PlayerManager";
@@ -55,10 +55,18 @@ const spoofUserAgent = () => {
   });
 };
 
+// Workaround to allow for webpack support with widevine
+// https://github.com/castlabs/electron-releases/issues/116
+const widevine = components;
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", () => {
+app.whenReady().then(async () => {
+  // Wait for widevine to load
+  await widevine.whenReady();
+  console.log("components ready:", components.status());
+
   createWindow();
   spoofUserAgent();
 });

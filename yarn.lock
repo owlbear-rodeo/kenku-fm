@@ -2810,10 +2810,9 @@ electron-winstaller@^5.0.0:
     lodash.template "^4.2.2"
     temp "^0.9.0"
 
-electron@17.0.0-beta.1:
+"electron@https://github.com/castlabs/electron-releases#v17.0.0-beta.1+wvcus":
   version "17.0.0-beta.1"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-17.0.0-beta.1.tgz#c38ea4a5d67763db6d13a624c7e709716d5510d5"
-  integrity sha512-Qy81RFC9t6ykn78k0HWXt07zc5KWOM29X7k71mi9/T4mOF3g5GY0d/sLRX402gY9pE0GEbj3WOAi62oS0hGZ3A==
+  resolved "https://github.com/castlabs/electron-releases#bc74cd9214c9f17d6f930ba5e6c3d4a432f3d605"
   dependencies:
     "@electron/get" "^1.13.0"
     "@types/node" "^14.6.2"

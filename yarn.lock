@@ -2744,6 +2744,18 @@ electron-osx-sign@^0.5.0:
     minimist "^1.2.0"
     plist "^3.0.1"
 
+electron-osx-sign@^0.6.0:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/electron-osx-sign/-/electron-osx-sign-0.6.0.tgz#9b69c191d471d9458ef5b1e4fdd52baa059f1bb8"
+  integrity sha512-+hiIEb2Xxk6eDKJ2FFlpofCnemCbjbT5jz+BKGpVBrRNT3kWTGs4DfNX6IzGwgi33hUcXF+kFs9JW+r6Wc1LRg==
+  dependencies:
+    bluebird "^3.5.0"
+    compare-version "^0.1.2"
+    debug "^2.6.8"
+    isbinaryfile "^3.0.2"
+    minimist "^1.2.0"
+    plist "^3.0.1"
+
 electron-packager@^15.4.0:
   version "15.4.0"
   resolved "https://registry.yarnpkg.com/electron-packager/-/electron-packager-15.4.0.tgz#07ea036b70cde2062d4c8dce4d907d793b303998"

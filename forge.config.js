@@ -6,14 +6,6 @@ const config = {
     out: "./out",
     icon: "./src/assets/icon",
     appBundleId: "com.kenku.fm",
-    osxSign: {
-      gatekeeperAssess: false,
-      identity: "Developer ID Application: Mitchell McCaffrey (34SN58ZB9F)",
-      "hardened-runtime": true,
-      entitlements: "entitlements.plist",
-      "entitlements-inherit": "entitlements.plist",
-      "signature-flags": "library",
-    },
   },
   makers: [
     {
@@ -98,32 +90,5 @@ const config = {
     ],
   ],
 };
-
-function notarizeMaybe() {
-  if (process.platform !== "darwin") {
-    return;
-  }
-
-  if (!process.env.CI) {
-    console.log(`Not in CI, skipping notarization`);
-    return;
-  }
-
-  if (!process.env.APPLE_ID || !process.env.APPLE_ID_PASSWORD) {
-    console.warn(
-      "Should be notarizing, but environment variables APPLE_ID or APPLE_ID_PASSWORD are missing!"
-    );
-    return;
-  }
-
-  config.packagerConfig.osxNotarize = {
-    appBundleId: "com.kenku.fm",
-    appleId: process.env.APPLE_ID,
-    appleIdPassword: process.env.APPLE_ID_PASSWORD,
-    ascProvider: "34SN58ZB9F",
-  };
-}
-
-notarizeMaybe();
 
 module.exports = config;

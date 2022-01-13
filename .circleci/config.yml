@@ -13,7 +13,7 @@ jobs:
       - checkout
       - node/install:
           install-yarn: true
-          node-version: "16.13.1"
+          node-version: "16.13.2"
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
@@ -46,7 +46,7 @@ jobs:
       - checkout
       - node/install:
           install-yarn: true
-          node-version: "16.13.1"
+          node-version: "16.13.2"
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
@@ -80,7 +80,7 @@ jobs:
       - checkout
       - node/install:
           install-yarn: true
-          node-version: "16.13.1"
+          node-version: "16.13.2"
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
       - run:
@@ -107,7 +107,7 @@ jobs:
       - checkout
       - node/install:
           install-yarn: true
-          node-version: "16.13.1"
+          node-version: "16.13.2"
       - restore_cache:
           key: dependency-cache-macos-{{ checksum "package.json" }}
       - run:

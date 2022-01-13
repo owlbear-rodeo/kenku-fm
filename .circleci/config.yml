@@ -36,7 +36,7 @@ jobs:
           name: Publish
           command: |
             export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
-            yarn run publish
+            yarn run publish:linux-arm
 
   build-linux-amd:
     machine:
@@ -55,9 +55,7 @@ jobs:
             npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
       - run:
           name: Install Dependencies
-          command: |
-            export ELECTRON_MIRROR=https://github.com/castlabs/electron-releases/releases/download/
-            yarn install --non-interactive --frozen-lockfile
+          command: yarn install --non-interactive --frozen-lockfile
       - run:
           name: Install dpkg and fakeroot
           command: |
@@ -71,7 +69,7 @@ jobs:
           name: Publish
           command: |
             export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
-            yarn run publish
+            yarn run publish:linux-amd
 
   build-win:
     executor:
@@ -91,9 +89,7 @@ jobs:
             npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
       - run:
           name: Install Dependencies
-          command: |
-            export ELECTRON_MIRROR=https://github.com/castlabs/electron-releases/releases/download/
-            yarn install --non-interactive --frozen-lockfile
+          command: yarn install --non-interactive --frozen-lockfile
       - save_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
           paths:
@@ -102,7 +98,7 @@ jobs:
           name: Publish
           command: |
             export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
-            yarn run publish
+            yarn run publish:win
 
   build-mac-amd:
     macos:
@@ -120,9 +116,7 @@ jobs:
             npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
       - run:
           name: Install Dependencies
-          command: |
-            export ELECTRON_MIRROR=https://github.com/castlabs/electron-releases/releases/download/
-            yarn install --non-interactive --frozen-lockfile
+          command: yarn install --non-interactive --frozen-lockfile
       - save_cache:
           key: dependency-cache-macos-{{ checksum "package.json" }}
           paths:
@@ -131,7 +125,7 @@ jobs:
           name: Make Package
           command: |
             export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
-            yarn run make
+            yarn run make:darwin
       - run:
           name: Install Widevine Python Module
           command: python3 -m pip install --upgrade castlabs-evs

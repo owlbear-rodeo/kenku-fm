@@ -36,7 +36,7 @@ jobs:
           name: Publish
           command: |
             export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
-            yarn run publish:linux-arm
+            yarn run publish
 
   build-win:
     executor:
@@ -65,7 +65,7 @@ jobs:
           name: Publish
           command: |
             export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
-            yarn run publish:win
+            yarn run publish
 
   build-mac-amd:
     macos:
@@ -92,7 +92,7 @@ jobs:
           name: Make Package
           command: |
             export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
-            yarn run make:darwin
+            yarn run make
       - run:
           name: Install Widevine Python Module
           command: python3 -m pip install --upgrade castlabs-evs

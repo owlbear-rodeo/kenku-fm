@@ -6,13 +6,9 @@
   "main": ".webpack/main",
   "scripts": {
     "start": "electron-forge start",
-    "package": "env-cmd -e dev electron-forge package",
-    "make": "env-cmd -e dev electron-forge make",
-    "make:darwin": "env-cmd -e darwin electron-forge make",
-    "publish": "electron-forge publish",
-    "publish:win": "env-cmd -e win electron-forge publish",
-    "publish:linux-amd": "env-cmd -e linux-amd electron-forge publish",
-    "publish:linux-arm": "env-cmd -e linux-arm electron-forge publish",
+    "package": "env-cmd electron-forge package",
+    "make": "env-cmd electron-forge make",
+    "publish": "env-cmd electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },
   "keywords": [],

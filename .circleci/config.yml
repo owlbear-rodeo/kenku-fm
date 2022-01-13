@@ -55,7 +55,9 @@ jobs:
             npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
       - run:
           name: Install Dependencies
-          command: yarn install --non-interactive --frozen-lockfile
+          command: |
+            export ELECTRON_MIRROR=https://github.com/castlabs/electron-releases/releases/download/
+            yarn install --non-interactive --frozen-lockfile
       - run:
           name: Install dpkg and fakeroot
           command: |
@@ -89,7 +91,9 @@ jobs:
             npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
       - run:
           name: Install Dependencies
-          command: yarn install --non-interactive --frozen-lockfile
+          command: |
+            export ELECTRON_MIRROR=https://github.com/castlabs/electron-releases/releases/download/
+            yarn install --non-interactive --frozen-lockfile
       - save_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
           paths:
@@ -116,7 +120,9 @@ jobs:
             npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
       - run:
           name: Install Dependencies
-          command: yarn install --non-interactive --frozen-lockfile
+          command: |
+            export ELECTRON_MIRROR=https://github.com/castlabs/electron-releases/releases/download/
+            yarn install --non-interactive --frozen-lockfile
       - save_cache:
           key: dependency-cache-macos-{{ checksum "package.json" }}
           paths:

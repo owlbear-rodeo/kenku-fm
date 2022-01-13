@@ -107,7 +107,7 @@ jobs:
           name: OSX Signature
           command: |
             export DEVELOPER_ID=${APPLE_DEVELOPER_ID}
-            npx electron-osx-sign "./out/Kenku FM-darwin-x64/" --gatekeeper-access=false --identity=$DEVELOPER_ID --hardened-runtime=true --entitlements="entitlements.plist" --entitlements-inherit="entitlements.plist"
+            npx electron-osx-sign "./out/Kenku FM-darwin-x64/Kenku\ FM.app" --gatekeeper-access=false --identity=$DEVELOPER_ID --hardened-runtime=true --entitlements="entitlements.plist" --entitlements-inherit="entitlements.plist"
       - run:
           name: Zip App
           command: |

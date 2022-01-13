@@ -135,8 +135,8 @@ jobs:
             export MACOS_APP_PATH=${KENKU_FM_MAC_X64_PATH}
             export ACCOUNT_NAME=${CASTLABS_ACCOUNT_NAME}
             export ACCOUNT_PASSWORD=${CASTLABS_ACCOUNT_PASSWORD}
-            python -m castlabs_evs.account reauth -n -A $ACCOUNT_NAME -P $ACCOUNT_PASSWORD
-            python -m castlabs_evs.vmp sign-pkg $MACOS_APP_PATH
+            python3 -m castlabs_evs.account reauth -n -A $ACCOUNT_NAME -P $ACCOUNT_PASSWORD
+            python3 -m castlabs_evs.vmp sign-pkg $MACOS_APP_PATH
       - run:
           name: OSX Signature
           command: |

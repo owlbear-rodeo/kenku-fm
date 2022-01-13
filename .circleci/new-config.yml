@@ -145,9 +145,8 @@ jobs:
     steps:
       - publish-electron-app
 
-
   checkout-mac-amd:
-    executor: win
+    executor: mac-amd
     steps: mac-amd
       - checkout
 
@@ -189,37 +188,24 @@ jobs:
     executor: mac-amd
     working_directory: ~/repo
     steps:
-      
-
-  build-mac-amd:
-    macos:
-      xcode: 13.2.1
-    steps:
-      - checkout
-      - node/install:
-          install-yarn: true
-          node-version: "16.13.2"
-      - restore_cache:
-          key: dependency-cache-macos-{{ checksum "package.json" }}
-      - run:
-          name: Login to Github Packages
-          command: |
-            npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
-      - run:
-          name: Install Dependencies
-          command: yarn install --non-interactive --frozen-lockfile
-      - save_cache:
-          key: dependency-cache-macos-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
       - run:
           name: Make Package
           command: |
             export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
             yarn run make
+
+  install-castlabs-module-mac-amd:
+    executor: mac-amd
+    working_directory: ~/repo
+    steps:
       - run:
           name: Install Widevine Python Module
           command: python3 -m pip install --upgrade castlabs-evs
+
+  sign-electron-app-mac-amd:
+    executor: mac-amd
+    working_directory: ~/repo
+    steps:
       - run:
           name: Widevine Signature
           command: |
@@ -251,11 +237,21 @@ jobs:
           command: |
             export MACOS_APP_PATH=${KENKU_FM_MAC_X64_PATH}
             xcrun stapler staple -v ${MACOS_APP_PATH}/Kenku\ FM.app
+
+  create-dmg-mac-amd:
+    executor: mac-amd
+    working_directory: ~/repo
+    steps: 
       - run:
           name: Create DMG
           command: |
             export MACOS_APP_PATH=${KENKU_FM_MAC_X64_PATH}
             npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out=$MACOS_APP_PATH ${MACOS_APP_PATH}/Kenku\ FM.app Kenku\ FM
+
+  publish-dmg-mac-amd:
+    executor: mac-amd
+    working_directory: ~/repo
+    steps:
       - run:
           name: Publish DMG
           command: |
@@ -265,23 +261,111 @@ jobs:
 
 workflows:
   version: 2
-  deploy:
+  deploy-linux-amd:
     jobs:
-      - build-linux-amd:
+      - install-npm-linux-amd:
           filters:
             tags:
               ignore: /^v[0-9]+(\.[0-9]+)*$/
             branches:
               ignore: /.*/
-      - build-win:
+      - install-linux-packages:
           filters:
             tags:
               ignore: /^v[0-9]+(\.[0-9]+)*$/
             branches:
               ignore: /.*/
-      - build-mac-amd:
+      - checkout-linux-amd:
           filters:
             tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+              ignore: /^v[0-9]+(\.[0-9]+)*$/
             branches:
               ignore: /.*/
+      - github-login-linux-amd:
+          requires:
+            - install-npm-linux-amd
+      - restore-cache-linux-amd:
+          requires:
+            - install-npm-linux-amd
+            - checkout-linux-amd
+      - install-packages-linux-amd:
+          requires:
+            - restore-cache-linux-amd
+            - github-login-linux-amd
+      - publish-electron-app-linux-amd:
+          requires:
+            - install-linux-packages
+            - install-packages-linux-amd
+
+  deploy-win:
+    jobs:
+      - install-npm-win:
+          filters:
+            tags:
+              ignore: /^v[0-9]+(\.[0-9]+)*$/
+            branches:
+              ignore: /.*/
+      - checkout-win:
+          filters:
+            tags:
+              ignore: /^v[0-9]+(\.[0-9]+)*$/
+            branches:
+              ignore: /.*/
+      - github-login-win:
+          requires:
+            - install-npm-win
+      - restore-cache-win:
+          requires:
+            - install-npm-win
+            - checkout-win
+      - install-packages-win:
+          requires:
+            - restore-cache-win
+            - github-login-win
+      - publish-electron-app-win:
+          requires:
+            - install-packages-win
+  deploy-mac-amd:
+    jobs:
+      - install-npm-mac-amd:
+          filters:
+            tags:
+              ignore: /^v[0-9]+(\.[0-9]+)*$/
+            branches:
+              ignore: /.*/
+      - checkout-mac-amd:
+          filters:
+            tags:
+              ignore: /^v[0-9]+(\.[0-9]+)*$/
+            branches:
+              ignore: /.*/
+      - install-castlabs-module-mac-amd:
+          filters:
+            tags:
+              ignore: /^v[0-9]+(\.[0-9]+)*$/
+            branches:
+              ignore: /.*/
+      - github-login-mac-amd:
+          requires:
+            - install-npm-mac-amd
+      - restore-cache-mac-amd:
+          requires:
+            - install-npm-mac-amd
+            - checkout-mac-amd
+      - install-packages-mac-amd:
+          requires:
+            - restore-cache-mac-amd
+            - github-login-mac-amd
+      - publish-electron-app-mac-amd:
+          requires:
+            - install-packages-mac-amd
+      - sign-electron-app-mac-amd:
+          requires:
+            - install-castlabs-module-mac-amd
+            - publish-electron-app-mac-amd
+      - create-dmg-mac-amd:
+          requires:
+            - sign-electron-app-mac-amd
+      - publish-dmg-mac-amd:
+          requires:
+            - create-dmg-mac-amd

@@ -177,8 +177,7 @@ jobs:
           command: |
             export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
             export MACOS_APP_PATH=${KENKU_FM_MAC_X64_PATH}
-            export TAG=<< pipeline.git.tag >>
-            ./publish/script-macos.sh ${MACOS_APP_PATH}/Kenku\ FM.dmg $GITHUB_TOKEN $TAG Kenku.FM-$TAG-x64.dmg
+            ./publish/script-macos.sh ${MACOS_APP_PATH}/Kenku\ FM.dmg $GITHUB_TOKEN $CIRCLE_TAG Kenku.FM-$TAG-x64.dmg
 
 workflows:
   version: 2

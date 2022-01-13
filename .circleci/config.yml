@@ -35,7 +35,7 @@ jobs:
           name: Publish
           command: |
             export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
-            yarn run publish:linux-amd
+            yarn run publish
 
   build-win:
     executor:

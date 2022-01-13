@@ -4,40 +4,6 @@ orbs:
   win: circleci/windows@2.3.0
 
 jobs:
-  build-linux-arm:
-    machine:
-      image: ubuntu-2004:202101-01
-    resource_class: arm.medium
-    working_directory: ~/repo
-    steps:
-      - checkout
-      - node/install:
-          install-yarn: true
-          node-version: "16.13.2"
-      - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
-      - run:
-          name: Login to Github Packages
-          command: |
-            npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
-      - run:
-          name: Install Dependencies
-          command: yarn install --non-interactive --frozen-lockfile
-      - run:
-          name: Install dpkg and fakeroot
-          command: |
-            sudo apt-get update -y
-            sudo apt-get install -y dpkg fakeroot rpm
-      - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
-      - run:
-          name: Publish
-          command: |
-            export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
-            yarn run publish
-
   build-linux-amd:
     machine:
       image: ubuntu-2004:202111-02
@@ -177,12 +143,6 @@ workflows:
   version: 2
   deploy:
     jobs:
-      - build-linux-arm:
-          filters:
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
-            branches:
-              ignore: /.*/
       - build-linux-amd:
           filters:
             tags:

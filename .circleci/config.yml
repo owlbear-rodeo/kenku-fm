@@ -107,32 +107,32 @@ jobs:
           name: OSX Signature
           command: |
             export DEVELOPER_ID=${APPLE_DEVELOPER_ID}
-            npx electron-osx-sign "./out/Kenku FM-darwin-x64/Kenku\ FM.app" --gatekeeper-access=false --identity=$DEVELOPER_ID --hardened-runtime=true --entitlements="entitlements.plist" --entitlements-inherit="entitlements.plist"
+            npx electron-osx-sign "./out/Kenku FM-darwin-x64/Kenku FM.app" --gatekeeper-access=false --identity=$DEVELOPER_ID --hardened-runtime=true --entitlements="entitlements.plist" --entitlements-inherit="entitlements.plist"
       - run:
           name: Zip App
           command: |
-            ditto -c -k --sequesterRsrc --keepParent "./out/Kenku FM-darwin-x64/Kenku\ FM.app" "./out/Kenku FM-darwin-x64/Kenku\ FM.zip"
+            ditto -c -k --sequesterRsrc --keepParent "./out/Kenku FM-darwin-x64/Kenku FM.app" "./out/Kenku FM-darwin-x64/Kenku FM.zip"
       - run:
           name: Notarize Zip file
           command: |
             export DEVELOPER_EMAIL=${APPLE_DEVELOPER_EMAIL}
             export DEVELOPER_PASSWORD=${APPLE_DEVELOPER_PASSWORD}
             export DEVELOPER_TEAM_ID=${APPLE_DEVELOPER_TEAM_ID}
-            xcrun notarytool submit "./out/Kenku FM-darwin-x64/Kenku\ FM.zip" --apple-id $DEVELOPER_EMAIL --password $DEVELOPER_PASSWORD --team-id $DEVELOPER_TEAM_ID --wait --output-format json
+            xcrun notarytool submit "./out/Kenku FM-darwin-x64/Kenku FM.zip" --apple-id $DEVELOPER_EMAIL --password $DEVELOPER_PASSWORD --team-id $DEVELOPER_TEAM_ID --wait --output-format json
       - run:
           name: Staple
           command: |
-            xcrun stapler staple -v "./out/Kenku FM-darwin-x64/Kenku\ FM.app"
+            xcrun stapler staple -v "./out/Kenku FM-darwin-x64/Kenku FM.app"
       - run:
           name: Create DMG
           command: |
             
-            npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out=$MACOS_APP_PATH "./out/Kenku FM-darwin-x64/Kenku\ FM.app" Kenku\ FM
+            npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out=$MACOS_APP_PATH "./out/Kenku FM-darwin-x64/Kenku FM.app" Kenku\ FM
       - run:
           name: Publish DMG
           command: |
             export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
-            ./publish/script-macos.sh "./out/Kenku FM-darwin-x64/Kenku\ FM.dmg" $GITHUB_TOKEN $CIRCLE_TAG Kenku.FM-$TAG-x64.dmg
+            ./publish/script-macos.sh "./out/Kenku FM-darwin-x64/Kenku FM.dmg" $GITHUB_TOKEN $CIRCLE_TAG Kenku.FM-$TAG-x64.dmg
 
 workflows:
   version: 2

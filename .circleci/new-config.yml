@@ -1,0 +1,287 @@
+version: 2.1
+orbs:
+  node: circleci/node@4.9.0
+  win: circleci/windows@2.3.0
+
+executors:
+  linux-amd:
+    machine:
+      image: ubuntu-2004:202111-02
+
+  win:
+    executor:
+      name: win/default
+      size: "medium"
+
+  mac-amd:
+    macos:
+      xcode: 13.2.1
+
+commands:
+  install-npm:
+    - node/install:
+      install-yarn: true
+      node-version: "16.13.2"
+  
+  login-to-github-packages:
+    steps:
+      - run:
+          name: Login to Github Packages
+          command: |
+            npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
+  
+  install-dependencies:
+    steps:
+      - run:
+        name: Install Dependencies
+        command: yarn install --non-interactive --frozen-lockfile
+  
+  publish-electron-app:
+    steps:
+      - run:
+        name: Publish
+        command: |
+          export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
+          yarn run publish
+
+jobs:
+  install-npm-linux-amd:
+    executor: linux-amd
+    working_directory: ~/repo
+    steps:
+      - install-npm
+
+  restore-cache-linux-amd:
+    executor: linux-amd
+    working_directory: ~/repo
+    steps:
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+  
+  github-login-linux-amd:
+    executor: linux-amd
+    working_directory: ~/repo
+    steps: 
+      - login-to-github-packages
+
+  install-packages-linux-amd:
+    executor: linux-amd
+    working_directory: ~/repo
+    steps:
+      - install-dependencies
+
+  install-linux-packages:
+    executor: linux-amd
+    working_directory: ~/repo
+    steps:
+      - run:
+        name: Install dpkg and fakeroot
+        command: |
+          sudo apt-get update -y
+          sudo apt-get install -y dpkg fakeroot rpm
+
+  save-cache-linux-amd:
+    executor: linux-amd
+    working_directory: ~/repo
+    steps:
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+
+  publish-electron-app-linux-amd:
+    executor: linux-amd
+    working_directory: ~/repo
+    steps:
+      - publish-electron-app
+
+  checkout-linux-amd:
+    executor: linux-amd
+    steps:
+      - checkout
+
+  checkout-win:
+    executor: win
+    steps:
+      - checkout
+
+  install-npm-win:
+    executor: win
+    working_directory: ~/repo
+    steps:
+      - install-npm
+
+  restore-cache-win:
+    executor: win
+    working_directory: ~/repo
+    steps:
+      - restore_cache:
+          key: dependency-cache-win-{{ checksum "package.json" }}
+
+  github-login-win:
+    executor: win
+    working_directory: ~/repo
+    steps:
+      - login-to-github-packages
+
+  install-packages-win:
+    executor: win
+    working_directory: ~/repo
+    steps:
+      - install-dependencies
+
+  save-cache-win:
+    executor: win
+    working_directory: ~/repo
+    steps:
+      - save_cache:
+          key: dependency-cache-win-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+
+  publish-electron-app-win:
+    executor: win
+    working_directory: ~/repo
+    steps:
+      - publish-electron-app
+
+
+  checkout-mac-amd:
+    executor: win
+    steps: mac-amd
+      - checkout
+
+  install-npm-mac-amd:
+    executor: mac-amd
+    working_directory: ~/repo
+    steps:
+      - install-npm
+
+  restore-cache-mac-amd:
+    executor: mac-amd
+    working_directory: ~/repo
+    steps:
+      - restore_cache:
+          key: dependency-cache-macos-{{ checksum "package.json" }}
+
+  github-login-mac-amd:
+    executor: mac-amd
+    working_directory: ~/repo
+    steps:
+      - login-to-github-packages
+
+  install-packages-mac-amd:
+    executor: mac-amd
+    working_directory: ~/repo
+    steps:
+      - install-dependencies
+
+  save-cache-mac-amd:
+    executor: mac-amd
+    working_directory: ~/repo
+    steps:
+      - save_cache:
+          key: dependency-cache-macos-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+
+  publish-electron-app-mac-amd:
+    executor: mac-amd
+    working_directory: ~/repo
+    steps:
+      
+
+  build-mac-amd:
+    macos:
+      xcode: 13.2.1
+    steps:
+      - checkout
+      - node/install:
+          install-yarn: true
+          node-version: "16.13.2"
+      - restore_cache:
+          key: dependency-cache-macos-{{ checksum "package.json" }}
+      - run:
+          name: Login to Github Packages
+          command: |
+            npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
+      - run:
+          name: Install Dependencies
+          command: yarn install --non-interactive --frozen-lockfile
+      - save_cache:
+          key: dependency-cache-macos-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: Make Package
+          command: |
+            export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
+            yarn run make
+      - run:
+          name: Install Widevine Python Module
+          command: python3 -m pip install --upgrade castlabs-evs
+      - run:
+          name: Widevine Signature
+          command: |
+            export MACOS_APP_PATH=${KENKU_FM_MAC_X64_PATH}
+            export ACCOUNT_NAME=${CASTLABS_ACCOUNT_NAME}
+            export ACCOUNT_PASSWORD=${CASTLABS_ACCOUNT_PASSWORD}
+            python3 -m castlabs_evs.account -n reauth -A $ACCOUNT_NAME -P $ACCOUNT_PASSWORD
+            python3 -m castlabs_evs.vmp sign-pkg $MACOS_APP_PATH
+      - run:
+          name: OSX Signature
+          command: |
+            export MACOS_APP_PATH=${KENKU_FM_MAC_X64_PATH}/
+            npx electron-osx-sign ${MACOS_APP_PATH} --gatekeeper-access=false --identity="Developer ID Application: Mitchell McCaffrey: (${APPLE_DEVELOPER_TEAM_ID})" --hardened-runtime=true --entitlements="entitlements.plist" --entitlements-inherit="entitlements.plist"
+      - run:
+          name: Zip App
+          command: |
+            export MACOS_APP_PATH=${KENKU_FM_MAC_X64_PATH}
+            ditto -c -k --sequesterRsrc --keepParent ${MACOS_APP_PATH}/Kenku\ FM.app ${MACOS_APP_PATH}/Kenku\ FM.zip
+      - run:
+          name: Notarize Zip file
+          command: |
+            export MACOS_APP_PATH=${KENKU_FM_MAC_X64_PATH}
+            export DEVELOPER_EMAIL=${APPLE_DEVELOPER_EMAIL}
+            export DEVELOPER_PASSWORD=${APPLE_DEVELOPER_PASSWORD}
+            export DEVELOPER_TEAM_ID=${APPLE_DEVELOPER_TEAM_ID}
+            xcrun notarytool submit ${MACOS_APP_PATH}/Kenku\ FM.zip --apple-id $DEVELOPER_EMAIL --password $DEVELOPER_PASSWORD --team-id $DEVELOPER_TEAM_ID --wait --output-format json
+      - run:
+          name: Staple
+          command: |
+            export MACOS_APP_PATH=${KENKU_FM_MAC_X64_PATH}
+            xcrun stapler staple -v ${MACOS_APP_PATH}/Kenku\ FM.app
+      - run:
+          name: Create DMG
+          command: |
+            export MACOS_APP_PATH=${KENKU_FM_MAC_X64_PATH}
+            npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out=$MACOS_APP_PATH ${MACOS_APP_PATH}/Kenku\ FM.app Kenku\ FM
+      - run:
+          name: Publish DMG
+          command: |
+            export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
+            export MACOS_APP_PATH=${KENKU_FM_MAC_X64_PATH}
+            ./publish/script-macos.sh ${MACOS_APP_PATH}/Kenku\ FM.dmg $GITHUB_TOKEN $CIRCLE_TAG Kenku.FM-$TAG-x64.dmg
+
+workflows:
+  version: 2
+  deploy:
+    jobs:
+      - build-linux-amd:
+          filters:
+            tags:
+              ignore: /^v[0-9]+(\.[0-9]+)*$/
+            branches:
+              ignore: /.*/
+      - build-win:
+          filters:
+            tags:
+              ignore: /^v[0-9]+(\.[0-9]+)*$/
+            branches:
+              ignore: /.*/
+      - build-mac-amd:
+          filters:
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*$/
+            branches:
+              ignore: /.*/

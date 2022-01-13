@@ -146,13 +146,13 @@ workflows:
       - build-linux-amd:
           filters:
             tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+              ignore: /^v[0-9]+(\.[0-9]+)*$/
             branches:
               ignore: /.*/
       - build-win:
           filters:
             tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+              ignore: /^v[0-9]+(\.[0-9]+)*$/
             branches:
               ignore: /.*/
       - build-mac-amd:

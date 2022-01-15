@@ -81,6 +81,12 @@ jobs:
           command: npm install -g corepack
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
+      - run:
+          command: |
+            echo "registry=https://registry.npmjs.org/" > ./.npmrc
+            echo "@owlbear-rodeo:registry=https://npm.pkg.github.com/" >> ./.npmrc
+            echo "//npm.pkg.github.com/:_authToken=:_authToken=${GITHUB_PACKAGE_TOKEN}" >> ./.npmrc
+            echo "always-auth=true" >> ./.npmrc
       - install-dependencies
       - save_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}

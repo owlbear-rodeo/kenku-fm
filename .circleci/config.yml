@@ -24,7 +24,7 @@ commands:
       - run:
           name: Login to Github Packages
           command: |
-            npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
+            npm set //npm.pkg.github.com/owlbear-rodeo/:_authToken=${GITHUB_PACKAGE_TOKEN}
   
   install-dependencies:
     steps:

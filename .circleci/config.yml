@@ -19,29 +19,17 @@ commands:
           install-yarn: true
           node-version: "16.13.2"
   
-  login-to-github-packages:
-    steps:
-      - run:
-          name: Login to Github Packages
-          command: |
-            yarn config set @owlbear-rodeo:registry https://npm.pkg.github.com/
-            npm config set //npm.pkg.github.com:_authToken=$GITHUB_PACKAGE_TOKEN
-  
   install-dependencies:
     steps:
       - run:
           name: Install Dependencies
-          command: |
-            yarn -v
-            yarn install --non-interactive --frozen-lockfile
+          command: yarn install --non-interactive --frozen-lockfile
   
   publish-electron-app:
     steps:
       - run:
           name: Publish
-          command: |
-            export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
-            yarn run publish
+          command: yarn run publish
 
 jobs:
   publish-electron-app-linux-amd:
@@ -55,7 +43,6 @@ jobs:
             sudo apt-get update -y
             sudo apt-get install -y dpkg fakeroot rpm
       - checkout
-      - login-to-github-packages
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - install-dependencies
@@ -79,13 +66,11 @@ jobs:
             nvm alias default 16.13.2
             echo 'nvm use default &>/dev/null' >> $BASH_ENV
       - run:
+          name: Install Yarn
           command: npm install -g yarn
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
-      - run:
-          name: Install Dependencies
-          shell: bash.exe
-          command: yarn install --non-interactive --frozen-lockfile
+      - install-dependencies
       - save_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
           paths:
@@ -100,7 +85,6 @@ jobs:
     steps:
       - install-npm
       - checkout
-      - login-to-github-packages
       - restore_cache:
           key: dependency-cache-macos-{{ checksum "package.json" }}
       - install-dependencies
@@ -110,9 +94,7 @@ jobs:
             - ./node_modules
       - run:
           name: Make Package
-          command: |
-            export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
-            yarn run make
+          command: yarn run make
       - run:
           name: Install Widevine Python Module
           command: python3 -m pip install --upgrade castlabs-evs
@@ -151,9 +133,7 @@ jobs:
             npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out="$KENKU_FM_MAC_X64_PATH"/ "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app Kenku\ FM
       - run:
           name: Publish DMG
-          command: |
-            export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
-            ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $CIRCLE_TAG Kenku.FM-$CIRCLE_TAG-x64.dmg
+          command: ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $CIRCLE_TAG Kenku.FM-$CIRCLE_TAG-x64.dmg
 
 workflows:
   version: 2

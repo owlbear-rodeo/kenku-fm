@@ -161,14 +161,10 @@ workflows:
   deploy-win:
     jobs:
       - publish-electron-app-win:
-          requires:
-            - install-npm-win
           filters: 
             <<: *tag
   deploy-mac-amd:
     jobs:
       - publish-electron-app-mac-amd:
-          requires:
-            - install-npm-mac-amd
           filters: 
             <<: *tag

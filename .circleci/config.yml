@@ -73,10 +73,13 @@ jobs:
           name: Install Node
           command: |
             nvm install 16.13.2
-            nvm alias default 16.13.2
             npm install -g yarn
       - checkout
-      - login-to-github-packages
+      - run:
+          name: Login to Github Packages
+          command: |
+            nvm use 16.13.2
+            npm set //npm.pkg.github.com/:_authToken=${GITHUB_REPO_TOKEN}
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
       - install-dependencies

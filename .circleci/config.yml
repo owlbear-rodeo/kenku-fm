@@ -368,11 +368,12 @@ workflows:
             <<: *tag
       - publish-electron-app-mac-amd:
           requires:
+            - install-castlabs-module-mac-amd
             - install-packages-mac-amd
+          filters: 
+            <<: *tag
       - sign-electron-app-mac-amd:
           requires:
-            - add-apple-developer-keychain
-            - install-castlabs-module-mac-amd
             - publish-electron-app-mac-amd
           filters: 
             <<: *tag

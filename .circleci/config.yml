@@ -23,7 +23,7 @@ commands:
     steps:
       - run:
           name: Login to Github Packages
-          command: npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
+          command: npm config set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
   
   install-dependencies:
     steps:
@@ -76,7 +76,8 @@ jobs:
             echo 'nvm use default &>/dev/null' >> $BASH_ENV
       - run:
           command: |
-            echo "//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}" > ~/.npmrc
+            echo "registry=//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}" > ~/.npmrc
+            echo "//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}" >> ~/.npmrc
             npm install -g corepack
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}

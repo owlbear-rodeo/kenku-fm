@@ -88,7 +88,7 @@ jobs:
             NPM_TOKEN: $GITHUB_PACKAGE_TOKEN
           command: |
             echo 'export TAG="$CIRCLE_TAG"' >> $BASH_ENV
-            Write-Host "printing tag $TAG"
+            Write-Host "printing tag $env:TAG"
             yarn config set @owlbear-rodeo:registry https://npm.pkg.github.com/
             npm config set //npm.pkg.github.com:_authToken=$env:NPM_TOKEN
             yarn install --non-interactive --frozen-lockfile

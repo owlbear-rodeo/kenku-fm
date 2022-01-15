@@ -47,25 +47,6 @@ jobs:
     steps:
       - install-npm
 
-  restore-cache-linux-amd:
-    executor: linux-amd
-    working_directory: ~/repo
-    steps:
-      - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
-  
-  github-login-linux-amd:
-    executor: linux-amd
-    working_directory: ~/repo
-    steps: 
-      - login-to-github-packages
-
-  install-packages-linux-amd:
-    executor: linux-amd
-    working_directory: ~/repo
-    steps:
-      - install-dependencies
-
   install-linux-packages:
     executor: linux-amd
     working_directory: ~/repo
@@ -76,32 +57,20 @@ jobs:
             sudo apt-get update -y
             sudo apt-get install -y dpkg fakeroot rpm
 
-  save-cache-linux-amd:
-    executor: linux-amd
-    working_directory: ~/repo
-    steps:
-      - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
-
   publish-electron-app-linux-amd:
     executor: linux-amd
     working_directory: ~/repo
     steps:
+      - checkout
+      - login-to-github-packages
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - install-dependencies
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
       - publish-electron-app
-
-  checkout-linux-amd:
-    executor: linux-amd
-    steps:
-      - checkout
-
-  checkout-win:
-    executor:
-      name: win/default
-      size: "medium"
-    steps:
-      - checkout
 
   install-npm-win:
     executor:
@@ -111,58 +80,22 @@ jobs:
     steps:
       - install-npm
 
-  restore-cache-win:
-    executor:
-      name: win/default
-      size: "medium"
-    working_directory: ~/repo
-    steps:
-      - restore_cache:
-          key: dependency-cache-win-{{ checksum "package.json" }}
-
-  github-login-win:
-    executor:
-      name: win/default
-      size: "medium"
-    working_directory: ~/repo
-    steps:
-      - login-to-github-packages
-
-  install-packages-win:
-    executor:
-      name: win/default
-      size: "medium"
-    working_directory: ~/repo
-    steps:
-      - install-dependencies
-
-  save-cache-win:
-    executor:
-      name: win/default
-      size: "medium"
-    working_directory: ~/repo
-    steps:
-      - save_cache:
-          key: dependency-cache-win-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
-
   publish-electron-app-win:
     executor:
       name: win/default
       size: "medium"
     working_directory: ~/repo
     steps:
-      - publish-electron-app
-
-  checkout-mac-amd:
-    executor: mac-amd
-    steps:
       - checkout
-      - persist_to_workspace:
-            root: .
-            paths:
-                - .
+      - login-to-github-packages
+      - restore_cache:
+          key: dependency-cache-win-{{ checksum "package.json" }}
+      - install-dependencies
+      - save_cache:
+          key: dependency-cache-win-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - publish-electron-app
 
   install-npm-mac-amd:
     executor: mac-amd
@@ -170,12 +103,13 @@ jobs:
     steps:
       - install-npm
 
-  install-packages-mac-amd:
+  publish-electron-app-mac-amd:
     executor: mac-amd
     working_directory: ~/repo
+    environment:
+      KENKU_FM_MAC_X64_PATH: "./out/Kenku\ FM-darwin-x64"
     steps:
-      - attach_workspace:
-          at: .
+      - checkout
       - login-to-github-packages
       - restore_cache:
           key: dependency-cache-macos-{{ checksum "package.json" }}
@@ -184,43 +118,14 @@ jobs:
           key: dependency-cache-macos-{{ checksum "package.json" }}
           paths:
             - ./node_modules
-      - persist_to_workspace:
-            root: .
-            paths:
-                - .
-
-  publish-electron-app-mac-amd:
-    executor: mac-amd
-    working_directory: ~/repo
-    steps:
-      - attach_workspace:
-          at: .
       - run:
           name: Make Package
           command: |
             export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
             yarn run make
-      - persist_to_workspace:
-            root: .
-            paths:
-                - ./out/*
-
-  install-castlabs-module-mac-amd:
-    executor: mac-amd
-    working_directory: ~/repo
-    steps:
       - run:
           name: Install Widevine Python Module
           command: python3 -m pip install --upgrade castlabs-evs
-
-  sign-electron-app-mac-amd:
-    executor: mac-amd
-    working_directory: ~/repo
-    environment:
-      KENKU_FM_MAC_X64_PATH: "./out/Kenku\ FM-darwin-x64"
-    steps:
-      - attach_workspace:
-          at: .
       - run:
           name: Widevine Signature
           command: |
@@ -250,146 +155,56 @@ jobs:
       - run:
           name: Staple
           command: xcrun stapler staple -v "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app
-      - persist_to_workspace:
-            root: .
-            paths:
-                - ./out/*
-
-  create-dmg-mac-amd:
-    executor: mac-amd
-    working_directory: ~/repo
-    environment:
-      KENKU_FM_MAC_X64_PATH: "./out/Kenku\ FM-darwin-x64"
-    steps: 
       - run:
           name: Create DMG
           command: |
             npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out="$KENKU_FM_MAC_X64_PATH"/ "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app Kenku\ FM
-      - persist_to_workspace:
-            root: .
-            paths:
-                - ./out/*
-
-  publish-dmg-mac-amd:
-    executor: mac-amd
-    working_directory: ~/repo
-    environment:
-      KENKU_FM_MAC_X64_PATH: "./out/Kenku\ FM-darwin-x64"
-    steps:
       - run:
           name: Publish DMG
           command: |
             export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
             ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $CIRCLE_TAG Kenku.FM-$CIRCLE_TAG-x64.dmg
-      - persist_to_workspace:
-            root: .
-            paths:
-                - ./out/*
 
 workflows:
   version: 2
   deploy-linux-amd:
     jobs:
-      - install-npm-linux-amd:
-          filters:
+      - install-npm-linux-amd: 
+          filters: &tag-linux
             tags:
               ignore: /^v[0-9]+(\.[0-9]+)*$/
             branches:
               ignore: /.*/
       - install-linux-packages:
           filters:
-            tags:
-              ignore: /^v[0-9]+(\.[0-9]+)*$/
-            branches:
-              ignore: /.*/
-      - checkout-linux-amd:
-          filters:
-            tags:
-              ignore: /^v[0-9]+(\.[0-9]+)*$/
-            branches:
-              ignore: /.*/
-      - github-login-linux-amd:
-          requires:
-            - install-npm-linux-amd
-      - restore-cache-linux-amd:
-          requires:
-            - install-npm-linux-amd
-            - checkout-linux-amd
-      - install-packages-linux-amd:
-          requires:
-            - restore-cache-linux-amd
-            - github-login-linux-amd
+            <<: *tag-linux
       - publish-electron-app-linux-amd:
           requires:
             - install-linux-packages
-            - install-packages-linux-amd
-
+            - install-npm-linux-amd
   deploy-win:
     jobs:
       - install-npm-win:
-          filters:
+          filters: &tag-win
             tags:
               ignore: /^v[0-9]+(\.[0-9]+)*$/
             branches:
               ignore: /.*/
-      - checkout-win:
-          filters:
-            tags:
-              ignore: /^v[0-9]+(\.[0-9]+)*$/
-            branches:
-              ignore: /.*/
-      - github-login-win:
-          requires:
-            - install-npm-win
-      - restore-cache-win:
-          requires:
-            - install-npm-win
-            - checkout-win
-      - install-packages-win:
-          requires:
-            - restore-cache-win
-            - github-login-win
       - publish-electron-app-win:
           requires:
-            - install-packages-win
+            - install-npm-win
+          filters: 
+            <<: *tag-win
   deploy-mac-amd:
     jobs:
       - install-npm-mac-amd:
-          filters: &tag
+          filters: &tag-mac
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
             branches:
               ignore: /.*/
-      - checkout-mac-amd:
-          filters: 
-            <<: *tag
-      - install-castlabs-module-mac-amd:
-          filters: 
-            <<: *tag
-      - install-packages-mac-amd:
-          requires:
-            - checkout-mac-amd
-            - install-npm-mac-amd
-          filters: 
-            <<: *tag
       - publish-electron-app-mac-amd:
           requires:
-            - install-castlabs-module-mac-amd
-            - install-packages-mac-amd
+            - install-npm-mac-amd
           filters: 
-            <<: *tag
-      - sign-electron-app-mac-amd:
-          requires:
-            - publish-electron-app-mac-amd
-          filters: 
-            <<: *tag
-      - create-dmg-mac-amd:
-          requires:
-            - sign-electron-app-mac-amd
-          filters: 
-            <<: *tag
-      - publish-dmg-mac-amd:
-          requires:
-            - create-dmg-mac-amd
-          filters: 
-            <<: *tag
+            <<: *tag-mac

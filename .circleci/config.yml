@@ -25,10 +25,8 @@ commands:
           name: Login to Github Packages
           command: |
             yarn config set always-auth true
-            yarn config set @owlbear-rodeo:registry=https://npm.pkg.github.com:_authToken=$NPM_TOKEN
-            npm config set @owlbear-rodeo:registry=https://npm.pkg.github.com:_authToken=$NPM_TOKEN
-          environment:
-            NPM_TOKEN: ${GITHUB_PACKAGE_TOKEN}
+            yarn config set @owlbear-rodeo:registry=https://npm.pkg.github.com:_authToken=$GITHUB_PACKAGE_TOKEN
+            npm config set @owlbear-rodeo:registry=https://npm.pkg.github.com:_authToken=$GITHUB_PACKAGE_TOKEN
   
   install-dependencies:
     steps:
@@ -86,7 +84,10 @@ jobs:
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
       - login-to-github-packages
-      - install-dependencies
+      - run:
+          command: |
+            $env:NPM_TOKEN = "$GITHUB_PACKAGE_TOKEN"
+            yarn install --non-interactive --frozen-lockfile
       - save_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
           paths:

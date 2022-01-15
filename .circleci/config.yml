@@ -41,16 +41,11 @@ commands:
             yarn run publish
 
 jobs:
-  install-npm-linux-amd:
-    executor: linux-amd
-    working_directory: ~/repo
-    steps:
-      - install-npm
-
   publish-electron-app-linux-amd:
     executor: linux-amd
     working_directory: ~/repo
     steps:
+      - install-npm
       - run:
           name: Install dpkg and fakeroot
           command: |
@@ -67,20 +62,18 @@ jobs:
             - ./node_modules
       - publish-electron-app
 
-  install-npm-win:
-    executor:
-      name: win/default
-      size: "medium"
-    working_directory: ~/repo
-    steps:
-      - install-npm
-
   publish-electron-app-win:
     executor:
       name: win/default
       size: "medium"
     working_directory: ~/repo
     steps:
+      - run:
+          name: Install Node
+          command: |
+            nvm install 16.13.2
+            nvm alias default 16.13.2
+            npm install -g yarn
       - checkout
       - login-to-github-packages
       - restore_cache:
@@ -92,18 +85,13 @@ jobs:
             - ./node_modules
       - publish-electron-app
 
-  install-npm-mac-amd:
-    executor: mac-amd
-    working_directory: ~/repo
-    steps:
-      - install-npm
-
   publish-electron-app-mac-amd:
     executor: mac-amd
     working_directory: ~/repo
     environment:
       KENKU_FM_MAC_X64_PATH: "./out/Kenku\ FM-darwin-x64"
     steps:
+      - install-npm
       - checkout
       - login-to-github-packages
       - restore_cache:
@@ -164,22 +152,14 @@ workflows:
   version: 2
   deploy-linux-amd:
     jobs:
-      - install-npm-linux-amd: 
+      - publish-electron-app-linux-amd:
           filters: &tag
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
             branches:
               ignore: /.*/
-      - publish-electron-app-linux-amd:
-          requires:
-            - install-npm-linux-amd
-          filters:
-            <<: *tag
   deploy-win:
     jobs:
-      - install-npm-win:
-          filters:
-            <<: *tag
       - publish-electron-app-win:
           requires:
             - install-npm-win
@@ -187,9 +167,6 @@ workflows:
             <<: *tag
   deploy-mac-amd:
     jobs:
-      - install-npm-mac-amd:
-          filters: 
-            <<: *tag
       - publish-electron-app-mac-amd:
           requires:
             - install-npm-mac-amd

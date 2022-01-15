@@ -74,6 +74,7 @@ jobs:
             nvm use 16.13.2
             nvm alias default 16.13.2
             echo 'nvm use default &>/dev/null' >> $BASH_ENV
+            corepack enable
       - login-to-github-packages
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}

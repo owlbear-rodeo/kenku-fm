@@ -122,7 +122,7 @@ jobs:
       - run:
           name: Zip App
           command: |
-            ditto -c -k --sequesterRsrc --keepParent ./out/Kenku FM-darwin-x64/Kenku\ FM.app ./out/Kenku\ FM-darwin-x64/Kenku\ FM.zip
+            ditto -c -k --sequesterRsrc --keepParent ./out/Kenku\ FM-darwin-x64/Kenku\ FM.app ./out/Kenku\ FM-darwin-x64/Kenku\ FM.zip
       - run:
           name: Notarize Zip file
           no_output_timeout: 20m
@@ -139,7 +139,7 @@ jobs:
           name: Create DMG
           command: |
             
-            npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out=$MACOS_APP_PATH "./out/Kenku FM-darwin-x64/Kenku FM.app" Kenku\ FM
+            npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out=$MACOS_APP_PATH ./out/Kenku\ FM-darwin-x64/Kenku\ FM.app Kenku\ FM
       - run:
           name: Publish DMG
           command: |

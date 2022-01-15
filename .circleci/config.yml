@@ -125,7 +125,7 @@ jobs:
             ditto -c -k --sequesterRsrc --keepParent ./out/Kenku\ FM-darwin-x64/Kenku\ FM.app ./out/Kenku\ FM-darwin-x64/Kenku\ FM.zip
       - run:
           name: Notarize Zip file
-          no_output_timeout: 20m
+          no_output_timeout: 10m
           command: |
             export DEVELOPER_EMAIL=${APPLE_DEVELOPER_EMAIL}
             export DEVELOPER_PASSWORD=${APPLE_DEVELOPER_PASSWORD}

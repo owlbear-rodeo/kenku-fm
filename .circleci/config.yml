@@ -73,13 +73,15 @@ jobs:
       - run:
           name: Login to Github Packages
           command: |
-            nvm install 16.13.2
-            npm install -g yarn
-            nvm use 16.13.2
             npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
-      - install-dependencies
+      - run:
+          command: |
+            nvm install 16.13.2
+            npm install -g yarn
+            nvm use 16.13.2
+            yarn install --non-interactive --frozen-lockfile
       - save_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
           paths:

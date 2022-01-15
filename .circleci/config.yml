@@ -159,6 +159,10 @@ jobs:
     executor: mac-amd
     steps:
       - checkout
+      - persist_to_workspace:
+            root: .
+            paths:
+                - .
 
   install-npm-mac-amd:
     executor: mac-amd
@@ -166,33 +170,22 @@ jobs:
     steps:
       - install-npm
 
-  restore-cache-mac-amd:
-    executor: mac-amd
-    working_directory: ~/repo
-    steps:
-      - restore_cache:
-          key: dependency-cache-macos-{{ checksum "package.json" }}
-
-  github-login-mac-amd:
-    executor: mac-amd
-    working_directory: ~/repo
-    steps:
-      - login-to-github-packages
-
   install-packages-mac-amd:
     executor: mac-amd
     working_directory: ~/repo
     steps:
+      - login-to-github-packages
+      - restore_cache:
+          key: dependency-cache-macos-{{ checksum "package.json" }}
       - install-dependencies
-
-  save-cache-mac-amd:
-    executor: mac-amd
-    working_directory: ~/repo
-    steps:
       - save_cache:
           key: dependency-cache-macos-{{ checksum "package.json" }}
           paths:
             - ./node_modules
+      - persist_to_workspace:
+            root: .
+            paths:
+                - .
 
   publish-electron-app-mac-amd:
     executor: mac-amd
@@ -203,6 +196,10 @@ jobs:
           command: |
             export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
             yarn run make
+      - persist_to_workspace:
+            root: .
+            paths:
+                - ./out/*
 
   install-castlabs-module-mac-amd:
     executor: mac-amd
@@ -211,22 +208,6 @@ jobs:
       - run:
           name: Install Widevine Python Module
           command: python3 -m pip install --upgrade castlabs-evs
-
-  add-apple-developer-keychain:
-    executor: mac-amd
-    working_directory: ~/repo
-    steps:
-      - run:
-          name: Import Apple Security Keychain
-          command: |
-            export CERTIFICATE_P12=certificate.p12;
-            echo "${CERT_OSX_P12}"| base64 --decode -o $CERTIFICATE_P12;
-            export KEYCHAIN=kenku-fm.keychain;
-            security create-keychain -p "${APPLE_KEYCHAIN_PASSWORD}" "$KEYCHAIN";
-            security default-keychain -s "$KEYCHAIN";
-            security unlock-keychain -p "${APPLE_KEYCHAIN_PASSWORD}" "$KEYCHAIN";
-            security import "$CERTIFICATE_P12" -k "$KEYCHAIN" -P "${CERT_PASSWORD}" -A
-            security set-key-partition-list -S apple-tool:,apple: -s -k "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN"
 
   sign-electron-app-mac-amd:
     executor: mac-amd
@@ -240,6 +221,17 @@ jobs:
             python3 -m castlabs_evs.account -n reauth -A "$CASTLABS_ACCOUNT_NAME" -P "$CASTLABS_ACCOUNT_PASSWORD"
             python3 -m castlabs_evs.vmp sign-pkg "$KENKU_FM_MAC_X64_PATH"
       - run:
+          name: Import Apple Security Keychain
+          command: |
+            export CERTIFICATE_P12=certificate.p12;
+            echo "${CERT_OSX_P12}"| base64 --decode -o $CERTIFICATE_P12;
+            export KEYCHAIN=kenku-fm.keychain;
+            security create-keychain -p "${APPLE_KEYCHAIN_PASSWORD}" "$KEYCHAIN";
+            security default-keychain -s "$KEYCHAIN";
+            security unlock-keychain -p "${APPLE_KEYCHAIN_PASSWORD}" "$KEYCHAIN";
+            security import "$CERTIFICATE_P12" -k "$KEYCHAIN" -P "${CERT_PASSWORD}" -A
+            security set-key-partition-list -S apple-tool:,apple: -s -k "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN"
+      - run:
           name: OSX Signature
           command: |
             npx electron-osx-sign "$KENKU_FM_MAC_X64_PATH"/ --gatekeeper-assess=false --identity="Developer ID Application: Mitchell McCaffrey: (${APPLE_DEVELOPER_TEAM_ID})" --hardened-runtime=true --entitlements="entitlements.plist" --entitlements-inherit="entitlements.plist"
@@ -252,6 +244,10 @@ jobs:
       - run:
           name: Staple
           command: xcrun stapler staple -v "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app
+      - persist_to_workspace:
+            root: .
+            paths:
+                - ./out/*
 
   create-dmg-mac-amd:
     executor: mac-amd
@@ -263,6 +259,10 @@ jobs:
           name: Create DMG
           command: |
             npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out="$KENKU_FM_MAC_X64_PATH"/ "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app Kenku\ FM
+      - persist_to_workspace:
+            root: .
+            paths:
+                - ./out/*
 
   publish-dmg-mac-amd:
     executor: mac-amd
@@ -275,6 +275,10 @@ jobs:
           command: |
             export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
             ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $CIRCLE_TAG Kenku.FM-$CIRCLE_TAG-x64.dmg
+      - persist_to_workspace:
+            root: .
+            paths:
+                - ./out/*
 
 workflows:
   version: 2
@@ -344,22 +348,24 @@ workflows:
             - install-packages-win
   deploy-mac-amd:
     jobs:
-      - install-npm-mac-amd
-      - checkout-mac-amd
-      - install-castlabs-module-mac-amd
-      - add-apple-developer-keychain
-      - github-login-mac-amd:
-          requires:
-            - install-npm-mac-amd
-      - restore-cache-mac-amd:
-          requires:
-            - install-npm-mac-amd
-            - checkout-mac-amd
+      - install-npm-mac-amd:
+          filters: &tag
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*$/
+            branches:
+              ignore: /.*/
+      - checkout-mac-amd:
+          filters: 
+            <<: *tag
+      - install-castlabs-module-mac-amd:
+          filters: 
+            <<: *tag
       - install-packages-mac-amd:
           requires:
-            - restore-cache-mac-amd
-            - github-login-mac-amd
-          
+            - checkout-mac-amd
+            - install-npm-mac-amd
+          filters: 
+            <<: *tag
       - publish-electron-app-mac-amd:
           requires:
             - install-packages-mac-amd
@@ -368,14 +374,15 @@ workflows:
             - add-apple-developer-keychain
             - install-castlabs-module-mac-amd
             - publish-electron-app-mac-amd
+          filters: 
+            <<: *tag
       - create-dmg-mac-amd:
           requires:
             - sign-electron-app-mac-amd
+          filters: 
+            <<: *tag
       - publish-dmg-mac-amd:
           requires:
             - create-dmg-mac-amd
-          filters:
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
-            branches:
-              ignore: /.*/
+          filters: 
+            <<: *tag

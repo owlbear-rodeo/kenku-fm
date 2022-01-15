@@ -344,52 +344,44 @@ workflows:
             - install-packages-win
   deploy-mac-amd:
     jobs:
-      - install-npm-mac-amd:
-          filters:
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
-            branches:
-              ignore: /.*/
-      - checkout-mac-amd:
-          filters:
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
-            branches:
-              ignore: /.*/
-      - install-castlabs-module-mac-amd:
-          filters:
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
-            branches:
-              ignore: /.*/
-      - add-apple-developer-keychain:
-          filters:
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
-            branches:
-              ignore: /.*/
+      - install-npm-mac-amd
+      - checkout-mac-amd
+      - install-castlabs-module-mac-amd
+      - add-apple-developer-keychain
       - github-login-mac-amd:
           requires:
             - install-npm-mac-amd
+          context: mac-global
       - restore-cache-mac-amd:
           requires:
             - install-npm-mac-amd
             - checkout-mac-amd
+          context: mac-global
       - install-packages-mac-amd:
           requires:
             - restore-cache-mac-amd
             - github-login-mac-amd
+          context: mac-global
       - publish-electron-app-mac-amd:
           requires:
             - install-packages-mac-amd
+          context: mac-global
       - sign-electron-app-mac-amd:
           requires:
             - add-apple-developer-keychain
             - install-castlabs-module-mac-amd
             - publish-electron-app-mac-amd
+          context: mac-global
       - create-dmg-mac-amd:
           requires:
             - sign-electron-app-mac-amd
+          context: mac-global
       - publish-dmg-mac-amd:
           requires:
             - create-dmg-mac-amd
+          context: mac-global
+          filters:
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*$/
+            branches:
+              ignore: /.*/

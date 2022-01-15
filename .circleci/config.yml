@@ -138,8 +138,7 @@ jobs:
       - run:
           name: Create DMG
           command: |
-            
-            npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out=$MACOS_APP_PATH ./out/Kenku\ FM-darwin-x64/Kenku\ FM.app Kenku\ FM
+            npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out=./out/Kenku\ FM-darwin-x64/ ./out/Kenku\ FM-darwin-x64/Kenku\ FM.app Kenku\ FM
       - run:
           name: Publish DMG
           command: |

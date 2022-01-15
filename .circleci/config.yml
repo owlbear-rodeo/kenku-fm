@@ -71,9 +71,9 @@ jobs:
       - run:
           command: |
             nvm install 16.13.2
-            npm install -g yarn
             nvm use 16.13.2
             nvm alias default 16.13.2
+            echo 'nvm use default &>/dev/null' >> $BASH_ENV
       - login-to-github-packages
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}

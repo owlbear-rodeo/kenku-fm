@@ -202,6 +202,22 @@ jobs:
           name: Install Widevine Python Module
           command: python3 -m pip install --upgrade castlabs-evs
 
+  add-apple-developer-keychain:
+    executor: mac-amd
+    working_directory: ~/repo
+    steps:
+      - run:
+          name: Import Apple Security Keychain
+          command: |
+            export CERTIFICATE_P12=certificate.p12;
+            echo "${CERT_OSX_P12}"| base64 --decode -o $CERTIFICATE_P12;
+            export KEYCHAIN=kenku-fm.keychain;
+            security create-keychain -p "${APPLE_KEYCHAIN_PASSWORD}" "$KEYCHAIN";
+            security default-keychain -s "$KEYCHAIN";
+            security unlock-keychain -p "${APPLE_KEYCHAIN_PASSWORD}" "$KEYCHAIN";
+            security import "$CERTIFICATE_P12" -k "$KEYCHAIN" -P "${CERT_PASSWORD}" -A
+            security set-key-partition-list -S apple-tool:,apple: -s -k "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN"
+
   sign-electron-app-mac-amd:
     executor: mac-amd
     working_directory: ~/repo
@@ -211,26 +227,21 @@ jobs:
       - run:
           name: Widevine Signature
           command: |
-            export ACCOUNT_NAME=${CASTLABS_ACCOUNT_NAME}
-            export ACCOUNT_PASSWORD=${CASTLABS_ACCOUNT_PASSWORD}
-            python3 -m castlabs_evs.account -n reauth -A $ACCOUNT_NAME -P $ACCOUNT_PASSWORD
+            python3 -m castlabs_evs.account -n reauth -A "$CASTLABS_ACCOUNT_NAME" -P "$CASTLABS_ACCOUNT_PASSWORD"
             python3 -m castlabs_evs.vmp sign-pkg "$KENKU_FM_MAC_X64_PATH"
       - run:
           name: OSX Signature
           command: |
-            npx electron-osx-sign "$KENKU_FM_MAC_X64_PATH"/ --gatekeeper-access=false --identity="Developer ID Application: Mitchell McCaffrey: (${APPLE_DEVELOPER_TEAM_ID})" --hardened-runtime=true --entitlements="entitlements.plist" --entitlements-inherit="entitlements.plist"
+            npx electron-osx-sign "$KENKU_FM_MAC_X64_PATH"/ --gatekeeper-assess=false --identity="Developer ID Application: Mitchell McCaffrey: (${APPLE_DEVELOPER_TEAM_ID})" --hardened-runtime=true --entitlements="entitlements.plist" --entitlements-inherit="entitlements.plist"
       - run:
           name: Zip App
-          command: |
-            ditto -c -k --sequesterRsrc --keepParent "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.zip
+          command: ditto -c -k --sequesterRsrc --keepParent "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.zip
       - run:
           name: Notarize Zip file
-          command: |
-            xcrun notarytool submit "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.zip --apple-id "$APPLE_DEVELOPER_EMAIL" --password "$APPLE_DEVELOPER_PASSWORD" --team-id "$APPLE_DEVELOPER_TEAM_ID" --wait --output-format json
+          command: xcrun notarytool submit "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.zip --apple-id "$APPLE_DEVELOPER_EMAIL" --password "$APPLE_DEVELOPER_PASSWORD" --team-id "$APPLE_DEVELOPER_TEAM_ID" --wait --output-format json
       - run:
           name: Staple
-          command: |
-            xcrun stapler staple -v "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app
+          command: xcrun stapler staple -v "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app
 
   create-dmg-mac-amd:
     executor: mac-amd
@@ -241,7 +252,7 @@ jobs:
       - run:
           name: Create DMG
           command: |
-            npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out="$KENKU_FM_MAC_X64_PATH" "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app Kenku\ FM
+            npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out="$KENKU_FM_MAC_X64_PATH"/ "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app Kenku\ FM
 
   publish-dmg-mac-amd:
     executor: mac-amd
@@ -253,7 +264,7 @@ jobs:
           name: Publish DMG
           command: |
             export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
-            ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $CIRCLE_TAG Kenku.FM-$TAG-x64.dmg
+            ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $CIRCLE_TAG Kenku.FM-$CIRCLE_TAG-x64.dmg
 
 workflows:
   version: 2
@@ -326,19 +337,25 @@ workflows:
       - install-npm-mac-amd:
           filters:
             tags:
-              ignore: /^v[0-9]+(\.[0-9]+)*$/
+              only: /^v[0-9]+(\.[0-9]+)*$/
             branches:
               ignore: /.*/
       - checkout-mac-amd:
           filters:
             tags:
-              ignore: /^v[0-9]+(\.[0-9]+)*$/
+              only: /^v[0-9]+(\.[0-9]+)*$/
             branches:
               ignore: /.*/
       - install-castlabs-module-mac-amd:
           filters:
             tags:
-              ignore: /^v[0-9]+(\.[0-9]+)*$/
+              only: /^v[0-9]+(\.[0-9]+)*$/
+            branches:
+              ignore: /.*/
+      - add-apple-developer-keychain:
+          filters:
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*$/
             branches:
               ignore: /.*/
       - github-login-mac-amd:
@@ -357,6 +374,7 @@ workflows:
             - install-packages-mac-amd
       - sign-electron-app-mac-amd:
           requires:
+            - add-apple-developer-keychain
             - install-castlabs-module-mac-amd
             - publish-electron-app-mac-amd
       - create-dmg-mac-amd:

@@ -29,9 +29,9 @@ commands:
     steps:
       - run:
           name: Install Dependencies
-          command: |
-            export NPM_TOKEN="$GITHUB_PACKAGE_TOKEN"
-            yarn install --non-interactive --frozen-lockfile
+          command: yarn install --non-interactive --frozen-lockfile
+          environment:
+            NPM_TOKEN: ${GITHUB_PACKAGE_TOKEN}
   
   publish-electron-app:
     steps:
@@ -69,7 +69,6 @@ jobs:
       size: "medium"
     working_directory: ~/repo
     environment:
-      NPM_CONFIG_USERCONFIG: ~/repo/.npmrc
       NPM_TOKEN: "$GITHUB_PACKAGE_TOKEN"
     steps:
       - checkout

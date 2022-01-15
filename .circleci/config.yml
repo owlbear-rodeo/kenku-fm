@@ -143,7 +143,7 @@ jobs:
           name: Publish DMG
           command: |
             export GITHUB_TOKEN=${GITHUB_REPO_TOKEN}
-            ./publish/script-macos.sh ./out/Kenku\ FM-darwin-x64/Kenku\ FM.dmg $GITHUB_TOKEN $CIRCLE_TAG Kenku.FM-$TAG-x64.dmg
+            ./publish/script-macos.sh ./out/Kenku\ FM-darwin-x64/Kenku\ FM.dmg $GITHUB_TOKEN $CIRCLE_TAG Kenku.FM-$CIRCLE_TAG-x64.dmg
 
 workflows:
   version: 2

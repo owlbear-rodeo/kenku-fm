@@ -170,14 +170,14 @@ workflows:
   deploy-linux-amd:
     jobs:
       - install-npm-linux-amd: 
-          filters: &tag-linux
+          filters: &tag
             tags:
-              ignore: /^v[0-9]+(\.[0-9]+)*$/
+              only: /^v[0-9]+(\.[0-9]+)*$/
             branches:
               ignore: /.*/
       - install-linux-packages:
           filters:
-            <<: *tag-linux
+            <<: *tag
       - publish-electron-app-linux-amd:
           requires:
             - install-linux-packages
@@ -185,26 +185,20 @@ workflows:
   deploy-win:
     jobs:
       - install-npm-win:
-          filters: &tag-win
-            tags:
-              ignore: /^v[0-9]+(\.[0-9]+)*$/
-            branches:
-              ignore: /.*/
+          filters:
+            <<: *tag
       - publish-electron-app-win:
           requires:
             - install-npm-win
           filters: 
-            <<: *tag-win
+            <<: *tag
   deploy-mac-amd:
     jobs:
       - install-npm-mac-amd:
-          filters: &tag-mac
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
-            branches:
-              ignore: /.*/
+          filters: 
+            <<: *tag
       - publish-electron-app-mac-amd:
           requires:
             - install-npm-mac-amd
           filters: 
-            <<: *tag-mac
+            <<: *tag

@@ -69,17 +69,14 @@ jobs:
       size: "medium"
     working_directory: ~/repo
     steps:
-      - run:
-          name: Install Node
-          command: |
-            nvm install 16.13.2
-            npm install -g yarn
       - checkout
       - run:
           name: Login to Github Packages
           command: |
+            nvm install 16.13.2
+            npm install -g yarn
             nvm use 16.13.2
-            npm set //npm.pkg.github.com/:_authToken=${GITHUB_REPO_TOKEN}
+            npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
       - install-dependencies

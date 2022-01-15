@@ -84,12 +84,13 @@ jobs:
           key: dependency-cache-win-{{ checksum "package.json" }}
       - run:
           command: |
-            echo 'export TAG=$env:CIRCLE_TAG' >> $BASH_ENV
+            echo 'export TAG=$env:CIRCLE_USERNAME' >> $BASH_ENV
       - run:
           name: Install Dependencies
           shell: bash.exe
           command: |
-            echo "printing tag $CIRCLE_TAG"
+            echo "print $TAG"
+            echo "printing tag $CIRCLE_USERNAME"
             yarn config set @owlbear-rodeo:registry https://npm.pkg.github.com/
             npm config set //npm.pkg.github.com:_authToken=NPM_TOKEN
             yarn install --non-interactive --frozen-lockfile

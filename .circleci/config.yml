@@ -31,9 +31,7 @@ commands:
     steps:
       - run:
           name: Install Dependencies
-          command: |
-            node -v
-            yarn install --non-interactive --frozen-lockfile
+          command: yarn install --non-interactive --frozen-lockfile
   
   publish-electron-app:
     steps:

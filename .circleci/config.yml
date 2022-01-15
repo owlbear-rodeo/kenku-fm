@@ -23,7 +23,7 @@ commands:
     steps:
       - run:
           name: Login to Github Packages
-          command: npm config set @owlbear-rodeo:registry=https://npm.pkg.github.com:_authToken=${NPM_TOKEN}
+          command: npm config set @owlbear-rodeo:registry=https://npm.pkg.github.com:_authToken=${GITHUB_PACKAGE_TOKEN}
   
   install-dependencies:
     steps:
@@ -66,6 +66,8 @@ jobs:
       name: win/default
       size: "medium"
     working_directory: ~/repo
+    environment:
+      NPM_TOKEN: "$GITHUB_PACKAGE_TOKEN"
     steps:
       - checkout
       - run:

@@ -85,12 +85,9 @@ jobs:
             nvm alias default 16.13.2
             echo 'nvm use default &>/dev/null' >> $BASH_ENV
       - run:
-          command: npm install -g corepack
+          command: npm install -g yarn
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
-      - run:
-          command: |
-            echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" 
       - install-dependencies
       - save_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}

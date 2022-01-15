@@ -182,6 +182,8 @@ workflows:
           requires:
             - install-linux-packages
             - install-npm-linux-amd
+          filters:
+            <<: *tag
   deploy-win:
     jobs:
       - install-npm-win:

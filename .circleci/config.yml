@@ -80,7 +80,6 @@ jobs:
           command: npm install -g corepack
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
-      - login-to-github-packages
       - install-dependencies
       - save_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}

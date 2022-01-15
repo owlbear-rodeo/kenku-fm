@@ -83,11 +83,11 @@ jobs:
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
       - run:
-          name: Login to Github Packages
+          name: Install Dependencies
           command: |
             yarn config set @owlbear-rodeo:registry https://npm.pkg.github.com/
             npm config set //npm.pkg.github.com:_authToken=$env:GITHUB_PACKAGE_TOKEN
-      - install-dependencies
+            yarn install --non-interactive --frozen-lockfile
       - save_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
           paths:

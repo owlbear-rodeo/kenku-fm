@@ -23,7 +23,10 @@ commands:
     steps:
       - run:
           name: Login to Github Packages
-          command: npm config set @owlbear-rodeo:registry=https://npm.pkg.github.com:_authToken=${GITHUB_PACKAGE_TOKEN}
+          command: |
+            yarn config set always-auth true
+            yarn config set @owlbear-rodeo:registry=https://npm.pkg.github.com:_authToken=$NPM_TOKEN
+            npm config set @owlbear-rodeo:registry=https://npm.pkg.github.com:_authToken=$NPM_TOKEN
           environment:
             NPM_TOKEN: ${GITHUB_PACKAGE_TOKEN}
   
@@ -82,6 +85,7 @@ jobs:
           command: npm install -g corepack
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
+      - login-to-github-packages
       - install-dependencies
       - save_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}

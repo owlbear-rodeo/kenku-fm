@@ -1,5 +1,6 @@
 version: 2.1
 orbs:
+  node: circleci/node@5.0.0
   win: circleci/windows@2.4.1
 
 executors:
@@ -12,20 +13,25 @@ executors:
       xcode: 13.2.1
 
 commands:
+  install-npm:
+    steps:
+      - node/install:
+          install-yarn: true
+          node-version: "16.13.2"
+  
   login-to-github-packages:
     steps:
       - run:
           name: Login to Github Packages
           command: |
+            node -v
             npm set //npm.pkg.github.com/:_authToken=${GITHUB_REPO_TOKEN}
   
   install-dependencies:
     steps:
       - run:
           name: Install Dependencies
-          command: |
-            node -v
-            yarn install --non-interactive --frozen-lockfile
+          command: yarn install --non-interactive --frozen-lockfile
   
   publish-electron-app:
     steps:
@@ -40,13 +46,12 @@ jobs:
     executor: linux-amd
     working_directory: ~/repo
     steps:
+      - install-npm
       - run:
           name: Install dpkg and fakeroot
           command: |
             sudo apt-get update -y
             sudo apt-get install -y dpkg fakeroot rpm
-            curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
-            sudo apt install -y nodejs
       - checkout
       - login-to-github-packages
       - restore_cache:
@@ -77,11 +82,7 @@ jobs:
             npm set //npm.pkg.github.com/:_authToken=${GITHUB_REPO_TOKEN}
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
-      - run:
-          name: Install Dependencies
-          command: |
-            nvm use 16.13.2
-            yarn install --non-interactive --frozen-lockfile
+      - install-dependencies
       - save_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
           paths:
@@ -94,6 +95,7 @@ jobs:
     environment:
       KENKU_FM_MAC_X64_PATH: "./out/Kenku\ FM-darwin-x64"
     steps:
+      - install-npm
       - checkout
       - login-to-github-packages
       - restore_cache:

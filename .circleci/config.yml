@@ -67,6 +67,7 @@ jobs:
       size: "medium"
     working_directory: ~/repo
     environment:
+      NPM_CONFIG_USERCONFIG: ~/repo/.npmrc
       NPM_TOKEN: "$GITHUB_PACKAGE_TOKEN"
     steps:
       - checkout

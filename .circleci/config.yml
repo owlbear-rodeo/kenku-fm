@@ -25,7 +25,7 @@ commands:
           name: Login to Github Packages
           command: |
             node -v
-            npm set //npm.pkg.github.com/:_authToken=${GITHUB_REPO_TOKEN}
+            npm set //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}
   
   install-dependencies:
     steps:

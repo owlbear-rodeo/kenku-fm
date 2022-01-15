@@ -119,8 +119,7 @@ jobs:
           name: OSX Signature
           no_output_timeout: 30m
           command: |
-            export DEBUG=electron-osx-sign*
-            npx electron-osx-sign ./out/Kenku\ FM-darwin-x64/Kenku\ FM.app --gatekeeper-access=false --identity="Developer ID Application: Mitchell McCaffrey (${APPLE_DEVELOPER_TEAM_ID})" --hardened-runtime=true --entitlements="entitlements.plist" --entitlements-inherit="entitlements.plist"
+            npx electron-osx-sign ./out/Kenku\ FM-darwin-x64/Kenku\ FM.app --gatekeeper-assess=false --identity="Developer ID Application: Mitchell McCaffrey (${APPLE_DEVELOPER_TEAM_ID})" --hardened-runtime=true --entitlements="entitlements.plist" --entitlements-inherit="entitlements.plist"
       - run:
           name: Zip App
           command: |

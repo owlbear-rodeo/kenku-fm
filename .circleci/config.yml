@@ -74,9 +74,10 @@ jobs:
             nvm use 16.13.2
             nvm alias default 16.13.2
             echo 'nvm use default &>/dev/null' >> $BASH_ENV
-      - login-to-github-packages
       - run:
-          command: npm install -g corepack
+          command: |
+            echo "//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}" > ~/.npmrc
+            npm install -g corepack
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
       - install-dependencies

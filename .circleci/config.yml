@@ -29,7 +29,9 @@ commands:
     steps:
       - run:
           name: Install Dependencies
-          command: yarn install --non-interactive --frozen-lockfile
+          command: |
+            export NPM_TOKEN="$GITHUB_PACKAGE_TOKEN"
+            yarn install --non-interactive --frozen-lockfile
   
   publish-electron-app:
     steps:
@@ -81,12 +83,6 @@ jobs:
           command: npm install -g corepack
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
-      - run:
-          command: |
-            echo "registry=https://registry.npmjs.org/" > ./.npmrc
-            echo "@owlbear-rodeo:registry=https://npm.pkg.github.com/" >> ./.npmrc
-            echo "//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGE_TOKEN}" >> ./.npmrc
-            echo "always-auth=true" >> ./.npmrc
       - install-dependencies
       - save_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}

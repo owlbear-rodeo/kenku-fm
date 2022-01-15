@@ -83,12 +83,14 @@ jobs:
       - restore_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}
       - run:
+          command: |
+            yarn config set @owlbear-rodeo:registry https://npm.pkg.github.com/
+            npm config set //npm.pkg.github.com:_authToken=$GITHUB_PACKAGE_TOKEN
+      - run:
           name: Install Dependencies
           shell: bash.exe
           command: |
             echo "printing tag $CIRCLE_USERNAME"
-            yarn config set @owlbear-rodeo:registry https://npm.pkg.github.com/
-            npm config set //npm.pkg.github.com:_authToken=$GITHUB_PACKAGE_TOKEN
             yarn install --non-interactive --frozen-lockfile
       - save_cache:
           key: dependency-cache-win-{{ checksum "package.json" }}

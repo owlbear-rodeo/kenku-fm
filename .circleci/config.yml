@@ -113,6 +113,7 @@ jobs:
             security default-keychain -s "$KEYCHAIN";
             security unlock-keychain -p "${APPLE_KEYCHAIN_PASSWORD}" "$KEYCHAIN";
             security import "$CERTIFICATE_P12" -k "$KEYCHAIN" -P "${CERT_PASSWORD}" -A
+            security set-key-partition-list -S apple-tool:,apple: -s -k "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN"
             security find-identity -v
       - run:
           name: OSX Signature

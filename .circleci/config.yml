@@ -72,7 +72,7 @@ jobs:
       size: "medium"
     working_directory: ~/repo
     environment:
-      KENKU_FM_MAC_X64_PATH: ".\\out\\Kenku FM-win32-x64"
+      KENKU_FM_MAC_X64_PATH: ""
     steps:
       - checkout
       - run:
@@ -110,7 +110,9 @@ jobs:
           command: |
             python -V
             python -m castlabs_evs.account -n reauth -A $env:CASTLABS_ACCOUNT_NAME -P $env:CASTLABS_ACCOUNT_PASSWORD
-            python -m castlabs_evs.vmp sign-pkg ".\\out\\Kenku FM-win32-x64"
+            python -m castlabs_evs.vmp sign-pkg ".\out\squirrel.make\x64"
+      - store_artifacts:
+          path: ~/repo/out/make
 
   publish-electron-app-mac-amd:
     executor: mac-amd
@@ -168,8 +170,6 @@ jobs:
       - run:
           name: Publish DMG
           command: ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $CIRCLE_TAG Kenku.FM-$CIRCLE_TAG-x64.dmg
-      - store_artifacts:
-          path: ~/repo/out/make
 
 workflows:
   version: 2

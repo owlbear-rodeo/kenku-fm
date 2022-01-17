@@ -92,12 +92,11 @@ jobs:
             - ./node_modules
       - yarn-make
       - run:
+          command: choco install python3 --version=3.6
+      - run:
           name: Install Widevine Python Module
           command: |
             python -V
-            python -m pip uninstall urllib3 -y
-            python -m pip install --upgrade urllib3
-            conda update urllib3
             python -m pip install --upgrade castlabs-evs
       - run:
           name: Widevine Signature

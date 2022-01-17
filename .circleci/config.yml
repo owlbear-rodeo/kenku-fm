@@ -93,7 +93,10 @@ jobs:
       - yarn-make
       - run:
           name: Install Widevine Python Module
-          command: python -m pip install --upgrade castlabs-evs
+          command: |
+            python -V
+            python -m pip install --upgrade awscli
+            python -m pip install --upgrade castlabs-evs
       - run:
           name: Widevine Signature
           command: |

@@ -76,11 +76,13 @@ jobs:
       - run:
           command: |
             choco install python --version=3.7.9
+          shell: bash.exe
       - run:
           name: Install Widevine Python Module
           command: |
             python -V
             python -m pip install --upgrade castlabs-evs
+          shell: bash.exe
       - run:
           command: |
             nvm install 16.13.2

@@ -156,6 +156,8 @@ jobs:
       - run:
           name: Publish DMG
           command: ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $CIRCLE_TAG Kenku.FM-$CIRCLE_TAG-x64.dmg
+      - store_artifacts:
+          path: ~/repo/out/make
 
 workflows:
   version: 2
@@ -170,10 +172,6 @@ workflows:
   deploy-win:
     jobs:
       - publish-electron-app-win:
-          filters: 
-            <<: *tag
-      - store_artifacts:
-          path: ~/repo/out/make
           filters: 
             <<: *tag
   deploy-mac-amd:

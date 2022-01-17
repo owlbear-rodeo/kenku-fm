@@ -110,9 +110,9 @@ jobs:
           command: |
             python -V
             python -m castlabs_evs.account -n reauth -A $env:CASTLABS_ACCOUNT_NAME -P $env:CASTLABS_ACCOUNT_PASSWORD
-            python -m castlabs_evs.vmp sign-pkg ".\out\make\squirrel.windows\x64\"
+            python -m castlabs_evs.vmp sign-pkg ".\out\Kenku FM-win32-x64"
       - store_artifacts:
-          path: ~/repo/out/make
+          path: ~/repo/out/
 
   publish-electron-app-mac-amd:
     executor: mac-amd

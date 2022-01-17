@@ -37,17 +37,12 @@ commands:
       - run:
           name: Publish
           command: yarn run publish
-
-  widevine:
+  
+  yarn-make:
     steps:
       - run:
-          name: Install Widevine Python Module
-          command: python3 -m pip install --upgrade castlabs-evs
-      - run:
-          name: Widevine Signature
-          command: |
-            python3 -m castlabs_evs.account -n reauth -A "$CASTLABS_ACCOUNT_NAME" -P "$CASTLABS_ACCOUNT_PASSWORD"
-            python3 -m castlabs_evs.vmp sign-pkg "$KENKU_FM_MAC_X64_PATH"
+          name: Make Package
+          command: yarn run make
 
 jobs:
   publish-electron-app-linux-amd:
@@ -69,7 +64,6 @@ jobs:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
-      - widevine
       - publish-electron-app
 
   publish-electron-app-win:
@@ -96,8 +90,15 @@ jobs:
           key: dependency-cache-win-{{ checksum "package.json" }}
           paths:
             - ./node_modules
-      - widevine
-      - publish-electron-app
+      - yarn-make
+      - run:
+          name: Install Widevine Python Module
+          command: python3 -m pip install --upgrade castlabs-evs
+      - run:
+          name: Widevine Signature
+          command: |
+            python3 -m castlabs_evs.account -n reauth -A "$CASTLABS_ACCOUNT_NAME" -P "$CASTLABS_ACCOUNT_PASSWORD"
+            python3 -m castlabs_evs.vmp sign-pkg "$KENKU_FM_WIN_X64_PATH"
 
   publish-electron-app-mac-amd:
     executor: mac-amd
@@ -115,10 +116,15 @@ jobs:
           key: dependency-cache-macos-{{ checksum "package.json" }}
           paths:
             - ./node_modules
+      - yarn-make
       - run:
-          name: Make Package
-          command: yarn run make
-      - widevine
+          name: Install Widevine Python Module
+          command: python3 -m pip install --upgrade castlabs-evs
+      - run:
+          name: Widevine Signature
+          command: |
+            python3 -m castlabs_evs.account -n reauth -A "$CASTLABS_ACCOUNT_NAME" -P "$CASTLABS_ACCOUNT_PASSWORD"
+            python3 -m castlabs_evs.vmp sign-pkg "$KENKU_FM_MAC_X64_PATH"
       - run:
           name: Import Apple Security Keychain
           command: |
@@ -164,6 +170,10 @@ workflows:
   deploy-win:
     jobs:
       - publish-electron-app-win:
+          filters: 
+            <<: *tag
+      - store_artifacts:
+          path: ~/repo/out/make
           filters: 
             <<: *tag
   deploy-mac-amd:

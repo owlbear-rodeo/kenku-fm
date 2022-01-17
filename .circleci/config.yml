@@ -95,8 +95,8 @@ jobs:
           name: Install Widevine Python Module
           command: |
             python -V
-            python -m pip uninstall --upgrade awscli
             python -m pip uninstall urllib3 -y
+            python -m pip uninstall awscli
             python -m pip install --upgrade awscli
             python -m pip install --upgrade urllib3
             python -m pip install --upgrade castlabs-evs

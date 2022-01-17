@@ -14,6 +14,12 @@ commands:
           install-yarn: true
           node-version: "16.13.2"
   
+  set-npm-config:
+    steps:
+      - run:
+          name: Set NPM config
+          command: npm config set //npm.pkg.github.com/:_authToken=${NPM_TOKEN}
+  
   install-dependencies:
     steps:
       - run:
@@ -60,7 +66,8 @@ jobs:
             sudo apt-get install -y dpkg fakeroot rpm
       - checkout
       - restore_cache:
-          key: dependency-cache-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
+          key: dependency-cache-{{ checksum "package.json" }}
+      - set-npm-config
       - install-dependencies
       - save_cache:
           key: dependency-cache-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}

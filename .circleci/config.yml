@@ -178,8 +178,11 @@ workflows:
   deploy-win:
     jobs:
       - publish-electron-app-win:
-          filters: 
-            <<: *tag
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only: main
   deploy-mac-amd:
     jobs:
       - publish-electron-app-mac-amd:

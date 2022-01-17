@@ -92,7 +92,7 @@ jobs:
             - ./node_modules
       - yarn-make
       - run:
-          command: choco install python3 --version=3.6
+          command: choco install python3 --version=3.7
       - run:
           name: Install Widevine Python Module
           command: |

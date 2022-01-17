@@ -84,6 +84,6 @@ workflows:
       - publish-electron-app-linux-arm:
           filters: &tag
             tags:
-              only: /^v[0-9]+(\.[0-9]+)*-linux-arm$/
+              only: /^v[0-9]+(\.[0-9]+)*$/
             branches:
-              ignore: /.*/
+              only: main

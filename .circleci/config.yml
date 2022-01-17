@@ -75,8 +75,7 @@ jobs:
       - checkout
       - run:
           command: |
-            conda clean --packages
-            conda update python
+            choco install python --version=3.7.9
       - run:
           name: Install Widevine Python Module
           command: |

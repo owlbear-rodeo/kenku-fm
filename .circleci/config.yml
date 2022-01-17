@@ -91,14 +91,6 @@ jobs:
           paths:
             - ./node_modules
       - yarn-make
-      - run:
-          name: Install Widevine Python Module
-          command: python3 -m pip install --upgrade castlabs-evs
-      - run:
-          name: Widevine Signature
-          command: |
-            python -m castlabs_evs.account -n reauth -A "$CASTLABS_ACCOUNT_NAME" -P "$CASTLABS_ACCOUNT_PASSWORD"
-            python -m castlabs_evs.vmp sign-pkg "$KENKU_FM_WIN_X64_PATH"
 
   publish-electron-app-mac-amd:
     executor: mac-amd

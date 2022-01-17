@@ -94,14 +94,14 @@ jobs:
           name: Install Yarn
           command: npm install -g yarn
       - restore_cache:
-          key: dependency-cache-win-{{ checksum "package.json" }}
+          key: dependency-cache-win-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
       - run:
           name: Set NPM config
           command: |
             npm config set //npm.pkg.github.com/:_authToken=$env:NPM_TOKEN
       - install-dependencies
       - save_cache:
-          key: dependency-cache-win-{{ checksum "package.json" }}
+          key: dependency-cache-win-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
           paths:
             - ./node_modules
       - yarn-make
@@ -110,7 +110,7 @@ jobs:
           command: |
             python -V
             python -m castlabs_evs.account -n reauth -A $env:CASTLABS_ACCOUNT_NAME -P $env:CASTLABS_ACCOUNT_PASSWORD
-            python -m castlabs_evs.vmp sign-pkg -H "Kenku FM-0.4.0 Setup" $env:KENKU_FM_WIN_X64_PATH
+            python -m castlabs_evs.vmp sign-pkg ".\\out\\Kenku FM-win32-x64"
 
   publish-electron-app-mac-amd:
     executor: mac-amd

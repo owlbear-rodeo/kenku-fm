@@ -38,6 +38,17 @@ commands:
           name: Publish
           command: yarn run publish
 
+  widevine:
+    steps:
+      - run:
+          name: Install Widevine Python Module
+          command: python3 -m pip install --upgrade castlabs-evs
+      - run:
+          name: Widevine Signature
+          command: |
+            python3 -m castlabs_evs.account -n reauth -A "$CASTLABS_ACCOUNT_NAME" -P "$CASTLABS_ACCOUNT_PASSWORD"
+            python3 -m castlabs_evs.vmp sign-pkg "$KENKU_FM_MAC_X64_PATH"
+
 jobs:
   publish-electron-app-linux-amd:
     executor: linux-amd
@@ -58,6 +69,7 @@ jobs:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
+      - widevine
       - publish-electron-app
 
   publish-electron-app-win:
@@ -84,6 +96,7 @@ jobs:
           key: dependency-cache-win-{{ checksum "package.json" }}
           paths:
             - ./node_modules
+      - widevine
       - publish-electron-app
 
   publish-electron-app-mac-amd:
@@ -105,14 +118,7 @@ jobs:
       - run:
           name: Make Package
           command: yarn run make
-      - run:
-          name: Install Widevine Python Module
-          command: python3 -m pip install --upgrade castlabs-evs
-      - run:
-          name: Widevine Signature
-          command: |
-            python3 -m castlabs_evs.account -n reauth -A "$CASTLABS_ACCOUNT_NAME" -P "$CASTLABS_ACCOUNT_PASSWORD"
-            python3 -m castlabs_evs.vmp sign-pkg "$KENKU_FM_MAC_X64_PATH"
+      - widevine
       - run:
           name: Import Apple Security Keychain
           command: |

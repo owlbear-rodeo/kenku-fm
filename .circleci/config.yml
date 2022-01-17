@@ -104,6 +104,7 @@ jobs:
           command: |
             python -m castlabs_evs.account -n reauth -A "${CASTLABS_ACCOUNT_NAME}" -P "${CASTLABS_ACCOUNT_PASSWORD}"
             python -m castlabs_evs.vmp sign-pkg "${KENKU_FM_WIN_X64_PATH}"
+          shell: bash.exe
 
   publish-electron-app-mac-amd:
     executor: mac-amd

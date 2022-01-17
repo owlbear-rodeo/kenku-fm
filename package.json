@@ -6,9 +6,9 @@
   "main": ".webpack/main",
   "scripts": {
     "start": "electron-forge start",
-    "package": "env-cmd electron-forge package",
-    "make": "env-cmd electron-forge make",
-    "publish": "env-cmd electron-forge publish",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },
   "keywords": [],
@@ -65,7 +65,6 @@
     "@sinclair/typebox": "^0.23.0",
     "case": "^1.6.3",
     "electron-squirrel-startup": "^1.0.0",
-    "env-cmd": "^10.1.0",
     "eris": "^0.16.1",
     "fastify": "^3.22.1",
     "howler": "^2.2.3",

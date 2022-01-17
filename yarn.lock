@@ -1043,9 +1043,9 @@
   integrity sha512-PfeQhvcMR4cPFVuYfBN4ifG7p9c+Dlh3yUZR6k+5yQK7wX3gDgVxBly4/WkBRs9x4dmcy1TVl08SY67wwtEvmA==
 
 "@types/node@^14.6.2":
-  version "14.18.12"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.18.12.tgz#0d4557fd3b94497d793efd4e7d92df2f83b4ef24"
-  integrity sha512-q4jlIR71hUpWTnGhXWcakgkZeHa3CCjcQcnuzU8M891BAWA2jHiziiWEPEkdS5pFsz7H9HJiy8BrK7tBRNrY7A==
+  version "14.18.5"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.18.5.tgz#0dd636fe7b2c6055cbed0d4ca3b7fb540f130a96"
+  integrity sha512-LMy+vDDcQR48EZdEx5wRX1q/sEl6NdGuHXPnfeL8ixkwCOSZ2qnIyIZmcCbdX0MeRqHhAcHmX+haCbrS8Run+A==
 
 "@types/parse-json@^4.0.0":
   version "4.0.0"
@@ -2870,9 +2870,10 @@ electron-winstaller@^5.0.0:
     lodash.template "^4.2.2"
     temp "^0.9.0"
 
-"electron@https://github.com/castlabs/electron-releases#v17.2.0+wvcus":
-  version "17.2.0"
-  resolved "https://github.com/castlabs/electron-releases#9ecb60c7963cbb35cbe9b92b6abf9d970cec4913"
+electron@17.0.0-beta.1:
+  version "17.0.0-beta.1"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-17.0.0-beta.1.tgz#c38ea4a5d67763db6d13a624c7e709716d5510d5"
+  integrity sha512-Qy81RFC9t6ykn78k0HWXt07zc5KWOM29X7k71mi9/T4mOF3g5GY0d/sLRX402gY9pE0GEbj3WOAi62oS0hGZ3A==
   dependencies:
     "@electron/get" "^1.13.0"
     "@types/node" "^14.6.2"

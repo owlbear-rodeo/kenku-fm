@@ -74,6 +74,13 @@ jobs:
     steps:
       - checkout
       - run:
+          command: choco install python3 --version=3.7
+      - run:
+          name: Install Widevine Python Module
+          command: |
+            python -V
+            python -m pip install --upgrade castlabs-evs
+      - run:
           command: |
             nvm install 16.13.2
             nvm use 16.13.2
@@ -92,13 +99,6 @@ jobs:
             - ./node_modules
       - yarn-make
       - run:
-          command: choco install python3 --version=3.7
-      - run:
-          name: Install Widevine Python Module
-          command: |
-            python -V
-            python -m pip install --upgrade castlabs-evs
-      - run:
           name: Widevine Signature
           command: |
             python -m castlabs_evs.account -n reauth -A "$CASTLABS_ACCOUNT_NAME" -P "$CASTLABS_ACCOUNT_PASSWORD"
@@ -111,6 +111,9 @@ jobs:
       KENKU_FM_MAC_X64_PATH: "./out/Kenku\ FM-darwin-x64"
     steps:
       - install-npm
+      - run:
+          name: Install Widevine Python Module
+          command: python3 -m pip install --upgrade castlabs-evs
       - checkout
       - restore_cache:
           key: dependency-cache-macos-{{ checksum "package.json" }}
@@ -121,9 +124,6 @@ jobs:
           paths:
             - ./node_modules
       - yarn-make
-      - run:
-          name: Install Widevine Python Module
-          command: python3 -m pip install --upgrade castlabs-evs
       - run:
           name: Widevine Signature
           command: |

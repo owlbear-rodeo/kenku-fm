@@ -111,8 +111,12 @@ jobs:
             python -V
             python -m castlabs_evs.account -n reauth -A $env:CASTLABS_ACCOUNT_NAME -P $env:CASTLABS_ACCOUNT_PASSWORD
             python -m castlabs_evs.vmp sign-pkg ".\out\Kenku FM-win32-x64"
+      - run:
+          name: Create App
+          command: |
+            npx electron-installer-windows --src "./out/Kenku FM-win32-x64/" --config ./publish/windows/config.json
       - store_artifacts:
-          path: ~/repo/out/
+          path: ~/repo/out/windows/
 
   publish-electron-app-mac-amd:
     executor: mac-amd

@@ -76,11 +76,12 @@ jobs:
       - run:
           command: |
             choco install python --version=3.7.9
+            python3 -m pip install --upgrade pip
       - run:
           name: Install Widevine Python Module
           command: |
             python -V
-            python -m pip install --upgrade castlabs-evs
+            python3 -m pip install --upgrade castlabs-evs
       - run:
           command: |
             nvm install 16.13.2
@@ -102,8 +103,8 @@ jobs:
       - run:
           name: Widevine Signature
           command: |
-            python -m castlabs_evs.account -n reauth -A $env:CASTLABS_ACCOUNT_NAME -P $env:CASTLABS_ACCOUNT_PASSWORD
-            python -m castlabs_evs.vmp sign-pkg $env:KENKU_FM_WIN_X64_PATH
+            python3 -m castlabs_evs.account -n reauth -A $env:CASTLABS_ACCOUNT_NAME -P $env:CASTLABS_ACCOUNT_PASSWORD
+            python3 -m castlabs_evs.vmp sign-pkg $env:KENKU_FM_WIN_X64_PATH
 
   publish-electron-app-mac-amd:
     executor: mac-amd

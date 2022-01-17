@@ -71,6 +71,8 @@ jobs:
       name: win/default
       size: "medium"
     working_directory: ~/repo
+    environment:
+      KENKU_FM_MAC_X64_PATH: ".\\out\\Kenku FM-win32-x64"
     steps:
       - checkout
       - run:

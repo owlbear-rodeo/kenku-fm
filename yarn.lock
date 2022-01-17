@@ -2658,7 +2658,7 @@ ee-first@1.1.1:
   resolved "https://registry.npmjs.org/ee-first/-/ee-first-1.1.1.tgz"
   integrity sha1-WQxhFWsK4vTwJVcyoViyZrxWsh0=
 
-electron-installer-common@^0.10.2:
+electron-installer-common@^0.10.0, electron-installer-common@^0.10.2:
   version "0.10.3"
   resolved "https://registry.npmjs.org/electron-installer-common/-/electron-installer-common-0.10.3.tgz"
   integrity sha512-mYbP+6i+nHMIm0WZHXgGdmmXMe+KXncl6jZYQNcCF9C1WsNA9C5SZ2VP4TLQMSIoFO+X4ugkMEA5uld1bmyEvA==
@@ -2712,6 +2712,19 @@ electron-installer-redhat@^3.2.0:
     lodash "^4.17.15"
     word-wrap "^1.2.3"
     yargs "^16.0.2"
+
+electron-installer-windows@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/electron-installer-windows/-/electron-installer-windows-3.0.0.tgz#e5c5cc6390018ff0d21316eb107429e57526d3f4"
+  integrity sha512-aTlkqwqFWXPlc3bAd5OidHfU9tHzNFcm4nTlHLLOQZYh1f090YTDMeNZeX+OG5xazOjHo/VkWDp1DzJp3us/2w==
+  dependencies:
+    debug "^4.1.1"
+    electron-installer-common "^0.10.0"
+    fs-extra "^8.1.0"
+    lodash "^4.17.15"
+    parse-author "^2.0.0"
+    which "^2.0.2"
+    yargs "^15.1.0"
 
 electron-notarize@^1.1.1:
   version "1.1.1"
@@ -7936,7 +7949,7 @@ yargs-parser@^20.0.0, yargs-parser@^20.2.2:
   resolved "https://registry.npmjs.org/yargs-parser/-/yargs-parser-20.2.9.tgz"
   integrity sha512-y11nGElTIV+CT3Zv9t7VKl+Q3hTQoT9a1Qzezhhl6Rp21gJ/IVTW7Z3y9EWXhuUBC2Shnf+DX0antecpAwSP8w==
 
-yargs@^15.0.1:
+yargs@^15.0.1, yargs@^15.1.0:
   version "15.4.1"
   resolved "https://registry.npmjs.org/yargs/-/yargs-15.4.1.tgz"
   integrity sha512-aePbxDmcYW++PaqBsJ+HYUFwCdv4LVvdnhBy78E57PIor8/OVvhMrADFFEDh8DHDFRv/O9i3lPhsENjO7QX0+A==

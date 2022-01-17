@@ -105,7 +105,7 @@ jobs:
           command: |
             python -V
             python -m castlabs_evs.account -n reauth -A $env:CASTLABS_ACCOUNT_NAME -P $env:CASTLABS_ACCOUNT_PASSWORD
-            python -m castlabs_evs.vmp sign-pkg $env:KENKU_FM_WIN_X64_PATH
+            python -m castlabs_evs.vmp sign-pkg -H "Kenku FM-0.4.0 Setup" $env:KENKU_FM_WIN_X64_PATH
 
   publish-electron-app-mac-amd:
     executor: mac-amd

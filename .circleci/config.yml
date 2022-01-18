@@ -119,7 +119,7 @@ jobs:
             node .\publish\windows\index.js .\ $env:CIRCLE_TAG
       - run:
           name: Publish EXE
-          command: ./publish/script-win.sh .\out\windows\kenku-fm-$CIRCLE_TAG-setup.exe $GITHUB_TOKEN $CIRCLE_TAG kenku-fm-$CIRCLE_TAG-win32-x64.exe
+          command: ./publish/script-win.sh .\out\windows\kenku-fm-$env:CIRCLE_TAG-setup.exe $env:GITHUB_TOKEN $env:CIRCLE_TAG kenku-fm-$env:CIRCLE_TAG-win32-x64.exe
 
   publish-electron-app-mac-amd:
     executor: mac-amd

@@ -71,8 +71,6 @@ jobs:
       name: win/default
       size: "medium"
     working_directory: ~/repo
-    environment:
-      KENKU_FM_MAC_X64_PATH: ""
     steps:
       - checkout
       - run:
@@ -119,8 +117,9 @@ jobs:
             yarn install --non-interactive --frozen-lockfile
             cd ~\repo
             node .\publish\windows\index.js .\ $env:CIRCLE_TAG
-      - store_artifacts:
-          path: ~/repo/out/windows/
+      - run:
+          name: Publish EXE
+          command: ./publish/script-win.sh .\out\windows\kenku-fm-$CIRCLE_TAG-setup.exe $GITHUB_TOKEN $CIRCLE_TAG kenku-fm-$CIRCLE_TAG-win32-x64.exe
 
   publish-electron-app-mac-amd:
     executor: mac-amd

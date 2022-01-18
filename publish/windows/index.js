@@ -19,4 +19,5 @@ async function createApp(dir, version) {
 }
 
 const args = process.argv.slice(2)
-createApp(args[0], args[1])
+const dir = path.resolve(args[0])
+createApp(dir, args[1])

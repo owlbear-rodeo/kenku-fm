@@ -192,10 +192,7 @@ workflows:
     jobs:
       - publish-electron-app-win:
           filters:
-            tags:
-              ignore: /.*/
-            branches:
-              only: main
+            <<: *tag
   deploy-mac-amd:
     jobs:
       - publish-electron-app-mac-amd:

@@ -1,6 +1,0 @@
-{
-    "dest": "out/windows/",
-    "icon": "src/assets/setup.ico",
-    "animation": "src/assets/loading.gif",
-    "homepage": "https://kenku.fm"
-}

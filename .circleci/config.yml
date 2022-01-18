@@ -76,6 +76,7 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install Python
           command: |
             choco install python --version=3.7.9
             python -m pip install --upgrade pip
@@ -85,6 +86,7 @@ jobs:
             python -V
             python -m pip install --upgrade castlabs-evs
       - run:
+          name: Install Node
           command: |
             nvm install 16.13.2
             nvm use 16.13.2

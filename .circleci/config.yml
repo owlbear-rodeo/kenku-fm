@@ -116,7 +116,7 @@ jobs:
           command: |
             cd $env:CIRCLE_WORKING_DIRECTORY\publish\windows
             yarn install --non-interactive --frozen-lockfile
-            node .\index.js $env:CIRCLE_WORKING_DIRECTORY $env:CIRCLE_TAG
+            node .\index.js ~\repo $env:CIRCLE_TAG
       - store_artifacts:
           path: ~/repo/out/windows/
 

@@ -118,7 +118,8 @@ jobs:
             cd $env:CIRCLE_WORKING_DIRECTORY\publish\windows
             yarn install --non-interactive --frozen-lockfile
             cd ~\repo
-            node $env:PWD\index.js $env:PWD $env:CIRCLE_TAG
+            Write-Host $env:PWD
+            node .\publish\windows\index.js $env:PWD $env:CIRCLE_TAG
       - store_artifacts:
           path: ~/repo/out/windows/
 

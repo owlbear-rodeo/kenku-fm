@@ -10,7 +10,7 @@ import ExpandMore from "@mui/icons-material/ExpandMoreRounded";
 
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
-import { addInput, removeInput, setDevices } from "./inputSlice";
+import { addInput, removeInput, setDevices, setInput } from "./inputSlice";
 
 import { InputListItem } from "./InputListItem";
 
@@ -32,6 +32,20 @@ export function InputListItems() {
         .map((device) => ({ id: device.deviceId, label: device.label }));
       dispatch(setDevices(audioDevices));
     });
+
+    return () => {
+      // Stop all input devices when external inputs is disabled
+      navigator.mediaDevices.enumerateDevices().then((devices) => {
+        const ids = devices
+          .filter((d) => d.kind === "audioinput")
+          .map((device) => device.deviceId);
+        for (let id of ids) {
+          window.kenku.stopExternalAudioCapture(id);
+        }
+        dispatch(setDevices([]));
+        dispatch(setInput([]));
+      });
+    };
   }, []);
 
   function handleInputChange(deviceId: string) {

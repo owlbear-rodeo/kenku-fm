@@ -22,8 +22,8 @@ export const inputSlice = createSlice({
     setDevices: (state, action: PayloadAction<Device[]>) => {
       state.devices = action.payload;
     },
-    setInput: (state, action: PayloadAction<string>) => {
-      state.inputs = [action.payload];
+    setInput: (state, action: PayloadAction<string[]>) => {
+      state.inputs = action.payload;
     },
     addInput: (state, action: PayloadAction<string>) => {
       if (state.inputs.includes(action.payload)) {

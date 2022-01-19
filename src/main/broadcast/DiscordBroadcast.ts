@@ -50,7 +50,7 @@ export class DiscordBroadcast {
       this.client = new Eris.Client(token, {
         intents: ["guilds", "guildVoiceStates"],
       });
-      const onReady = async () => {
+      this.client.once("ready", async () => {
         event.reply("DISCORD_READY");
         event.reply("MESSAGE", "Connected");
         let guilds: Guild[] = [];
@@ -72,8 +72,11 @@ export class DiscordBroadcast {
           });
         }
         event.reply("DISCORD_GUILDS", guilds);
-      };
-      this.client.once("ready", onReady);
+      });
+      this.client.on("error", (err) => {
+        event.reply("DISCORD_DISCONNECTED");
+        event.reply("ERROR", `Error connecting to bot: ${err.message}`);
+      });
       await this.client.connect();
     } catch (err) {
       event.reply("DISCORD_DISCONNECTED");

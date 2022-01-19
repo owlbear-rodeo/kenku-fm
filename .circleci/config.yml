@@ -13,6 +13,13 @@ commands:
       - node/install:
           install-yarn: true
           node-version: "16.13.2"
+
+  set-npm-config:
+    steps:
+      - run:
+          name: Set NPM config
+          command: |
+            npm config set //npm.pkg.github.com/:_authToken=${NPM_TOKEN}
   
   set-npm-config:
     steps:
@@ -31,6 +38,12 @@ commands:
       - run:
           name: Publish
           command: yarn run publish
+  
+  yarn-make:
+    steps:
+      - run:
+          name: Make Package
+          command: yarn run make
 
 jobs:
   publish-electron-app-linux-arm:

@@ -1,0 +1,10 @@
+{
+  "name": "windows-packager",
+  "version": "1.0.0",
+  "description": "packaging script for electron app (windows)",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "electron-winstaller": "^5.0.0"
+  }
+}

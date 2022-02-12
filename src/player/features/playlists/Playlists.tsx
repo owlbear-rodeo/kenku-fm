@@ -9,6 +9,8 @@ import IconButton from "@mui/material/IconButton";
 import AddRounded from "@mui/icons-material/AddRounded";
 import Tooltip from "@mui/material/Tooltip";
 import Backdrop from "@mui/material/Backdrop";
+import Back from "@mui/icons-material/ChevronLeftRounded";
+import styled from "@mui/material/styles/styled";
 
 import {
   DndContext,
@@ -26,25 +28,32 @@ import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { PlaylistItem } from "./PlaylistItem";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import {
-  selectPlaylist,
-  movePlaylist,
-  Track,
-  addPlaylist,
-  addTracks,
-} from "./playlistsSlice";
+import { movePlaylist, Track, addPlaylist, addTracks } from "./playlistsSlice";
 import { PlaylistAdd } from "./PlaylistAdd";
 import { SortableItem } from "./SortableItem";
 import { startQueue } from "../playback/playbackSlice";
 import { useDrop } from "./useDrop";
 import { getRandomBackground } from "../../backgrounds";
 import { useHideScrollbar } from "../../../renderer/common/useHideScrollbar";
+import { useNavigate } from "react-router-dom";
+
+const WallPaper = styled("div")({
+  position: "absolute",
+  width: "100%",
+  height: "100%",
+  top: 0,
+  left: 0,
+  overflow: "hidden",
+  background: "linear-gradient(#2D3143 0%, #1e2231 100%)",
+  zIndex: -1,
+});
 
 type PlaylistsProps = {
   onPlay: (track: Track) => void;
 };
 
 export function Playlists({ onPlay }: PlaylistsProps) {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const playlists = useSelector((state: RootState) => state.playlists);
 
@@ -113,6 +122,7 @@ export function Playlists({ onPlay }: PlaylistsProps) {
 
   return (
     <>
+      <WallPaper />
       <Container
         sx={{
           padding: "0px !important",
@@ -129,6 +139,9 @@ export function Playlists({ onPlay }: PlaylistsProps) {
           justifyContent="space-between"
           alignItems="center"
         >
+          <IconButton onClick={() => navigate(-1)} sx={{ mr: "40px" }}>
+            <Back />
+          </IconButton>
           <Typography variant="h3" noWrap>
             Playlists
           </Typography>
@@ -140,8 +153,8 @@ export function Playlists({ onPlay }: PlaylistsProps) {
         </Stack>
         <Grid
           container
-          spacing={{ xs: 2, md: 3 }}
-          columns={{ xs: 4, sm: 9, md: 12, lg: 10 }}
+          spacing={2}
+          columns={{ xs: 4, sm: 9, md: 12 }}
           sx={{
             px: 2,
             pb: "248px",
@@ -159,11 +172,11 @@ export function Playlists({ onPlay }: PlaylistsProps) {
           >
             <SortableContext items={items} strategy={rectSortingStrategy}>
               {items.map((playlist) => (
-                <Grid item xs={2} sm={3} md={3} lg={2} key={playlist.id}>
+                <Grid item xs={2} sm={3} md={3} key={playlist.id}>
                   <SortableItem id={playlist.id}>
                     <PlaylistItem
                       playlist={playlist}
-                      onSelect={(id) => dispatch(selectPlaylist(id))}
+                      onSelect={(id) => navigate(`/playlists/${id}`)}
                       onPlay={handlePlaylistPlay}
                     />
                   </SortableItem>

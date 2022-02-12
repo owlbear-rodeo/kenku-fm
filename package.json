@@ -73,7 +73,7 @@
     "react-dom": "^17.0.2",
     "react-dropzone": "^11.4.2",
     "react-redux": "^7.2.4",
-    "react-router-dom": "^5.2.0",
+    "react-router-dom": "^6.2.1",
     "redux-persist": "^6.0.0",
     "tiny-typed-emitter": "^2.1.0",
     "uuid": "^8.3.2"

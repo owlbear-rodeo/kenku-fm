@@ -12,8 +12,8 @@ import IconButton from "@mui/material/IconButton";
 
 import { useDropzone } from "react-dropzone";
 
-import { backgrounds } from "../../backgrounds";
-import { encodeFilePath, getDropURL } from "../../../renderer/common/drop";
+import { backgrounds } from "../backgrounds";
+import { encodeFilePath, getDropURL } from "../../renderer/common/drop";
 import Input from "@mui/material/Input";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";

@@ -9,17 +9,17 @@ import DialogTitle from "@mui/material/DialogTitle";
 import { v4 as uuid } from "uuid";
 
 import { useDispatch } from "react-redux";
-import { addTrack } from "./playlistsSlice";
+import { addSound } from "./soundboardsSlice";
 import { AudioSelector } from "../../common/AudioSelector";
 import { addTrackToQueueIfNeeded } from "../playback/playbackSlice";
 
-type TrackAddProps = {
-  playlistId: string;
+type SoundAddProps = {
+  soundboardId: string;
   open: boolean;
   onClose: () => void;
 };
 
-export function TrackAdd({ playlistId, open, onClose }: TrackAddProps) {
+export function SoundAdd({ soundboardId, open, onClose }: SoundAddProps) {
   const dispatch = useDispatch();
 
   const [title, setTitle] = useState("");
@@ -39,14 +39,19 @@ export function TrackAdd({ playlistId, open, onClose }: TrackAddProps) {
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const id = uuid();
-    dispatch(addTrack({ track: { id, title, url }, playlistId }));
-    dispatch(addTrackToQueueIfNeeded({ playlistId, trackId: id }));
+    dispatch(
+      addSound({ sound: { id, title, url }, soundboardId: soundboardId })
+    );
+    // TODO:
+    // dispatch(
+    //   addTrackToQueueIfNeeded({ playlistId: soundboardId, trackId: id })
+    // );
     onClose();
   }
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Add Track</DialogTitle>
+      <DialogTitle>Add Sound</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <AudioSelector value={url} onChange={setURL} />

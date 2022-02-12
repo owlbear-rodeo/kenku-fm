@@ -20,26 +20,26 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
-import { TrackItem } from "./TrackItem";
+import { SoundItem } from "./SoundItem";
 import { SortableItem } from "../../common/SortableItem";
 
 import { useDispatch } from "react-redux";
-import { Playlist, Track, moveTrack } from "./playlistsSlice";
+import { Soundboard, Sound, moveSound } from "./soundboardsSlice";
 import { moveQueueIfNeeded } from "../playback/playbackSlice";
 
 import { useHideScrollbar } from "../../../renderer/common/useHideScrollbar";
 
-type PlaylistTracksProps = {
-  items: Track[];
-  playlist: Playlist;
+type SoundboardSoundsProps = {
+  items: Sound[];
+  soundboard: Soundboard;
   onPlay: (id: string) => void;
 };
 
-export function PlaylistTracks({
+export function SoundboardSounds({
   items,
-  playlist,
+  soundboard,
   onPlay,
-}: PlaylistTracksProps) {
+}: SoundboardSoundsProps) {
   const dispatch = useDispatch();
 
   const pointerSensor = useSensor(PointerSensor, {
@@ -61,15 +61,20 @@ export function PlaylistTracks({
 
     if (active.id !== over.id) {
       dispatch(
-        moveTrack({ playlistId: playlist.id, active: active.id, over: over.id })
-      );
-      dispatch(
-        moveQueueIfNeeded({
-          playlistId: playlist.id,
+        moveSound({
+          soundboardId: soundboard.id,
           active: active.id,
           over: over.id,
         })
       );
+      // TODO
+      // dispatch(
+      //   moveQueueIfNeeded({
+      //     playlistId: soundboard.id,
+      //     active: active.id,
+      //     over: over.id,
+      //   })
+      // );
     }
 
     setDragId(null);
@@ -110,14 +115,18 @@ export function PlaylistTracks({
           <SortableContext items={items} strategy={verticalListSortingStrategy}>
             {items.map((item) => (
               <SortableItem key={item.id} id={item.id}>
-                <TrackItem track={item} playlist={playlist} onPlay={onPlay} />
+                <SoundItem
+                  sound={item}
+                  soundboard={soundboard}
+                  onPlay={onPlay}
+                />
               </SortableItem>
             ))}
             <DragOverlay>
               {dragId ? (
-                <TrackItem
-                  track={items.find((track) => track.id === dragId)}
-                  playlist={playlist}
+                <SoundItem
+                  sound={items.find((sound) => sound.id === dragId)}
+                  soundboard={soundboard}
                   onPlay={onPlay}
                 />
               ) : null}

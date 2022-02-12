@@ -1,8 +1,13 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { v4 as uuid } from "uuid";
 
-import { cleanFileName, encodeFilePath } from "../../../renderer/common/drop";
-import { Track } from "./playlistsSlice";
+import { cleanFileName, encodeFilePath } from "../../renderer/common/drop";
+
+export interface AudioFile {
+  id: string;
+  url: string;
+  title: string;
+}
 
 const supportedFileTypes = [
   "audio/wav",
@@ -31,7 +36,7 @@ function isFileSystemDirectoryEntry(
 export type Directory = {
   path: string;
   name: string;
-  tracks: Track[];
+  audioFiles: AudioFile[];
 };
 
 export type Directories = Record<string, Directory>;
@@ -55,14 +60,14 @@ async function getDirectories(
   entries: FileSystemEntry[],
   path: string = "/",
   directories: Directories = {
-    "/": { path: "/", name: "root", tracks: [] },
+    "/": { path: "/", name: "root", audioFiles: [] },
   }
 ): Promise<Directories> {
   for (let entry of entries) {
     if (isFileSystemFileEntry(entry)) {
       const file = await getFile(entry);
       if (path in directories && supportedFileTypes.includes(file.type)) {
-        directories[path].tracks.push({
+        directories[path].audioFiles.push({
           url: encodeFilePath(file.path),
           title: cleanFileName(file.name),
           id: uuid(),
@@ -73,7 +78,7 @@ async function getDirectories(
       directories[folderPath] = {
         path: folderPath,
         name: entry.name,
-        tracks: [],
+        audioFiles: [],
       };
       const folderEntries = await getEntries(entry);
       await getDirectories(folderEntries, folderPath, directories);

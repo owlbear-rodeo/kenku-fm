@@ -18,18 +18,27 @@ import {
   Link as RouterLink,
   LinkProps as RouterLinkProps,
 } from "react-router-dom";
+import { SoundboardItem } from "../soundboards/SoundboardItem";
 
 const PlaylistsLink = React.forwardRef<any, Omit<RouterLinkProps, "to">>(
   (props, ref) => <RouterLink ref={ref} to="/playlists" {...props} />
 );
 
+const SoundboardsLink = React.forwardRef<any, Omit<RouterLinkProps, "to">>(
+  (props, ref) => <RouterLink ref={ref} to="/soundboards" {...props} />
+);
+
 export function Home() {
   const navigate = useNavigate();
   const playlists = useSelector((state: RootState) => state.playlists);
+  const soundboards = useSelector((state: RootState) => state.soundboards);
 
   const playlistItems = playlists.playlists.allIds
     .slice(0, 4)
     .map((id) => playlists.playlists.byId[id]);
+  const soundboardItems = soundboards.soundboards.allIds
+    .slice(0, 4)
+    .map((id) => soundboards.soundboards.byId[id]);
 
   return (
     <Container
@@ -91,13 +100,28 @@ export function Home() {
               <AddIcon />
             </IconButton>
             <Box sx={{ flexGrow: 1 }} />
-            <Link href="#" color="inherit" underline="hover">
+            <Link
+              href="#"
+              color="inherit"
+              underline="hover"
+              component={SoundboardsLink}
+            >
               See All
             </Link>
           </Stack>
         </CardContent>
         <CardContent>
-          <Grid container></Grid>
+          <Grid container spacing={2}>
+            {soundboardItems.map((soundboard) => (
+              <Grid xs={6} sm={4} md={3} item key={soundboard.id}>
+                <SoundboardItem
+                  soundboard={soundboard}
+                  onSelect={(id) => navigate(`/soundboards/${id}`)}
+                  onPlay={() => {}}
+                />
+              </Grid>
+            ))}
+          </Grid>
         </CardContent>
       </Card>
     </Container>

@@ -8,7 +8,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 
 import { useDispatch } from "react-redux";
 import { editTrack, Track } from "./playlistsSlice";
-import { AudioSelector } from "./AudioSelector";
+import { AudioSelector } from "../../common/AudioSelector";
 
 type TrackSettingsProps = {
   track: Track;

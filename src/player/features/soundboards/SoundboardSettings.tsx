@@ -7,28 +7,28 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 
 import { useDispatch } from "react-redux";
-import { editPlaylist, Playlist } from "./playlistsSlice";
+import { editSoundboard, Soundboard } from "./soundboardsSlice";
 import { ImageSelector } from "../../common/ImageSelector";
 
-type PlaylistSettingsProps = {
-  playlist: Playlist;
+type SoundboardSettingsProps = {
+  soundboard: Soundboard;
   open: boolean;
   onClose: () => void;
 };
 
-export function PlaylistSettings({
-  playlist,
+export function SoundboardSettings({
+  soundboard,
   open,
   onClose,
-}: PlaylistSettingsProps) {
+}: SoundboardSettingsProps) {
   const dispatch = useDispatch();
 
   function handleTitleChange(event: React.ChangeEvent<HTMLInputElement>) {
-    dispatch(editPlaylist({ id: playlist.id, title: event.target.value }));
+    dispatch(editSoundboard({ id: soundboard.id, title: event.target.value }));
   }
 
   function handleBackgroundChange(background: string) {
-    dispatch(editPlaylist({ id: playlist.id, background }));
+    dispatch(editSoundboard({ id: soundboard.id, background }));
   }
 
   function handleSubmit(event: React.FormEvent) {
@@ -38,7 +38,7 @@ export function PlaylistSettings({
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Edit Playlist</DialogTitle>
+      <DialogTitle>Edit Soundboard</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <TextField
@@ -51,11 +51,11 @@ export function PlaylistSettings({
             InputLabelProps={{
               shrink: true,
             }}
-            value={playlist.title}
+            value={soundboard.title}
             onChange={handleTitleChange}
           />
           <ImageSelector
-            value={playlist.background}
+            value={soundboard.background}
             onChange={handleBackgroundChange}
           />
         </DialogContent>

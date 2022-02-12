@@ -15,6 +15,8 @@ import { Playlist } from "../features/playlists/Playlist";
 
 import "../../renderer/app/App.css";
 import { Home } from "../features/home/Home";
+import { Soundboards } from "../features/soundboards/Soundboards";
+import { Soundboard } from "../features/soundboards/Soundboard";
 
 const WallPaper = styled("div")({
   position: "absolute",
@@ -47,6 +49,11 @@ export function App() {
         <Route
           path="playlists/:playlistId"
           element={<Playlist onPlay={play} />}
+        />
+        <Route path="soundboards" element={<Soundboards onPlay={play} />} />
+        <Route
+          path="soundboards/:soundboardId"
+          element={<Soundboard onPlay={play} />}
         />
       </Routes>
       <Player onSeek={seek} onNext={next} onPrevious={previous} />

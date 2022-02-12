@@ -25,11 +25,16 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 
-import { PlaylistItem } from "./PlaylistItem";
+import { SoundboardItem } from "./SoundboardItem";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import { movePlaylist, Track, addPlaylist, addTracks } from "./playlistsSlice";
-import { PlaylistAdd } from "./PlaylistAdd";
+import {
+  moveSoundboard,
+  Sound,
+  addSoundboard,
+  addSounds,
+} from "./soundboardsSlice";
+import { SoundboardAdd } from "./SoundboardAdd";
 import { SortableItem } from "../../common/SortableItem";
 import { startQueue } from "../playback/playbackSlice";
 import { useDrop } from "../../common/useDrop";
@@ -48,14 +53,14 @@ const WallPaper = styled("div")({
   zIndex: -1,
 });
 
-type PlaylistsProps = {
-  onPlay: (track: Track) => void;
+type SoundboardProps = {
+  onPlay: (sound: Sound) => void;
 };
 
-export function Playlists({ onPlay }: PlaylistsProps) {
+export function Soundboards({ onPlay }: SoundboardProps) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const playlists = useSelector((state: RootState) => state.playlists);
+  const soundboards = useSelector((state: RootState) => state.soundboards);
 
   const pointerSensor = useSensor(PointerSensor, {
     activationConstraint: { distance: 10 },
@@ -64,8 +69,8 @@ export function Playlists({ onPlay }: PlaylistsProps) {
 
   const sensors = useSensors(pointerSensor, keyboardSensor);
 
-  const items = playlists.playlists.allIds.map(
-    (id) => playlists.playlists.byId[id]
+  const items = soundboards.soundboards.allIds.map(
+    (id) => soundboards.soundboards.byId[id]
   );
 
   const [dragId, setDragId] = useState<string | null>(null);
@@ -77,7 +82,7 @@ export function Playlists({ onPlay }: PlaylistsProps) {
     const { active, over } = event;
 
     if (active.id !== over.id) {
-      dispatch(movePlaylist({ active: active.id, over: over.id }));
+      dispatch(moveSoundboard({ active: active.id, over: over.id }));
     }
 
     setDragId(null);
@@ -85,15 +90,16 @@ export function Playlists({ onPlay }: PlaylistsProps) {
 
   const [addOpen, setAddOpen] = useState(false);
 
-  function handlePlaylistPlay(playlistId: string) {
-    const playlist = playlists.playlists.byId[playlistId];
-    if (playlist) {
-      let tracks = [...playlist.tracks];
-      const trackId = tracks[0];
-      const track = playlists.tracks[trackId];
-      if (track) {
-        dispatch(startQueue({ tracks, trackId, playlistId }));
-        onPlay(track);
+  function handleSoundboardPlay(soundboardId: string) {
+    const soundboard = soundboards.soundboards.byId[soundboardId];
+    if (soundboard) {
+      let sounds = [...soundboard.sounds];
+      const soundId = sounds[0];
+      const sound = soundboards.sounds[soundId];
+      if (sound) {
+        // TODO
+        // dispatch(startQueue({ tracks, trackId, playlistId }));
+        onPlay(sound);
       }
     }
   }
@@ -105,14 +111,14 @@ export function Playlists({ onPlay }: PlaylistsProps) {
         if (files.length > 0 && directory.path !== "/") {
           const id = uuid();
           dispatch(
-            addPlaylist({
+            addSoundboard({
               id,
               background: getRandomBackground(),
               title: directory.name,
-              tracks: [],
+              sounds: [],
             })
           );
-          dispatch(addTracks({ tracks: files, playlistId: id }));
+          dispatch(addSounds({ sounds: files, soundboardId: id }));
         }
       }
     }
@@ -143,9 +149,9 @@ export function Playlists({ onPlay }: PlaylistsProps) {
             <Back />
           </IconButton>
           <Typography variant="h3" noWrap>
-            Playlists
+            Soundboards
           </Typography>
-          <Tooltip title="Add Playlist">
+          <Tooltip title="Add Soundboard">
             <IconButton onClick={() => setAddOpen(true)}>
               <AddRounded />
             </IconButton>
@@ -171,21 +177,21 @@ export function Playlists({ onPlay }: PlaylistsProps) {
             onDragEnd={handleDragEnd}
           >
             <SortableContext items={items} strategy={rectSortingStrategy}>
-              {items.map((playlist) => (
-                <Grid item xs={2} sm={3} md={3} key={playlist.id}>
-                  <SortableItem id={playlist.id}>
-                    <PlaylistItem
-                      playlist={playlist}
-                      onSelect={(id) => navigate(`/playlists/${id}`)}
-                      onPlay={handlePlaylistPlay}
+              {items.map((soundboard) => (
+                <Grid item xs={2} sm={3} md={3} key={soundboard.id}>
+                  <SortableItem id={soundboard.id}>
+                    <SoundboardItem
+                      soundboard={soundboard}
+                      onSelect={(id) => navigate(`/soundboards/${id}`)}
+                      onPlay={handleSoundboardPlay}
                     />
                   </SortableItem>
                 </Grid>
               ))}
               <DragOverlay>
                 {dragId ? (
-                  <PlaylistItem
-                    playlist={playlists.playlists.byId[dragId]}
+                  <SoundboardItem
+                    soundboard={soundboards.soundboards.byId[dragId]}
                     onSelect={() => {}}
                     onPlay={() => {}}
                   />
@@ -200,11 +206,11 @@ export function Playlists({ onPlay }: PlaylistsProps) {
           {...overlayListeners}
         >
           <Typography sx={{ pointerEvents: "none" }}>
-            Drop the playlists here...
+            Drop the soundboards here...
           </Typography>
         </Backdrop>
       </Container>
-      <PlaylistAdd open={addOpen} onClose={() => setAddOpen(false)} />
+      <SoundboardAdd open={addOpen} onClose={() => setAddOpen(false)} />
     </>
   );
 }

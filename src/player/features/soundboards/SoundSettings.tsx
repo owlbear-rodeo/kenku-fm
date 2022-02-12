@@ -7,28 +7,24 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 
 import { useDispatch } from "react-redux";
-import { editPlaylist, Playlist } from "./playlistsSlice";
-import { ImageSelector } from "../../common/ImageSelector";
+import { editSound, Sound } from "./soundboardsSlice";
+import { AudioSelector } from "../../common/AudioSelector";
 
-type PlaylistSettingsProps = {
-  playlist: Playlist;
+type SoundSettingsProps = {
+  sound: Sound;
   open: boolean;
   onClose: () => void;
 };
 
-export function PlaylistSettings({
-  playlist,
-  open,
-  onClose,
-}: PlaylistSettingsProps) {
+export function SoundSettings({ sound, open, onClose }: SoundSettingsProps) {
   const dispatch = useDispatch();
 
   function handleTitleChange(event: React.ChangeEvent<HTMLInputElement>) {
-    dispatch(editPlaylist({ id: playlist.id, title: event.target.value }));
+    dispatch(editSound({ id: sound.id, title: event.target.value }));
   }
 
-  function handleBackgroundChange(background: string) {
-    dispatch(editPlaylist({ id: playlist.id, background }));
+  function handleURLChange(url: string) {
+    dispatch(editSound({ id: sound.id, url }));
   }
 
   function handleSubmit(event: React.FormEvent) {
@@ -37,10 +33,16 @@ export function PlaylistSettings({
   }
 
   return (
-    <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Edit Playlist</DialogTitle>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      // Stop key events from propagating to prevent the sound drag and drop from stealing the space bar
+      onKeyDown={(e) => e.stopPropagation()}
+    >
+      <DialogTitle>Edit Sound</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
+          <AudioSelector value={sound.url} onChange={handleURLChange} />
           <TextField
             margin="dense"
             id="name"
@@ -51,12 +53,8 @@ export function PlaylistSettings({
             InputLabelProps={{
               shrink: true,
             }}
-            value={playlist.title}
+            value={sound.title}
             onChange={handleTitleChange}
-          />
-          <ImageSelector
-            value={playlist.background}
-            onChange={handleBackgroundChange}
           />
         </DialogContent>
         <DialogActions>

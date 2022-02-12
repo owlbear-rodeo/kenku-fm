@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Dialog from "@mui/material/Dialog";
@@ -6,42 +6,49 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 
+import { v4 as uuid } from "uuid";
+
 import { useDispatch } from "react-redux";
-import { editPlaylist, Playlist } from "./playlistsSlice";
+import { addSoundboard } from "./soundboardsSlice";
+
+import { backgrounds } from "../../backgrounds";
 import { ImageSelector } from "../../common/ImageSelector";
 
-type PlaylistSettingsProps = {
-  playlist: Playlist;
+type SoundboardAddProps = {
   open: boolean;
   onClose: () => void;
 };
 
-export function PlaylistSettings({
-  playlist,
-  open,
-  onClose,
-}: PlaylistSettingsProps) {
+export function SoundboardAdd({ open, onClose }: SoundboardAddProps) {
   const dispatch = useDispatch();
 
-  function handleTitleChange(event: React.ChangeEvent<HTMLInputElement>) {
-    dispatch(editPlaylist({ id: playlist.id, title: event.target.value }));
-  }
+  const [title, setTitle] = useState("");
+  const [background, setBackground] = useState(Object.keys(backgrounds)[0]);
 
-  function handleBackgroundChange(background: string) {
-    dispatch(editPlaylist({ id: playlist.id, background }));
+  useEffect(() => {
+    if (!open) {
+      setTitle("");
+    }
+  }, [open]);
+
+  function handleTitleChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setTitle(event.target.value);
   }
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    const id = uuid();
+    dispatch(addSoundboard({ id, title, background, sounds: [] }));
     onClose();
   }
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Edit Playlist</DialogTitle>
+      <DialogTitle>Add Soundboard</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <TextField
+            autoFocus
             margin="dense"
             id="name"
             label="Name"
@@ -51,16 +58,16 @@ export function PlaylistSettings({
             InputLabelProps={{
               shrink: true,
             }}
-            value={playlist.title}
+            value={title}
             onChange={handleTitleChange}
           />
-          <ImageSelector
-            value={playlist.background}
-            onChange={handleBackgroundChange}
-          />
+          <ImageSelector value={background} onChange={setBackground} />
         </DialogContent>
         <DialogActions>
-          <Button type="submit">Done</Button>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button disabled={!title || !background} type="submit">
+            Add
+          </Button>
         </DialogActions>
       </form>
     </Dialog>

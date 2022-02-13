@@ -17,7 +17,7 @@ import {
 import {
   SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
 } from "@dnd-kit/sortable";
 
 import { SoundItem } from "./SoundItem";
@@ -107,7 +107,7 @@ export function SoundboardSounds({
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext items={items} strategy={verticalListSortingStrategy}>
+          <SortableContext items={items} strategy={rectSortingStrategy}>
             {items.map((item) => (
               <Grid item xs={12} sm={6} md={4} lg={3} key={item.id}>
                 <SortableItem key={item.id} id={item.id}>

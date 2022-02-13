@@ -19,6 +19,8 @@ import Next from "@mui/icons-material/SkipNextRounded";
 import Previous from "@mui/icons-material/SkipPreviousRounded";
 import Container from "@mui/material/Container";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import LinearProgress from "@mui/material/LinearProgress";
+import Chip from "@mui/material/Chip";
 
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -29,7 +31,6 @@ import {
   shuffle,
   repeat,
 } from "../playlists/playlistPlaybackSlice";
-import Chip from "@mui/material/Chip";
 import { stopSound } from "../soundboards/soundboardPlaybackSlice";
 
 const TimeSlider = styled(Slider)({
@@ -74,6 +75,16 @@ const TinyText = styled(Typography)({
   opacity: 0.38,
   fontWeight: 500,
   letterSpacing: 0.2,
+});
+
+const SoundProgress = styled(LinearProgress)({
+  height: 32,
+  borderRadius: 16,
+  position: "absolute",
+  left: 0,
+  right: 0,
+  top: 0,
+  bottom: 0,
 });
 
 type PlayerProps = {
@@ -325,11 +336,21 @@ export function Player({
         {sounds.length > 0 && (
           <Stack direction="row">
             {sounds.map((sound) => (
-              <Chip
-                key={sound.id}
-                label={sound.title}
-                onDelete={() => handleSoundboardStop(sound.id)}
-              />
+              <Box sx={{ position: "relative" }} key={sound.id}>
+                <SoundProgress
+                  variant="determinate"
+                  value={(sound.current / sound.duration) * 100}
+                />
+                <Chip
+                  label={sound.title}
+                  onDelete={() => handleSoundboardStop(sound.id)}
+                  sx={{
+                    ".MuiLinearProgress-bar": {
+                      transition: "transform 1s linear",
+                    },
+                  }}
+                />
+              </Box>
             ))}
           </Stack>
         )}

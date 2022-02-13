@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { shuffleArray } from "../../common/shuffle";
-import { Track } from "../playlists/playlistsSlice";
+import { Track } from "./playlistsSlice";
 
 export interface Queue {
   current: number;
@@ -17,7 +17,7 @@ export interface Playback {
 
 export type Repeat = "off" | "track" | "playlist";
 
-export interface PlaybackState {
+export interface PlaylistPlaybackState {
   queue?: Queue;
   playing: boolean;
   volume: number;
@@ -28,7 +28,7 @@ export interface PlaybackState {
   playback?: Playback;
 }
 
-const initialState: PlaybackState = {
+const initialState: PlaylistPlaybackState = {
   playing: false,
   volume: 1,
   muted: false,
@@ -36,8 +36,8 @@ const initialState: PlaybackState = {
   repeat: "playlist",
 };
 
-export const playbackSlice = createSlice({
-  name: "playback",
+export const playlistPlaybackSlice = createSlice({
+  name: "playlistPlayback",
   initialState,
   reducers: {
     startQueue: (
@@ -175,6 +175,6 @@ export const {
   mute,
   shuffle,
   repeat,
-} = playbackSlice.actions;
+} = playlistPlaybackSlice.actions;
 
-export default playbackSlice.reducer;
+export default playlistPlaybackSlice.reducer;

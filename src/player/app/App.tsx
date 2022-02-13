@@ -6,9 +6,9 @@ import Alert from "@mui/material/Alert";
 
 import { Routes, Route } from "react-router-dom";
 
-import { Player } from "../features/playback/Player";
-import { usePlayback } from "../features/playback/usePlayback";
-import { useMediaSession } from "../features/playback/useMediaSession";
+import { Player } from "../features/player/Player";
+import { usePlaylistPlayback } from "../features/playlists/usePlaylistPlayback";
+import { useMediaSession } from "../features/playlists/useMediaSession";
 import { useRemote } from "../features/remote/useRemote";
 import { Playlists } from "../features/playlists/Playlists";
 import { Playlist } from "../features/playlists/Playlist";
@@ -17,6 +17,7 @@ import "../../renderer/app/App.css";
 import { Home } from "../features/home/Home";
 import { Soundboards } from "../features/soundboards/Soundboards";
 import { Soundboard } from "../features/soundboards/Soundboard";
+import { useSoundboardPlayback } from "../features/soundboards/useSoundboardPlayback";
 
 const WallPaper = styled("div")({
   position: "absolute",
@@ -36,27 +37,46 @@ export function App() {
     setErrorMessage(message);
   }, []);
 
-  const { seek, play, next, previous, stop } = usePlayback(handleError);
-  useMediaSession(seek, next, previous, stop);
-  useRemote(play, seek, next, previous);
+  const playlist = usePlaylistPlayback(handleError);
+  useMediaSession(
+    playlist.seek,
+    playlist.next,
+    playlist.previous,
+    playlist.stop
+  );
+  useRemote(playlist.play, playlist.seek, playlist.next, playlist.previous);
+  const soundboard = useSoundboardPlayback(handleError);
 
   return (
     <>
       <WallPaper />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="playlists" element={<Playlists onPlay={play} />} />
+        <Route
+          path="playlists"
+          element={<Playlists onPlay={playlist.play} />}
+        />
         <Route
           path="playlists/:playlistId"
-          element={<Playlist onPlay={play} />}
+          element={<Playlist onPlay={playlist.play} />}
         />
-        <Route path="soundboards" element={<Soundboards onPlay={play} />} />
+        <Route
+          path="soundboards"
+          element={<Soundboards onPlay={soundboard.play} />}
+        />
         <Route
           path="soundboards/:soundboardId"
-          element={<Soundboard onPlay={play} />}
+          element={
+            <Soundboard onPlay={soundboard.play} onStop={soundboard.stop} />
+          }
         />
       </Routes>
-      <Player onSeek={seek} onNext={next} onPrevious={previous} />
+      <Player
+        onPlaylistSeek={playlist.seek}
+        onPlaylistNext={playlist.next}
+        onPlaylistPrevious={playlist.previous}
+        onSoundboardStop={soundboard.stop}
+      />
       <Snackbar
         open={Boolean(errorMessage)}
         autoHideDuration={4000}

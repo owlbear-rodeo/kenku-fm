@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import { playPause } from "./playbackSlice";
+import { playPause } from "./playlistPlaybackSlice";
 
 export function useMediaSession(
   seek: (to: number) => void,
@@ -10,7 +10,7 @@ export function useMediaSession(
   previous: () => void,
   stop: () => void
 ) {
-  const playback = useSelector((state: RootState) => state.playback);
+  const playback = useSelector((state: RootState) => state.playlistPlayback);
   const dispatch = useDispatch();
 
   // Handle media session actions

@@ -12,7 +12,7 @@ import {
   adjustVolume,
   shuffle,
   startQueue,
-} from "../playback/playbackSlice";
+} from "../playlists/playlistPlaybackSlice";
 
 export function useRemote(
   play: (track: Track) => void,
@@ -21,7 +21,7 @@ export function useRemote(
   previous: () => void
 ) {
   const playlists = useSelector((state: RootState) => state.playlists);
-  const playback = useSelector((state: RootState) => state.playback);
+  const playback = useSelector((state: RootState) => state.playlistPlayback);
   const dispatch = useDispatch();
 
   useEffect(() => {

@@ -31,7 +31,7 @@ import { RootState } from "../../app/store";
 import { movePlaylist, Track, addPlaylist, addTracks } from "./playlistsSlice";
 import { PlaylistAdd } from "./PlaylistAdd";
 import { SortableItem } from "../../common/SortableItem";
-import { startQueue } from "../playback/playbackSlice";
+import { startQueue } from "./playlistPlaybackSlice";
 import { useDrop } from "../../common/useDrop";
 import { getRandomBackground } from "../../backgrounds";
 import { useHideScrollbar } from "../../../renderer/common/useHideScrollbar";

@@ -32,12 +32,14 @@ type SoundboardSoundsProps = {
   items: Sound[];
   soundboard: Soundboard;
   onPlay: (id: string) => void;
+  onStop: (id: string) => void;
 };
 
 export function SoundboardSounds({
   items,
   soundboard,
   onPlay,
+  onStop,
 }: SoundboardSoundsProps) {
   const dispatch = useDispatch();
 
@@ -113,6 +115,7 @@ export function SoundboardSounds({
                     sound={item}
                     soundboard={soundboard}
                     onPlay={onPlay}
+                    onStop={onStop}
                   />
                 </SortableItem>
               </Grid>
@@ -123,6 +126,7 @@ export function SoundboardSounds({
                   sound={items.find((sound) => sound.id === dragId)}
                   soundboard={soundboard}
                   onPlay={onPlay}
+                  onStop={onStop}
                 />
               ) : null}
             </DragOverlay>

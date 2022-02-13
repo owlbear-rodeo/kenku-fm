@@ -13,7 +13,7 @@ import { backgrounds, isBackground } from "../../backgrounds";
 import { Playlist } from "./playlistsSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import { playPause } from "../playback/playbackSlice";
+import { playPause } from "./playlistPlaybackSlice";
 
 type PlaylistItemProps = {
   playlist: Playlist;
@@ -26,7 +26,7 @@ export function PlaylistItem({
   onSelect,
   onPlay,
 }: PlaylistItemProps) {
-  const playback = useSelector((state: RootState) => state.playback);
+  const playback = useSelector((state: RootState) => state.playlistPlayback);
   const dispatch = useDispatch();
 
   const image = isBackground(playlist.background)

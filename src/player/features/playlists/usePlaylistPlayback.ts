@@ -9,15 +9,15 @@ import {
   updatePlayback,
   updateQueue,
   stopTrack,
-} from "./playbackSlice";
-import { Track } from "../playlists/playlistsSlice";
+} from "./playlistPlaybackSlice";
+import { Track } from "./playlistsSlice";
 
-export function usePlayback(onError: (message: string) => void) {
+export function usePlaylistPlayback(onError: (message: string) => void) {
   const trackRef = useRef<Howl | null>(null);
   const animationRef = useRef<number | null>(null);
 
   const playlists = useSelector((state: RootState) => state.playlists);
-  const playback = useSelector((state: RootState) => state.playback);
+  const playback = useSelector((state: RootState) => state.playlistPlayback);
   const dispatch = useDispatch();
 
   const play = useCallback(

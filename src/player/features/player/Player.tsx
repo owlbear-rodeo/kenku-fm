@@ -21,14 +21,16 @@ import Container from "@mui/material/Container";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../..//app/store";
+import { RootState } from "../../app/store";
 import {
   adjustVolume,
   playPause,
   mute,
   shuffle,
   repeat,
-} from "./playbackSlice";
+} from "../playlists/playlistPlaybackSlice";
+import Chip from "@mui/material/Chip";
+import { stopSound } from "../soundboards/soundboardPlaybackSlice";
 
 const TimeSlider = styled(Slider)({
   color: "#fff",
@@ -75,15 +77,26 @@ const TinyText = styled(Typography)({
 });
 
 type PlayerProps = {
-  onNext: () => void;
-  onPrevious: () => void;
-  onSeek: (to: number) => void;
+  onPlaylistNext: () => void;
+  onPlaylistPrevious: () => void;
+  onPlaylistSeek: (to: number) => void;
+  onSoundboardStop: (id: string) => void;
 };
 
-export function Player({ onNext, onPrevious, onSeek }: PlayerProps) {
+export function Player({
+  onPlaylistNext,
+  onPlaylistPrevious,
+  onPlaylistSeek,
+  onSoundboardStop,
+}: PlayerProps) {
   const dispatch = useDispatch();
   const playlists = useSelector((state: RootState) => state.playlists);
-  const playback = useSelector((state: RootState) => state.playback);
+  const playlistPlayback = useSelector(
+    (state: RootState) => state.playlistPlayback
+  );
+  const soundboardPlayback = useSelector(
+    (state: RootState) => state.soundboardPlayback
+  );
 
   function formatDuration(value: number) {
     const minute = Math.floor(value / 60);
@@ -96,22 +109,22 @@ export function Player({ onNext, onPrevious, onSeek }: PlayerProps) {
   // Commit the time value when letting go of the slider
   function handleTimeChange(_: Event, value: number | number[]) {
     setTimeOverride(null);
-    onSeek(value as number);
+    onPlaylistSeek(value as number);
   }
 
   function handleVolumeChange(_: Event, value: number | number[]) {
-    if (playback.muted && value > 0) {
+    if (playlistPlayback.muted && value > 0) {
       dispatch(mute());
     }
     dispatch(adjustVolume(value as number));
   }
 
   function handlePlay() {
-    dispatch(playPause(!playback.playing));
+    dispatch(playPause(!playlistPlayback.playing));
   }
 
   function handlRepeat() {
-    switch (playback.repeat) {
+    switch (playlistPlayback.repeat) {
       case "off":
         dispatch(repeat("playlist"));
         break;
@@ -125,21 +138,30 @@ export function Player({ onNext, onPrevious, onSeek }: PlayerProps) {
   }
 
   function handleMute() {
-    dispatch(mute(!playback.muted));
+    dispatch(mute(!playlistPlayback.muted));
   }
 
   function handleShuffle() {
-    const newShuffle = !playback.shuffle;
+    const newShuffle = !playlistPlayback.shuffle;
     dispatch(shuffle(newShuffle));
   }
 
-  const time =
-    timeOverride === null ? playback.playback?.current || 0 : timeOverride;
-  const duration = playback.playback?.duration || 0;
+  function handleSoundboardStop(id: string) {
+    dispatch(stopSound(id));
+    onSoundboardStop(id);
+  }
 
-  const noTrack = playback.track?.title === undefined;
+  const time =
+    timeOverride === null
+      ? playlistPlayback.playback?.current || 0
+      : timeOverride;
+  const duration = playlistPlayback.playback?.duration || 0;
+
+  const noTrack = playlistPlayback.track?.title === undefined;
 
   const large = useMediaQuery("(min-width: 500px)");
+
+  const sounds = Object.values(soundboardPlayback.playback);
 
   const title = (
     <Box
@@ -157,7 +179,7 @@ export function Player({ onNext, onPrevious, onSeek }: PlayerProps) {
         noWrap
         gutterBottom
       >
-        {noTrack ? "" : playback.track.title}
+        {noTrack ? "" : playlistPlayback.track.title}
       </Typography>
       <Typography
         variant="caption"
@@ -167,7 +189,7 @@ export function Player({ onNext, onPrevious, onSeek }: PlayerProps) {
       >
         {noTrack
           ? ""
-          : playlists.playlists.byId[playback.queue.playlistId]?.title}
+          : playlists.playlists.byId[playlistPlayback.queue.playlistId]?.title}
       </Typography>
     </Box>
   );
@@ -183,40 +205,40 @@ export function Player({ onNext, onPrevious, onSeek }: PlayerProps) {
       }}
     >
       <IconButton aria-label="shuffle" onClick={handleShuffle}>
-        <Shuffle color={playback.shuffle ? "primary" : undefined} />
+        <Shuffle color={playlistPlayback.shuffle ? "primary" : undefined} />
       </IconButton>
       <IconButton
-        disabled={!Boolean(playback.playback)}
+        disabled={!Boolean(playlistPlayback.playback)}
         aria-label="previous"
-        onClick={() => onPrevious()}
+        onClick={() => onPlaylistPrevious()}
       >
         <Previous />
       </IconButton>
       <IconButton
-        aria-label={playback.playing ? "pause" : "play"}
+        aria-label={playlistPlayback.playing ? "pause" : "play"}
         onClick={handlePlay}
-        disabled={!Boolean(playback.playback)}
+        disabled={!Boolean(playlistPlayback.playback)}
       >
-        {playback.playing ? (
+        {playlistPlayback.playing ? (
           <Pause sx={{ fontSize: "3rem" }} />
         ) : (
           <PlayArrow sx={{ fontSize: "3rem" }} />
         )}
       </IconButton>
       <IconButton
-        disabled={!Boolean(playback.playback)}
+        disabled={!Boolean(playlistPlayback.playback)}
         aria-label="next"
-        onClick={() => onNext()}
+        onClick={() => onPlaylistNext()}
       >
         <Next />
       </IconButton>
       <IconButton
-        aria-label={`repeat ${playback.repeat}`}
+        aria-label={`repeat ${playlistPlayback.repeat}`}
         onClick={handlRepeat}
       >
-        {playback.repeat === "off" ? (
+        {playlistPlayback.repeat === "off" ? (
           <RepeatIcon />
-        ) : playback.repeat === "playlist" ? (
+        ) : playlistPlayback.repeat === "playlist" ? (
           <RepeatIcon color="primary" />
         ) : (
           <RepeatOne color="primary" />
@@ -232,14 +254,14 @@ export function Player({ onNext, onPrevious, onSeek }: PlayerProps) {
       alignItems="center"
     >
       <IconButton
-        aria-label={playback.muted ? "unmute" : "mute"}
+        aria-label={playlistPlayback.muted ? "unmute" : "mute"}
         onClick={handleMute}
       >
-        {playback.muted ? <VolumeOff /> : <VolumeDown />}
+        {playlistPlayback.muted ? <VolumeOff /> : <VolumeDown />}
       </IconButton>
       <VolumeSlider
         aria-label="Volume"
-        value={playback.muted ? 0 : playback.volume}
+        value={playlistPlayback.muted ? 0 : playlistPlayback.volume}
         step={0.01}
         min={0}
         max={1}
@@ -262,7 +284,7 @@ export function Player({ onNext, onPrevious, onSeek }: PlayerProps) {
         min={0}
         step={1}
         max={duration}
-        disabled={!Boolean(playback.playback)}
+        disabled={!Boolean(playlistPlayback.playback)}
         onChange={(_, value) => setTimeOverride(value as number)}
         onChangeCommitted={handleTimeChange}
       />
@@ -300,6 +322,17 @@ export function Player({ onNext, onPrevious, onSeek }: PlayerProps) {
           backdropFilter: "blur(10px)",
         }}
       >
+        {sounds.length > 0 && (
+          <Stack direction="row">
+            {sounds.map((sound) => (
+              <Chip
+                key={sound.id}
+                label={sound.title}
+                onDelete={() => handleSoundboardStop(sound.id)}
+              />
+            ))}
+          </Stack>
+        )}
         {large ? (
           <>
             <Stack direction="row">

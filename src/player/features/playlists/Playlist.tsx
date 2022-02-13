@@ -20,7 +20,7 @@ import { PlaylistSettings } from "./PlaylistSettings";
 import { PlaylistTracks } from "./PlaylistTracks";
 
 import { isBackground, backgrounds } from "../../backgrounds";
-import { startQueue } from "../playback/playbackSlice";
+import { startQueue } from "./playlistPlaybackSlice";
 import { useDrop } from "../../common/useDrop";
 import { useNavigate, useParams } from "react-router-dom";
 

@@ -11,7 +11,7 @@ import { v4 as uuid } from "uuid";
 import { useDispatch } from "react-redux";
 import { addTrack } from "./playlistsSlice";
 import { AudioSelector } from "../../common/AudioSelector";
-import { addTrackToQueueIfNeeded } from "../playback/playbackSlice";
+import { addTrackToQueueIfNeeded } from "./playlistPlaybackSlice";
 
 type TrackAddProps = {
   playlistId: string;

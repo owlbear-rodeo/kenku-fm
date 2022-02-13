@@ -25,9 +25,10 @@ import { useNavigate, useParams } from "react-router-dom";
 
 type SoundboardProps = {
   onPlay: (sound: Sound) => void;
+  onStop: (id: string) => void;
 };
 
-export function Soundboard({ onPlay }: SoundboardProps) {
+export function Soundboard({ onPlay, onStop }: SoundboardProps) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const soundboards = useSelector((state: RootState) => state.soundboards);
@@ -154,6 +155,7 @@ export function Soundboard({ onPlay }: SoundboardProps) {
           items={items}
           soundboard={soundboard}
           onPlay={handleSoundPlay}
+          onStop={onStop}
         />
         <Backdrop
           open={dragging}

@@ -3,7 +3,7 @@ import Grid from "@mui/material/Grid";
 import PlayArrow from "@mui/icons-material/PlayArrowRounded";
 import IconButton from "@mui/material/IconButton";
 import Repeat from "@mui/icons-material/RepeatRounded";
-import Pause from "@mui/icons-material/PauseRounded";
+import Stop from "@mui/icons-material/StopRounded";
 import MoreVert from "@mui/icons-material/MoreVertRounded";
 import VolumeUp from "@mui/icons-material/VolumeUp";
 import Menu from "@mui/material/Menu";
@@ -19,11 +19,13 @@ import { Sound, removeSound, Soundboard } from "./soundboardsSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { SoundSettings } from "./SoundSettings";
 import { RootState } from "../../app/store";
+import { stopSound } from "./soundboardPlaybackSlice";
 
 type SoundItemProps = {
   sound: Sound;
   soundboard: Soundboard;
   onPlay: (id: string) => void;
+  onStop: (id: string) => void;
 };
 
 const VolumeSlider = styled(Slider)({
@@ -41,8 +43,13 @@ const VolumeSlider = styled(Slider)({
   },
 });
 
-export function SoundItem({ sound, soundboard, onPlay }: SoundItemProps) {
-  const playback = useSelector((state: RootState) => state.playback);
+export function SoundItem({
+  sound,
+  soundboard,
+  onPlay,
+  onStop,
+}: SoundItemProps) {
+  const playback = useSelector((state: RootState) => state.soundboardPlayback);
   const dispatch = useDispatch();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -71,17 +78,15 @@ export function SoundItem({ sound, soundboard, onPlay }: SoundItemProps) {
     handleMenuClose();
   }
 
-  function handlePlayPause() {
-    // TODO
-    // if (playback.track?.id === sound.id) {
-    //   dispatch(playPause(!playback.playing));
-    // } else {
-    onPlay(sound.id);
-    // }
+  function handlePlayStop() {
+    if (sound.id in playback.playback) {
+      onStop(sound.id);
+    } else {
+      onPlay(sound.id);
+    }
   }
 
-  // TODO
-  const playing = playback.track?.id === sound.id && playback.playing;
+  const playing = sound.id in playback.playback;
 
   return (
     <>
@@ -120,11 +125,11 @@ export function SoundItem({ sound, soundboard, onPlay }: SoundItemProps) {
             max={1}
           />
           <IconButton
-            aria-label={playing ? "pause" : "play"}
-            onClick={handlePlayPause}
+            aria-label={playing ? "stop" : "play"}
+            onClick={handlePlayStop}
           >
             {playing ? (
-              <Pause sx={{ fontSize: "3rem" }} />
+              <Stop sx={{ fontSize: "3rem" }} />
             ) : (
               <PlayArrow sx={{ fontSize: "3rem" }} />
             )}

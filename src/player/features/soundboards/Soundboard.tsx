@@ -20,7 +20,6 @@ import { SoundboardSettings } from "./SoundboardSettings";
 import { SoundboardSounds } from "./SoundboardSounds";
 
 import { isBackground, backgrounds } from "../../backgrounds";
-import { startQueue } from "../playback/playbackSlice";
 import { useDrop } from "../../common/useDrop";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -72,9 +71,6 @@ export function Soundboard({ onPlay }: SoundboardProps) {
   function handleSoundPlay(soundId: string) {
     const sound = soundboards.sounds[soundId];
     if (sound) {
-      let sounds = [...soundboard.sounds];
-      // TODO
-      // dispatch(startQueue({ tracks, trackId: soundId, playlistId: soundboard.id }));
       onPlay(sound);
     }
   }
@@ -83,7 +79,13 @@ export function Soundboard({ onPlay }: SoundboardProps) {
     (directories) => {
       const sounds: Sound[] = [];
       for (let directory of Object.values(directories)) {
-        sounds.push(...directory.audioFiles);
+        sounds.push(
+          ...directory.audioFiles.map((file) => ({
+            ...file,
+            repeat: false,
+            volume: 1,
+          }))
+        );
       }
       dispatch(addSounds({ sounds, soundboardId: soundboard.id }));
     }

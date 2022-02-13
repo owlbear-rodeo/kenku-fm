@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import Box from "@mui/material/Box";
-import List from "@mui/material/List";
+import Grid from "@mui/material/Grid";
 
 import {
   DndContext,
@@ -25,7 +25,6 @@ import { SortableItem } from "../../common/SortableItem";
 
 import { useDispatch } from "react-redux";
 import { Soundboard, Sound, moveSound } from "./soundboardsSlice";
-import { moveQueueIfNeeded } from "../playback/playbackSlice";
 
 import { useHideScrollbar } from "../../../renderer/common/useHideScrollbar";
 
@@ -67,14 +66,6 @@ export function SoundboardSounds({
           over: over.id,
         })
       );
-      // TODO
-      // dispatch(
-      //   moveQueueIfNeeded({
-      //     playlistId: soundboard.id,
-      //     active: active.id,
-      //     over: over.id,
-      //   })
-      // );
     }
 
     setDragId(null);
@@ -98,13 +89,15 @@ export function SoundboardSounds({
       }}
       {...hideScrollbar}
     >
-      <List
+      <Grid
         sx={{
           width: "100%",
-          maxWidth: 360,
+          maxWidth: "1200px",
           margin: "0 auto",
           marginBottom: "240px",
         }}
+        container
+        spacing={2}
       >
         <DndContext
           sensors={sensors}
@@ -114,13 +107,15 @@ export function SoundboardSounds({
         >
           <SortableContext items={items} strategy={verticalListSortingStrategy}>
             {items.map((item) => (
-              <SortableItem key={item.id} id={item.id}>
-                <SoundItem
-                  sound={item}
-                  soundboard={soundboard}
-                  onPlay={onPlay}
-                />
-              </SortableItem>
+              <Grid item xs={12} sm={6} md={4} lg={3} key={item.id}>
+                <SortableItem key={item.id} id={item.id}>
+                  <SoundItem
+                    sound={item}
+                    soundboard={soundboard}
+                    onPlay={onPlay}
+                  />
+                </SortableItem>
+              </Grid>
             ))}
             <DragOverlay>
               {dragId ? (
@@ -133,7 +128,7 @@ export function SoundboardSounds({
             </DragOverlay>
           </SortableContext>
         </DndContext>
-      </List>
+      </Grid>
     </Box>
   );
 }

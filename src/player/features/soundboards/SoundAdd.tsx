@@ -11,7 +11,6 @@ import { v4 as uuid } from "uuid";
 import { useDispatch } from "react-redux";
 import { addSound } from "./soundboardsSlice";
 import { AudioSelector } from "../../common/AudioSelector";
-import { addTrackToQueueIfNeeded } from "../playback/playbackSlice";
 
 type SoundAddProps = {
   soundboardId: string;
@@ -40,12 +39,11 @@ export function SoundAdd({ soundboardId, open, onClose }: SoundAddProps) {
     event.preventDefault();
     const id = uuid();
     dispatch(
-      addSound({ sound: { id, title, url }, soundboardId: soundboardId })
+      addSound({
+        sound: { id, title, url, repeat: false, volume: 1 },
+        soundboardId: soundboardId,
+      })
     );
-    // TODO:
-    // dispatch(
-    //   addTrackToQueueIfNeeded({ playlistId: soundboardId, trackId: id })
-    // );
     onClose();
   }
 

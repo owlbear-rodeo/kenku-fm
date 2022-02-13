@@ -4,6 +4,8 @@ export interface Sound {
   id: string;
   url: string;
   title: string;
+  repeat: boolean;
+  volume: number;
 }
 
 export interface Soundboard {

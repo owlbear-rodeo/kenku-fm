@@ -3,17 +3,13 @@ import Card from "@mui/material/Card";
 import CardMedia from "@mui/material/CardMedia";
 import Typography from "@mui/material/Typography";
 import CardActionArea from "@mui/material/CardActionArea";
-import PlayArrowIcon from "@mui/icons-material/PlayArrowRounded";
-import PauseIcon from "@mui/icons-material/PauseRounded";
+import ShuffleIcon from "@mui/icons-material/ShuffleRounded";
 import IconButton from "@mui/material/IconButton";
 import Box from "@mui/material/Box";
 
 import { backgrounds, isBackground } from "../../backgrounds";
 
 import { Soundboard } from "./soundboardsSlice";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../app/store";
-import { playPause } from "../playback/playbackSlice";
 
 type SoundboardItemProps = {
   soundboard: Soundboard;
@@ -26,24 +22,12 @@ export function SoundboardItem({
   onSelect,
   onPlay,
 }: SoundboardItemProps) {
-  const playback = useSelector((state: RootState) => state.playback);
-  const dispatch = useDispatch();
-
   const image = isBackground(soundboard.background)
     ? backgrounds[soundboard.background]
     : soundboard.background;
 
-  // TODO
-  const playing =
-    playback.playing && playback.queue?.playlistId === soundboard.id;
-
-  function handlePlay() {
-    // TODO
-    // if (playback.queue?.playlistId === soundboard.id) {
-    //   dispatch(playPause(!playback.playing));
-    // } else {
+  function handleShuffle() {
     onPlay(soundboard.id);
-    // }
   }
 
   return (
@@ -85,15 +69,11 @@ export function SoundboardItem({
           {soundboard.title}
         </Typography>
         <IconButton
-          aria-label="play/pause"
+          aria-label="shuffle"
           sx={{ pointerEvents: "all" }}
-          onClick={handlePlay}
+          onClick={handleShuffle}
         >
-          {playing ? (
-            <PauseIcon sx={{ fontSize: "2rem" }} />
-          ) : (
-            <PlayArrowIcon sx={{ fontSize: "2rem" }} />
-          )}
+          <ShuffleIcon sx={{ fontSize: "2rem" }} />
         </IconButton>
       </Box>
     </Card>

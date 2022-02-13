@@ -36,7 +36,6 @@ import {
 } from "./soundboardsSlice";
 import { SoundboardAdd } from "./SoundboardAdd";
 import { SortableItem } from "../../common/SortableItem";
-import { startQueue } from "../playback/playbackSlice";
 import { useDrop } from "../../common/useDrop";
 import { getRandomBackground } from "../../backgrounds";
 import { useHideScrollbar } from "../../../renderer/common/useHideScrollbar";
@@ -94,11 +93,10 @@ export function Soundboards({ onPlay }: SoundboardProps) {
     const soundboard = soundboards.soundboards.byId[soundboardId];
     if (soundboard) {
       let sounds = [...soundboard.sounds];
-      const soundId = sounds[0];
+      // Play a random sound from the soundboard
+      const soundId = sounds[Math.floor(Math.random() * sounds.length)];
       const sound = soundboards.sounds[soundId];
       if (sound) {
-        // TODO
-        // dispatch(startQueue({ tracks, trackId, playlistId }));
         onPlay(sound);
       }
     }
@@ -118,7 +116,16 @@ export function Soundboards({ onPlay }: SoundboardProps) {
               sounds: [],
             })
           );
-          dispatch(addSounds({ sounds: files, soundboardId: id }));
+          dispatch(
+            addSounds({
+              sounds: files.map((file) => ({
+                ...file,
+                repeat: false,
+                volume: 1,
+              })),
+              soundboardId: id,
+            })
+          );
         }
       }
     }

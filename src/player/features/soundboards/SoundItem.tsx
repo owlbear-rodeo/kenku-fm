@@ -1,27 +1,45 @@
 import React, { useState } from "react";
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemText from "@mui/material/ListItemText";
+import Grid from "@mui/material/Grid";
 import PlayArrow from "@mui/icons-material/PlayArrowRounded";
-import Pause from "@mui/icons-material/PauseRounded";
 import IconButton from "@mui/material/IconButton";
-import Paper from "@mui/material/Paper";
-
+import Repeat from "@mui/icons-material/RepeatRounded";
+import Pause from "@mui/icons-material/PauseRounded";
 import MoreVert from "@mui/icons-material/MoreVertRounded";
+import VolumeUp from "@mui/icons-material/VolumeUp";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import styled from "@mui/material/styles/styled";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Slider from "@mui/material/Slider";
 
 import { Sound, removeSound, Soundboard } from "./soundboardsSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { SoundSettings } from "./SoundSettings";
 import { RootState } from "../../app/store";
-import { playPause } from "../playback/playbackSlice";
 
 type SoundItemProps = {
   sound: Sound;
   soundboard: Soundboard;
   onPlay: (id: string) => void;
 };
+
+const VolumeSlider = styled(Slider)({
+  color: "#fff",
+  "& .MuiSlider-track": {
+    border: "none",
+  },
+  "& .MuiSlider-thumb": {
+    width: 24,
+    height: 24,
+    backgroundColor: "#fff",
+    "&:hover, &.Mui-focusVisible, &.Mui-active": {
+      boxShadow: "0 4px 8px rgba(0,0,0,0.4)",
+    },
+  },
+});
 
 export function SoundItem({ sound, soundboard, onPlay }: SoundItemProps) {
   const playback = useSelector((state: RootState) => state.playback);
@@ -66,41 +84,53 @@ export function SoundItem({ sound, soundboard, onPlay }: SoundItemProps) {
   const playing = playback.track?.id === sound.id && playback.playing;
 
   return (
-    <ListItem key={sound.id} disablePadding>
-      <Paper
+    <>
+      <Card
         sx={{
-          width: "100%",
-          m: 0.5,
+          display: "flex",
+          flexDirection: "column",
           backgroundColor: "rgba(34, 38, 57, 0.8)",
+          height: "150px",
         }}
       >
-        <ListItemButton
-          role={undefined}
-          sx={{ m: 0, borderRadius: "16px" }}
-          dense
-          selected={playback.track?.id === sound.id}
+        <CardContent>
+          <Box sx={{ display: "flex" }}>
+            <Typography variant="h5" sx={{ flexGrow: 1 }}>
+              {sound.title}
+            </Typography>
+            <IconButton onClick={handleMenuClick}>
+              <MoreVert />
+            </IconButton>
+          </Box>
+        </CardContent>
+        <Box
+          sx={{ display: "flex", gap: 2, alignItems: "center", px: 2, pb: 1 }}
         >
-          <ListItemText
-            primary={sound.title}
-            sx={{
-              ".MuiListItemText-primary": {
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              },
-            }}
+          <IconButton aria-label={sound.repeat ? "no repeat" : "repeat"}>
+            {sound.repeat ? <Repeat color="primary" /> : <Repeat />}
+          </IconButton>
+          <Box height="24px">
+            <VolumeUp sx={{ color: "rgba(255,255,255,0.4)" }} />
+          </Box>
+          <VolumeSlider
+            aria-label="Volume"
+            value={sound.volume}
+            step={0.01}
+            min={0}
+            max={1}
           />
           <IconButton
             aria-label={playing ? "pause" : "play"}
             onClick={handlePlayPause}
           >
-            {playing ? <Pause /> : <PlayArrow />}
+            {playing ? (
+              <Pause sx={{ fontSize: "3rem" }} />
+            ) : (
+              <PlayArrow sx={{ fontSize: "3rem" }} />
+            )}
           </IconButton>
-          <IconButton onClick={handleMenuClick}>
-            <MoreVert />
-          </IconButton>
-        </ListItemButton>
-      </Paper>
+        </Box>
+      </Card>
       <Menu
         id="soundboard-menu"
         anchorEl={anchorEl}
@@ -119,6 +149,6 @@ export function SoundItem({ sound, soundboard, onPlay }: SoundItemProps) {
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
       />
-    </ListItem>
+    </>
   );
 }

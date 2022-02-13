@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Grid from "@mui/material/Grid";
 import PlayArrow from "@mui/icons-material/PlayArrowRounded";
 import IconButton from "@mui/material/IconButton";
 import Repeat from "@mui/icons-material/RepeatRounded";
@@ -14,12 +13,12 @@ import CardContent from "@mui/material/CardContent";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Slider from "@mui/material/Slider";
+import CardActionArea from "@mui/material/CardActionArea";
 
-import { Sound, removeSound, Soundboard } from "./soundboardsSlice";
+import { Sound, removeSound, Soundboard, editSound } from "./soundboardsSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { SoundSettings } from "./SoundSettings";
 import { RootState } from "../../app/store";
-import { stopSound } from "./soundboardPlaybackSlice";
 
 type SoundItemProps = {
   sound: Sound;
@@ -86,6 +85,14 @@ export function SoundItem({
     }
   }
 
+  function handleVolumeChange(_: Event, value: number | number[]) {
+    dispatch(editSound({ id: sound.id, volume: value as number }));
+  }
+
+  function handleToggleRepeat() {
+    dispatch(editSound({ id: sound.id, repeat: !sound.repeat }));
+  }
+
   const playing = sound.id in playback.playback;
 
   return (
@@ -96,8 +103,12 @@ export function SoundItem({
           flexDirection: "column",
           backgroundColor: "rgba(34, 38, 57, 0.8)",
           height: "150px",
+          position: "relative",
         }}
       >
+        <CardActionArea
+          sx={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0 }}
+        />
         <CardContent>
           <Box sx={{ display: "flex" }}>
             <Typography variant="h5" sx={{ flexGrow: 1 }}>
@@ -111,7 +122,10 @@ export function SoundItem({
         <Box
           sx={{ display: "flex", gap: 2, alignItems: "center", px: 2, pb: 1 }}
         >
-          <IconButton aria-label={sound.repeat ? "no repeat" : "repeat"}>
+          <IconButton
+            aria-label={sound.repeat ? "no repeat" : "repeat"}
+            onClick={handleToggleRepeat}
+          >
             {sound.repeat ? <Repeat color="primary" /> : <Repeat />}
           </IconButton>
           <Box height="24px">
@@ -119,6 +133,9 @@ export function SoundItem({
           </Box>
           <VolumeSlider
             aria-label="Volume"
+            // Prevent drag and drop when using slider
+            onPointerDown={(e) => e.stopPropagation()}
+            onChange={handleVolumeChange}
             value={sound.volume}
             step={0.01}
             min={0}

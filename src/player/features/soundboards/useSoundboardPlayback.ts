@@ -15,7 +15,6 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
 
   const play = useCallback(
     (sound: Sound) => {
-      console.log("play", sound);
       function error() {
         delete soundsRef.current[sound.id];
         dispatch(stopSound(sound.id));
@@ -41,6 +40,14 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
           );
         });
 
+        howl.on("end", () => {
+          if (!sound.repeat) {
+            dispatch(stopSound(sound.id));
+            soundsRef.current[sound.id]?.stop();
+            delete soundsRef.current[sound.id];
+          }
+        });
+
         howl.on("loaderror", error);
 
         howl.on("playerror", error);
@@ -62,13 +69,13 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
     let prevTime = performance.now();
     function animatePlayback(time: number) {
       handler = requestAnimationFrame(animatePlayback);
-      // Limit update to 1 time per second
+      // Limit update to 1 time per 200 ms
       const delta = time - prevTime;
-      if (delta > 1000) {
+      if (delta > 200) {
         for (let id in soundsRef.current) {
           const howl = soundsRef.current[id];
           if (howl.playing()) {
-            dispatch(updatePlayback({ id, current: Math.floor(howl.seek()) }));
+            dispatch(updatePlayback({ id, current: howl.seek() }));
           }
         }
         prevTime = time;

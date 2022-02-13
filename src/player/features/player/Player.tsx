@@ -85,6 +85,9 @@ const SoundProgress = styled(LinearProgress)({
   right: 0,
   top: 0,
   bottom: 0,
+  "& .MuiLinearProgress-bar": {
+    transition: "transform 200ms linear",
+  },
 });
 
 type PlayerProps = {
@@ -334,21 +337,16 @@ export function Player({
         }}
       >
         {sounds.length > 0 && (
-          <Stack direction="row">
+          <Stack direction="row" gap={1} mb={1}>
             {sounds.map((sound) => (
               <Box sx={{ position: "relative" }} key={sound.id}>
                 <SoundProgress
                   variant="determinate"
-                  value={(sound.current / sound.duration) * 100}
+                  value={Math.min((sound.current / sound.duration) * 100, 100)}
                 />
                 <Chip
                   label={sound.title}
                   onDelete={() => handleSoundboardStop(sound.id)}
-                  sx={{
-                    ".MuiLinearProgress-bar": {
-                      transition: "transform 1s linear",
-                    },
-                  }}
                 />
               </Box>
             ))}

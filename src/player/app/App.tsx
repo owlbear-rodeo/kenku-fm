@@ -20,7 +20,7 @@ import { Soundboard } from "../features/soundboards/Soundboard";
 import { useSoundboardPlayback } from "../features/soundboards/useSoundboardPlayback";
 
 const WallPaper = styled("div")({
-  position: "absolute",
+  position: "fixed",
   width: "100%",
   height: "100%",
   top: 0,

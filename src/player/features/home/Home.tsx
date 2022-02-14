@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Container from "@mui/material/Container";
@@ -7,6 +7,7 @@ import IconButton from "@mui/material/IconButton";
 import AddIcon from "@mui/icons-material/AddCircleRounded";
 import Stack from "@mui/material/Stack";
 import Link from "@mui/material/Link";
+import Tooltip from "@mui/material/Tooltip";
 
 import { useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -21,6 +22,8 @@ import {
 import { SoundboardItem } from "../soundboards/SoundboardItem";
 import { Track } from "../playlists/playlistsSlice";
 import { Sound } from "../soundboards/soundboardsSlice";
+import { PlaylistAdd } from "../playlists/PlaylistAdd";
+import { SoundboardAdd } from "../soundboards/SoundboardAdd";
 
 const PlaylistsLink = React.forwardRef<any, Omit<RouterLinkProps, "to">>(
   (props, ref) => <RouterLink ref={ref} to="/playlists" {...props} />
@@ -47,6 +50,9 @@ export function Home({ onPlayTrack, onPlaySound }: HomeProps) {
     .slice(0, 4)
     .map((id) => soundboards.soundboards.byId[id]);
 
+  const [playlistAddOpen, setPlaylistAddOpen] = useState(false);
+  const [soundboardAddOpen, setSoundboardAddOpen] = useState(false);
+
   return (
     <Container
       maxWidth="md"
@@ -69,9 +75,11 @@ export function Home({ onPlayTrack, onPlaySound }: HomeProps) {
             <Typography variant="h5" component="div">
               Playlists
             </Typography>
-            <IconButton>
-              <AddIcon />
-            </IconButton>
+            <Tooltip title="Add Playlist">
+              <IconButton onClick={() => setPlaylistAddOpen(true)}>
+                <AddIcon />
+              </IconButton>
+            </Tooltip>
             <Box sx={{ flexGrow: 1 }} />
             <Link color="inherit" underline="hover" component={PlaylistsLink}>
               See All
@@ -103,9 +111,11 @@ export function Home({ onPlayTrack, onPlaySound }: HomeProps) {
             <Typography variant="h5" component="div">
               Soundboards
             </Typography>
-            <IconButton>
-              <AddIcon />
-            </IconButton>
+            <Tooltip title="Add Soundboard">
+              <IconButton onClick={() => setSoundboardAddOpen(true)}>
+                <AddIcon />
+              </IconButton>
+            </Tooltip>
             <Box sx={{ flexGrow: 1 }} />
             <Link
               href="#"
@@ -131,6 +141,14 @@ export function Home({ onPlayTrack, onPlaySound }: HomeProps) {
           </Grid>
         </CardContent>
       </Card>
+      <PlaylistAdd
+        open={playlistAddOpen}
+        onClose={() => setPlaylistAddOpen(false)}
+      />
+      <SoundboardAdd
+        open={soundboardAddOpen}
+        onClose={() => setSoundboardAddOpen(false)}
+      />
     </Container>
   );
 }

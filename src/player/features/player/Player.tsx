@@ -327,6 +327,7 @@ export function Player({
       maxWidth="md"
     >
       <Paper
+        elevation={5}
         sx={{
           width: "100%",
           display: "flex",

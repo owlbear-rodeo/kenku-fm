@@ -14,6 +14,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Slider from "@mui/material/Slider";
 import CardActionArea from "@mui/material/CardActionArea";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 import { Sound, removeSound, Soundboard, editSound } from "./soundboardsSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -95,6 +96,45 @@ export function SoundItem({
 
   const playing = sound.id in playback.playback;
 
+  const large = useMediaQuery("(min-width: 600px)");
+
+  const repeatToggle = (
+    <IconButton
+      aria-label={sound.repeat ? "no repeat" : "repeat"}
+      onClick={handleToggleRepeat}
+    >
+      {sound.repeat ? <Repeat color="primary" /> : <Repeat />}
+    </IconButton>
+  );
+
+  const volumeSlider = (
+    <>
+      <Box height="24px">
+        <VolumeUp sx={{ color: "rgba(255,255,255,0.4)" }} />
+      </Box>
+      <VolumeSlider
+        aria-label="Volume"
+        // Prevent drag and drop when using slider
+        onPointerDown={(e) => e.stopPropagation()}
+        onChange={handleVolumeChange}
+        value={sound.volume}
+        step={0.01}
+        min={0}
+        max={1}
+      />
+    </>
+  );
+
+  const playButton = (
+    <IconButton aria-label={playing ? "stop" : "play"} onClick={handlePlayStop}>
+      {playing ? (
+        <Stop sx={{ fontSize: "3rem" }} />
+      ) : (
+        <PlayArrow sx={{ fontSize: "3rem" }} />
+      )}
+    </IconButton>
+  );
+
   return (
     <>
       <Card
@@ -102,7 +142,7 @@ export function SoundItem({
           display: "flex",
           flexDirection: "column",
           backgroundColor: "rgba(34, 38, 57, 0.8)",
-          height: "150px",
+          height: large ? "150px" : "200px",
           position: "relative",
         }}
       >
@@ -111,7 +151,7 @@ export function SoundItem({
         />
         <CardContent>
           <Box sx={{ display: "flex" }}>
-            <Typography variant="h5" sx={{ flexGrow: 1 }}>
+            <Typography variant="h5" noWrap sx={{ flexGrow: 1 }}>
               {sound.title}
             </Typography>
             <IconButton onClick={handleMenuClick}>
@@ -119,39 +159,47 @@ export function SoundItem({
             </IconButton>
           </Box>
         </CardContent>
-        <Box
-          sx={{ display: "flex", gap: 2, alignItems: "center", px: 2, pb: 1 }}
-        >
-          <IconButton
-            aria-label={sound.repeat ? "no repeat" : "repeat"}
-            onClick={handleToggleRepeat}
+        {large ? (
+          <Box
+            sx={{ display: "flex", gap: 2, alignItems: "center", px: 2, pb: 1 }}
           >
-            {sound.repeat ? <Repeat color="primary" /> : <Repeat />}
-          </IconButton>
-          <Box height="24px">
-            <VolumeUp sx={{ color: "rgba(255,255,255,0.4)" }} />
+            {repeatToggle}
+            {volumeSlider}
+            {playButton}
           </Box>
-          <VolumeSlider
-            aria-label="Volume"
-            // Prevent drag and drop when using slider
-            onPointerDown={(e) => e.stopPropagation()}
-            onChange={handleVolumeChange}
-            value={sound.volume}
-            step={0.01}
-            min={0}
-            max={1}
-          />
-          <IconButton
-            aria-label={playing ? "stop" : "play"}
-            onClick={handlePlayStop}
+        ) : (
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              alignItems: "center",
+              px: 2,
+              pb: 1,
+            }}
           >
-            {playing ? (
-              <Stop sx={{ fontSize: "3rem" }} />
-            ) : (
-              <PlayArrow sx={{ fontSize: "3rem" }} />
-            )}
-          </IconButton>
-        </Box>
+            <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+              <Box
+                sx={{ position: "absolute", left: { xs: "12px", sm: "24px" } }}
+              >
+                {repeatToggle}
+              </Box>
+              {playButton}
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                alignItems: "center",
+                width: "100%",
+                pr: 3,
+                pb: 1,
+              }}
+            >
+              {volumeSlider}
+            </Box>
+          </Box>
+        )}
       </Card>
       <Menu
         id="soundboard-menu"

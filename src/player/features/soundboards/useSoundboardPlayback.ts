@@ -9,6 +9,8 @@ import {
 } from "./soundboardPlaybackSlice";
 import { Sound } from "./soundboardsSlice";
 
+const fadeTime = 500;
+
 export function useSoundboardPlayback(onError: (message: string) => void) {
   const soundsRef = useRef<Record<string, Howl>>({});
   const dispatch = useDispatch();
@@ -26,11 +28,22 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
           src: sound.url,
           html5: true,
           loop: sound.repeat,
-          volume: sound.volume,
+          volume: 0,
           autoplay: true,
         });
-
         soundsRef.current[sound.id] = howl;
+
+        howl.on("play", () => {
+          // Fade in
+          howl.fade(0, sound.volume, fadeTime);
+          // Fade out
+          setTimeout(() => {
+            if (howl.playing()) {
+              howl.fade(sound.volume, 0, fadeTime);
+            }
+          }, Math.floor(howl.duration() * 1000) - fadeTime);
+        });
+
         howl.once("load", () => {
           dispatch(
             playSound({

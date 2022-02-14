@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { Howl, Howler } from "howler";
+import { Howl } from "howler";
 
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -40,6 +40,8 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
         const howl = new Howl({
           src: track.url,
           html5: true,
+          mute: playback.muted,
+          volume: playback.volume,
         });
 
         trackRef.current = howl;
@@ -86,7 +88,7 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
         error();
       }
     },
-    [onError]
+    [onError, playback.muted, playback.volume]
   );
 
   const seek = useCallback((to: number) => {
@@ -221,16 +223,14 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
 
   useEffect(() => {
     if (trackRef.current) {
-      if (playback.muted) {
-        Howler.mute(true);
-      } else {
-        Howler.mute(false);
-      }
+      trackRef.current.mute(playback.muted);
     }
   }, [playback.muted]);
 
   useEffect(() => {
-    Howler.volume(playback.volume);
+    if (trackRef.current) {
+      trackRef.current.volume(playback.volume);
+    }
   }, [playback.volume]);
 
   return {

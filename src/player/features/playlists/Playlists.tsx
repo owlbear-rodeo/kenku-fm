@@ -6,7 +6,7 @@ import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
-import AddRounded from "@mui/icons-material/AddRounded";
+import AddRounded from "@mui/icons-material/AddCircleRounded";
 import Tooltip from "@mui/material/Tooltip";
 import Backdrop from "@mui/material/Backdrop";
 import Back from "@mui/icons-material/ChevronLeftRounded";

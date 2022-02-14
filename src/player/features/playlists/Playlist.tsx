@@ -3,7 +3,7 @@ import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
-import Add from "@mui/icons-material/AddRounded";
+import Add from "@mui/icons-material/AddCircleRounded";
 import Tooltip from "@mui/material/Tooltip";
 import Box from "@mui/material/Box";
 import Back from "@mui/icons-material/ChevronLeftRounded";

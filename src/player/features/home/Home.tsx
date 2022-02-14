@@ -19,6 +19,8 @@ import {
   LinkProps as RouterLinkProps,
 } from "react-router-dom";
 import { SoundboardItem } from "../soundboards/SoundboardItem";
+import { Track } from "../playlists/playlistsSlice";
+import { Sound } from "../soundboards/soundboardsSlice";
 
 const PlaylistsLink = React.forwardRef<any, Omit<RouterLinkProps, "to">>(
   (props, ref) => <RouterLink ref={ref} to="/playlists" {...props} />
@@ -28,7 +30,12 @@ const SoundboardsLink = React.forwardRef<any, Omit<RouterLinkProps, "to">>(
   (props, ref) => <RouterLink ref={ref} to="/soundboards" {...props} />
 );
 
-export function Home() {
+type HomeProps = {
+  onPlayTrack: (track: Track) => void;
+  onPlaySound: (sound: Sound) => void;
+};
+
+export function Home({ onPlayTrack, onPlaySound }: HomeProps) {
   const navigate = useNavigate();
   const playlists = useSelector((state: RootState) => state.playlists);
   const soundboards = useSelector((state: RootState) => state.soundboards);
@@ -78,7 +85,7 @@ export function Home() {
                 <PlaylistItem
                   playlist={playlist}
                   onSelect={(id) => navigate(`/playlists/${id}`)}
-                  onPlay={() => {}}
+                  onPlay={onPlayTrack}
                 />
               </Grid>
             ))}
@@ -117,7 +124,7 @@ export function Home() {
                 <SoundboardItem
                   soundboard={soundboard}
                   onSelect={(id) => navigate(`/soundboards/${id}`)}
-                  onPlay={() => {}}
+                  onPlay={onPlaySound}
                 />
               </Grid>
             ))}

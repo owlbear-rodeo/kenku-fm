@@ -51,7 +51,12 @@ export function App() {
     <>
       <WallPaper />
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route
+          path="/"
+          element={
+            <Home onPlayTrack={playlist.play} onPlaySound={soundboard.play} />
+          }
+        />
         <Route
           path="playlists"
           element={<Playlists onPlay={playlist.play} />}

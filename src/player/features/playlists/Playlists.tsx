@@ -85,19 +85,6 @@ export function Playlists({ onPlay }: PlaylistsProps) {
 
   const [addOpen, setAddOpen] = useState(false);
 
-  function handlePlaylistPlay(playlistId: string) {
-    const playlist = playlists.playlists.byId[playlistId];
-    if (playlist) {
-      let tracks = [...playlist.tracks];
-      const trackId = tracks[0];
-      const track = playlists.tracks[trackId];
-      if (track) {
-        dispatch(startQueue({ tracks, trackId, playlistId }));
-        onPlay(track);
-      }
-    }
-  }
-
   const { dragging, containerListeners, overlayListeners } = useDrop(
     (directories) => {
       for (let directory of Object.values(directories)) {
@@ -177,7 +164,7 @@ export function Playlists({ onPlay }: PlaylistsProps) {
                     <PlaylistItem
                       playlist={playlist}
                       onSelect={(id) => navigate(`/playlists/${id}`)}
-                      onPlay={handlePlaylistPlay}
+                      onPlay={onPlay}
                     />
                   </SortableItem>
                 </Grid>

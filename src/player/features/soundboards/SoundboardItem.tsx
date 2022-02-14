@@ -9,12 +9,14 @@ import Box from "@mui/material/Box";
 
 import { backgrounds, isBackground } from "../../backgrounds";
 
-import { Soundboard } from "./soundboardsSlice";
+import { Sound, Soundboard } from "./soundboardsSlice";
+import { useSelector } from "react-redux";
+import { RootState } from "../../app/store";
 
 type SoundboardItemProps = {
   soundboard: Soundboard;
   onSelect: (id: string) => void;
-  onPlay: (id: string) => void;
+  onPlay: (sound: Sound) => void;
 };
 
 export function SoundboardItem({
@@ -22,12 +24,19 @@ export function SoundboardItem({
   onSelect,
   onPlay,
 }: SoundboardItemProps) {
+  const soundboards = useSelector((state: RootState) => state.soundboards);
   const image = isBackground(soundboard.background)
     ? backgrounds[soundboard.background]
     : soundboard.background;
 
   function handleShuffle() {
-    onPlay(soundboard.id);
+    let sounds = [...soundboard.sounds];
+    // Play a random sound from the soundboard
+    const soundId = sounds[Math.floor(Math.random() * sounds.length)];
+    const sound = soundboards.sounds[soundId];
+    if (sound) {
+      onPlay(sound);
+    }
   }
 
   return (

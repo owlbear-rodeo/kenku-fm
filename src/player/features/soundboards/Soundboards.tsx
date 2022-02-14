@@ -89,19 +89,6 @@ export function Soundboards({ onPlay }: SoundboardProps) {
 
   const [addOpen, setAddOpen] = useState(false);
 
-  function handleSoundboardPlay(soundboardId: string) {
-    const soundboard = soundboards.soundboards.byId[soundboardId];
-    if (soundboard) {
-      let sounds = [...soundboard.sounds];
-      // Play a random sound from the soundboard
-      const soundId = sounds[Math.floor(Math.random() * sounds.length)];
-      const sound = soundboards.sounds[soundId];
-      if (sound) {
-        onPlay(sound);
-      }
-    }
-  }
-
   const { dragging, containerListeners, overlayListeners } = useDrop(
     (directories) => {
       for (let directory of Object.values(directories)) {
@@ -190,7 +177,7 @@ export function Soundboards({ onPlay }: SoundboardProps) {
                     <SoundboardItem
                       soundboard={soundboard}
                       onSelect={(id) => navigate(`/soundboards/${id}`)}
-                      onPlay={handleSoundboardPlay}
+                      onPlay={onPlay}
                     />
                   </SortableItem>
                 </Grid>

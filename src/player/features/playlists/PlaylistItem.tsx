@@ -10,15 +10,15 @@ import Box from "@mui/material/Box";
 
 import { backgrounds, isBackground } from "../../backgrounds";
 
-import { Playlist } from "./playlistsSlice";
+import { Playlist, Track } from "./playlistsSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import { playPause } from "./playlistPlaybackSlice";
+import { playPause, startQueue } from "./playlistPlaybackSlice";
 
 type PlaylistItemProps = {
   playlist: Playlist;
   onSelect: (id: string) => void;
-  onPlay: (id: string) => void;
+  onPlay: (track: Track) => void;
 };
 
 export function PlaylistItem({
@@ -26,6 +26,7 @@ export function PlaylistItem({
   onSelect,
   onPlay,
 }: PlaylistItemProps) {
+  const playlists = useSelector((state: RootState) => state.playlists);
   const playback = useSelector((state: RootState) => state.playlistPlayback);
   const dispatch = useDispatch();
 
@@ -40,7 +41,13 @@ export function PlaylistItem({
     if (playback.queue?.playlistId === playlist.id) {
       dispatch(playPause(!playback.playing));
     } else {
-      onPlay(playlist.id);
+      let tracks = [...playlist.tracks];
+      const trackId = tracks[0];
+      const track = playlists.tracks[trackId];
+      if (track) {
+        dispatch(startQueue({ tracks, trackId, playlistId: playlist.id }));
+        onPlay(track);
+      }
     }
   }
 

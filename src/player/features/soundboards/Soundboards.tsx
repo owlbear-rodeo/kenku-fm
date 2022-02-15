@@ -109,6 +109,8 @@ export function Soundboards({ onPlay }: SoundboardProps) {
                 ...file,
                 repeat: false,
                 volume: 1,
+                fadeIn: 100,
+                fadeOut: 100,
               })),
               soundboardId: id,
             })

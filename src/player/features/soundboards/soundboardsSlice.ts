@@ -6,6 +6,8 @@ export interface Sound {
   title: string;
   repeat: boolean;
   volume: number;
+  fadeIn: number;
+  fadeOut: number;
 }
 
 export interface Soundboard {

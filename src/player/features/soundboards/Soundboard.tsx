@@ -85,6 +85,8 @@ export function Soundboard({ onPlay, onStop }: SoundboardProps) {
             ...file,
             repeat: false,
             volume: 1,
+            fadeIn: 100,
+            fadeOut: 100,
           }))
         );
       }

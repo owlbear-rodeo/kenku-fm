@@ -9,8 +9,6 @@ import {
 } from "./soundboardPlaybackSlice";
 import { Sound } from "./soundboardsSlice";
 
-const fadeTime = 500;
-
 export function useSoundboardPlayback(onError: (message: string) => void) {
   const soundsRef = useRef<Record<string, Howl>>({});
   const dispatch = useDispatch();
@@ -35,13 +33,13 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
 
         howl.on("play", () => {
           // Fade in
-          howl.fade(0, sound.volume, fadeTime);
+          howl.fade(0, sound.volume, sound.fadeIn);
           // Fade out
           setTimeout(() => {
             if (howl.playing()) {
-              howl.fade(sound.volume, 0, fadeTime);
+              howl.fade(sound.volume, 0, sound.fadeOut);
             }
-          }, Math.floor(howl.duration() * 1000) - fadeTime);
+          }, Math.floor(howl.duration() * 1000) - sound.fadeOut);
         });
 
         howl.once("load", () => {

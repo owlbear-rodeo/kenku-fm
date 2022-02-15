@@ -41,7 +41,7 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
           src: track.url,
           html5: true,
           mute: playback.muted,
-          volume: playback.volume,
+          volume: 0,
         });
 
         trackRef.current = howl;
@@ -54,10 +54,10 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
           );
           // Fade out previous track and fade in new track
           if (prevTrack) {
-            prevTrack.fade(1, 0, 1000);
+            prevTrack.fade(playback.volume, 0, 1000);
             prevTrack.once("fade", removePrevTrack);
           }
-          howl.fade(0, 1, 1000);
+          howl.fade(0, playback.volume, 1000);
           // Update playback
           // Create playback animation
           if (animationRef.current !== null) {

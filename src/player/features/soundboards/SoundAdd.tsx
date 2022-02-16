@@ -57,7 +57,7 @@ export function SoundAdd({ soundboardId, open, onClose }: SoundAddProps) {
     const id = uuid();
     dispatch(
       addSound({
-        sound: { id, title, url, repeat: false, volume: 1, fadeIn, fadeOut },
+        sound: { id, title, url, loop: false, volume: 1, fadeIn, fadeOut },
         soundboardId: soundboardId,
       })
     );

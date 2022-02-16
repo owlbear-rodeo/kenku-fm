@@ -4,7 +4,7 @@ export interface Sound {
   id: string;
   url: string;
   title: string;
-  repeat: boolean;
+  loop: boolean;
   volume: number;
   fadeIn: number;
   fadeOut: number;

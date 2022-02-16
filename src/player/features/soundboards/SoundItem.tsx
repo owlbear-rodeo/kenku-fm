@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import PlayArrow from "@mui/icons-material/PlayArrowRounded";
 import IconButton from "@mui/material/IconButton";
-import Repeat from "@mui/icons-material/RepeatRounded";
+import Loop from "@mui/icons-material/RepeatRounded";
 import Stop from "@mui/icons-material/StopRounded";
 import MoreVert from "@mui/icons-material/MoreVertRounded";
 import VolumeUp from "@mui/icons-material/VolumeUp";
@@ -90,20 +90,20 @@ export function SoundItem({
     dispatch(editSound({ id: sound.id, volume: value as number }));
   }
 
-  function handleToggleRepeat() {
-    dispatch(editSound({ id: sound.id, repeat: !sound.repeat }));
+  function handleToggleLoop() {
+    dispatch(editSound({ id: sound.id, loop: !sound.loop }));
   }
 
   const playing = sound.id in playback.playback;
 
   const large = useMediaQuery("(min-width: 600px)");
 
-  const repeatToggle = (
+  const loopToggle = (
     <IconButton
-      aria-label={sound.repeat ? "no repeat" : "repeat"}
-      onClick={handleToggleRepeat}
+      aria-label={sound.loop ? "no loop" : "loop"}
+      onClick={handleToggleLoop}
     >
-      {sound.repeat ? <Repeat color="primary" /> : <Repeat />}
+      {sound.loop ? <Loop color="primary" /> : <Loop />}
     </IconButton>
   );
 
@@ -163,7 +163,7 @@ export function SoundItem({
           <Box
             sx={{ display: "flex", gap: 2, alignItems: "center", px: 2, pb: 1 }}
           >
-            {repeatToggle}
+            {loopToggle}
             {volumeSlider}
             {playButton}
           </Box>
@@ -182,7 +182,7 @@ export function SoundItem({
               <Box
                 sx={{ position: "absolute", left: { xs: "12px", sm: "24px" } }}
               >
-                {repeatToggle}
+                {loopToggle}
               </Box>
               {playButton}
             </Box>

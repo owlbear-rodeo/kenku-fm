@@ -25,7 +25,7 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
         const howl = new Howl({
           src: sound.url,
           html5: true,
-          loop: sound.repeat,
+          loop: sound.loop,
           volume: 0,
           autoplay: true,
         });
@@ -52,7 +52,7 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
         });
 
         howl.on("end", () => {
-          if (!sound.repeat) {
+          if (!sound.loop) {
             dispatch(stopSound(sound.id));
             soundsRef.current[sound.id]?.stop();
             delete soundsRef.current[sound.id];

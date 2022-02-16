@@ -107,7 +107,7 @@ export function Soundboards({ onPlay }: SoundboardProps) {
             addSounds({
               sounds: files.map((file) => ({
                 ...file,
-                repeat: false,
+                loop: false,
                 volume: 1,
                 fadeIn: 100,
                 fadeOut: 100,

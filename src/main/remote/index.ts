@@ -1,6 +1,6 @@
 import { PlayerManager } from "../managers/PlayerManager";
-import { play } from "./routes/play";
-import { playback } from "./routes/playback";
+import { play as playlistPlay } from "./routes/playlist/play";
+import { playback as playlistPlayback } from "./routes/playlist/playback";
 
 export type ReplyError = {
   statusCode: number;
@@ -15,6 +15,10 @@ export const VIEW_ERROR: ReplyError = {
 };
 
 export function registerRemote(manager: PlayerManager) {
-  manager.fastify.register(play(manager), { prefix: "/v1/play" });
-  manager.fastify.register(playback(manager), { prefix: "/v1/playback" });
+  manager.fastify.register(playlistPlay(manager), {
+    prefix: "/v1/playlist/play",
+  });
+  manager.fastify.register(playlistPlayback(manager), {
+    prefix: "/v1/playlist/playback",
+  });
 }

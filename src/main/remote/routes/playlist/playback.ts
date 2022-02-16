@@ -3,9 +3,9 @@ import { ipcMain } from "electron";
 import { Static, Type } from "@sinclair/typebox";
 import { FastifyPluginCallback } from "fastify";
 
-import { PlayerManager } from "../../managers/PlayerManager";
-import { ReplyError, VIEW_ERROR } from "../";
-import { PlaybackReply } from "../../../types/player";
+import { PlayerManager } from "../../../managers/PlayerManager";
+import { ReplyError, VIEW_ERROR } from "../../";
+import { PlaybackReply } from "../../../../types/player";
 
 const MuteRequest = Type.Object({
   mute: Type.Boolean(),
@@ -42,7 +42,7 @@ async function waitForPlaybackReply(): Promise<PlaybackReply> {
       reject("Request timeout");
     }, 5000);
     ipcMain.once(
-      "PLAYER_REMOTE_PLAYBACK_REPLY",
+      "PLAYER_REMOTE_PLAYLIST_PLAYBACK_REPLY",
       (_: Electron.IpcMainEvent, playback: PlaybackReply) => {
         clearTimeout(timeout);
         resolve(playback);
@@ -56,7 +56,7 @@ export const playback: (manager: PlayerManager) => FastifyPluginCallback =
     fastify.get("/", async (_, reply) => {
       const view = manager.getView();
       if (view) {
-        view.send("PLAYER_REMOTE_PLAYBACK_REQUEST");
+        view.send("PLAYER_REMOTE_PLAYLIST_PLAYBACK_REQUEST");
         try {
           const playback = await waitForPlaybackReply();
           reply.status(200).send(playback);
@@ -75,7 +75,7 @@ export const playback: (manager: PlayerManager) => FastifyPluginCallback =
     fastify.put("/play", (request, reply) => {
       const view = manager.getView();
       if (view) {
-        view.send("PLAYER_REMOTE_PLAYBACK_PLAY");
+        view.send("PLAYER_REMOTE_PLAYLIST_PLAYBACK_PLAY");
         reply.status(200).send(request.body);
       } else {
         reply.status(503).send(VIEW_ERROR);
@@ -85,7 +85,7 @@ export const playback: (manager: PlayerManager) => FastifyPluginCallback =
     fastify.put("/pause", (request, reply) => {
       const view = manager.getView();
       if (view) {
-        view.send("PLAYER_REMOTE_PLAYBACK_PAUSE");
+        view.send("PLAYER_REMOTE_PLAYLIST_PLAYBACK_PAUSE");
         reply.status(200).send(request.body);
       } else {
         reply.status(503).send(VIEW_ERROR);
@@ -108,7 +108,7 @@ export const playback: (manager: PlayerManager) => FastifyPluginCallback =
       (request, reply) => {
         const view = manager.getView();
         if (view) {
-          view.send("PLAYER_REMOTE_PLAYBACK_MUTE", request.body.mute);
+          view.send("PLAYER_REMOTE_PLAYLIST_PLAYBACK_MUTE", request.body.mute);
           reply.status(200).send(request.body);
         } else {
           reply.status(503).send(VIEW_ERROR);
@@ -134,7 +134,7 @@ export const playback: (manager: PlayerManager) => FastifyPluginCallback =
         const view = manager.getView();
         if (view) {
           view.send(
-            "PLAYER_REMOTE_PLAYBACK_VOLUME",
+            "PLAYER_REMOTE_PLAYLIST_PLAYBACK_VOLUME",
             Math.max(Math.min(request.body.volume, 1), 0)
           );
           reply.status(200).send(request.body);
@@ -161,7 +161,7 @@ export const playback: (manager: PlayerManager) => FastifyPluginCallback =
       (request, reply) => {
         const view = manager.getView();
         if (view) {
-          view.send("PLAYER_REMOTE_PLAYBACK_SEEK", request.body.to);
+          view.send("PLAYER_REMOTE_PLAYLIST_PLAYBACK_SEEK", request.body.to);
           reply.status(200).send(request.body);
         } else {
           reply.status(503).send(VIEW_ERROR);
@@ -172,7 +172,7 @@ export const playback: (manager: PlayerManager) => FastifyPluginCallback =
     fastify.post("/next", (request, reply) => {
       const view = manager.getView();
       if (view) {
-        view.send("PLAYER_REMOTE_PLAYBACK_NEXT");
+        view.send("PLAYER_REMOTE_PLAYLIST_PLAYBACK_NEXT");
         reply.status(200).send(request.body);
       } else {
         reply.status(503).send(VIEW_ERROR);
@@ -182,7 +182,7 @@ export const playback: (manager: PlayerManager) => FastifyPluginCallback =
     fastify.post("/previous", (request, reply) => {
       const view = manager.getView();
       if (view) {
-        view.send("PLAYER_REMOTE_PLAYBACK_PREVIOUS");
+        view.send("PLAYER_REMOTE_PLAYLIST_PLAYBACK_PREVIOUS");
         reply.status(200).send(request.body);
       } else {
         reply.status(503).send(VIEW_ERROR);
@@ -205,7 +205,10 @@ export const playback: (manager: PlayerManager) => FastifyPluginCallback =
       (request, reply) => {
         const view = manager.getView();
         if (view) {
-          view.send("PLAYER_REMOTE_PLAYBACK_REPEAT", request.body.repeat);
+          view.send(
+            "PLAYER_REMOTE_PLAYLIST_PLAYBACK_REPEAT",
+            request.body.repeat
+          );
           reply.status(200).send(request.body);
         } else {
           reply.status(503).send(VIEW_ERROR);
@@ -229,7 +232,10 @@ export const playback: (manager: PlayerManager) => FastifyPluginCallback =
       (request, reply) => {
         const view = manager.getView();
         if (view) {
-          view.send("PLAYER_REMOTE_PLAYBACK_SHUFFLE", request.body.shuffle);
+          view.send(
+            "PLAYER_REMOTE_PLAYLIST_PLAYBACK_SHUFFLE",
+            request.body.shuffle
+          );
           reply.status(200).send(request.body);
         } else {
           reply.status(503).send(VIEW_ERROR);

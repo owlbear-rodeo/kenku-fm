@@ -25,27 +25,7 @@ export function useRemote(
   const dispatch = useDispatch();
 
   useEffect(() => {
-    window.player.on("PLAYER_REMOTE_PLAY_URL", (args) => {
-      const url = args[0];
-      const title = args[1];
-      const track = { url, title, id: uuid() };
-      dispatch(
-        startQueue({
-          tracks: [track.id],
-          playlistId: "",
-          trackId: track.id,
-        })
-      );
-      play(track);
-    });
-
-    return () => {
-      window.player.removeAllListeners("PLAYER_REMOTE_PLAY_URL");
-    };
-  }, [play]);
-
-  useEffect(() => {
-    window.player.on("PLAYER_REMOTE_PLAY_ID", (args) => {
+    window.player.on("PLAYER_REMOTE_PLAYLIST_PLAY", (args) => {
       const id = args[0];
       if (id in playlists.tracks) {
         const track = playlists.tracks[id];
@@ -73,12 +53,12 @@ export function useRemote(
     });
 
     return () => {
-      window.player.removeAllListeners("PLAYER_REMOTE_PLAY_ID");
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAYLIST_PLAY");
     };
   }, [play, playlists]);
 
   useEffect(() => {
-    window.player.on("PLAYER_REMOTE_PLAYBACK_REQUEST", () => {
+    window.player.on("PLAYER_REMOTE_PLAYLIST_PLAYBACK_REQUEST", () => {
       window.player.playbackReply({
         playing: playback.playing,
         volume: playback.volume,
@@ -105,37 +85,39 @@ export function useRemote(
     });
 
     return () => {
-      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_REQUEST");
+      window.player.removeAllListeners(
+        "PLAYER_REMOTE_PLAYLIST_PLAYBACK_REQUEST"
+      );
     };
   }, [playback]);
 
   useEffect(() => {
-    window.player.on("PLAYER_REMOTE_PLAYBACK_PLAY", () => {
+    window.player.on("PLAYER_REMOTE_PLAYLIST_PLAYBACK_PLAY", () => {
       if (playback.playback) {
         dispatch(playPause(true));
       }
     });
 
-    window.player.on("PLAYER_REMOTE_PLAYBACK_PAUSE", () => {
+    window.player.on("PLAYER_REMOTE_PLAYLIST_PLAYBACK_PAUSE", () => {
       if (playback.playback) {
         dispatch(playPause(false));
       }
     });
 
-    window.player.on("PLAYER_REMOTE_PLAYBACK_SEEK", (args) => {
+    window.player.on("PLAYER_REMOTE_PLAYLIST_PLAYBACK_SEEK", (args) => {
       const to = args[0];
       if (playback.playback) {
       }
     });
 
     return () => {
-      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_PLAY");
-      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_PAUSE");
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAYLIST_PLAYBACK_PLAY");
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAYLIST_PLAYBACK_PAUSE");
     };
   }, [playback]);
 
   useEffect(() => {
-    window.player.on("PLAYER_REMOTE_PLAYBACK_SEEK", (args) => {
+    window.player.on("PLAYER_REMOTE_PLAYLIST_PLAYBACK_SEEK", (args) => {
       const to = args[0];
       if (playback.playback) {
         // Clamp playback and seek
@@ -144,56 +126,64 @@ export function useRemote(
     });
 
     return () => {
-      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_SEEK");
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAYLIST_PLAYBACK_SEEK");
     };
   }, [playback, seek]);
 
   useEffect(() => {
-    window.player.on("PLAYER_REMOTE_PLAYBACK_MUTE", (args) => {
+    window.player.on("PLAYER_REMOTE_PLAYLIST_PLAYBACK_MUTE", (args) => {
       const muted = args[0];
       dispatch(mute(muted));
     });
 
-    window.player.on("PLAYER_REMOTE_PLAYBACK_VOLUME", (args) => {
+    window.player.on("PLAYER_REMOTE_PLAYLIST_PLAYBACK_VOLUME", (args) => {
       const volume = args[0];
       dispatch(adjustVolume(volume));
     });
 
-    window.player.on("PLAYER_REMOTE_PLAYBACK_SHUFFLE", (args) => {
+    window.player.on("PLAYER_REMOTE_PLAYLIST_PLAYBACK_SHUFFLE", (args) => {
       const shuffled = args[0];
       dispatch(shuffle(shuffled));
     });
 
-    window.player.on("PLAYER_REMOTE_PLAYBACK_REPEAT", (args) => {
+    window.player.on("PLAYER_REMOTE_PLAYLIST_PLAYBACK_REPEAT", (args) => {
       const repeated = args[0];
       dispatch(repeat(repeated));
     });
 
     return () => {
-      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_MUTE");
-      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_VOLUME");
-      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_SHUFFLE");
-      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_REPEAT");
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAYLIST_PLAYBACK_MUTE");
+      window.player.removeAllListeners(
+        "PLAYER_REMOTE_PLAYLIST_PLAYBACK_VOLUME"
+      );
+      window.player.removeAllListeners(
+        "PLAYER_REMOTE_PLAYLIST_PLAYBACK_SHUFFLE"
+      );
+      window.player.removeAllListeners(
+        "PLAYER_REMOTE_PLAYLIST_PLAYBACK_REPEAT"
+      );
     };
   }, []);
 
   useEffect(() => {
-    window.player.on("PLAYER_REMOTE_PLAYBACK_NEXT", () => {
+    window.player.on("PLAYER_REMOTE_PLAYLIST_PLAYBACK_NEXT", () => {
       next();
     });
 
     return () => {
-      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_NEXT");
+      window.player.removeAllListeners("PLAYER_REMOTE_PLAYLIST_PLAYBACK_NEXT");
     };
   }, [next]);
 
   useEffect(() => {
-    window.player.on("PLAYER_REMOTE_PLAYBACK_PREVIOUS", () => {
+    window.player.on("PLAYER_REMOTE_PLAYLIST_PLAYBACK_PREVIOUS", () => {
       previous();
     });
 
     return () => {
-      window.player.removeAllListeners("PLAYER_REMOTE_PLAYBACK_PREVIOUS");
+      window.player.removeAllListeners(
+        "PLAYER_REMOTE_PLAYLIST_PLAYBACK_PREVIOUS"
+      );
     };
   }, [previous]);
 }

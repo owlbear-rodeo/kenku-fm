@@ -1,7 +1,6 @@
 import { useEffect } from "react";
-import { v4 as uuid } from "uuid";
 
-import { Track } from "../playlists/playlistsSlice";
+import { Track } from "./playlistsSlice";
 
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
@@ -12,9 +11,9 @@ import {
   adjustVolume,
   shuffle,
   startQueue,
-} from "../playlists/playlistPlaybackSlice";
+} from "./playlistPlaybackSlice";
 
-export function useRemote(
+export function usePlaylistRemote(
   play: (track: Track) => void,
   seek: (to: number) => void,
   next: () => void,
@@ -59,28 +58,29 @@ export function useRemote(
 
   useEffect(() => {
     window.player.on("PLAYER_REMOTE_PLAYLIST_PLAYBACK_REQUEST", () => {
-      window.player.playbackReply({
+      let track = undefined;
+      if (playback.track && playback.playback && playback.queue) {
+        track = {
+          ...playback.track,
+          duration: playback.playback.duration,
+          progress: playback.playback?.current,
+        };
+      }
+      let playlist = undefined;
+      if (playback.queue?.playlistId) {
+        playlist = {
+          id: playback.queue.playlistId,
+          title: playlists.playlists.byId[playback.queue.playlistId]?.title,
+        };
+      }
+      window.player.playlistPlaybackReply({
         playing: playback.playing,
         volume: playback.volume,
         muted: playback.muted,
         shuffle: playback.shuffle,
         repeat: playback.repeat,
-        track:
-          playback.track && playback.playback && playback.queue
-            ? {
-                ...playback.track,
-                duration: playback.playback.duration,
-                playlist: playback.queue.playlistId
-                  ? {
-                      id: playback.queue.playlistId,
-                      title:
-                        playlists.playlists.byId[playback.queue.playlistId]
-                          ?.title,
-                    }
-                  : undefined,
-              }
-            : undefined,
-        progress: playback.playback?.current,
+        track,
+        playlist,
       });
     });
 

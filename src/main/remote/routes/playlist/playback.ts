@@ -5,7 +5,7 @@ import { FastifyPluginCallback } from "fastify";
 
 import { PlayerManager } from "../../../managers/PlayerManager";
 import { ReplyError, VIEW_ERROR } from "../../";
-import { PlaybackReply } from "../../../../types/player";
+import { PlaylistPlaybackReply } from "../../../../types/player";
 
 const MuteRequest = Type.Object({
   mute: Type.Boolean(),
@@ -36,14 +36,14 @@ const SeekRequest = Type.Object({
 });
 type SeekRequestType = Static<typeof SeekRequest>;
 
-async function waitForPlaybackReply(): Promise<PlaybackReply> {
+async function waitForPlaybackReply(): Promise<PlaylistPlaybackReply> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject("Request timeout");
     }, 5000);
     ipcMain.once(
       "PLAYER_REMOTE_PLAYLIST_PLAYBACK_REPLY",
-      (_: Electron.IpcMainEvent, playback: PlaybackReply) => {
+      (_: Electron.IpcMainEvent, playback: PlaylistPlaybackReply) => {
         clearTimeout(timeout);
         resolve(playback);
       }

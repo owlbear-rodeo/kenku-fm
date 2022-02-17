@@ -9,7 +9,7 @@ import { Routes, Route } from "react-router-dom";
 import { Player } from "../features/player/Player";
 import { usePlaylistPlayback } from "../features/playlists/usePlaylistPlayback";
 import { useMediaSession } from "../features/playlists/useMediaSession";
-import { useRemote } from "../features/remote/useRemote";
+import { usePlaylistRemote } from "../features/playlists/usePlaylistRemote";
 import { Playlists } from "../features/playlists/Playlists";
 import { Playlist } from "../features/playlists/Playlist";
 
@@ -18,6 +18,7 @@ import { Home } from "../features/home/Home";
 import { Soundboards } from "../features/soundboards/Soundboards";
 import { Soundboard } from "../features/soundboards/Soundboard";
 import { useSoundboardPlayback } from "../features/soundboards/useSoundboardPlayback";
+import { useSoundboardRemote } from "../features/soundboards/useSoundboardRemote";
 
 const WallPaper = styled("div")({
   position: "fixed",
@@ -44,8 +45,14 @@ export function App() {
     playlist.previous,
     playlist.stop
   );
-  useRemote(playlist.play, playlist.seek, playlist.next, playlist.previous);
+  usePlaylistRemote(
+    playlist.play,
+    playlist.seek,
+    playlist.next,
+    playlist.previous
+  );
   const soundboard = useSoundboardPlayback(handleError);
+  useSoundboardRemote(soundboard.play, soundboard.stop);
 
   return (
     <>

@@ -343,7 +343,7 @@ export function Player({
               <Box sx={{ position: "relative" }} key={sound.id}>
                 <SoundProgress
                   variant="determinate"
-                  value={Math.min((sound.current / sound.duration) * 100, 100)}
+                  value={Math.min((sound.progress / sound.duration) * 100, 100)}
                 />
                 <Chip
                   label={sound.title}

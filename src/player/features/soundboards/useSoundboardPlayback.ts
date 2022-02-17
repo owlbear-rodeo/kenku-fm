@@ -86,7 +86,7 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
         for (let id in soundsRef.current) {
           const howl = soundsRef.current[id];
           if (howl.playing()) {
-            dispatch(updatePlayback({ id, current: howl.seek() }));
+            dispatch(updatePlayback({ id, progress: howl.seek() }));
           }
         }
         prevTime = time;
@@ -98,7 +98,7 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
   }, []);
 
   const seek = useCallback((id: string, to: number) => {
-    dispatch(updatePlayback({ id, current: to }));
+    dispatch(updatePlayback({ id, progress: to }));
     soundsRef.current[id]?.seek(to);
   }, []);
 

@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Sound } from "./soundboardsSlice";
 
 export interface SoundPlayback extends Sound {
-  current: number;
+  progress: number;
   duration: number;
 }
 
@@ -23,18 +23,18 @@ export const soundboardPlaybackSlice = createSlice({
       action: PayloadAction<{ sound: Sound; duration: number }>
     ) => {
       const { sound, duration } = action.payload;
-      state.playback[sound.id] = { ...sound, current: 0, duration };
+      state.playback[sound.id] = { ...sound, progress: 0, duration };
     },
     stopSound: (state, action: PayloadAction<string>) => {
       delete state.playback[action.payload];
     },
     updatePlayback: (
       state,
-      action: PayloadAction<{ id: string; current: number }>
+      action: PayloadAction<{ id: string; progress: number }>
     ) => {
-      const { id, current } = action.payload;
+      const { id, progress } = action.payload;
       if (id in state.playback) {
-        state.playback[id].current = current;
+        state.playback[id].progress = progress;
       }
     },
   },

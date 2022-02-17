@@ -50,11 +50,7 @@ export function useSoundboardRemote(
     window.player.on("PLAYER_REMOTE_SOUNDBOARD_PLAYBACK_REQUEST", () => {
       const sounds = Object.values(playback.playback);
       window.player.soundboardPlaybackReply({
-        sounds: sounds.map((sound) => ({
-          ...sound,
-          progress: sound.current,
-          current: undefined,
-        })),
+        sounds,
       });
     });
 

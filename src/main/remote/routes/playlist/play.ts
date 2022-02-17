@@ -4,12 +4,6 @@ import { FastifyPluginCallback } from "fastify";
 import { PlayerManager } from "../../../managers/PlayerManager";
 import { ReplyError, VIEW_ERROR } from "../..";
 
-const PlayURLRequest = Type.Object({
-  url: Type.String(),
-  title: Type.String(),
-});
-type PlayURLRequestType = Static<typeof PlayURLRequest>;
-
 const PlayIDRequest = Type.Object({
   id: Type.String(),
 });

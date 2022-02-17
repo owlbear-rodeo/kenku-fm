@@ -145,7 +145,7 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
     } else if (playback.repeat === "playlist" && playback.queue) {
       let index = playback.queue.current;
       // Only go to previous if at the start of the track
-      if (playback.playback.current < 5) {
+      if (playback.playback.progress < 5) {
         index -= 1;
       }
       if (index < 0) {

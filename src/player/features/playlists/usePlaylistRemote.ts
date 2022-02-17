@@ -62,8 +62,7 @@ export function usePlaylistRemote(
       if (playback.track && playback.playback && playback.queue) {
         track = {
           ...playback.track,
-          duration: playback.playback.duration,
-          progress: playback.playback?.current,
+          ...playback.playback,
         };
       }
       let playlist = undefined;

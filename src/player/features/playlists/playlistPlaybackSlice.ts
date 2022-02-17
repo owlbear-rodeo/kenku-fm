@@ -11,7 +11,7 @@ export interface Queue {
 }
 
 export interface Playback {
-  current: number;
+  progress: number;
   duration: number;
 }
 
@@ -114,7 +114,7 @@ export const playlistPlaybackSlice = createSlice({
     ) => {
       state.track = action.payload.track;
       state.playing = true;
-      state.playback = { current: 0, duration: action.payload.duration };
+      state.playback = { progress: 0, duration: action.payload.duration };
     },
     stopTrack: (state) => {
       state.track = undefined;
@@ -126,7 +126,7 @@ export const playlistPlaybackSlice = createSlice({
     },
     updatePlayback: (state, action: PayloadAction<number>) => {
       if (state.playback) {
-        state.playback.current = action.payload;
+        state.playback.progress = action.payload;
       }
     },
     adjustVolume: (state, action: PayloadAction<number>) => {

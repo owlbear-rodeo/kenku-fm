@@ -167,7 +167,7 @@ export function Player({
 
   const time =
     timeOverride === null
-      ? playlistPlayback.playback?.current || 0
+      ? playlistPlayback.playback?.progress || 0
       : timeOverride;
   const duration = playlistPlayback.playback?.duration || 0;
 

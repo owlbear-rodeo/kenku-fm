@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef } from "react";
 import { Howl } from "howler";
 
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../../app/store";
 import {
   playSound,
   updatePlayback,
@@ -11,6 +12,7 @@ import { Sound } from "./soundboardsSlice";
 
 export function useSoundboardPlayback(onError: (message: string) => void) {
   const soundsRef = useRef<Record<string, Howl>>({});
+  const soundboards = useSelector((state: RootState) => state.soundboards);
   const dispatch = useDispatch();
 
   const play = useCallback(
@@ -114,11 +116,26 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
     soundsRef.current[id]?.seek(to);
   }, []);
 
-  const stop = useCallback((id: string) => {
-    dispatch(stopSound(id));
-    soundsRef.current[id]?.stop();
-    delete soundsRef.current[id];
-  }, []);
+  const stop = useCallback(
+    (id: string) => {
+      dispatch(stopSound(id));
+      const howl = soundsRef.current[id];
+      const sound = soundboards.sounds[id];
+      // Fade out sound when stopping
+      if (howl && sound) {
+        howl.fade(howl.volume(), 0, sound.fadeOut);
+        howl.once("fade", () => {
+          howl.stop();
+          delete soundsRef.current[id];
+        });
+      } else if (howl) {
+        // If the user has deleted the sound just stop the howler instance
+        howl.stop();
+        delete soundsRef.current[id];
+      }
+    },
+    [soundboards]
+  );
 
   return {
     seek,

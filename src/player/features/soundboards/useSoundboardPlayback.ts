@@ -22,51 +22,63 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
       }
 
       try {
-        const howl = new Howl({
-          src: sound.url,
-          html5: true,
-          loop: sound.loop,
-          volume: 0,
-          autoplay: true,
-        });
-        soundsRef.current[sound.id] = howl;
+        const createHowlerInstance = () => {
+          const howl = new Howl({
+            src: sound.url,
+            html5: true,
+            volume: 0,
+            autoplay: true,
+          });
+          soundsRef.current[sound.id] = howl;
 
-        howl.on("play", () => {
-          // Fade in
-          howl.fade(0, sound.volume, sound.fadeIn);
-          // Fade out
-          setTimeout(() => {
-            if (howl.playing()) {
-              howl.fade(sound.volume, 0, sound.fadeOut);
+          howl.on("play", () => {
+            // Fade in
+            howl.fade(0, sound.volume, sound.fadeIn);
+            // Fade out
+            setTimeout(() => {
+              if (howl.playing()) {
+                if (sound.loop) {
+                  // Cross fade on loop
+                  howl.fade(sound.volume, 0, sound.fadeOut);
+                  howl.once("fade", () => {
+                    howl.stop();
+                  });
+                  createHowlerInstance();
+                } else {
+                  // Basic fade out when not looping
+                  howl.fade(sound.volume, 0, sound.fadeOut);
+                }
+              }
+            }, Math.floor(howl.duration() * 1000) - sound.fadeOut);
+          });
+
+          howl.once("load", () => {
+            dispatch(
+              playSound({
+                sound,
+                duration: Math.floor(howl.duration()),
+              })
+            );
+          });
+
+          howl.on("end", () => {
+            if (!sound.loop) {
+              dispatch(stopSound(sound.id));
+              soundsRef.current[sound.id]?.stop();
+              delete soundsRef.current[sound.id];
             }
-          }, Math.floor(howl.duration() * 1000) - sound.fadeOut);
-        });
+          });
 
-        howl.once("load", () => {
-          dispatch(
-            playSound({
-              sound,
-              duration: Math.floor(howl.duration()),
-            })
-          );
-        });
+          howl.on("loaderror", error);
 
-        howl.on("end", () => {
-          if (!sound.loop) {
-            dispatch(stopSound(sound.id));
-            soundsRef.current[sound.id]?.stop();
-            delete soundsRef.current[sound.id];
+          howl.on("playerror", error);
+
+          const howlSound = (howl as any)._sounds[0];
+          if (!howlSound) {
+            error();
           }
-        });
-
-        howl.on("loaderror", error);
-
-        howl.on("playerror", error);
-
-        const howlSound = (howl as any)._sounds[0];
-        if (!howlSound) {
-          error();
-        }
+        };
+        createHowlerInstance();
       } catch {
         error();
       }

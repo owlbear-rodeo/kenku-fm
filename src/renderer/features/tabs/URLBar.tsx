@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import InputBase from "@mui/material/InputBase";
@@ -46,6 +46,14 @@ export function URLBar({ viewId, url, onURLChange, disabled }: URLBarProps) {
     window.kenku.reload(viewId);
   }
 
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    // Focus URL bar when changing tabs to an empty URL
+    if (url === "") {
+      inputRef.current?.focus();
+    }
+  }, [viewId, url]);
+
   return (
     <Stack
       direction="column"
@@ -66,6 +74,7 @@ export function URLBar({ viewId, url, onURLChange, disabled }: URLBarProps) {
         </IconButton>
         <form onSubmit={handleSubmit} style={{ flexGrow: 1 }}>
           <InputBase
+            inputRef={inputRef}
             sx={{
               bgcolor: "rgba(0, 0, 0, 0.15)",
               px: 2,

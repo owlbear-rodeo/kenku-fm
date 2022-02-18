@@ -4,9 +4,12 @@ import Stack from "@mui/material/Stack";
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
 import {
+  addTab,
   decreaseTabPlayingMedia,
   editTab,
   increaseTabPlayingMedia,
+  removeTab,
+  selectTab,
 } from "./tabsSlice";
 
 import { URLBar } from "./URLBar";
@@ -68,6 +71,42 @@ export function Tabs() {
         dispatch(decreaseTabPlayingMedia(viewId));
       }
     });
+    window.kenku.on("BROWSER_VIEW_NEW_TAB", async () => {
+      const bounds = getBounds();
+      const id = await window.kenku.createBrowserView(
+        "",
+        bounds.x,
+        bounds.y,
+        bounds.width,
+        bounds.height
+      );
+      dispatch(
+        addTab({
+          id,
+          url: "",
+          title: "New Tab",
+          icon: "",
+          playingMedia: 0,
+          muted: false,
+        })
+      );
+      dispatch(selectTab(id));
+    });
+    window.kenku.on("BROWSER_VIEW_CLOSE_TAB", async () => {
+      const tabId = tabs.selectedTab;
+      // Don't close the kenku player tab
+      if (tabId && tabId !== player.tab.id) {
+        const tabIds = tabs.tabs.allIds;
+        // Find previous tab so we can select when closing the tab
+        const prevTabIndex = tabIds.indexOf(tabId) - 1;
+        const prevTabId = tabIds[prevTabIndex] || player.tab.id; // If there's no previous use the kenku player tab
+
+        // Remove tab and select previous
+        dispatch(removeTab(tabId));
+        window.kenku.removeBrowserView(tabId);
+        dispatch(selectTab(prevTabId));
+      }
+    });
 
     return () => {
       window.kenku.removeAllListeners("BROWSER_VIEW_DID_NAVIGATE");
@@ -75,8 +114,10 @@ export function Tabs() {
       window.kenku.removeAllListeners("BROWSER_VIEW_FAVICON_UPDATED");
       window.kenku.removeAllListeners("BROWSER_VIEW_MEDIA_STARTED_PLAYING");
       window.kenku.removeAllListeners("BROWSER_VIEW_MEDIA_PAUSED");
+      window.kenku.removeAllListeners("BROWSER_VIEW_NEW_TAB");
+      window.kenku.removeAllListeners("BROWSER_VIEW_CLOSE_TAB");
     };
-  }, [player.tab.id]);
+  }, [player.tab.id, tabs]);
 
   useEffect(() => {
     if (tabs.selectedTab) {

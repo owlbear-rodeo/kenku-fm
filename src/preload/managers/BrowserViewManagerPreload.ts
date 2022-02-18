@@ -37,21 +37,6 @@ export class BrowserViewManagerPreload {
     ipcRenderer.send("BROWSER_VIEW_STREAM_START");
   }
 
-  destroy() {
-    for (let stream of Object.values(this._mediaStreams)) {
-      for (let track of stream.getTracks()) {
-        track.stop();
-      }
-    }
-    for (let stream of Object.values(this._externalAudioStreams)) {
-      for (let track of stream.getTracks()) {
-        track.stop();
-      }
-    }
-    ipcRenderer.send("BROWSER_VIEW_REMOVE_ALL_BROWSER_VIEWS");
-    ipcRenderer.send("BROWSER_VIEW_STREAM_END");
-  }
-
   async createBrowserView(
     url: string,
     x: number,

@@ -8,12 +8,6 @@ window.addEventListener("load", () => {
   viewManager.load();
 });
 
-window.addEventListener("beforeunload", () => {
-  ipcRenderer.send("DISCORD_DISCONNECT");
-  ipcRenderer.send("PLAYER_STOP_REMOTE");
-  viewManager.destroy();
-});
-
 type Channel =
   | "ERROR"
   | "MESSAGE"

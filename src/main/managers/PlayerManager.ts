@@ -25,6 +25,7 @@ export class PlayerManager {
     ipcMain.off("PLAYER_REGISTER_VIEW", this._handleRegisterView);
     ipcMain.off("PLAYER_START_REMOTE", this._handleStartRemote);
     ipcMain.off("PLAYER_STOP_REMOTE", this._handleStopRemote);
+    this.stopRemote();
   }
 
   getView() {

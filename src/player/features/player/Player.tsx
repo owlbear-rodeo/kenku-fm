@@ -338,7 +338,7 @@ export function Player({
         }}
       >
         {sounds.length > 0 && (
-          <Stack direction="row" gap={1} mb={1}>
+          <Stack direction="row" gap={1} pb={1} overflow="auto">
             {sounds.map((sound) => (
               <Box sx={{ position: "relative" }} key={sound.id}>
                 <SoundProgress

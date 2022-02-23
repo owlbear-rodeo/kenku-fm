@@ -60,7 +60,7 @@
     "@emotion/styled": "^11.3.0",
     "@mui/icons-material": "^5.0.1",
     "@mui/material": "^5.0.1",
-    "@owlbear-rodeo/page-icon": "^0.5.1",
+    "@owlbear-rodeo/page-icon": "^0.6.0",
     "@reduxjs/toolkit": "^1.6.1",
     "@sinclair/typebox": "^0.23.0",
     "case": "^1.6.3",

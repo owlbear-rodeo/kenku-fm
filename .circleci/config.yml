@@ -108,9 +108,11 @@ jobs:
             node .\publish\windows\index.js .\ $env:CIRCLE_TAG
       - run:
           name: Publish EXE
-          command: ./publish/script-win.sh .\out\windows\kenku-fm-$env:CIRCLE_TAG-setup.exe $env:GITHUB_TOKEN $env:CIRCLE_TAG kenku-fm-$env:CIRCLE_TAG-win32-x64.exe
-      - store_artifacts:
-          path: ~/repo/out/windows/
+          command: |
+            $version = $env:CIRCLE_TAG -replace 'v',""
+            ./publish/script-win.sh .\out\windows\kenku-fm-$env:CIRCLE_TAG-setup.exe $env:GITHUB_TOKEN $env:CIRCLE_TAG kenku-fm-$version-win32-x64.exe
+            ./publish/script-win.sh .\out\windows\kenku-fm-$version-full.nupkg $env:GITHUB_TOKEN $env:CIRCLE_TAG kenku-fm-$version-win32-full.nupkg
+            ./publish/script-win.sh .\out\windows\RELEASES $env:GITHUB_TOKEN $env:CIRCLE_TAG RELEASES
 
   publish-electron-app-mac-amd:
     executor: mac-amd
@@ -166,7 +168,9 @@ jobs:
             npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out="$KENKU_FM_MAC_X64_PATH"/ "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app Kenku\ FM
       - run:
           name: Publish DMG
-          command: ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $CIRCLE_TAG Kenku.FM-$CIRCLE_TAG-x64.dmg
+          command: |
+            VERSION=${CIRCLE_TAG//v}
+            ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $CIRCLE_TAG Kenku.FM-$VERSION-x64.dmg
 
 workflows:
   version: 2

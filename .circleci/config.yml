@@ -170,7 +170,8 @@ jobs:
           name: Publish DMG
           command: |
             VERSION=${CIRCLE_TAG//v}
-            ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $CIRCLE_TAG Kenku.FM-$VERSION-x64.dmg
+            RELEASE_ID=$(./publish/script-get-github-release.sh $CIRCLE_TAG $GITHUB_TOKEN)
+            ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $RELEASE_ID Kenku.FM-$VERSION-x64.dmg
 
 workflows:
   version: 2

@@ -43,6 +43,14 @@ commands:
       - run:
           name: Get Images
           command: git clone https://$GITHUB_TOKEN@github.com/owlbear-rodeo/kenku-fm-assets.git
+  
+  move-images:
+    steps:
+      - run:
+          name: Move Images to Directory
+          command: | 
+            mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
+            rm -rf ./kenku-fm-assets
 
 jobs:
   publish-electron-app-linux-amd:
@@ -64,9 +72,7 @@ jobs:
           paths:
             - ./node_modules
       - get-images
-      - run:
-          name: Move Images
-          command: mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
+      - move-images
       - publish-electron-app
 
   publish-electron-app-win:
@@ -104,11 +110,8 @@ jobs:
           paths:
             - ./node_modules
       - get-images
-      - run:
-          name: Move Images to Directory
+      - move-images:
           shell: bash.exe
-          command: |
-            mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
       - yarn-make
       - run:
           name: Widevine Signature
@@ -151,9 +154,7 @@ jobs:
           paths:
             - ./node_modules
       - get-images
-      - run:
-          name: Move Images
-          command: mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
+      - move-images
       - yarn-make
       - run:
           name: Widevine Signature

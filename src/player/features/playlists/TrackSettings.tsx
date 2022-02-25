@@ -38,6 +38,7 @@ export function TrackSettings({ track, open, onClose }: TrackSettingsProps) {
       onClose={onClose}
       // Stop key events from propagating to prevent the track drag and drop from stealing the space bar
       onKeyDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       <DialogTitle>Edit Track</DialogTitle>
       <form onSubmit={handleSubmit}>

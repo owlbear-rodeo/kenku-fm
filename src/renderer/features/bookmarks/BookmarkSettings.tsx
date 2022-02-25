@@ -60,6 +60,7 @@ export function BookmarkSettings({
       onClose={handleClose}
       // Stop key events from propagating to prevent the track drag and drop from stealing the space bar
       onKeyDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       <DialogTitle>Edit Bookmark</DialogTitle>
       <form onSubmit={handleSubmit}>

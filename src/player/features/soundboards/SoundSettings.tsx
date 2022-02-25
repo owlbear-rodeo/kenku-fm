@@ -53,6 +53,7 @@ export function SoundSettings({ sound, open, onClose }: SoundSettingsProps) {
       onClose={onClose}
       // Stop key events from propagating to prevent the sound drag and drop from stealing the space bar
       onKeyDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       <DialogTitle>Edit Sound</DialogTitle>
       <form onSubmit={handleSubmit}>

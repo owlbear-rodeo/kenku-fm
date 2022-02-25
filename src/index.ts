@@ -1,4 +1,4 @@
-import { app, autoUpdater, dialog, BrowserWindow, components, session, shell } from "electron";
+import { app, BrowserWindow, components, session, shell } from "electron";
 import "./menu";
 import icon from "./assets/icon.png";
 import { getUserAgent } from "./main/userAgent";
@@ -64,34 +64,6 @@ app.whenReady().then(async () => {
   createWindow();
   spoofUserAgent();
 });
-
-const server = "https://hazel-sage-beta.vercel.app/"
-const url = `${server}/update/${process.platform}/${app.getVersion()}`
-
-autoUpdater.setFeedURL({ url })
-
-setInterval(() => {
-  autoUpdater.checkForUpdates()
-}, 1200000)
-
-autoUpdater.on('update-downloaded', (event, releaseNotes, releaseName) => {
-  const dialogOpts = {
-    type: 'info',
-    buttons: ['Restart', 'Later'],
-    title: 'Application Update',
-    message: process.platform === 'win32' ? releaseNotes : releaseName,
-    detail: 'A new version has been downloaded. Restart the application to apply the updates.'
-  }
-
-  dialog.showMessageBox(dialogOpts).then((returnValue) => {
-    if (returnValue.response === 0) autoUpdater.quitAndInstall()
-  })
-})
-
-autoUpdater.on('error', message => {
-  console.error('There was a problem updating the application')
-  console.error(message)
-})
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

@@ -90,5 +90,4 @@ out/
 # terraform 
 .terraform/
 
-#typescript compile
 dist/

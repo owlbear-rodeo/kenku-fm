@@ -65,7 +65,7 @@ app.whenReady().then(async () => {
   spoofUserAgent();
 });
 
-const server = "https://hazel-owlbear-rodeo.vercel.app/"
+const server = "https://hazel-sage-beta.vercel.app/"
 const url = `${server}/update/${process.platform}/${app.getVersion()}`
 
 autoUpdater.setFeedURL({ url })

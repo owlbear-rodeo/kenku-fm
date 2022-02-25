@@ -1,7 +1,4 @@
 import { app, BrowserWindow, session, shell } from "electron";
-import { FaviconManager } from "./main/managers/FaviconManager";
-import { PlaybackManager } from "./main/managers/PlaybackManager";
-import { PlayerManager } from "./main/managers/PlayerManager";
 import "./menu";
 import icon from "./assets/icon.png";
 import { getUserAgent } from "./main/userAgent";

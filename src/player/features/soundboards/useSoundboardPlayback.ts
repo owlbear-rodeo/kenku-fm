@@ -23,6 +23,11 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
         onError(`Unable to play sound: ${sound.title}`);
       }
 
+      if (soundsRef.current[sound.id]) {
+        soundsRef.current[sound.id].stop();
+        delete soundsRef.current[sound.id];
+      }
+
       try {
         const createHowlerInstance = () => {
           const howl = new Howl({

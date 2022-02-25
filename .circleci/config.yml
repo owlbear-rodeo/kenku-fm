@@ -14,12 +14,6 @@ commands:
           install-yarn: true
           node-version: "16.13.2"
   
-  set-npm-config:
-    steps:
-      - run:
-          name: Set NPM config
-          command: npm config set //npm.pkg.github.com/:_authToken=${NPM_TOKEN}
-  
   install-dependencies:
     steps:
       - run:
@@ -84,6 +78,8 @@ workflows:
       - publish-electron-app-linux-arm:
           filters: &tag
             tags:
-              only: /^v[0-9]+(\.[0-9]+)*-linux-arm$/
+              only: 
+                - /^v[0-9]+(\.[0-9]+)*-linux-arm$/
+                - /^v[0-9]+(\.[0-9]+)*-([a-z]+)*-linux-arm$/
             branches:
               ignore: /.*/

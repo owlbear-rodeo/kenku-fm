@@ -4,7 +4,8 @@
 
 *.js    eol=lf
 *.jsx   eol=lf
-*.json  text
+*.json  text eol=lf
+publish/windows/*.json text eol=lf
 
 # Explicitly declare text files you want to always be normalized and converted
 # to native line endings on checkout.
@@ -29,6 +30,9 @@
 # in Unix via a file share from Windows, the scripts will work.
 *.sh text eol=lf
 
-yarn.lock         text -diff
+yarn.lock         text eol=lf
+publish/windows/yarn.lock text eol=lf
 *.yaml            text
 *.yml             text
+
+*.*ignore         text eol=lf

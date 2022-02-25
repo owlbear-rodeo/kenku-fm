@@ -42,7 +42,6 @@ commands:
     steps:
       - run:
           name: Get Images
-          shell: bash.exe
           command: git clone https://$GITHUB_TOKEN@github.com/owlbear-rodeo/kenku-fm-assets.git
 
 jobs:

@@ -11,6 +11,9 @@ declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 if (require("electron-squirrel-startup")) {
   // eslint-disable-line global-require
   app.quit();
+} else if (app.isPackaged) {
+  // Setup auto update
+  require("./update");
 }
 
 const createWindow = (): void => {

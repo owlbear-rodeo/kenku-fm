@@ -16,7 +16,7 @@
     "name": "Owlbear Rodeo",
     "email": "contact@owlbear.rodeo"
   },
-  "license": "MIT",
+  "license": "GPLv3",
   "config": {
     "forge": "./forge.config.js"
   },

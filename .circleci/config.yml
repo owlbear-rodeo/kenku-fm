@@ -38,6 +38,12 @@ commands:
           name: Make Package
           command: yarn run make
 
+  get-images:
+    steps:
+      - run:
+          name: Get Images
+          command: git clone https://$GITHUB_TOKEN@github.com/owlbear-rodeo/kenku-fm-assets.git
+
 jobs:
   publish-electron-app-linux-amd:
     executor: linux-amd
@@ -57,6 +63,10 @@ jobs:
           key: dependency-cache-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
           paths:
             - ./node_modules
+      - get-images
+      - run:
+          name: Move Images
+          command: mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
       - publish-electron-app
 
   publish-electron-app-win:
@@ -93,6 +103,12 @@ jobs:
           key: dependency-cache-win-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
           paths:
             - ./node_modules
+      - get-images
+      - run:
+          name: Move Images to Directory
+          shell: bash.exe
+          command: |
+            mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
       - yarn-make
       - run:
           name: Widevine Signature
@@ -132,6 +148,10 @@ jobs:
           key: dependency-cache-macos-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
           paths:
             - ./node_modules
+      - get-images
+      - run:
+          name: Move Images
+          command: mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
       - yarn-make
       - run:
           name: Widevine Signature

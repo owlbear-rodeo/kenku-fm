@@ -2,6 +2,10 @@
 * text=auto
 * text eol=lf
 
+*.js    eol=lf
+*.jsx   eol=lf
+*.json  text
+
 # Explicitly declare text files you want to always be normalized and converted
 # to native line endings on checkout.
 *.c text
@@ -13,6 +17,8 @@
 # Denote all files that are truly binary and should not be modified.
 *.png binary
 *.jpg binary
+*.icns binary
+*.gif binary
 
 # Force batch scripts to always use CRLF line endings so that if a repo is accessed
 # in Windows via a file share from Linux, the scripts will work.
@@ -22,3 +28,7 @@
 # Force bash scripts to always use LF line endings so that if a repo is accessed
 # in Unix via a file share from Windows, the scripts will work.
 *.sh text eol=lf
+
+yarn.lock         text -diff
+*.yaml            text
+*.yml             text

@@ -8,7 +8,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 
 import { useDispatch } from "react-redux";
 import { editTrack, Track } from "./playlistsSlice";
-import { AudioSelector } from "./AudioSelector";
+import { AudioSelector } from "../../common/AudioSelector";
 
 type TrackSettingsProps = {
   track: Track;
@@ -38,6 +38,7 @@ export function TrackSettings({ track, open, onClose }: TrackSettingsProps) {
       onClose={onClose}
       // Stop key events from propagating to prevent the track drag and drop from stealing the space bar
       onKeyDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       <DialogTitle>Edit Track</DialogTitle>
       <form onSubmit={handleSubmit}>

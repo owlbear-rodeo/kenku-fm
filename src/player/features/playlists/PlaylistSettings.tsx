@@ -8,7 +8,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 
 import { useDispatch } from "react-redux";
 import { editPlaylist, Playlist } from "./playlistsSlice";
-import { ImageSelector } from "./ImageSelector";
+import { ImageSelector } from "../../common/ImageSelector";
 
 type PlaylistSettingsProps = {
   playlist: Playlist;

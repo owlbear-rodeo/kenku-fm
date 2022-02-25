@@ -18,7 +18,6 @@ export interface PlaylistsState {
     byId: Record<string, Playlist>;
     allIds: string[];
   };
-  selectedPlaylist?: string;
   tracks: Record<string, Track>;
 }
 
@@ -46,12 +45,6 @@ export const playlistsSlice = createSlice({
       state.playlists.allIds = state.playlists.allIds.filter(
         (id) => id !== action.payload
       );
-      if (action.payload === state.selectedPlaylist) {
-        state.selectedPlaylist = undefined;
-      }
-    },
-    selectPlaylist: (state, action: PayloadAction<string>) => {
-      state.selectedPlaylist = action.payload;
     },
     editPlaylist: (state, action: PayloadAction<Partial<Playlist>>) => {
       if (!action.payload.id) {
@@ -130,7 +123,6 @@ export const playlistsSlice = createSlice({
 export const {
   addPlaylist,
   removePlaylist,
-  selectPlaylist,
   editPlaylist,
   movePlaylist,
   addTrack,

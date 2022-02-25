@@ -3,7 +3,7 @@ import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
-import Add from "@mui/icons-material/AddRounded";
+import Add from "@mui/icons-material/AddCircleRounded";
 import Tooltip from "@mui/material/Tooltip";
 import Box from "@mui/material/Box";
 import Back from "@mui/icons-material/ChevronLeftRounded";
@@ -14,29 +14,26 @@ import Backdrop from "@mui/material/Backdrop";
 
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import {
-  Playlist as PlaylistType,
-  selectPlaylist,
-  removePlaylist,
-  Track,
-  addTracks,
-} from "./playlistsSlice";
+import { removePlaylist, Track, addTracks } from "./playlistsSlice";
 import { TrackAdd } from "./TrackAdd";
 import { PlaylistSettings } from "./PlaylistSettings";
 import { PlaylistTracks } from "./PlaylistTracks";
 
 import { isBackground, backgrounds } from "../../backgrounds";
-import { startQueue } from "../playback/playbackSlice";
-import { useDrop } from "./useDrop";
+import { startQueue } from "./playlistPlaybackSlice";
+import { useDrop } from "../../common/useDrop";
+import { useNavigate, useParams } from "react-router-dom";
 
 type PlaylistProps = {
-  playlist: PlaylistType;
   onPlay: (track: Track) => void;
 };
 
-export function Playlist({ playlist, onPlay }: PlaylistProps) {
+export function Playlist({ onPlay }: PlaylistProps) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const playlists = useSelector((state: RootState) => state.playlists);
+  const { playlistId } = useParams();
+  const playlist = playlists.playlists.byId[playlistId];
 
   const [addOpen, setAddOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -68,7 +65,7 @@ export function Playlist({ playlist, onPlay }: PlaylistProps) {
 
   function handleDelete() {
     dispatch(removePlaylist(playlist.id));
-    dispatch(selectPlaylist(undefined));
+    navigate(-1);
     handleMenuClose();
   }
 
@@ -85,7 +82,7 @@ export function Playlist({ playlist, onPlay }: PlaylistProps) {
     (directories) => {
       const tracks: Track[] = [];
       for (let directory of Object.values(directories)) {
-        tracks.push(...directory.tracks);
+        tracks.push(...directory.audioFiles);
       }
       dispatch(addTracks({ tracks, playlistId: playlist.id }));
     }
@@ -133,13 +130,7 @@ export function Playlist({ playlist, onPlay }: PlaylistProps) {
           alignItems="center"
           sx={{ zIndex: 1 }}
         >
-          <IconButton
-            onClick={() => dispatch(selectPlaylist(undefined))}
-            id="more-button"
-            aria-controls="playlist-menu"
-            aria-haspopup="true"
-            sx={{ mr: "40px" }}
-          >
+          <IconButton onClick={() => navigate(-1)} sx={{ mr: "40px" }}>
             <Back />
           </IconButton>
           <Typography sx={{ zIndex: 1 }} variant="h3" noWrap>

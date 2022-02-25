@@ -38,6 +38,20 @@ commands:
           name: Make Package
           command: yarn run make
 
+  get-images:
+    steps:
+      - run:
+          name: Get Images
+          command: git clone https://$GITHUB_TOKEN@github.com/owlbear-rodeo/kenku-fm-assets.git
+  
+  move-images:
+    steps:
+      - run:
+          name: Move Images to Directory
+          command: | 
+            mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
+            rm -rf ./kenku-fm-assets
+
 jobs:
   publish-electron-app-linux-arm:
     executor: linux-arm
@@ -52,13 +66,14 @@ jobs:
             sudo apt-get install -y dpkg fakeroot rpm
       - checkout
       - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
-      - set-npm-config
+          key: dependency-cache-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
       - install-dependencies
       - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
+          key: dependency-cache-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
           paths:
             - ./node_modules
+      - get-images
+      - move-images
       - publish-electron-app
 
 workflows:

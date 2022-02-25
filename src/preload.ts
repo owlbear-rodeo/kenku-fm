@@ -8,12 +8,6 @@ window.addEventListener("load", () => {
   viewManager.load();
 });
 
-window.addEventListener("beforeunload", () => {
-  ipcRenderer.send("DISCORD_DISCONNECT");
-  ipcRenderer.send("PLAYER_STOP_REMOTE");
-  viewManager.destroy();
-});
-
 type Channel =
   | "ERROR"
   | "MESSAGE"
@@ -29,6 +23,8 @@ type Channel =
   | "BROWSER_VIEW_FAVICON_UPDATED"
   | "BROWSER_VIEW_MEDIA_STARTED_PLAYING"
   | "BROWSER_VIEW_MEDIA_PAUSED"
+  | "BROWSER_VIEW_NEW_TAB"
+  | "BROWSER_VIEW_CLOSE_TAB"
   | "PLAYER_REMOTE_ENABLED";
 
 const validChannels: Channel[] = [
@@ -46,6 +42,8 @@ const validChannels: Channel[] = [
   "BROWSER_VIEW_FAVICON_UPDATED",
   "BROWSER_VIEW_MEDIA_STARTED_PLAYING",
   "BROWSER_VIEW_MEDIA_PAUSED",
+  "BROWSER_VIEW_NEW_TAB",
+  "BROWSER_VIEW_CLOSE_TAB",
   "PLAYER_REMOTE_ENABLED",
 ];
 

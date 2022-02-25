@@ -11,6 +11,7 @@ import { PersistGate } from "redux-persist/integration/react";
 import { App } from "./app/App";
 import { theme } from "../renderer/app/theme";
 import { store, persistor } from "./app/store";
+import { MemoryRouter } from "react-router-dom";
 
 render(
   <Provider store={store}>
@@ -24,7 +25,9 @@ render(
     >
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <App />
+        <MemoryRouter>
+          <App />
+        </MemoryRouter>
       </ThemeProvider>
     </PersistGate>
   </Provider>,

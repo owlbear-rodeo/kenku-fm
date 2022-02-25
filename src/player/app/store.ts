@@ -1,6 +1,8 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import playlistsReducer from "../features/playlists/playlistsSlice";
-import playbackReducer from "../features/playback/playbackSlice";
+import soundboardsReducer from "../features/soundboards/soundboardsSlice";
+import playlsitPlaybackReducer from "../features/playlists/playlistPlaybackSlice";
+import soundboardPlaybackReducer from "../features/soundboards/soundboardPlaybackSlice";
 
 import {
   persistStore,
@@ -23,14 +25,19 @@ const playbackPersistConfig = {
 
 const rootReducer = combineReducers({
   playlists: playlistsReducer,
-  playback: persistReducer(playbackPersistConfig, playbackReducer),
+  soundboards: soundboardsReducer,
+  playlistPlayback: persistReducer(
+    playbackPersistConfig,
+    playlsitPlaybackReducer
+  ),
+  soundboardPlayback: soundboardPlaybackReducer,
 });
 
 const persistConfig = {
   key: "player",
   version: 1,
   storage,
-  whitelist: ["playlists"],
+  whitelist: ["playlists", "soundboards"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

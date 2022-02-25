@@ -1,4 +1,4 @@
-export interface PlaybackReply {
+export interface PlaylistPlaybackReply {
   playing: boolean;
   volume: number;
   muted: boolean;
@@ -9,10 +9,24 @@ export interface PlaybackReply {
     url: string;
     title: string;
     duration: number;
-    playlist?: {
-      id: string;
-      title: string;
-    };
+    progress: number;
   };
-  progress?: number;
+  playlist?: {
+    id: string;
+    title: string;
+  };
+}
+
+export interface SoundboardPlaybackReply {
+  sounds: {
+    id: string;
+    url: string;
+    title: string;
+    loop: boolean;
+    volume: number;
+    fadeIn: number;
+    fadeOut: number;
+    duration: number;
+    progress: number;
+  }[];
 }

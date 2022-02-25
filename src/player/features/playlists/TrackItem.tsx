@@ -15,7 +15,7 @@ import { Track, removeTrack, Playlist } from "./playlistsSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { TrackSettings } from "./TrackSettings";
 import { RootState } from "../../app/store";
-import { playPause } from "../playback/playbackSlice";
+import { playPause } from "./playlistPlaybackSlice";
 
 type TrackItemProps = {
   track: Track;
@@ -24,7 +24,7 @@ type TrackItemProps = {
 };
 
 export function TrackItem({ track, playlist, onPlay }: TrackItemProps) {
-  const playback = useSelector((state: RootState) => state.playback);
+  const playback = useSelector((state: RootState) => state.playlistPlayback);
   const dispatch = useDispatch();
 
   const [settingsOpen, setSettingsOpen] = useState(false);

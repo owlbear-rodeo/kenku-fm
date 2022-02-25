@@ -1,52 +1,15 @@
-import castle from "./shutter/castle.jpg";
-import dragon from "./shutter/dragon.jpg";
-import tavern from "./shutter/tavern.jpg";
-import town from "./shutter/town.jpg";
-import war from "./shutter/war.jpg";
-import autumn from "./pexels/autumn.jpg";
-import beach from "./pexels/beach.jpg";
-import butterflys from "./pexels/butterflys.jpg";
-import cathedral from "./pexels/cathedral.jpg";
-import haunted from "./pexels/haunted.jpg";
-import lines from "./pexels/lines.jpg";
-import mountain from "./pexels/mountain.jpg";
-import sand from "./pexels/sand.jpg";
-import skulls from "./pexels/skulls.jpg";
-import sky from "./pexels/sky.jpg";
-import smoke from "./pexels/smoke.jpg";
-import sparks from "./pexels/sparks.jpg";
-import stars from "./pexels/stars.jpg";
-import texture from "./pexels/texture.jpg";
-import tree from "./pexels/tree.jpg";
-import veins from "./pexels/veins.jpg";
-import volcano from "./pexels/volcano.jpg";
-import winter from "./pexels/winter.jpg";
+// Import all images in this folder at build time
+// @ts-ignore
+const images = require.context("./", false, /\.(png|jpe?g|svg|webp)$/);
 
-export const backgrounds = {
-  castle,
-  dragon,
-  tavern,
-  town,
-  war,
-  autumn,
-  beach,
-  butterflys,
-  cathedral,
-  haunted,
-  lines,
-  mountain,
-  sand,
-  skulls,
-  sky,
-  smoke,
-  sparks,
-  stars,
-  texture,
-  tree,
-  veins,
-  volcano,
-  winter,
-};
+export const backgrounds: Record<string, string> = images.keys().reduce(
+  (bg: Record<string, string>, path: string) => ({
+    // Use just the file name as the key
+    [path.replace(/\.\/(.+?)(\.[^.]*$|$)/, "$1")]: images(path),
+    ...bg,
+  }),
+  {}
+);
 
 export type Background = keyof typeof backgrounds;
 

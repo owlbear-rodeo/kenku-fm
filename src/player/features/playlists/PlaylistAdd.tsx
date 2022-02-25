@@ -12,7 +12,7 @@ import { useDispatch } from "react-redux";
 import { addPlaylist } from "./playlistsSlice";
 
 import { backgrounds } from "../../backgrounds";
-import { ImageSelector } from "./ImageSelector";
+import { ImageSelector } from "../../common/ImageSelector";
 
 type PlaylistAddProps = {
   open: boolean;

@@ -109,10 +109,16 @@ jobs:
           key: dependency-cache-win-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
           paths:
             - ./node_modules
-      - get-images:
+      - run:
+          name: Get Images
           shell: bash.exe
-      - move-images:
+          command: git clone https://$GITHUB_TOKEN@github.com/owlbear-rodeo/kenku-fm-assets.git
+      - run:
+          name: Move Images to Directory
           shell: bash.exe
+          command: | 
+            mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
+            rm -rf ./kenku-fm-assets
       - yarn-make
       - run:
           name: Widevine Signature

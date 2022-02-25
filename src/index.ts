@@ -1,4 +1,4 @@
-import { app, BrowserWindow, components, session, shell } from "electron";
+import { app, BrowserWindow, session, shell } from "electron";
 import "./menu";
 import icon from "./assets/icon.png";
 import { getUserAgent } from "./main/userAgent";

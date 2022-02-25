@@ -58,7 +58,7 @@ If you wish to add protected media playback support follow the build steps from 
 
 ## Project Structure
 
-All source files can be found in the `src` folder, our build scripts for CI/CD are in the `publish` and `infra` folders.
+All source files can be found in the `src` folder, our build scripts for CI/CD are in the `publish` folder.
 
 Within the `src` folder the `index.ts` file and `main` folder contains the code for the main process of Electron. This includes things like managing the Discord connection, creating the HTTP server for the remote control and managing the browser views.
 

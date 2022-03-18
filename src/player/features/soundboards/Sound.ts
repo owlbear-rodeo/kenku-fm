@@ -16,7 +16,10 @@ type SoundOptions = {
 };
 
 /**
- * Cross fade wrapper around a Howler sound playback
+ * Cross fade wrapper around a Howler sound playback.
+ * Setting fadeIn and fadeOut to 0 will disable cross fading.
+ * If cross fading is disabled then HTML5 audio won't be used
+ * this increases the memory usage but allows for perfect loops.
  */
 export class Sound extends TypedEmitter<SoundEvents> {
   options: SoundOptions;
@@ -30,14 +33,18 @@ export class Sound extends TypedEmitter<SoundEvents> {
     this.options = options;
     try {
       const createHowlerInstance = () => {
+        const crossFade =
+          this.options.fadeIn !== 0 && this.options.fadeOut !== 0;
         const howl = new Howl({
           ...this.options,
-          loop: false,
-          volume: 0,
+          loop: crossFade ? false : this.options.loop,
+          volume: crossFade ? 0 : this.options.volume,
           autoplay: true,
+          // Disable html audio when not cross fading to allow for perfect looping
+          html5: crossFade,
         });
 
-        const handlePlay = () => {
+        const handleCrossFade = () => {
           // Fade in
           howl.fade(0, this.options.volume, options.fadeIn);
           // Fade out
@@ -68,7 +75,9 @@ export class Sound extends TypedEmitter<SoundEvents> {
           this.emit("error");
         };
 
-        howl.on("play", handlePlay);
+        if (crossFade) {
+          howl.on("play", handleCrossFade);
+        }
         howl.on("load", handleLoad);
         howl.on("end", handleEnd);
         howl.on("loaderror", handleError);

@@ -7,22 +7,22 @@ import {
   updatePlayback,
   stopSound,
 } from "./soundboardPlaybackSlice";
-import { Sound } from "./soundboardsSlice";
-import { Loop } from "../../common/Loop";
+import { Sound as SoundType } from "./soundboardsSlice";
+import { Sound } from "./Sound";
 
 export function useSoundboardPlayback(onError: (message: string) => void) {
-  const loopsRef = useRef<Record<string, Loop>>({});
+  const loopsRef = useRef<Record<string, Sound>>({});
   const soundboards = useSelector((state: RootState) => state.soundboards);
   const dispatch = useDispatch();
 
   const play = useCallback(
-    (sound: Sound) => {
+    (sound: SoundType) => {
       if (loopsRef.current[sound.id]) {
         loopsRef.current[sound.id].stop(false);
         delete loopsRef.current[sound.id];
       }
 
-      const loop = new Loop({
+      const loop = new Sound({
         src: sound.url,
         volume: sound.volume,
         fadeIn: sound.fadeIn,

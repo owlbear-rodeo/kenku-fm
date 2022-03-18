@@ -1,13 +1,13 @@
 import { Howl } from "howler";
 import { TypedEmitter } from "tiny-typed-emitter";
 
-export interface FadeEvents {
+export interface SoundEvents {
   error: () => void;
   load: (duration: number) => void;
   end: () => void;
 }
 
-type LoopOptions = {
+type SoundOptions = {
   src: string;
   volume: number;
   loop: boolean;
@@ -18,14 +18,14 @@ type LoopOptions = {
 /**
  * Cross fade wrapper around a Howler sound playback
  */
-export class Loop extends TypedEmitter<FadeEvents> {
-  options: LoopOptions;
+export class Sound extends TypedEmitter<SoundEvents> {
+  options: SoundOptions;
   /** Timeout that controls the cross-fade */
   _timeout: NodeJS.Timeout;
   /** Current howl audio playabck for this loop */
   _howl: Howl;
 
-  constructor(options: LoopOptions) {
+  constructor(options: SoundOptions) {
     super();
     this.options = options;
     try {

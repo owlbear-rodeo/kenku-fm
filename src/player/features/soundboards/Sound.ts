@@ -121,6 +121,11 @@ export class Sound extends TypedEmitter<SoundEvents> {
   }
 
   seek(to: number) {
-    return this._howl.seek(to);
+    this._howl.seek(to);
+  }
+
+  volume(volume: number) {
+    this.options.volume = volume;
+    this._howl.volume(volume);
   }
 }

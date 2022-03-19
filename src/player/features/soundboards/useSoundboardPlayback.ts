@@ -11,18 +11,18 @@ import { Sound as SoundType } from "./soundboardsSlice";
 import { Sound } from "./Sound";
 
 export function useSoundboardPlayback(onError: (message: string) => void) {
-  const loopsRef = useRef<Record<string, Sound>>({});
+  const soundsRef = useRef<Record<string, Sound>>({});
   const soundboards = useSelector((state: RootState) => state.soundboards);
   const dispatch = useDispatch();
 
   const play = useCallback(
     (sound: SoundType) => {
-      if (loopsRef.current[sound.id]) {
-        loopsRef.current[sound.id].stop(false);
-        delete loopsRef.current[sound.id];
+      if (soundsRef.current[sound.id]) {
+        soundsRef.current[sound.id].stop(false);
+        delete soundsRef.current[sound.id];
       }
 
-      const loop = new Sound({
+      const playback = new Sound({
         src: sound.url,
         volume: sound.volume,
         fadeIn: sound.fadeIn,
@@ -30,7 +30,7 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
         loop: sound.loop,
       });
 
-      loop.once("load", (duration) => {
+      playback.once("load", (duration) => {
         dispatch(
           playSound({
             sound,
@@ -39,21 +39,19 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
         );
       });
 
-      loop.on("end", () => {
-        if (!sound.loop) {
-          dispatch(stopSound(sound.id));
-          loopsRef.current[sound.id]?.stop(false);
-          delete loopsRef.current[sound.id];
-        }
+      playback.on("end", () => {
+        dispatch(stopSound(sound.id));
+        soundsRef.current[sound.id]?.stop(false);
+        delete soundsRef.current[sound.id];
       });
 
-      loop.on("error", () => {
-        delete loopsRef.current[sound.id];
+      playback.on("error", () => {
+        delete soundsRef.current[sound.id];
         dispatch(stopSound(sound.id));
         onError(`Unable to play sound: ${sound.title}`);
       });
 
-      loopsRef.current[sound.id] = loop;
+      soundsRef.current[sound.id] = playback;
     },
     [onError]
   );
@@ -67,8 +65,8 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
       // Limit update to 1 time per 200 ms
       const delta = time - prevTime;
       if (delta > 200) {
-        for (let id in loopsRef.current) {
-          const loop = loopsRef.current[id];
+        for (let id in soundsRef.current) {
+          const loop = soundsRef.current[id];
           if (loop.playing()) {
             dispatch(updatePlayback({ id, progress: loop.progress() }));
           }
@@ -83,20 +81,31 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
 
   const seek = useCallback((id: string, to: number) => {
     dispatch(updatePlayback({ id, progress: to }));
-    loopsRef.current[id]?.seek(to);
+    soundsRef.current[id]?.seek(to);
   }, []);
 
-  const stop = useCallback(
-    async (id: string) => {
-      dispatch(stopSound(id));
-      const loop = loopsRef.current[id];
-      if (loop) {
-        await loop.stop(true);
-        delete loopsRef.current[id];
+  const stop = useCallback(async (id: string) => {
+    dispatch(stopSound(id));
+    const loop = soundsRef.current[id];
+    if (loop) {
+      await loop.stop(true);
+      delete soundsRef.current[id];
+    }
+  }, []);
+
+  useEffect(() => {
+    for (let [id, sound] of Object.entries(soundsRef.current)) {
+      const state = soundboards.sounds[id];
+      if (state) {
+        if (state.volume !== sound.options.volume) {
+          sound.volume(state.volume);
+        }
+        if (state.loop !== sound.options.loop) {
+          sound.loop(state.loop);
+        }
       }
-    },
-    [soundboards]
-  );
+    }
+  }, [soundboards]);
 
   return {
     seek,

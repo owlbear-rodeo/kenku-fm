@@ -68,7 +68,9 @@ export class Sound extends TypedEmitter<SoundEvents> {
         };
 
         const handleEnd = () => {
-          this.emit("end");
+          if (!this.options.loop) {
+            this.emit("end");
+          }
         };
 
         const handleError = () => {
@@ -121,6 +123,19 @@ export class Sound extends TypedEmitter<SoundEvents> {
   }
 
   seek(to: number) {
-    return this._howl.seek(to);
+    this._howl.seek(to);
+  }
+
+  volume(volume: number) {
+    this.options.volume = volume;
+    this._howl.volume(volume);
+  }
+
+  loop(loop: boolean) {
+    this.options.loop = loop;
+    // Toggle howl loop if cross fade is disabled
+    if (this.options.fadeIn === 0 && this.options.fadeOut === 0) {
+      this._howl.loop(loop);
+    }
   }
 }

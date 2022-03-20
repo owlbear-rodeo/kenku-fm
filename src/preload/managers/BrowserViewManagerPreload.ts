@@ -193,9 +193,6 @@ export class BrowserViewManagerPreload {
       if (this._ws.readyState === WebSocket.OPEN) {
         this._ws.send(event.data);
       }
-      // event.data.arrayBuffer().then((buffer) => {
-      //   ipcRenderer.send("BROWSER_VIEW_STREAM_DATA", buffer);
-      // });
     };
     recorder.start(60);
 

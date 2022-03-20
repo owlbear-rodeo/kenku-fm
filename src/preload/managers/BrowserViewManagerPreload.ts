@@ -21,6 +21,8 @@ export class BrowserViewManagerPreload {
   _externalAudioStreams: Record<string, MediaStream>;
   _externalAudioStreamOutputs: Record<string, GainNode>;
 
+  _ws: WebSocket;
+
   constructor() {
     this._mediaStreams = {};
     this._mediaStreamOutputs = {};
@@ -32,7 +34,8 @@ export class BrowserViewManagerPreload {
     this._audioOutputNode = this._audioContext.createGain();
   }
 
-  load() {
+  async load() {
+    await this._setupWebsocket();
     this._setupPlayback();
     ipcRenderer.send("BROWSER_VIEW_STREAM_START");
   }
@@ -169,6 +172,13 @@ export class BrowserViewManagerPreload {
     }
   }
 
+  async _setupWebsocket() {
+    const websocketAddress = await ipcRenderer.invoke(
+      "BROWSER_VIEW_GET_WEBSOCKET_ADDRESS"
+    );
+    this._ws = new WebSocket(`ws://localhost:${websocketAddress.port}`);
+  }
+
   _setupPlayback() {
     const destination = this._audioContext.createMediaStreamDestination();
 
@@ -180,9 +190,12 @@ export class BrowserViewManagerPreload {
 
     const recorder = new MediaRecorder(destination.stream);
     recorder.ondataavailable = (event) => {
-      event.data.arrayBuffer().then((buffer) => {
-        ipcRenderer.send("BROWSER_VIEW_STREAM_DATA", buffer);
-      });
+      if (this._ws.readyState === WebSocket.OPEN) {
+        this._ws.send(event.data);
+      }
+      // event.data.arrayBuffer().then((buffer) => {
+      //   ipcRenderer.send("BROWSER_VIEW_STREAM_DATA", buffer);
+      // });
     };
     recorder.start(60);
 

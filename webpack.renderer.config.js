@@ -6,6 +6,11 @@ rules.push({
   use: [{ loader: "style-loader" }, { loader: "css-loader" }],
 });
 
+rules.push({
+  test: /\.worker\.js$/,
+  use: { loader: "worker-loader", options: { inline: "fallback" } },
+});
+
 module.exports = {
   module: {
     rules,

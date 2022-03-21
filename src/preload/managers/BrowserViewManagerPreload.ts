@@ -1,5 +1,10 @@
 import { ipcRenderer } from "electron";
 
+// @ts-ignore
+import Worker from "./StreamSender.worker.js";
+
+const streamSender = new Worker();
+
 /**
  * Manager to help create and manager browser views
  * This class is to be run on the renderer thread
@@ -21,8 +26,6 @@ export class BrowserViewManagerPreload {
   _externalAudioStreams: Record<string, MediaStream>;
   _externalAudioStreamOutputs: Record<string, GainNode>;
 
-  _ws: WebSocket;
-
   constructor() {
     this._mediaStreams = {};
     this._mediaStreamOutputs = {};
@@ -35,9 +38,8 @@ export class BrowserViewManagerPreload {
   }
 
   async load() {
-    await this._setupWebsocket();
+    await this._setupStreamSender();
     this._setupPlayback();
-    ipcRenderer.send("BROWSER_VIEW_STREAM_START");
   }
 
   async createBrowserView(
@@ -172,11 +174,15 @@ export class BrowserViewManagerPreload {
     }
   }
 
-  async _setupWebsocket() {
+  async _setupStreamSender() {
     const websocketAddress = await ipcRenderer.invoke(
       "BROWSER_VIEW_GET_WEBSOCKET_ADDRESS"
     );
-    this._ws = new WebSocket(`ws://localhost:${websocketAddress.port}`);
+    ipcRenderer.send("BROWSER_VIEW_STREAM_START");
+    streamSender.postMessage([
+      "url",
+      `ws://localhost:${websocketAddress.port}`,
+    ]);
   }
 
   _setupPlayback() {
@@ -190,9 +196,7 @@ export class BrowserViewManagerPreload {
 
     const recorder = new MediaRecorder(destination.stream);
     recorder.ondataavailable = (event) => {
-      if (this._ws.readyState === WebSocket.OPEN) {
-        this._ws.send(event.data);
-      }
+      streamSender.postMessage(["data", event.data]);
     };
     recorder.start(60);
 

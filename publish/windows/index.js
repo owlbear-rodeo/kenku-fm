@@ -21,5 +21,6 @@ async function createApp(dir, version, certPassword) {
 
 const args = process.argv.slice(2)
 const dir = path.resolve(args[0])
+const appVersion = args[1]
 const certPassword = path.resolve(args[2])
-createApp(dir, args[1], certPassword)
+createApp(dir, appVersion, certPassword)

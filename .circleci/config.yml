@@ -141,7 +141,7 @@ jobs:
             Set-Location -Path ~\repo
             get-location
 
-            node .\publish\windows\index.js .\ v1.0.0-beta-2
+            node .\publish\windows\index.js .\ v1.0.0-beta-2  $env:CERTIFICATE_PASSWORD
       - run:
           name: Publish
           shell: bash.exe

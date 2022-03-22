@@ -126,24 +126,10 @@ jobs:
             python -m castlabs_evs.account -n reauth -A $env:CASTLABS_ACCOUNT_NAME -P $env:CASTLABS_ACCOUNT_PASSWORD
             python -m castlabs_evs.vmp sign-pkg ".\out\Kenku FM-win32-x64"
       - run:
-          name: Certificate Setup
-          shell: bash.exe
-          command: |
-            CERTIFICATE_PFX=certificate.pfx;
-            echo "${WINDOWS_CERT_P12}" | base64 -d > $CERTIFICATE_PFX;
-      - run:
           name: Create App
           shell: bash.exe
           command: |
-            CERTIFICATE_PFX=certificate.pfx
-            cd ./publish/windows
-            yarn install --non-interactive --frozen-lockfile
-            DIR="./"
-            echo "${DIR}"
-            echo $(pwd)
-            cd /c/Users/circleci/repo
-            echo $(pwd)
-            node ./publish/windows/index.js "${DIR}" v1.0.0-beta-2
+            ./publish/windows/publish.sh $WINDOWS_CERT_PASSWORD
       - run:
           name: Publish
           shell: bash.exe

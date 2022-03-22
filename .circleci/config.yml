@@ -131,7 +131,7 @@ jobs:
           command: |
             CERTIFICATE_PFX=certificate.pfx;
             echo "${WINDOWS_CERT_P12}" | base64 -d > $CERTIFICATE_PFX;
-            yarn install --non-interactive --frozen-lockfile --cwd "./publish/windows/"
+            yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows/
             DIR="./"
             echo "${DIR}"
             node ./publish/windows/index.js "${DIR}" v1.0.0-beta-2

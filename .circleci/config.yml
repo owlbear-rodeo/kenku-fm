@@ -128,7 +128,11 @@ jobs:
       - run:
           name: Create App
           command: |
-            bash ./publish/windows/publish.sh $WINDOWS_CERT_PASSWORD
+            bash ./publish/windows/publish.sh
+            cd $env:CIRCLE_WORKING_DIRECTORY\publish\windows
+            yarn install --non-interactive --frozen-lockfile
+            cd ~\repo
+            node .\publish\windows\index.js .\ $env:CIRCLE_TAG
       - run:
           name: Publish
           shell: bash.exe

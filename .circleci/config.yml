@@ -130,6 +130,7 @@ jobs:
           command: |
             bash ./publish/windows/publish.sh
             cd $env:CIRCLE_WORKING_DIRECTORY\publish\windows
+            echo $(pwd)
             yarn install --non-interactive --frozen-lockfile
             cd ~\repo
             node .\publish\windows\index.js .\ $env:CIRCLE_TAG

@@ -129,16 +129,19 @@ jobs:
           name: Create App
           command: |
             $env:CERTIFICATE_PFX = certificate.pfx
+            $env:CERTIFICATE_PASSWORD = $env:WINDOWS_CERTIFICATE_PASSWORD
             echo "${WINDOWS_CERT_P12}" > cert.txt
             certutil -decode cert.txt $CERTIFICATE_PFX
-            Set-Location -Path $env:CIRCLE_WORKING_DIRECTORY\publish\windows -PassThru
+            Set-Location -Path $env:CIRCLE_WORKING_DIRECTORY\publish\windows
 
             get-location
-            
+
             yarn install --non-interactive --frozen-lockfile
 
-            Set-Location -Path ~\repo -PassThru
-            node .\publish\windows\index.js .\ $env:CIRCLE_TAG
+            Set-Location -Path ~\repo
+            get-location
+
+            node .\publish\windows\index.js .\ v1.0.0-beta-2
       - run:
           name: Publish
           shell: bash.exe

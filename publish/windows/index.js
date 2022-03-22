@@ -23,4 +23,17 @@ const args = process.argv.slice(2)
 const dir = path.resolve(args[0])
 const appVersion = args[1]
 const certPassword = path.resolve(args[2])
+
+if (dir === undefined) {
+    console.log("directory is undefined")
+}
+
+if (appVersion === undefined) {
+    console.log("app version is undefined")
+}
+
+if (certPassword === undefined) {
+    console.log("password is undefined")
+}
+
 createApp(dir, appVersion, certPassword)

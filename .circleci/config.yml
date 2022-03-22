@@ -127,11 +127,14 @@ jobs:
             python -m castlabs_evs.vmp sign-pkg ".\out\Kenku FM-win32-x64"
       - run:
           name: Create App
+          shell: bash.exe
           command: |
-            cd $env:CIRCLE_WORKING_DIRECTORY\publish\windows
+            CERTIFICATE_PFX=certificate.pfx;
+            echo "${WINDOWS_CERT_P12}"| base64 --decode -o $CERTIFICATE_PFX;
+            cd $CIRCLE_WORKING_DIRECTORY\publish\windows
             yarn install --non-interactive --frozen-lockfile
             cd ~\repo
-            node .\publish\windows\index.js .\ $env:CIRCLE_TAG
+            node .\publish\windows\index.js .\ $CIRCLE_TAG
       - run:
           name: Publish
           shell: bash.exe

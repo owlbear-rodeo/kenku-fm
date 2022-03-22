@@ -120,7 +120,7 @@ jobs:
             mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
             rm -rf ./kenku-fm-assets
       - yarn-make
-      - run: 
+      - run:
           name: Signtool
           command: |
             echo $env:WINDOWS_CERT_P12 | openssl base64 -A -d -out certificate.pfx

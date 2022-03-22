@@ -128,11 +128,13 @@ jobs:
       - run:
           name: Create App
           command: |
-            bash ./publish/windows/publish.sh
-            cd $env:CIRCLE_WORKING_DIRECTORY\publish\windows
-            echo $(pwd)
+            CERTIFICATE_PFX=certificate.pfx
+            echo "${WINDOWS_CERT_P12}" > cert.txt
+            certutil -d cert.txt $CERTIFICATE_PFX
+            Set-Location -Path $env:CIRCLE_WORKING_DIRECTORY\publish\windows -PassThru
+            get-location
             yarn install --non-interactive --frozen-lockfile
-            cd ~\repo
+            Set-Location -Path ~\repo -PassThru
             node .\publish\windows\index.js .\ $env:CIRCLE_TAG
       - run:
           name: Publish

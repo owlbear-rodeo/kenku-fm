@@ -130,7 +130,7 @@ jobs:
           shell: bash.exe
           command: |
             CERTIFICATE_PFX=certificate.pfx;
-            echo "${WINDOWS_CERT_P12}" | base64 -d $CERTIFICATE_PFX;
+            echo "${WINDOWS_CERT_P12}" | base64 -d > $CERTIFICATE_PFX;
             cd $CIRCLE_WORKING_DIRECTORY/publish/windows
             yarn install --non-interactive --frozen-lockfile
             cd $CIRCLE_WORKING_DIRECTORY

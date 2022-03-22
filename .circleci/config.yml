@@ -127,9 +127,8 @@ jobs:
             python -m castlabs_evs.vmp sign-pkg ".\out\Kenku FM-win32-x64"
       - run:
           name: Create App
-          shell: bash.exe
           command: |
-            ./publish/windows/publish.sh $WINDOWS_CERT_PASSWORD
+            bash ./publish/windows/publish.sh $WINDOWS_CERT_PASSWORD
       - run:
           name: Publish
           shell: bash.exe

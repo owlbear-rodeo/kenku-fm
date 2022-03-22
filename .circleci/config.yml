@@ -127,19 +127,14 @@ jobs:
             python -m castlabs_evs.vmp sign-pkg ".\out\Kenku FM-win32-x64"
       - run:
           name: Create App
+          shell: bash.exe
           command: |
             echo "${WINDOWS_CERT_P12}" > cert.txt
             certutil -decode cert.txt certificate.pfx
-            Set-Location -Path $env:CIRCLE_WORKING_DIRECTORY\publish\windows
 
-            get-location
+            yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows
 
-            yarn install --non-interactive --frozen-lockfile
-
-            Set-Location -Path ~\repo
-            get-location
-
-            node .\publish\windows\index.js .\ v1.0.0-beta-2  $env:WINDOWS_CERTIFICATE_PASSWORD
+            node ./publish/windows/index.js ./ v1.0.0-beta-2  $WINDOWS_CERTIFICATE_PASSWORD
       - run:
           name: Publish
           shell: bash.exe

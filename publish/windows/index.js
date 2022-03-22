@@ -12,7 +12,7 @@ async function createApp(dir, version) {
             noMsi: true,
             exe: "kenku-fm.exe",
             setupExe: `kenku-fm-${version}-setup.exe`,
-            signWithParams: `/a /f "${path.join(dir, "publish", "windows", process.env.CERTIFICATE_PFX)}" /p "${process.env.WINDOWS_CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256"`
+            signWithParams: `/a /f "${path.join(dir, process.env.CERTIFICATE_PFX)}" /p "${process.env.WINDOWS_CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256"`
           });
     } catch (e) {
         console.log(`Error occured: ${e.message}`)

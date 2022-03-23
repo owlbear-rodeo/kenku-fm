@@ -134,7 +134,7 @@ jobs:
 
             yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows
 
-            node ./publish/windows/index.js ./ v1.0.0-beta-2  $WINDOWS_CERTIFICATE_PASSWORD
+            node ./publish/windows/index.js ./ v1.0.0-beta-2  $WINDOWS_CERT_PASSWORD
       - run:
           name: Publish
           shell: bash.exe

@@ -121,11 +121,6 @@ jobs:
             rm -rf ./kenku-fm-assets
       - yarn-make
       - run:
-          name: Widevine Signature
-          command: |
-            python -m castlabs_evs.account -n reauth -A $env:CASTLABS_ACCOUNT_NAME -P $env:CASTLABS_ACCOUNT_PASSWORD
-            python -m castlabs_evs.vmp sign-pkg ".\out\Kenku FM-win32-x64"
-      - run:
           name: Create App
           shell: bash.exe
           command: |
@@ -135,6 +130,11 @@ jobs:
             yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows
 
             node ./publish/windows/index.js ./ v1.0.0-beta-2  $WINDOWS_CERT_PASSWORD
+      - run:
+          name: Widevine Signature
+          command: |
+            python -m castlabs_evs.account -n reauth -A $env:CASTLABS_ACCOUNT_NAME -P $env:CASTLABS_ACCOUNT_PASSWORD
+            python -m castlabs_evs.vmp sign-pkg ".\out\Kenku FM-win32-x64"
       - run:
           name: Publish
           shell: bash.exe

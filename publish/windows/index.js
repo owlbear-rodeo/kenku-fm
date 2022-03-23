@@ -12,7 +12,7 @@ async function createApp(dir, version, certPassword) {
             noMsi: true,
             exe: "kenku-fm.exe",
             setupExe: `kenku-fm-${version}-setup.exe`,
-            signWithParams: `/a /f "certificate.pfx" /p "${certPassword}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256"`
+            signWithParams: `/a /f "${path.join(dir, "certificate.pfx")}" /p "${certPassword}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256"`
           });
     } catch (e) {
         console.log(`Error occured: ${e.message}`)
@@ -22,7 +22,7 @@ async function createApp(dir, version, certPassword) {
 const args = process.argv.slice(2)
 const dir = path.resolve(args[0])
 const appVersion = args[1]
-const certPassword = path.resolve(args[2])
+const certPassword = args[2]
 
 if (dir === undefined) {
     console.log("directory is undefined")

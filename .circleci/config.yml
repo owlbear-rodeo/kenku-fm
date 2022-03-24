@@ -129,8 +129,8 @@ jobs:
             $DIR = $(pwd)
             $CERT = "${DIR}\certificate.pfx"
 
-            C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /d /a /f ".\certificate.pfx" /p "${$WINDOWS_CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\kenku-fm.exe"
-            C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /a /f ".\certificate.pfx" /p "${$WINDOWS_CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\Squirrel.exe"
+            C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /d /f ".\certificate.pfx" /p "${$WINDOWS_CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\kenku-fm.exe"
+            C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /d /f ".\certificate.pfx" /p "${$WINDOWS_CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\Squirrel.exe"
       - run:
           name: Widevine Signature
           command: |

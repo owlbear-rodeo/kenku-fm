@@ -82,16 +82,6 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - run: 
-          name: cert
-          command: |
-            echo "${WINDOWS_CERT_P12}" > cert.txt
-            certutil -decode cert.txt certificate.pfx
-            
-            $DIR = $(pwd)
-            $CERT = "${DIR}\certificate.pfx"
-
-            C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /a /f "${CERT}" /p "${$WINDOWS_CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" 
       - run:
           name: Install Python
           command: |

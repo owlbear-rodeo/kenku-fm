@@ -81,10 +81,6 @@ jobs:
       size: "medium"
     working_directory: ~/repo
     steps:
-      - run: 
-          name: Signtool
-          command: |
-            $PSVersionTable
       - checkout
       - run:
           name: Install Python
@@ -124,21 +120,29 @@ jobs:
             mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
             rm -rf ./kenku-fm-assets
       - yarn-make
-      - run:
-          name: Create App
-          shell: bash.exe
+      - run: 
+          name: Signtool
           command: |
             echo "${WINDOWS_CERT_P12}" > cert.txt
             certutil -decode cert.txt certificate.pfx
+            
+            $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate
+            $cert.Import("${$CIRCLE_WORKING_DIRECTORY}\certificate.pfx","${WINDOWS_CERT_PASSWORD}","DefaultKeySet")
 
-            yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows
-
-            node ./publish/windows/index.js ./ v1.0.0-beta-2  $WINDOWS_CERT_PASSWORD
+            Set-AuthenticodeSignature -Certificate $cert -FilePath "${$CIRCLE_WORKING_DIRECTORY}\out\Kenku FM-win32-x64\kenku-fm.exe" -TimestampServer "http://timestamp.comodoca.com" -HashAlgorithm "SHA256"
+            Set-AuthenticodeSignature -Certificate $cert -FilePath "${$CIRCLE_WORKING_DIRECTORY}\out\Kenku FM-win32-x64\Squirrel.exe" -TimestampServer "http://timestamp.comodoca.com" -HashAlgorithm "SHA256"
       - run:
           name: Widevine Signature
           command: |
             python -m castlabs_evs.account -n reauth -A $env:CASTLABS_ACCOUNT_NAME -P $env:CASTLABS_ACCOUNT_PASSWORD
             python -m castlabs_evs.vmp sign-pkg ".\out\Kenku FM-win32-x64"
+      - run:
+          name: Create App
+          shell: bash.exe
+          command: |
+            yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows
+
+            node ./publish/windows/index.js ./ v1.0.0-beta-2  $WINDOWS_CERT_PASSWORD
       - run:
           name: Publish
           shell: bash.exe

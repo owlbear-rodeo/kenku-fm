@@ -84,9 +84,7 @@ jobs:
       - run: 
           name: Signtool
           command: |
-            signtool
-
-            signtool.exe
+            $PSVersionTable
       - checkout
       - run:
           name: Install Python

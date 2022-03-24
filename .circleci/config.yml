@@ -81,6 +81,12 @@ jobs:
       size: "medium"
     working_directory: ~/repo
     steps:
+      - run: 
+          name: Signtool
+          command: |
+            signtool
+
+            signtool.exe
       - checkout
       - run:
           name: Install Python

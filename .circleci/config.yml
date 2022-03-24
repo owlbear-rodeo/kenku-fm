@@ -85,12 +85,13 @@ jobs:
       - run: 
           name: cert
           command: |
-            choco install -y windows-sdk-10.0
             echo "${WINDOWS_CERT_P12}" > cert.txt
             certutil -decode cert.txt certificate.pfx
+            
+            $DIR = $(pwd)
+            $CERT = "${DIR}\certificate.pfx"
 
-            C:\"Program Files (x86)"\"Windows Kits"\10\bin\10.0.26624\x64\signtool.exe
-            C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe
+            C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /a /f "${CERT}" /p "${$WINDOWS_CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" 
       - run:
           name: Install Python
           command: |
@@ -132,8 +133,14 @@ jobs:
       - run: 
           name: Signtool
           command: |
-            Set-AuthenticodeSignature -Certificate $cert -FilePath "${dir}\out\Kenku FM-win32-x64\kenku-fm.exe" -TimestampServer "http://timestamp.comodoca.com" -HashAlgorithm "SHA256"
-            Set-AuthenticodeSignature -Certificate $cert -FilePath "${dir}\out\Kenku FM-win32-x64\Squirrel.exe" -TimestampServer "http://timestamp.comodoca.com" -HashAlgorithm "SHA256"
+            echo "${WINDOWS_CERT_P12}" > cert.txt
+            certutil -decode cert.txt certificate.pfx
+            
+            $DIR = $(pwd)
+            $CERT = "${DIR}\certificate.pfx"
+
+            C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /a /f "${CERT}" /p "${$WINDOWS_CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\kenku-fm.exe"
+            C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /a /f "${CERT}" /p "${$WINDOWS_CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\Squirrel.exe"
       - run:
           name: Widevine Signature
           command: |

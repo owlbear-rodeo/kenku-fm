@@ -89,12 +89,9 @@ jobs:
             certutil -decode cert.txt certificate.pfx
             
             $DIR = $(pwd)
-            echo $DIR
-            echo ${DIR}
-
-            ls
-            
-            $CERT = (New-Object System.Security.Cryptography.X509Certificates.X509Certificate).Import("${DIR}\certificate.pfx",$WINDOWS_CERT_PASSWORD,"DefaultKeySet")
+            $IMPORT = $DIR\certificate.pfx
+            $CERT = New-Object System.Security.Cryptography.X509Certificates.X509Certificate
+            $CERT.Import("${IMPORT}","${WINDOWS_CERT_PASSWORD}","DefaultKeySet")
       - run:
           name: Install Python
           command: |

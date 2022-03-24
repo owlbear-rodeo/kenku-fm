@@ -91,8 +91,10 @@ jobs:
             $DIR = $(pwd)
             echo $DIR
             echo ${DIR}
-            $CERT = New-Object System.Security.Cryptography.X509Certificates.X509Certificate
-            $CERT.Import("${DIR}\certificate.pfx",$WINDOWS_CERT_PASSWORD,"DefaultKeySet")
+
+            ls
+            
+            $CERT = (New-Object System.Security.Cryptography.X509Certificates.X509Certificate).Import("${DIR}\certificate.pfx",$WINDOWS_CERT_PASSWORD,"DefaultKeySet")
       - run:
           name: Install Python
           command: |

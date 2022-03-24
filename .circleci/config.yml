@@ -127,10 +127,10 @@ jobs:
             certutil -decode cert.txt certificate.pfx
             
             $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate
-            $cert.Import("${$CIRCLE_WORKING_DIRECTORY}\certificate.pfx","${WINDOWS_CERT_PASSWORD}","DefaultKeySet")
+            $cert.Import("${CIRCLE_WORKING_DIRECTORY}\certificate.pfx","${WINDOWS_CERT_PASSWORD}","DefaultKeySet")
 
-            Set-AuthenticodeSignature -Certificate $cert -FilePath "${$CIRCLE_WORKING_DIRECTORY}\out\Kenku FM-win32-x64\kenku-fm.exe" -TimestampServer "http://timestamp.comodoca.com" -HashAlgorithm "SHA256"
-            Set-AuthenticodeSignature -Certificate $cert -FilePath "${$CIRCLE_WORKING_DIRECTORY}\out\Kenku FM-win32-x64\Squirrel.exe" -TimestampServer "http://timestamp.comodoca.com" -HashAlgorithm "SHA256"
+            Set-AuthenticodeSignature -Certificate $cert -FilePath "${CIRCLE_WORKING_DIRECTORY}\out\Kenku FM-win32-x64\kenku-fm.exe" -TimestampServer "http://timestamp.comodoca.com" -HashAlgorithm "SHA256"
+            Set-AuthenticodeSignature -Certificate $cert -FilePath "${CIRCLE_WORKING_DIRECTORY}\out\Kenku FM-win32-x64\Squirrel.exe" -TimestampServer "http://timestamp.comodoca.com" -HashAlgorithm "SHA256"
       - run:
           name: Widevine Signature
           command: |

@@ -85,13 +85,14 @@ jobs:
       - run: 
           name: cert
           command: |
+            choco install -y windows-sdk-10.0
             echo "${WINDOWS_CERT_P12}" > cert.txt
             certutil -decode cert.txt certificate.pfx
             
             $DIR = $(pwd)
             $IMPORT = "${DIR}\certificate.pfx"
             $CERT = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
-            $CERT.Import("${IMPORT}","${WINDOWS_CERT_PASSWORD}",[System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]"DefaultKeySet")
+            $CERT.Import("${IMPORT}","${WINDOWS_CERT_PASSWORD}","DefaultKeySet")
       - run:
           name: Install Python
           command: |

@@ -90,7 +90,7 @@ jobs:
             
             $DIR = $(pwd)
             $IMPORT = "${DIR}\certificate.pfx"
-            $CERT = New-Object System.Security.Cryptography.X509Certificates.X509Certificate
+            $CERT = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
             $CERT.Import("${IMPORT}","${WINDOWS_CERT_PASSWORD}","DefaultKeySet")
       - run:
           name: Install Python

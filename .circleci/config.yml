@@ -89,7 +89,7 @@ jobs:
             certutil -decode cert.txt certificate.pfx
             
             $DIR = $(pwd)
-            $IMPORT = $DIR\certificate.pfx
+            $IMPORT = "${DIR}\certificate.pfx"
             $CERT = New-Object System.Security.Cryptography.X509Certificates.X509Certificate
             $CERT.Import("${IMPORT}","${WINDOWS_CERT_PASSWORD}","DefaultKeySet")
       - run:

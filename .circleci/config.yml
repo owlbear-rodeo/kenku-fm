@@ -138,7 +138,6 @@ jobs:
             python -m castlabs_evs.vmp sign-pkg ".\out\Kenku FM-win32-x64"
       - run:
           name: Create App
-          shell: bash.exe
           command: |
             $CERT_PASSWORD = $(echo $env:WINDOWS_CERT_PASSWORD | openssl base64 -A -d)
             yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows

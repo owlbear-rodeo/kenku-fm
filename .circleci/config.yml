@@ -140,9 +140,10 @@ jobs:
           name: Create App
           shell: bash.exe
           command: |
+            $CERT_PASSWORD = $(echo $env:WINDOWS_CERT_PASSWORD | openssl base64 -A -d)
             yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows
 
-            node ./publish/windows/index.js ./ v1.0.0-beta-2  $WINDOWS_CERT_PASSWORD
+            node ./publish/windows/index.js ./ v1.0.0-beta-2  $CERT_PASSWORD
       - run:
           name: Publish
           shell: bash.exe

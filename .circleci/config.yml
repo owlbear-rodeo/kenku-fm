@@ -129,7 +129,7 @@ jobs:
             $DIR = $(pwd)
             $CERT = "${DIR}\certificate.pfx"
             
-            certutil -addstore -user -f "Personal" "${CERT}"
+            Import-PfxCertificate -FilePath "${CERT}" -CertStoreLocation Cert:\CurrentUser\My
 
             C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /d /a /f "${CERT}" /p "${$WINDOWS_CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\kenku-fm.exe"
             C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /d /a /f "${CERT}" /p "${$WINDOWS_CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\Squirrel.exe"

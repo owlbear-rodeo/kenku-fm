@@ -123,12 +123,11 @@ jobs:
       - run: 
           name: Signtool
           command: |
-            echo "${WINDOWS_CERT_P12}" > cert.txt
-            openssl base64 -A -d -in cert.txt -out certificate.pfx
+            echo $env:WINDOWS_CERT_P12 | openssl base64 -A -d -out certificate.pfx
             
             $DIR = $(pwd)
             $CERT = "${DIR}\certificate.pfx"
-            $CERT_PASSWORD = $(echo $WINDOWS_CERT_PASSWORD | openssl base64 -d)
+            $CERT_PASSWORD = $(echo $env:WINDOWS_CERT_PASSWORD | openssl base64 -A -d)
             
             certutil -addstore -user -f "My" "${CERT}"
 

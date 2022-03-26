@@ -124,15 +124,16 @@ jobs:
           name: Signtool
           command: |
             echo "${WINDOWS_CERT_P12}" > cert.txt
-            certutil -decode cert.txt certificate.pfx
+            openssl base64 -A -d -in cert.txt -out certificate.pfx
             
             $DIR = $(pwd)
             $CERT = "${DIR}\certificate.pfx"
+            $CERT_PASSWORD = $(echo $WINDOWS_CERT_PASSWORD | openssl base64 -d)
             
-            Import-PfxCertificate -FilePath "${CERT}" -CertStoreLocation Cert:\CurrentUser\My
+            certutil -addstore -user -f "My" "${CERT}"
 
-            C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /d /a /f "${CERT}" /p "${$WINDOWS_CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\kenku-fm.exe"
-            C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /d /a /f "${CERT}" /p "${$WINDOWS_CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\Squirrel.exe"
+            C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\kenku-fm.exe"
+            C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\Squirrel.exe"
       - run:
           name: Widevine Signature
           command: |

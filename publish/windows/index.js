@@ -1,5 +1,6 @@
 const electronInstaller = require("electron-winstaller");
 const path = require("path");
+const { exit } = require("process");
 
 async function createApp(dir, version, certPassword) {
     try {
@@ -16,6 +17,7 @@ async function createApp(dir, version, certPassword) {
           });
     } catch (e) {
         console.log(`Error occured: ${e.message}`)
+        exit(1)
     }    
 }
 
@@ -26,14 +28,17 @@ const certPassword = args[2]
 
 if (dir === undefined) {
     console.log("directory is undefined")
+    exit(1)
 }
 
 if (appVersion === undefined) {
     console.log("app version is undefined")
+    exit(1)
 }
 
 if (certPassword === undefined) {
     console.log("password is undefined")
+    exit(1)
 }
 
 createApp(dir, appVersion, certPassword)

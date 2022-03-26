@@ -124,7 +124,7 @@ jobs:
           name: Signtool
           command: |
             echo "${WINDOWS_CERT_P12}" > cert.txt
-            openssl base64 -d -in cert.txt -out certificate.pfx
+            certutil -decode cert.txt certificate.pfx
             
             $DIR = $(pwd)
             $CERT = "${DIR}\certificate.pfx"

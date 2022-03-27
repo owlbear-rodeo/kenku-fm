@@ -118,12 +118,22 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
     if (!trackRef.current) {
       return;
     }
-    if (repeat === "off") {
+    if (!queue) {
       stop();
     } else if (repeat === "track") {
       seek(0);
-    } else if (repeat === "playlist" && queue) {
-      let index = (queue.current + 1) % queue.tracks.length;
+    } else {
+      let index = queue.current + 1;
+
+      if (index >= queue.tracks.length) {
+        // Repeat off just stop the playback
+        if (repeat === "off") {
+          stop();
+          return;
+        }
+        index = 0;
+      }
+
       let id: string;
       if (shuffle) {
         id = queue.tracks[queue.shuffled[index]];
@@ -150,17 +160,22 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
     if (!trackRef.current) {
       return;
     }
-    if (repeat === "off") {
+    if (!queue) {
       stop();
     } else if (repeat === "track") {
       seek(0);
-    } else if (repeat === "playlist" && queue) {
+    } else {
       let index = queue.current;
       // Only go to previous if at the start of the track
       if (trackRef.current.seek() < 5) {
         index -= 1;
       }
       if (index < 0) {
+        // Start of playlist with repeat off just stop the track
+        if (repeat === "off") {
+          stop();
+          return;
+        }
         index = queue.tracks.length - 1;
       }
       let id: string;
@@ -189,11 +204,21 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
     const track = trackRef.current;
     // Move to next song or repeat this song on track end
     function handleEnd() {
-      if (repeat === "track") {
+      if (!queue) {
+        stop();
+      } else if (repeat === "track") {
         seek(0);
         track?.play();
-      } else if (repeat === "playlist" && queue) {
-        const index = (queue.current + 1) % queue.tracks.length;
+      } else {
+        let index = queue.current + 1;
+        if (index >= queue.tracks.length) {
+          // Repeat off just stop the playback
+          if (repeat === "off") {
+            stop();
+            return;
+          }
+          index = 0;
+        }
         let id: string;
         if (shuffle) {
           id = queue.tracks[queue.shuffled[index]];
@@ -220,7 +245,7 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
     return () => {
       track?.off("end", handleEnd);
     };
-  }, [repeat, queue, shuffle, playbackTrack, playlists, play, seek]);
+  }, [repeat, queue, shuffle, playbackTrack, playlists, play, seek, stop]);
 
   const pauseResume = useCallback((resume: boolean) => {
     if (trackRef.current) {

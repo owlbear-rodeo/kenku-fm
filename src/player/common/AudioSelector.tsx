@@ -4,6 +4,7 @@ import { useDropzone } from "react-dropzone";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { Link } from "@mui/material";
 
 import { getDropURL, encodeFilePath } from "../../renderer/common/drop";
 
@@ -11,6 +12,8 @@ type AudioSelectorProps = {
   value: string;
   onChange: (value: string) => void;
 };
+
+const formats = ["mp3", "flac", "wav", "ogg", "mp4", "3gp", "webm", "mpeg"];
 
 export function AudioSelector({ value, onChange }: AudioSelectorProps) {
   function handleURLChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -37,6 +40,9 @@ export function AudioSelector({ value, onChange }: AudioSelectorProps) {
     maxFiles: 1,
   });
 
+  const warning =
+    value && !formats.some((format) => value.toLowerCase().endsWith(format));
+
   return (
     <>
       <TextField
@@ -54,6 +60,22 @@ export function AudioSelector({ value, onChange }: AudioSelectorProps) {
         value={value}
         onChange={handleURLChange}
         onDrop={handleURLDrop}
+        color={warning ? "warning" : undefined}
+        helperText={
+          warning ? (
+            <>
+              Unable to verify audio format, this file may not be supported. See{" "}
+              <Link
+                href="https://www.kenku.fm/docs/using-kenku-player"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                here
+              </Link>{" "}
+              for more information.
+            </>
+          ) : undefined
+        }
       />
       <Button
         sx={{

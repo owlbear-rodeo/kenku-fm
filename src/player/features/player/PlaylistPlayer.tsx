@@ -104,10 +104,10 @@ export function PlaylistPlayer({
   }
 
   function handleVolumeChange(_: Event, value: number | number[]) {
-    if (playlistPlayback.muted && value > 0) {
-      dispatch(mute());
-    }
     dispatch(adjustVolume(value as number));
+    if (playlistPlayback.muted && value > 0) {
+      dispatch(mute(false));
+    }
   }
 
   function handlePlay() {

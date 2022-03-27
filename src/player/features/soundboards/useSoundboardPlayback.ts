@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../app/store";
+import { useDispatch } from "react-redux";
 import {
   playSound,
   updatePlayback,
@@ -12,7 +11,6 @@ import { Sound } from "./Sound";
 
 export function useSoundboardPlayback(onError: (message: string) => void) {
   const soundsRef = useRef<Record<string, Sound>>({});
-  const soundboards = useSelector((state: RootState) => state.soundboards);
   const dispatch = useDispatch();
 
   const play = useCallback(
@@ -97,23 +95,18 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
     }
   }, []);
 
-  useEffect(() => {
+  // Sync function for updating the currently playing sounds with the redux store
+  // Used in `SoundboardPlaybackSync`
+  const sync = useCallback((update: (id: string, sound: Sound) => void) => {
     for (let [id, sound] of Object.entries(soundsRef.current)) {
-      const state = soundboards.sounds[id];
-      if (state) {
-        if (state.volume !== sound.options.volume) {
-          sound.volume(state.volume);
-        }
-        if (state.loop !== sound.options.loop) {
-          sound.loop(state.loop);
-        }
-      }
+      update(id, sound);
     }
-  }, [soundboards]);
+  }, []);
 
   return {
     seek,
     play,
     stop,
+    sync,
   };
 }

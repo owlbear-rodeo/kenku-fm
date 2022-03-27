@@ -31,14 +31,13 @@ type SoundboardProps = {
 export function Soundboard({ onPlay, onStop }: SoundboardProps) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const soundboards = useSelector((state: RootState) => state.soundboards);
   const { soundboardId } = useParams();
-  const soundboard = soundboards.soundboards.byId[soundboardId];
+  const soundboard = useSelector(
+    (state: RootState) => state.soundboards.soundboards.byId[soundboardId]
+  );
 
   const [addOpen, setAddOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-
-  const items = soundboard.sounds.map((id) => soundboards.sounds[id]);
 
   const image = isBackground(soundboard.background)
     ? backgrounds[soundboard.background]
@@ -67,13 +66,6 @@ export function Soundboard({ onPlay, onStop }: SoundboardProps) {
     dispatch(removeSoundboard(soundboard.id));
     navigate(-1);
     handleMenuClose();
-  }
-
-  function handleSoundPlay(soundId: string) {
-    const sound = soundboards.sounds[soundId];
-    if (sound) {
-      onPlay(sound);
-    }
   }
 
   const { dragging, containerListeners, overlayListeners } = useDrop(
@@ -154,9 +146,8 @@ export function Soundboard({ onPlay, onStop }: SoundboardProps) {
           </Stack>
         </Stack>
         <SoundboardSounds
-          items={items}
           soundboard={soundboard}
-          onPlay={handleSoundPlay}
+          onPlay={onPlay}
           onStop={onStop}
         />
         <Backdrop

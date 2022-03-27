@@ -10,6 +10,7 @@ import { Player } from "../features/player/Player";
 import { usePlaylistPlayback } from "../features/playlists/usePlaylistPlayback";
 import { PlaylistMediaSession } from "../features/playlists/PlaylistMediaSession";
 import { PlaylistRemote } from "../features/playlists/PlaylistRemote";
+import { PlaylistPlaybackSync } from "../features/playlists/PlaylistPlaybackSync";
 import { Playlists } from "../features/playlists/Playlists";
 import { Playlist } from "../features/playlists/Playlist";
 
@@ -19,7 +20,7 @@ import { Soundboards } from "../features/soundboards/Soundboards";
 import { Soundboard } from "../features/soundboards/Soundboard";
 import { useSoundboardPlayback } from "../features/soundboards/useSoundboardPlayback";
 import { SoundboardRemote } from "../features/soundboards/SoundboardRemote";
-import { PlaylistPlaybackSync } from "../features/playlists/PlaylistPlaybackSync";
+import { SoundboardPlaybackSync } from "../features/soundboards/SoundboardPlaybackSync";
 
 const WallPaper = styled("div")({
   position: "fixed",
@@ -95,6 +96,7 @@ export function App() {
         onVolume={playlist.volume}
       />
       <SoundboardRemote onPlay={soundboard.play} onStop={soundboard.stop} />
+      <SoundboardPlaybackSync onSync={soundboard.sync} />
       <Snackbar
         open={Boolean(errorMessage)}
         autoHideDuration={4000}

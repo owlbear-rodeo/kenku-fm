@@ -22,9 +22,9 @@ import { SoundSettings } from "./SoundSettings";
 import { RootState } from "../../app/store";
 
 type SoundItemProps = {
-  sound: Sound;
+  id: string;
   soundboard: Soundboard;
-  onPlay: (id: string) => void;
+  onPlay: (sound: Sound) => void;
   onStop: (id: string) => void;
 };
 
@@ -43,12 +43,8 @@ const VolumeSlider = styled(Slider)({
   },
 });
 
-export function SoundItem({
-  sound,
-  soundboard,
-  onPlay,
-  onStop,
-}: SoundItemProps) {
+export function SoundItem({ id, soundboard, onPlay, onStop }: SoundItemProps) {
+  const sound = useSelector((state: RootState) => state.soundboards.sounds[id]);
   const playing = useSelector(
     (state: RootState) => sound.id in state.soundboardPlayback.playback
   );
@@ -84,7 +80,7 @@ export function SoundItem({
     if (playing) {
       onStop(sound.id);
     } else {
-      onPlay(sound.id);
+      onPlay(sound);
     }
   }
 

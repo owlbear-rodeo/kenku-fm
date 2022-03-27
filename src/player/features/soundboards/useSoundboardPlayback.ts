@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../app/store";
+import { useDispatch } from "react-redux";
 import {
   playSound,
   updatePlayback,
@@ -12,7 +11,6 @@ import { Sound } from "./Sound";
 
 export function useSoundboardPlayback(onError: (message: string) => void) {
   const soundsRef = useRef<Record<string, Sound>>({});
-  const soundboards = useSelector((state: RootState) => state.soundboards);
   const dispatch = useDispatch();
 
   const play = useCallback(
@@ -62,14 +60,18 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
     let prevTime = performance.now();
     function animatePlayback(time: number) {
       handler = requestAnimationFrame(animatePlayback);
-      // Limit update to 1 time per 200 ms
+      // Limit update to 1 time per second
       const delta = time - prevTime;
-      if (delta > 200) {
+      if (delta > 1000) {
+        const updates: { id: string; progress: number }[] = [];
         for (let id in soundsRef.current) {
-          const loop = soundsRef.current[id];
-          if (loop.playing()) {
-            dispatch(updatePlayback({ id, progress: loop.progress() }));
+          const sound = soundsRef.current[id];
+          if (sound.playing()) {
+            updates.push({ id, progress: sound.progress() });
           }
+        }
+        if (updates.length > 0) {
+          dispatch(updatePlayback(updates));
         }
         prevTime = time;
       }
@@ -80,7 +82,7 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
   }, []);
 
   const seek = useCallback((id: string, to: number) => {
-    dispatch(updatePlayback({ id, progress: to }));
+    dispatch(updatePlayback([{ id, progress: to }]));
     soundsRef.current[id]?.seek(to);
   }, []);
 
@@ -93,23 +95,18 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
     }
   }, []);
 
-  useEffect(() => {
+  // Sync function for updating the currently playing sounds with the redux store
+  // Used in `SoundboardPlaybackSync`
+  const sync = useCallback((update: (id: string, sound: Sound) => void) => {
     for (let [id, sound] of Object.entries(soundsRef.current)) {
-      const state = soundboards.sounds[id];
-      if (state) {
-        if (state.volume !== sound.options.volume) {
-          sound.volume(state.volume);
-        }
-        if (state.loop !== sound.options.loop) {
-          sound.loop(state.loop);
-        }
-      }
+      update(id, sound);
     }
-  }, [soundboards]);
+  }, []);
 
   return {
     seek,
     play,
     stop,
+    sync,
   };
 }

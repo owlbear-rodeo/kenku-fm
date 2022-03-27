@@ -1,15 +1,22 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { playPause } from "./playlistPlaybackSlice";
 
-export function useMediaSession(
-  seek: (to: number) => void,
-  next: () => void,
-  previous: () => void,
-  stop: () => void
-) {
+type PlaylistMediaSessionProps = {
+  onSeek: (to: number) => void;
+  onNext: () => void;
+  onPrevious: () => void;
+  onStop: () => void;
+};
+
+export function PlaylistMediaSession({
+  onSeek,
+  onNext,
+  onPrevious,
+  onStop,
+}: PlaylistMediaSessionProps) {
   const playback = useSelector((state: RootState) => state.playlistPlayback);
   const dispatch = useDispatch();
 
@@ -22,20 +29,20 @@ export function useMediaSession(
       dispatch(playPause(false));
     });
     navigator.mediaSession.setActionHandler("stop", () => {
-      stop();
+      onStop();
     });
     navigator.mediaSession.setActionHandler("seekto", (details) => {
       if (typeof details.seekTime === "number") {
-        seek(details.seekTime);
+        onSeek(details.seekTime);
       }
     });
     navigator.mediaSession.setActionHandler("previoustrack", () => {
-      previous();
+      onPrevious();
     });
     navigator.mediaSession.setActionHandler("nexttrack", () => {
-      next();
+      onNext();
     });
-  }, [stop, seek, previous, next]);
+  }, [onStop, onSeek, onPrevious, onNext]);
 
   // Update media sesssion metadata with current track
   useEffect(() => {
@@ -56,4 +63,6 @@ export function useMediaSession(
       navigator.mediaSession.playbackState = "paused";
     }
   }, [playback.playing]);
+
+  return <></>;
 }

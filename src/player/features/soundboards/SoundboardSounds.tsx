@@ -29,14 +29,12 @@ import { Soundboard, Sound, moveSound } from "./soundboardsSlice";
 import { useHideScrollbar } from "../../../renderer/common/useHideScrollbar";
 
 type SoundboardSoundsProps = {
-  items: Sound[];
   soundboard: Soundboard;
-  onPlay: (id: string) => void;
+  onPlay: (sound: Sound) => void;
   onStop: (id: string) => void;
 };
 
 export function SoundboardSounds({
-  items,
   soundboard,
   onPlay,
   onStop,
@@ -107,12 +105,15 @@ export function SoundboardSounds({
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext items={items} strategy={rectSortingStrategy}>
-            {items.map((item) => (
-              <Grid item xs={6} sm={6} md={4} lg={3} key={item.id}>
-                <SortableItem key={item.id} id={item.id}>
+          <SortableContext
+            items={soundboard.sounds}
+            strategy={rectSortingStrategy}
+          >
+            {soundboard.sounds.map((id) => (
+              <Grid item xs={6} sm={6} md={4} lg={3} key={id}>
+                <SortableItem key={id} id={id}>
                   <SoundItem
-                    sound={item}
+                    id={id}
                     soundboard={soundboard}
                     onPlay={onPlay}
                     onStop={onStop}
@@ -123,7 +124,7 @@ export function SoundboardSounds({
             <DragOverlay>
               {dragId ? (
                 <SoundItem
-                  sound={items.find((sound) => sound.id === dragId)}
+                  id={dragId}
                   soundboard={soundboard}
                   onPlay={onPlay}
                   onStop={onStop}

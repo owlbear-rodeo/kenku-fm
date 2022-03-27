@@ -59,7 +59,9 @@ type SoundboardProps = {
 export function Soundboards({ onPlay }: SoundboardProps) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const soundboards = useSelector((state: RootState) => state.soundboards);
+  const soundboards = useSelector(
+    (state: RootState) => state.soundboards.soundboards
+  );
 
   const pointerSensor = useSensor(PointerSensor, {
     activationConstraint: { distance: 10 },
@@ -68,9 +70,7 @@ export function Soundboards({ onPlay }: SoundboardProps) {
 
   const sensors = useSensors(pointerSensor, keyboardSensor);
 
-  const items = soundboards.soundboards.allIds.map(
-    (id) => soundboards.soundboards.byId[id]
-  );
+  const items = soundboards.allIds.map((id) => soundboards.byId[id]);
 
   const [dragId, setDragId] = useState<string | null>(null);
   function handleDragStart(event: DragStartEvent) {
@@ -187,7 +187,7 @@ export function Soundboards({ onPlay }: SoundboardProps) {
               <DragOverlay>
                 {dragId ? (
                   <SoundboardItem
-                    soundboard={soundboards.soundboards.byId[dragId]}
+                    soundboard={soundboards.byId[dragId]}
                     onSelect={() => {}}
                     onPlay={() => {}}
                   />

@@ -11,13 +11,25 @@ import {
   stopTrack,
 } from "./playlistPlaybackSlice";
 import { Track } from "./playlistsSlice";
+import { useStore } from "react-redux";
 
 export function usePlaylistPlayback(onError: (message: string) => void) {
   const trackRef = useRef<Howl | null>(null);
   const animationRef = useRef<number | null>(null);
 
   const playlists = useSelector((state: RootState) => state.playlists);
-  const playback = useSelector((state: RootState) => state.playlistPlayback);
+  const store = useStore();
+  const muted = useSelector((state: RootState) => state.playlistPlayback.muted);
+  const repeat = useSelector(
+    (state: RootState) => state.playlistPlayback.repeat
+  );
+  const shuffle = useSelector(
+    (state: RootState) => state.playlistPlayback.shuffle
+  );
+  const queue = useSelector((state: RootState) => state.playlistPlayback.queue);
+  const playbackTrack = useSelector(
+    (state: RootState) => state.playlistPlayback.track
+  );
   const dispatch = useDispatch();
 
   const play = useCallback(
@@ -40,7 +52,7 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
         const howl = new Howl({
           src: track.url,
           html5: true,
-          mute: playback.muted,
+          mute: muted,
           volume: 0,
         });
 
@@ -54,10 +66,10 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
           );
           // Fade out previous track and fade in new track
           if (prevTrack) {
-            prevTrack.fade(playback.volume, 0, 1000);
+            prevTrack.fade(prevTrack.volume(), 0, 1000);
             prevTrack.once("fade", removePrevTrack);
           }
-          howl.fade(0, playback.volume, 1000);
+          howl.fade(0, store.getState().playlistPlayback.volume, 1000);
           // Update playback
           // Create playback animation
           if (animationRef.current !== null) {
@@ -88,7 +100,7 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
         error();
       }
     },
-    [onError, playback.muted, playback.volume]
+    [onError, muted, store]
   );
 
   const seek = useCallback((to: number) => {
@@ -103,23 +115,23 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
   }, []);
 
   const next = useCallback(() => {
-    if (!playback.playback) {
+    if (!trackRef.current) {
       return;
     }
-    if (playback.repeat === "off") {
+    if (repeat === "off") {
       stop();
-    } else if (playback.repeat === "track") {
+    } else if (repeat === "track") {
       seek(0);
-    } else if (playback.repeat === "playlist" && playback.queue) {
-      let index = (playback.queue.current + 1) % playback.queue.tracks.length;
+    } else if (repeat === "playlist" && queue) {
+      let index = (queue.current + 1) % queue.tracks.length;
       let id: string;
-      if (playback.shuffle) {
-        id = playback.queue.tracks[playback.queue.shuffled[index]];
+      if (shuffle) {
+        id = queue.tracks[queue.shuffled[index]];
       } else {
-        id = playback.queue.tracks[index];
+        id = queue.tracks[index];
       }
       if (id) {
-        if (id === playback.track?.id) {
+        if (id === playbackTrack?.id) {
           // Playing the same track just restart it
           seek(0);
         } else {
@@ -132,33 +144,33 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
         }
       }
     }
-  }, [playback, playlists, seek, play, stop]);
+  }, [repeat, queue, shuffle, playbackTrack, playlists, seek, play, stop]);
 
   const previous = useCallback(() => {
-    if (!playback.playback) {
+    if (!trackRef.current) {
       return;
     }
-    if (playback.repeat === "off") {
+    if (repeat === "off") {
       stop();
-    } else if (playback.repeat === "track") {
+    } else if (repeat === "track") {
       seek(0);
-    } else if (playback.repeat === "playlist" && playback.queue) {
-      let index = playback.queue.current;
+    } else if (repeat === "playlist" && queue) {
+      let index = queue.current;
       // Only go to previous if at the start of the track
-      if (playback.playback.progress < 5) {
+      if (trackRef.current.seek() < 5) {
         index -= 1;
       }
       if (index < 0) {
-        index = playback.queue.tracks.length - 1;
+        index = queue.tracks.length - 1;
       }
       let id: string;
-      if (playback.shuffle) {
-        id = playback.queue.tracks[playback.queue.shuffled[index]];
+      if (shuffle) {
+        id = queue.tracks[queue.shuffled[index]];
       } else {
-        id = playback.queue.tracks[index];
+        id = queue.tracks[index];
       }
       if (id) {
-        if (id === playback.track?.id) {
+        if (id === playbackTrack?.id) {
           // Playing the same track just restart it
           seek(0);
         } else {
@@ -171,26 +183,25 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
         }
       }
     }
-  }, [playback, playlists, seek, play, stop]);
+  }, [repeat, queue, shuffle, playbackTrack, playlists, seek, play, stop]);
 
   useEffect(() => {
     const track = trackRef.current;
     // Move to next song or repeat this song on track end
     function handleEnd() {
-      if (playback.repeat === "track") {
+      if (repeat === "track") {
         seek(0);
         track?.play();
-      } else if (playback.repeat === "playlist" && playback.queue) {
-        const index =
-          (playback.queue.current + 1) % playback.queue.tracks.length;
+      } else if (repeat === "playlist" && queue) {
+        const index = (queue.current + 1) % queue.tracks.length;
         let id: string;
-        if (playback.shuffle) {
-          id = playback.queue.tracks[playback.queue.shuffled[index]];
+        if (shuffle) {
+          id = queue.tracks[queue.shuffled[index]];
         } else {
-          id = playback.queue.tracks[index];
+          id = queue.tracks[index];
         }
         if (id) {
-          if (id === playback.track?.id) {
+          if (id === playbackTrack?.id) {
             // Playing the same track just restart it
             seek(0);
             track?.play();
@@ -209,29 +220,29 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
     return () => {
       track?.off("end", handleEnd);
     };
-  }, [playback, playlists, play, seek]);
+  }, [repeat, queue, shuffle, playbackTrack, playlists, play, seek]);
 
-  useEffect(() => {
+  const pauseResume = useCallback((resume: boolean) => {
     if (trackRef.current) {
-      if (playback.playing) {
+      if (resume) {
         trackRef.current.play();
       } else {
         trackRef.current.pause();
       }
     }
-  }, [playback.playing, playback.track]);
+  }, []);
 
-  useEffect(() => {
+  const mute = useCallback((muted: boolean) => {
     if (trackRef.current) {
-      trackRef.current.mute(playback.muted);
+      trackRef.current.mute(muted);
     }
-  }, [playback.muted]);
+  }, []);
 
-  useEffect(() => {
+  const volume = useCallback((volume: number) => {
     if (trackRef.current) {
-      trackRef.current.volume(playback.volume);
+      trackRef.current.volume(volume);
     }
-  }, [playback.volume]);
+  }, []);
 
   return {
     seek,
@@ -239,5 +250,8 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
     next,
     previous,
     stop,
+    pauseResume,
+    mute,
+    volume,
   };
 }

@@ -22,9 +22,9 @@ import { SoundSettings } from "./SoundSettings";
 import { RootState } from "../../app/store";
 
 type SoundItemProps = {
-  sound: Sound;
+  id: string;
   soundboard: Soundboard;
-  onPlay: (id: string) => void;
+  onPlay: (sound: Sound) => void;
   onStop: (id: string) => void;
 };
 
@@ -43,13 +43,11 @@ const VolumeSlider = styled(Slider)({
   },
 });
 
-export function SoundItem({
-  sound,
-  soundboard,
-  onPlay,
-  onStop,
-}: SoundItemProps) {
-  const playback = useSelector((state: RootState) => state.soundboardPlayback);
+export function SoundItem({ id, soundboard, onPlay, onStop }: SoundItemProps) {
+  const sound = useSelector((state: RootState) => state.soundboards.sounds[id]);
+  const playing = useSelector(
+    (state: RootState) => sound.id in state.soundboardPlayback.playback
+  );
   const dispatch = useDispatch();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -79,10 +77,10 @@ export function SoundItem({
   }
 
   function handlePlayStop() {
-    if (sound.id in playback.playback) {
+    if (playing) {
       onStop(sound.id);
     } else {
-      onPlay(sound.id);
+      onPlay(sound);
     }
   }
 
@@ -93,8 +91,6 @@ export function SoundItem({
   function handleToggleLoop() {
     dispatch(editSound({ id: sound.id, loop: !sound.loop }));
   }
-
-  const playing = sound.id in playback.playback;
 
   const large = useMediaQuery("(min-width: 600px)");
 

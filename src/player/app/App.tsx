@@ -8,8 +8,9 @@ import { Routes, Route } from "react-router-dom";
 
 import { Player } from "../features/player/Player";
 import { usePlaylistPlayback } from "../features/playlists/usePlaylistPlayback";
-import { useMediaSession } from "../features/playlists/useMediaSession";
-import { usePlaylistRemote } from "../features/playlists/usePlaylistRemote";
+import { PlaylistMediaSession } from "../features/playlists/PlaylistMediaSession";
+import { PlaylistRemote } from "../features/playlists/PlaylistRemote";
+import { PlaylistPlaybackSync } from "../features/playlists/PlaylistPlaybackSync";
 import { Playlists } from "../features/playlists/Playlists";
 import { Playlist } from "../features/playlists/Playlist";
 
@@ -18,7 +19,8 @@ import { Home } from "../features/home/Home";
 import { Soundboards } from "../features/soundboards/Soundboards";
 import { Soundboard } from "../features/soundboards/Soundboard";
 import { useSoundboardPlayback } from "../features/soundboards/useSoundboardPlayback";
-import { useSoundboardRemote } from "../features/soundboards/useSoundboardRemote";
+import { SoundboardRemote } from "../features/soundboards/SoundboardRemote";
+import { SoundboardPlaybackSync } from "../features/soundboards/SoundboardPlaybackSync";
 
 const WallPaper = styled("div")({
   position: "fixed",
@@ -39,20 +41,7 @@ export function App() {
   }, []);
 
   const playlist = usePlaylistPlayback(handleError);
-  useMediaSession(
-    playlist.seek,
-    playlist.next,
-    playlist.previous,
-    playlist.stop
-  );
-  usePlaylistRemote(
-    playlist.play,
-    playlist.seek,
-    playlist.next,
-    playlist.previous
-  );
   const soundboard = useSoundboardPlayback(handleError);
-  useSoundboardRemote(soundboard.play, soundboard.stop);
 
   return (
     <>
@@ -89,6 +78,25 @@ export function App() {
         onPlaylistPrevious={playlist.previous}
         onSoundboardStop={soundboard.stop}
       />
+      <PlaylistMediaSession
+        onSeek={playlist.seek}
+        onNext={playlist.next}
+        onPrevious={playlist.previous}
+        onStop={playlist.stop}
+      />
+      <PlaylistRemote
+        onPlay={playlist.play}
+        onSeek={playlist.seek}
+        onNext={playlist.next}
+        onPrevious={playlist.previous}
+      />
+      <PlaylistPlaybackSync
+        onMute={playlist.mute}
+        onPauseResume={playlist.pauseResume}
+        onVolume={playlist.volume}
+      />
+      <SoundboardRemote onPlay={soundboard.play} onStop={soundboard.stop} />
+      <SoundboardPlaybackSync onSync={soundboard.sync} />
       <Snackbar
         open={Boolean(errorMessage)}
         autoHideDuration={4000}

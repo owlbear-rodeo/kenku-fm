@@ -1,4 +1,4 @@
-import { app, BrowserWindow, components, session, shell } from "electron";
+import { app, autoUpdater, dialog, BrowserWindow, components, session, shell } from "electron";
 import "./menu";
 import icon from "./assets/icon.png";
 import { getUserAgent } from "./main/userAgent";
@@ -11,6 +11,54 @@ declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 if (require("electron-squirrel-startup")) {
   // eslint-disable-line global-require
   app.quit();
+}
+
+const server = "https://hazel-owlbear-rodeo.vercel.app"
+const url = `${server}/update/${process.platform}/${app.getVersion()}`
+
+async function initAutoUpdate() {
+  autoUpdater.setFeedURL({ url })
+
+  autoUpdater.on("checking-for-update", async () => {
+    const dialogOpts = {
+      type: 'info',
+      title: 'Application Update',
+      message: 'checking for update'
+    }
+    
+    await dialog.showMessageBox(dialogOpts)
+  })
+  
+  autoUpdater.on("update-available", async () => {
+    const dialogOpts = {
+      type: 'info',
+      title: 'Application Update',
+      message: 'Update available'
+    }
+    
+    await dialog.showMessageBox(dialogOpts)
+  })
+  
+  autoUpdater.on("update-downloaded", async () => {
+    const dialogOpts = {
+      type: 'info',
+      title: 'Application Update',
+      message: 'Update downloaded'
+    }
+    
+    await dialog.showMessageBox(dialogOpts)
+  })
+  
+  setInterval(() => {
+    if (process.platform === "win32") {
+      const squirrelCommand = process.argv[1];
+      if (squirrelCommand ==="--squirrel-firstrun") {
+        return;
+      }
+    }
+        
+    autoUpdater.checkForUpdates()
+  }, 10000)
 }
 
 const createWindow = (): void => {
@@ -63,6 +111,7 @@ app.whenReady().then(async () => {
 
   createWindow();
   spoofUserAgent();
+  initAutoUpdate();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common

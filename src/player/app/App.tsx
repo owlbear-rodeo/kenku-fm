@@ -19,6 +19,7 @@ import { Soundboards } from "../features/soundboards/Soundboards";
 import { Soundboard } from "../features/soundboards/Soundboard";
 import { useSoundboardPlayback } from "../features/soundboards/useSoundboardPlayback";
 import { SoundboardRemote } from "../features/soundboards/SoundboardRemote";
+import { PlaylistPlaybackSync } from "../features/playlists/PlaylistPlaybackSync";
 
 const WallPaper = styled("div")({
   position: "fixed",
@@ -87,6 +88,11 @@ export function App() {
         onSeek={playlist.seek}
         onNext={playlist.next}
         onPrevious={playlist.previous}
+      />
+      <PlaylistPlaybackSync
+        onMute={playlist.mute}
+        onPauseResume={playlist.pauseResume}
+        onVolume={playlist.volume}
       />
       <SoundboardRemote onPlay={soundboard.play} onStop={soundboard.stop} />
       <Snackbar

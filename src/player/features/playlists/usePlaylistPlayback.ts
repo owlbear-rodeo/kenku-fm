@@ -11,16 +11,15 @@ import {
   stopTrack,
 } from "./playlistPlaybackSlice";
 import { Track } from "./playlistsSlice";
+import { useStore } from "react-redux";
 
 export function usePlaylistPlayback(onError: (message: string) => void) {
   const trackRef = useRef<Howl | null>(null);
   const animationRef = useRef<number | null>(null);
 
   const playlists = useSelector((state: RootState) => state.playlists);
+  const store = useStore();
   const muted = useSelector((state: RootState) => state.playlistPlayback.muted);
-  const volume = useSelector(
-    (state: RootState) => state.playlistPlayback.volume
-  );
   const repeat = useSelector(
     (state: RootState) => state.playlistPlayback.repeat
   );
@@ -28,9 +27,6 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
     (state: RootState) => state.playlistPlayback.shuffle
   );
   const queue = useSelector((state: RootState) => state.playlistPlayback.queue);
-  const playing = useSelector(
-    (state: RootState) => state.playlistPlayback.playing
-  );
   const playbackTrack = useSelector(
     (state: RootState) => state.playlistPlayback.track
   );
@@ -70,10 +66,10 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
           );
           // Fade out previous track and fade in new track
           if (prevTrack) {
-            prevTrack.fade(volume, 0, 1000);
+            prevTrack.fade(prevTrack.volume(), 0, 1000);
             prevTrack.once("fade", removePrevTrack);
           }
-          howl.fade(0, volume, 1000);
+          howl.fade(0, store.getState().playlistPlayback.volume, 1000);
           // Update playback
           // Create playback animation
           if (animationRef.current !== null) {
@@ -104,7 +100,7 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
         error();
       }
     },
-    [onError, muted, volume]
+    [onError, muted, store]
   );
 
   const seek = useCallback((to: number) => {
@@ -226,27 +222,27 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
     };
   }, [repeat, queue, shuffle, playbackTrack, playlists, play, seek]);
 
-  useEffect(() => {
+  const pauseResume = useCallback((resume: boolean) => {
     if (trackRef.current) {
-      if (playing) {
+      if (resume) {
         trackRef.current.play();
       } else {
         trackRef.current.pause();
       }
     }
-  }, [playing, playbackTrack]);
+  }, []);
 
-  useEffect(() => {
+  const mute = useCallback((muted: boolean) => {
     if (trackRef.current) {
       trackRef.current.mute(muted);
     }
-  }, [muted]);
+  }, []);
 
-  useEffect(() => {
+  const volume = useCallback((volume: number) => {
     if (trackRef.current) {
       trackRef.current.volume(volume);
     }
-  }, [volume]);
+  }, []);
 
   return {
     seek,
@@ -254,5 +250,8 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
     next,
     previous,
     stop,
+    pauseResume,
+    mute,
+    volume,
   };
 }

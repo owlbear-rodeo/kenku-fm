@@ -18,7 +18,7 @@ import { Home } from "../features/home/Home";
 import { Soundboards } from "../features/soundboards/Soundboards";
 import { Soundboard } from "../features/soundboards/Soundboard";
 import { useSoundboardPlayback } from "../features/soundboards/useSoundboardPlayback";
-import { useSoundboardRemote } from "../features/soundboards/useSoundboardRemote";
+import { SoundboardRemote } from "../features/soundboards/SoundboardRemote";
 
 const WallPaper = styled("div")({
   position: "fixed",
@@ -52,7 +52,6 @@ export function App() {
     playlist.previous
   );
   const soundboard = useSoundboardPlayback(handleError);
-  useSoundboardRemote(soundboard.play, soundboard.stop);
 
   return (
     <>
@@ -89,6 +88,7 @@ export function App() {
         onPlaylistPrevious={playlist.previous}
         onSoundboardStop={soundboard.stop}
       />
+      <SoundboardRemote onPlay={soundboard.play} onStop={soundboard.stop} />
       <Snackbar
         open={Boolean(errorMessage)}
         autoHideDuration={4000}

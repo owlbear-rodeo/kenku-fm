@@ -1,11 +1,21 @@
 import { BrowserView, BrowserWindow, ipcMain, shell } from "electron";
-import { PassThrough } from "stream";
 import { TypedEmitter } from "tiny-typed-emitter";
-import { Readable } from "stream";
-import { WebSocketServer, WebSocket } from "ws";
+import { PassThrough } from "stream";
+import Peer from "simple-peer";
+import wrtc from "wrtc";
+import prism from "prism-media";
+
+const DESIRED_SAMPLE_RATE = 48000;
+const DESIRED_CHANNELS = 1;
+const DESIRED_FRAME_SIZE = 960;
 
 interface BrowserViewManagerEvents {
-  streamStart: (stream: Readable) => void;
+  streamStart: (
+    stream: PassThrough,
+    channels: number,
+    frameSize: number,
+    samplingRate: number
+  ) => void;
   streamEnd: () => void;
 }
 
@@ -17,21 +27,17 @@ interface BrowserViewManagerEvents {
 export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvents> {
   window: BrowserWindow;
   views: Record<number, BrowserView>;
+  _inputStream?: PassThrough;
   _outputStream?: PassThrough;
-  _wss: WebSocketServer;
+  _encoder?: prism.opus.Encoder;
+  _peer?: Peer.Instance;
 
   constructor(window: BrowserWindow) {
     super();
     this.window = window;
     this.views = {};
-    this._wss = new WebSocketServer({ port: 0 });
 
-    ipcMain.on("BROWSER_VIEW_STREAM_START", this._handleBrowserViewStreamStart);
-    ipcMain.on("BROWSER_VIEW_STREAM_END", this._handleBrowserViewStreamEnd);
-    ipcMain.handle(
-      "BROWSER_VIEW_GET_WEBSOCKET_ADDRESS",
-      this._handleGetWebsocketAddress
-    );
+    ipcMain.on("BROWSER_VIEW_PEER_SIGNAL", this._handleBrowserViewPeerSignal);
     ipcMain.on(
       "BROWSER_VIEW_CREATE_BROWSER_VIEW",
       this._handleCreateBrowserView
@@ -58,16 +64,9 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     ipcMain.on("BROWSER_VIEW_GO_FORWARD", this._handleGoForward);
     ipcMain.on("BROWSER_VIEW_GO_BACK", this._handleGoBack);
     ipcMain.on("BROWSER_VIEW_RELOAD", this._handleReload);
-
-    this._wss.on("connection", this._handleWebsocketConnection);
   }
 
   destroy() {
-    ipcMain.off(
-      "BROWSER_VIEW_STREAM_START",
-      this._handleBrowserViewStreamStart
-    );
-    ipcMain.off("BROWSER_VIEW_STREAM_END", this._handleBrowserViewStreamEnd);
     ipcMain.removeHandler("BROWSER_VIEW_GET_WEBSOCKET_ADDRESS");
     ipcMain.off(
       "BROWSER_VIEW_CREATE_BROWSER_VIEW",
@@ -92,34 +91,67 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     ipcMain.off("BROWSER_VIEW_GO_FORWARD", this._handleGoForward);
     ipcMain.off("BROWSER_VIEW_GO_BACK", this._handleGoBack);
     ipcMain.off("BROWSER_VIEW_RELOAD", this._handleReload);
-    this._handleBrowserViewStreamEnd();
+    this._peer.destroy();
     this.removeAllBrowserViews();
-    this._wss.close();
   }
 
-  _handleWebsocketConnection = (ws: WebSocket) => {
-    ws.on("message", this._handleBrowserViewStreamData);
+  _handleBrowserViewPeerSignal = (event: Electron.IpcMainEvent, data: any) => {
+    const peer = new Peer({ wrtc: wrtc });
+    peer.signal(data);
+    peer.on("signal", (data) => {
+      event.reply("BROWSER_VIEW_PEER_SIGNAL", data);
+    });
+
+    peer.on("stream", this._handleMediaStream);
+    this._peer = peer;
   };
 
-  _handleBrowserViewStreamStart = () => {
-    this._outputStream?.end();
-    const stream = new PassThrough();
-    this._outputStream = stream;
-    this.emit("streamStart", stream);
-  };
+  _handleMediaStream = (stream: MediaStream) => {
+    const track = stream.getAudioTracks()[0];
+    if (track) {
+      const sink = new wrtc.nonstandard.RTCAudioSink(track);
+      sink.ondata = (event) => {
+        if (event.sampleRate !== DESIRED_SAMPLE_RATE) {
+          console.log(
+            "Incorrect stream config",
+            "sample rate",
+            event.sampleRate,
+            "channel count",
+            event.channelCount,
+            "frame size",
+            event.numberOfFrames
+          );
+          return;
+        }
+        // Create opus encoder
+        if (!this._outputStream) {
+          this._outputStream = new PassThrough();
+          this._inputStream = new PassThrough();
+          this._encoder = new prism.opus.Encoder({
+            channels: DESIRED_CHANNELS,
+            frameSize: DESIRED_FRAME_SIZE,
+            rate: DESIRED_SAMPLE_RATE,
+          });
 
-  _handleBrowserViewStreamData = async (data: Buffer) => {
-    this._outputStream?.write(data);
-  };
-
-  _handleBrowserViewStreamEnd = () => {
-    this._outputStream?.end();
-    this._outputStream = undefined;
-    this.emit("streamEnd");
-  };
-
-  _handleGetWebsocketAddress = async () => {
-    return this._wss.address();
+          this._inputStream.pipe(this._encoder).pipe(this._outputStream);
+          this.emit(
+            "streamStart",
+            this._outputStream,
+            DESIRED_CHANNELS,
+            DESIRED_FRAME_SIZE,
+            DESIRED_SAMPLE_RATE
+          );
+          this._outputStream.on("end", () => {
+            this._inputStream = undefined;
+            this._encoder = undefined;
+            this._outputStream = undefined;
+            this.emit("streamEnd");
+          });
+        }
+        // console.log("pcm", Buffer.from(event.samples));
+        this._inputStream?.write(Buffer.from(event.samples));
+      };
+    }
   };
 
   _handleCreateBrowserView = (

@@ -1,4 +1,5 @@
 import { ipcRenderer } from "electron";
+import Peer from "simple-peer";
 
 /**
  * Manager to help create and manager browser views
@@ -21,8 +22,6 @@ export class BrowserViewManagerPreload {
   _externalAudioStreams: Record<string, MediaStream>;
   _externalAudioStreamOutputs: Record<string, GainNode>;
 
-  _ws: WebSocket;
-
   constructor() {
     this._mediaStreams = {};
     this._mediaStreamOutputs = {};
@@ -35,9 +34,7 @@ export class BrowserViewManagerPreload {
   }
 
   async load() {
-    await this._setupWebsocket();
     this._setupPlayback();
-    ipcRenderer.send("BROWSER_VIEW_STREAM_START");
   }
 
   async createBrowserView(
@@ -172,13 +169,6 @@ export class BrowserViewManagerPreload {
     }
   }
 
-  async _setupWebsocket() {
-    const websocketAddress = await ipcRenderer.invoke(
-      "BROWSER_VIEW_GET_WEBSOCKET_ADDRESS"
-    );
-    this._ws = new WebSocket(`ws://localhost:${websocketAddress.port}`);
-  }
-
   _setupPlayback() {
     const destination = this._audioContext.createMediaStreamDestination();
 
@@ -188,13 +178,15 @@ export class BrowserViewManagerPreload {
       this._audioOutputElement.play();
     };
 
-    const recorder = new MediaRecorder(destination.stream);
-    recorder.ondataavailable = (event) => {
-      if (this._ws.readyState === WebSocket.OPEN) {
-        this._ws.send(event.data);
-      }
-    };
-    recorder.start(60);
+    const peer = new Peer({ initiator: true, stream: destination.stream });
+    peer.on("signal", (data) => {
+      console.log("SIGNAL", data);
+      ipcRenderer.send("BROWSER_VIEW_PEER_SIGNAL", data);
+    });
+    ipcRenderer.on("BROWSER_VIEW_PEER_SIGNAL", (_, data) => {
+      console.log("RECEIVE", data);
+      peer.signal(data);
+    });
 
     this._audioOutputNode.connect(destination);
   }

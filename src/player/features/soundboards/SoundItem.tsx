@@ -49,7 +49,9 @@ export function SoundItem({
   onPlay,
   onStop,
 }: SoundItemProps) {
-  const playback = useSelector((state: RootState) => state.soundboardPlayback);
+  const playing = useSelector(
+    (state: RootState) => sound.id in state.soundboardPlayback.playback
+  );
   const dispatch = useDispatch();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -79,7 +81,7 @@ export function SoundItem({
   }
 
   function handlePlayStop() {
-    if (sound.id in playback.playback) {
+    if (playing) {
       onStop(sound.id);
     } else {
       onPlay(sound.id);
@@ -93,8 +95,6 @@ export function SoundItem({
   function handleToggleLoop() {
     dispatch(editSound({ id: sound.id, loop: !sound.loop }));
   }
-
-  const playing = sound.id in playback.playback;
 
   const large = useMediaQuery("(min-width: 600px)");
 

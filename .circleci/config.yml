@@ -230,7 +230,8 @@ workflows:
     jobs:
       - publish-electron-app-win:
           filters:
-            <<: *tag
+            branches:
+              only: feature/auto-update
   deploy-mac-amd:
     jobs:
       - publish-electron-app-mac-amd:

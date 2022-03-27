@@ -8,8 +8,8 @@ import { Routes, Route } from "react-router-dom";
 
 import { Player } from "../features/player/Player";
 import { usePlaylistPlayback } from "../features/playlists/usePlaylistPlayback";
-import { useMediaSession } from "../features/playlists/useMediaSession";
-import { usePlaylistRemote } from "../features/playlists/usePlaylistRemote";
+import { PlaylistMediaSession } from "../features/playlists/PlaylistMediaSession";
+import { PlaylistRemote } from "../features/playlists/PlaylistRemote";
 import { Playlists } from "../features/playlists/Playlists";
 import { Playlist } from "../features/playlists/Playlist";
 
@@ -39,18 +39,6 @@ export function App() {
   }, []);
 
   const playlist = usePlaylistPlayback(handleError);
-  useMediaSession(
-    playlist.seek,
-    playlist.next,
-    playlist.previous,
-    playlist.stop
-  );
-  usePlaylistRemote(
-    playlist.play,
-    playlist.seek,
-    playlist.next,
-    playlist.previous
-  );
   const soundboard = useSoundboardPlayback(handleError);
 
   return (
@@ -87,6 +75,18 @@ export function App() {
         onPlaylistNext={playlist.next}
         onPlaylistPrevious={playlist.previous}
         onSoundboardStop={soundboard.stop}
+      />
+      <PlaylistMediaSession
+        onSeek={playlist.seek}
+        onNext={playlist.next}
+        onPrevious={playlist.previous}
+        onStop={playlist.stop}
+      />
+      <PlaylistRemote
+        onPlay={playlist.play}
+        onSeek={playlist.seek}
+        onNext={playlist.next}
+        onPrevious={playlist.previous}
       />
       <SoundboardRemote onPlay={soundboard.play} onStop={soundboard.stop} />
       <Snackbar

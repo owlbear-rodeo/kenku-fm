@@ -15,9 +15,6 @@ if (require("electron-squirrel-startup")) {
   app.quit();
 }
 
-const server = "https://hazel-owlbear-rodeo.vercel.app"
-const url = `${server}/update/${process.platform}/${app.getVersion()}`
-
 const createWindow = (): void => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
@@ -88,6 +85,9 @@ app.on("activate", () => {
 });
 
 if (process.platform === "win32" || process.platform == "darwin") {
+  const server = "https://hazel-owlbear-rodeo.vercel.app"
+  const url = `${server}/update/${process.platform}/${app.getVersion()}`
+
   autoUpdater.setFeedURL({ url })
 
   autoUpdater.on("checking-for-update", async () => {
@@ -101,7 +101,7 @@ if (process.platform === "win32" || process.platform == "darwin") {
   autoUpdater.on("update-downloaded", async () => {
     mainWindow.webContents.send("MESSAGE", "update_downloaded");
   })
-  
+
   setInterval(() => {
     if (process.platform === "win32") {
       const squirrelCommand = process.argv[1];

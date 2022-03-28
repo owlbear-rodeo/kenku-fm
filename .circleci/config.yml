@@ -160,6 +160,7 @@ jobs:
     working_directory: ~/repo
     environment:
       KENKU_FM_MAC_X64_PATH: "./out/Kenku\ FM-darwin-x64"
+      KENKU_FM_MAC_X64_ZIP_PATH: "./out/mac"
     steps:
       - install-npm
       - run:
@@ -206,6 +207,9 @@ jobs:
           name: Staple
           command: xcrun stapler staple -v "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app
       - run:
+          name: Zip App - Release Version
+          command: ditto -c -k --sequesterRsrc --keepParent "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app "$KENKU_FM_MAC_X64_ZIP_PATH"/Kenku\ FM.zip
+      - run:
           name: Create DMG
           command: |
             npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out="$KENKU_FM_MAC_X64_PATH"/ "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app Kenku\ FM
@@ -215,7 +219,8 @@ jobs:
             TAG=v1.0.0-beta-4
             VERSION=${TAG//v}
             RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
-            ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $RELEASE_ID Kenku.FM-$VERSION-x64.dmg
+            ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-x64-$VERSION.dmg
+            ./publish/script-macos.sh "$KENKU_FM_MAC_X64_ZIP_PATH"/Kenku\ FM.zip $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-x64-$VERSION.zip
 
 workflows:
   version: 2

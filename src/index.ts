@@ -7,6 +7,8 @@ import { SessionManager } from "./main/managers/SessionManager";
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
+let mainWindow: BrowserWindow;
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
   // eslint-disable-line global-require
@@ -20,33 +22,15 @@ async function initAutoUpdate() {
   autoUpdater.setFeedURL({ url })
 
   autoUpdater.on("checking-for-update", async () => {
-    const dialogOpts = {
-      type: 'info',
-      title: 'Application Update',
-      message: 'checking for update'
-    }
-    
-    await dialog.showMessageBox(dialogOpts)
+    mainWindow.webContents.send("MESSAGE", "checking_for_update");
   })
   
   autoUpdater.on("update-available", async () => {
-    const dialogOpts = {
-      type: 'info',
-      title: 'Application Update',
-      message: 'Update available'
-    }
-    
-    await dialog.showMessageBox(dialogOpts)
+    mainWindow.webContents.send("MESSAGE", "update_available");
   })
   
   autoUpdater.on("update-downloaded", async () => {
-    const dialogOpts = {
-      type: 'info',
-      title: 'Application Update',
-      message: 'Update downloaded'
-    }
-    
-    await dialog.showMessageBox(dialogOpts)
+    mainWindow.webContents.send("MESSAGE", "update_downloaded");
   })
   
   setInterval(() => {
@@ -63,7 +47,7 @@ async function initAutoUpdate() {
 
 const createWindow = (): void => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     height: 600,
     width: 800,
     webPreferences: {

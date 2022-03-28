@@ -145,7 +145,7 @@ jobs:
             
             TAG=v1.0.0-beta-3
             VERSION=${TAG//v}
-            node .\publish\windows\index.js .\ $VERSION  $CERT_PASSWORD
+            node ./publish/windows/index.js ./ $VERSION  $CERT_PASSWORD
       - run:
           name: Publish
           shell: bash.exe

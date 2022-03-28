@@ -140,7 +140,7 @@ jobs:
           name: Create App
           shell: bash.exe
           command: |
-            $CERT_PASSWORD=$(echo "${WINDOWS_CERT_PASSWORD}" | openssl base64 -A -d)
+            CERT_PASSWORD=$(echo "${WINDOWS_CERT_PASSWORD}" | openssl base64 -A -d)
             yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows
 
             VERSION=${CIRCLE_TAG//v}

@@ -1,5 +1,4 @@
 const path = require("path");
-const { exit } = require("process");
 
 const config = {
   packagerConfig: {
@@ -7,14 +6,6 @@ const config = {
     out: "./out",
     icon: "./src/assets/icon",
     appBundleId: "com.kenku.fm",
-  },
-  hooks: {
-    preMake: async (forgeConfig) => {
-      if (process.platform === "darwin" || process.platform === "win32") {
-        console.log("\nPackaging by Electron Forge not required on this platform. Exiting...");
-        exit(0);
-      }
-    }
   },
   makers: [
     {

@@ -212,8 +212,9 @@ jobs:
       - run:
           name: Publish DMG
           command: |
-            VERSION=${CIRCLE_TAG//v}
-            RELEASE_ID=$(./publish/script-get-github-release.sh $CIRCLE_TAG $GITHUB_TOKEN)
+            TAG=v1.0.0-beta-3
+            VERSION=${TAG//v}
+            RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
             ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $RELEASE_ID Kenku.FM-$VERSION-x64.dmg
 
 workflows:
@@ -237,4 +238,5 @@ workflows:
     jobs:
       - publish-electron-app-mac-amd:
           filters: 
-            <<: *tag
+            branches:
+              only: feature/auto-update

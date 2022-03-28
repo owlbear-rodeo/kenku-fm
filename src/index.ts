@@ -26,7 +26,7 @@ async function initAutoUpdate() {
   })
   
   autoUpdater.on("update-available", async () => {
-    mainWindow.webContents.send("MESSAGE", "update_available");
+    mainWindow.webContents.send("MESSAGE", "Update Available");
   })
   
   autoUpdater.on("update-downloaded", async () => {

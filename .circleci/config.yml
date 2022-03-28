@@ -142,15 +142,17 @@ jobs:
           command: |
             CERT_PASSWORD=$(echo "${WINDOWS_CERT_PASSWORD}" | openssl base64 -A -d)
             yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows
-
-            VERSION=${CIRCLE_TAG//v}
+            
+            TAG=v1.0.0-beta-3
+            VERSION=${TAG//v}
             node .\publish\windows\index.js .\ $VERSION  $CERT_PASSWORD
       - run:
           name: Publish
           shell: bash.exe
           command: |
-            VERSION=${CIRCLE_TAG//v}
-            RELEASE_ID=$(./publish/script-get-github-release.sh $CIRCLE_TAG $GITHUB_TOKEN)
+            TAG=v1.0.0-beta-3
+            VERSION=${TAG//v}
+            RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
             ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-win32-x64.exe $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-win32-x64.exe
             ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-full.nupkg $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-full.nupkg
             ./publish/script-win.sh ./out/windows/RELEASES $GITHUB_TOKEN $RELEASE_ID RELEASES
@@ -216,7 +218,7 @@ jobs:
       - run:
           name: Publish DMG
           command: |
-            TAG=v1.0.0-beta-4
+            TAG=v1.0.0-beta-3
             VERSION=${TAG//v}
             RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
             ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-x64-$VERSION.dmg
@@ -238,7 +240,8 @@ workflows:
     jobs:
       - publish-electron-app-win:
           filters:
-            <<: *tag
+            branches:
+              only: feature/auto-update
   deploy-mac-amd:
     jobs:
       - publish-electron-app-mac-amd:

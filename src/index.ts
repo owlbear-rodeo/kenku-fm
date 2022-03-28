@@ -99,7 +99,7 @@ if (process.platform === "win32" || process.platform == "darwin") {
   })
   
   autoUpdater.on("update-downloaded", async () => {
-    mainWindow.webContents.send("MESSAGE", "update_downloaded");
+    mainWindow.webContents.send("MESSAGE", "Update Downloaded. Restart Kenku FM to apply update...");
   })
 
   setInterval(() => {

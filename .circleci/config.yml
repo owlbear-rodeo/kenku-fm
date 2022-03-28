@@ -152,7 +152,7 @@ jobs:
             VERSION=${CIRCLE_TAG//v}
             RELEASE_ID=$(./publish/script-get-github-release.sh $CIRCLE_TAG $GITHUB_TOKEN)
             ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-win32-x64.exe $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-win32-x64.exe
-            ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-win32-x64-full.nupkg $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-win32-full.nupkg
+            ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-full.nupkg $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-full.nupkg
             ./publish/script-win.sh ./out/windows/RELEASES $GITHUB_TOKEN $RELEASE_ID RELEASES
 
   publish-electron-app-mac-amd:

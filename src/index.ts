@@ -18,33 +18,6 @@ if (require("electron-squirrel-startup")) {
 const server = "https://hazel-owlbear-rodeo.vercel.app"
 const url = `${server}/update/${process.platform}/${app.getVersion()}`
 
-async function initAutoUpdate() {
-  autoUpdater.setFeedURL({ url })
-
-  autoUpdater.on("checking-for-update", async () => {
-    mainWindow.webContents.send("MESSAGE", "checking_for_update");
-  })
-  
-  autoUpdater.on("update-available", async () => {
-    mainWindow.webContents.send("MESSAGE", "Update Available");
-  })
-  
-  autoUpdater.on("update-downloaded", async () => {
-    mainWindow.webContents.send("MESSAGE", "update_downloaded");
-  })
-  
-  setInterval(() => {
-    if (process.platform === "win32") {
-      const squirrelCommand = process.argv[1];
-      if (squirrelCommand ==="--squirrel-firstrun") {
-        return;
-      }
-    }
-        
-    autoUpdater.checkForUpdates()
-  }, 10000)
-}
-
 const createWindow = (): void => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
@@ -95,7 +68,6 @@ app.whenReady().then(async () => {
 
   createWindow();
   spoofUserAgent();
-  initAutoUpdate();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -114,3 +86,31 @@ app.on("activate", () => {
     createWindow();
   }
 });
+
+if (process.platform === "win32" || process.platform == "darwin") {
+  autoUpdater.setFeedURL({ url })
+
+  autoUpdater.on("checking-for-update", async () => {
+    mainWindow.webContents.send("MESSAGE", "checking_for_update");
+  })
+  
+  autoUpdater.on("update-available", async () => {
+    mainWindow.webContents.send("MESSAGE", "Update Available");
+  })
+  
+  autoUpdater.on("update-downloaded", async () => {
+    mainWindow.webContents.send("MESSAGE", "update_downloaded");
+  })
+  
+  setInterval(() => {
+    if (process.platform === "win32") {
+      const squirrelCommand = process.argv[1];
+      if (squirrelCommand === "--squirrel-firstrun") {
+        return;
+      }
+    }
+  
+    autoUpdater.checkForUpdates()
+  }, 10000)
+}
+

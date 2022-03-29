@@ -91,7 +91,7 @@ if (process.platform === "win32" || process.platform == "darwin") {
   autoUpdater.setFeedURL({ url })
 
   autoUpdater.on("checking-for-update", async () => {
-    mainWindow.webContents.send("MESSAGE", "checking_for_update");
+    mainWindow.webContents.send("MESSAGE", "Checking for update");
   })
   
   autoUpdater.on("update-available", async () => {

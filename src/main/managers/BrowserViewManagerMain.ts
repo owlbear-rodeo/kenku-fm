@@ -236,6 +236,11 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
       console.error(err);
     }
 
+    // Ensure browser views have a white background to maintain compatibility with regular browsers
+    view.webContents.on("dom-ready", () => {
+      view.webContents.insertCSS("html { background-color: #fff; }");
+    });
+
     this.views[view.webContents.id] = view;
 
     return view.webContents.id;

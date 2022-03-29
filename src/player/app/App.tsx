@@ -29,7 +29,7 @@ const WallPaper = styled("div")({
   top: 0,
   left: 0,
   overflow: "hidden",
-  background: "#222639",
+  background: "#1e2231",
   zIndex: -1,
 });
 

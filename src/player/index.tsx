@@ -13,6 +13,8 @@ import { theme } from "../renderer/app/theme";
 import { store, persistor } from "./app/store";
 import { MemoryRouter } from "react-router-dom";
 
+import "./index.css";
+
 render(
   <Provider store={store}>
     <PersistGate

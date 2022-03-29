@@ -138,19 +138,21 @@ jobs:
             python -m castlabs_evs.vmp sign-pkg ".\out\Kenku FM-win32-x64"
       - run:
           name: Create App
+          shell: bash.exe
           command: |
-            $CERT_PASSWORD = $(echo $env:WINDOWS_CERT_PASSWORD | openssl base64 -A -d)
+            CERT_PASSWORD=$(echo "${WINDOWS_CERT_PASSWORD}" | openssl base64 -A -d)
             yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows
-
-            node .\publish\windows\index.js .\ $env:CIRCLE_TAG  $CERT_PASSWORD
+            
+            VERSION=${CIRCLE_TAG//v}
+            node ./publish/windows/index.js ./ $VERSION  $CERT_PASSWORD
       - run:
           name: Publish
           shell: bash.exe
           command: |
             VERSION=${CIRCLE_TAG//v}
             RELEASE_ID=$(./publish/script-get-github-release.sh $CIRCLE_TAG $GITHUB_TOKEN)
-            ./publish/script-win.sh ./out/windows/kenku-fm-$CIRCLE_TAG-setup.exe $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-win32-x64.exe
-            ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-full.nupkg $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-win32-full.nupkg
+            ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-win32-x64.exe $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-win32-x64.exe
+            ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-full.nupkg $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-full.nupkg
             ./publish/script-win.sh ./out/windows/RELEASES $GITHUB_TOKEN $RELEASE_ID RELEASES
 
   publish-electron-app-mac-amd:
@@ -158,6 +160,7 @@ jobs:
     working_directory: ~/repo
     environment:
       KENKU_FM_MAC_X64_PATH: "./out/Kenku\ FM-darwin-x64"
+      KENKU_FM_MAC_X64_ZIP_PATH: "./out/mac"
     steps:
       - install-npm
       - run:
@@ -204,6 +207,9 @@ jobs:
           name: Staple
           command: xcrun stapler staple -v "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app
       - run:
+          name: Zip App - Release Version
+          command: ditto -c -k --sequesterRsrc --keepParent "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app "$KENKU_FM_MAC_X64_ZIP_PATH"/Kenku\ FM.zip
+      - run:
           name: Create DMG
           command: |
             npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out="$KENKU_FM_MAC_X64_PATH"/ "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app Kenku\ FM
@@ -212,7 +218,8 @@ jobs:
           command: |
             VERSION=${CIRCLE_TAG//v}
             RELEASE_ID=$(./publish/script-get-github-release.sh $CIRCLE_TAG $GITHUB_TOKEN)
-            ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $RELEASE_ID Kenku.FM-$VERSION-x64.dmg
+            ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-x64-$VERSION.dmg
+            ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.zip $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-x64-$VERSION.zip
 
 workflows:
   version: 2

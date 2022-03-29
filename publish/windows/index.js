@@ -12,7 +12,7 @@ async function createApp(dir, version, certPassword) {
             iconUrl: path.join(dir, "src", "assets", "setup.ico"),
             noMsi: true,
             exe: "kenku-fm.exe",
-            setupExe: `kenku-fm-${version}-setup.exe`,
+            setupExe: `kenku-fm-${version}-win32-${process.arch}.exe`,
             signWithParams: `/a /f "${path.join(dir, "certificate.pfx")}" /p "${certPassword}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256"`
           });
     } catch (e) {

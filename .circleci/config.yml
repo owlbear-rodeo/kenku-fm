@@ -143,14 +143,14 @@ jobs:
             CERT_PASSWORD=$(echo "${WINDOWS_CERT_PASSWORD}" | openssl base64 -A -d)
             yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows
             
-            TAG=v1.0.0-beta-4
+            TAG=v1.0.0-beta-3
             VERSION=${TAG//v}
             node ./publish/windows/index.js ./ $VERSION  $CERT_PASSWORD
       - run:
           name: Publish
           shell: bash.exe
           command: |
-            TAG=v1.0.0-beta-4
+            TAG=v1.0.0-beta-3
             VERSION=${TAG//v}
             RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
             ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-win32-x64.exe $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-win32-x64.exe

@@ -89,8 +89,6 @@ if (process.platform === "win32" || process.platform == "darwin") {
   const url = `${server}/update/${process.platform}/${app.getVersion()}`
 
   autoUpdater.setFeedURL({ url })
-
-  
   autoUpdater.on("checking-for-update", async () => {
     mainWindow.webContents.send("MESSAGE", "Checking for update");
   })
@@ -111,8 +109,10 @@ if (process.platform === "win32" || process.platform == "darwin") {
         return;
       }
     }
-  
-    autoUpdater.checkForUpdates()
-  }, 10000)
+    
+    if (app.isReady()) {
+      autoUpdater.checkForUpdates()
+    }
+  }, 60000)
 }
 

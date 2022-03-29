@@ -218,7 +218,7 @@ jobs:
       - run:
           name: Publish DMG
           command: |
-            TAG=v1.0.0-beta-3
+            TAG=v1.0.0-beta-4
             VERSION=${TAG//v}
             RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
             ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-x64-$VERSION.dmg

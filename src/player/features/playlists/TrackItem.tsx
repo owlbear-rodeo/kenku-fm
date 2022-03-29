@@ -67,6 +67,7 @@ export function TrackItem({ track, playlist, onPlay }: TrackItemProps) {
     <ListItem key={track.id} disablePadding>
       <Paper
         sx={{
+          minWidth: 0,
           width: "100%",
           m: 0.5,
           backgroundColor: "rgba(34, 38, 57, 0.8)",

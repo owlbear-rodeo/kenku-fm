@@ -3,6 +3,7 @@ import "./menu";
 import icon from "./assets/icon.png";
 import { getUserAgent } from "./main/userAgent";
 import { SessionManager } from "./main/managers/SessionManager";
+import { runAutoUpdate } from "./autoUpdate";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -45,6 +46,8 @@ const createWindow = (): void => {
   mainWindow.on("close", () => {
     session.destroy();
   });
+
+  runAutoUpdate(mainWindow);
 };
 
 const spoofUserAgent = () => {

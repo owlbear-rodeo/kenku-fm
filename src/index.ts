@@ -26,14 +26,20 @@ const createWindow = (): void => {
     minHeight: 375,
   });
 
-  const session = new SessionManager(mainWindow);
-
   // and load the index.html of the app.
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
   mainWindow.webContents.on("new-window", (event, url) => {
     event.preventDefault();
     shell.openExternal(url);
+  });
+
+  let session = new SessionManager(mainWindow);
+
+  mainWindow.webContents.on("did-start-loading", () => {
+    // Restart the session on refresh
+    session.destroy();
+    session = new SessionManager(mainWindow);
   });
 
   mainWindow.on("close", () => {

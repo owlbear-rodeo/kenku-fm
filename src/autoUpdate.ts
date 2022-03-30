@@ -16,7 +16,11 @@ function checkForAppUpdates() {
 export function runAutoUpdate(window: BrowserWindow) {
   if (process.platform === "win32" || process.platform == "darwin") {
     const server = "https://download.kenku.fm"
-    const url = `${server}/update/${process.platform}/${app.getVersion()}`
+    let url = `${server}/update/${process.platform}/${app.getVersion()}`
+
+    if (process.platform === "darwin" && process.arch === "arm64") {
+      url = `${server}/update/${process.platform}_arm64/${app.getVersion()}`
+    }
 
     autoUpdater.setFeedURL({ url })
 

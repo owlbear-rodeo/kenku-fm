@@ -3,6 +3,7 @@ import { PassThrough } from "stream";
 import { TypedEmitter } from "tiny-typed-emitter";
 import { Readable } from "stream";
 import { WebSocketServer, WebSocket } from "ws";
+import { getUserAgent } from "../userAgent";
 
 interface BrowserViewManagerEvents {
   streamStart: (stream: Readable) => void;
@@ -240,6 +241,9 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     view.webContents.on("dom-ready", () => {
       view.webContents.insertCSS("html { background-color: #fff; }");
     });
+
+    // Spoof user agent to fix compatibility issues with 3rd party apps
+    view.webContents.setUserAgent(getUserAgent());
 
     this.views[view.webContents.id] = view;
 

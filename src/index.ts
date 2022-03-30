@@ -43,6 +43,9 @@ const createWindow = (): void => {
     session = new SessionManager(mainWindow);
   });
 
+  // Spoof user agent for window.navigator
+  mainWindow.webContents.setUserAgent(getUserAgent());
+
   mainWindow.on("close", () => {
     session.destroy();
   });
@@ -52,7 +55,7 @@ const createWindow = (): void => {
 
 const spoofUserAgent = () => {
   session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
-    // Google blocks sign in on CEF so spoof user agent
+    // Google blocks sign in on CEF so spoof user agent for network requests
     details.requestHeaders["User-Agent"] = getUserAgent();
     callback({ cancel: false, requestHeaders: details.requestHeaders });
   });

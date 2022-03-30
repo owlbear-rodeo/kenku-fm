@@ -50,7 +50,9 @@ const createWindow = (): void => {
     session.destroy();
   });
 
-  runAutoUpdate(mainWindow);
+  if (app.isPackaged) {
+    runAutoUpdate(mainWindow);
+  }
 };
 
 const spoofUserAgent = () => {

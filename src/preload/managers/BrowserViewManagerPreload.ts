@@ -195,13 +195,25 @@ export class BrowserViewManagerPreload {
       this._audioOutputElement.play();
     };
 
-    const recorder = new MediaRecorder(destination.stream);
-    recorder.ondataavailable = (event) => {
-      if (this._ws.readyState === WebSocket.OPEN) {
-        this._ws.send(event.data);
-      }
-    };
-    recorder.start(60);
+    try {
+      const recorder = new MediaRecorder(destination.stream, {
+        mimeType: 'audio/webm;codecs="opus"',
+        audioBitsPerSecond: 64000,
+        // @ts-ignore
+        audioBitrateMode: "constant",
+      });
+      recorder.ondataavailable = (event) => {
+        if (this._ws.readyState === WebSocket.OPEN) {
+          this._ws.send(event.data);
+        }
+      };
+      recorder.onerror = (event) => {
+        ipcRenderer.emit("ERROR", null, event.error.message);
+      };
+      recorder.start(60);
+    } catch (error) {
+      ipcRenderer.emit("ERROR", null, error.message);
+    }
 
     this._audioOutputNode.connect(destination);
   }

@@ -6,7 +6,7 @@ export class PlaybackManager {
   discord: DiscordBroadcast;
   viewManager: BrowserViewManagerMain;
   constructor(window: BrowserWindow) {
-    this.discord = new DiscordBroadcast();
+    this.discord = new DiscordBroadcast(window);
     this.viewManager = new BrowserViewManagerMain(window);
     this.viewManager.on("streamStart", (stream) => {
       this.discord.broadcast.play(stream, {

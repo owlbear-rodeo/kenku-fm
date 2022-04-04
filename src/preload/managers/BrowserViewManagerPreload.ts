@@ -177,6 +177,13 @@ export class BrowserViewManagerPreload {
       "BROWSER_VIEW_GET_WEBSOCKET_ADDRESS"
     );
     this._ws = new WebSocket(`ws://localhost:${websocketAddress.port}`);
+    this._ws.addEventListener("close", (event) => {
+      ipcRenderer.emit(
+        "ERROR",
+        null,
+        `WebSocket clossed with code ${event.code}`
+      );
+    });
   }
 
   _setupPlayback() {

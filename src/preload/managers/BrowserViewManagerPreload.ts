@@ -1,4 +1,30 @@
 import { ipcRenderer } from "electron";
+// @ts-ignore
+import PCMStream from "./PCMStream.worklet";
+
+/** Sample rate of the audio context */
+const SAMPLE_RATE = 48000;
+/** Duration of each audio frame in ms */
+const FRAME_DURATION_MS = 60;
+/** Duration of each audio frame in seconds */
+const FRAME_DURATION_SECONDS = FRAME_DURATION_MS / 1000;
+/** Number of channels for the audio context */
+const NUM_CHANNELS = 2;
+/** 16 bit audio data */
+const BIT_DEPTH = 16;
+/** Number of bytes per audio sample */
+const BYTES_PER_SAMPLE = BIT_DEPTH / 8;
+/**
+ * Size in bytes of each frame of audio
+ * We stream audio to the main context as 16bit PCM data
+ * At 48KHz with a frame duration of 20ms (or 0.02s) and a stereo signal
+ * our FRAME_SIZE is calculated by:
+ * `SAMPLE_RATE * FRAME_DURATION_SECONDS * NUM_CHANNELS / BYTES_PER_SAMPLE`
+ * or:
+ * `48000 * 0.02 * 2 / 2 = 960`
+ */
+const FRAME_SIZE =
+  (SAMPLE_RATE * FRAME_DURATION_SECONDS * NUM_CHANNELS) / BYTES_PER_SAMPLE;
 
 /**
  * Manager to help create and manager browser views
@@ -30,14 +56,16 @@ export class BrowserViewManagerPreload {
     this._externalAudioStreams = {};
     this._externalAudioStreamOutputs = {};
 
-    this._audioContext = new AudioContext({ latencyHint: "playback" });
+    this._audioContext = new AudioContext({
+      latencyHint: "playback",
+      sampleRate: SAMPLE_RATE,
+    });
     this._audioOutputNode = this._audioContext.createGain();
   }
 
   async load() {
     await this._setupWebsocket();
-    this._setupPlayback();
-    ipcRenderer.send("BROWSER_VIEW_STREAM_START");
+    await this._setupPlayback();
   }
 
   async createBrowserView(
@@ -186,36 +214,42 @@ export class BrowserViewManagerPreload {
     });
   }
 
-  _setupPlayback() {
-    const destination = this._audioContext.createMediaStreamDestination();
+  async _setupPlayback() {
+    ipcRenderer.send(
+      "BROWSER_VIEW_STREAM_START",
+      NUM_CHANNELS,
+      FRAME_DURATION_MS,
+      FRAME_SIZE,
+      SAMPLE_RATE
+    );
+
+    // Create loopback media element
+    const mediaDestination = this._audioContext.createMediaStreamDestination();
+    this._audioOutputNode.connect(mediaDestination);
 
     this._audioOutputElement = document.createElement("audio");
-    this._audioOutputElement.srcObject = destination.stream;
-    this._audioOutputElement.onloadedmetadata = (e) => {
+    this._audioOutputElement.srcObject = mediaDestination.stream;
+    this._audioOutputElement.onloadedmetadata = () => {
       this._audioOutputElement.play();
     };
 
-    try {
-      const recorder = new MediaRecorder(destination.stream, {
-        mimeType: 'audio/webm;codecs="opus"',
-        audioBitsPerSecond: 64000,
-        // @ts-ignore
-        audioBitrateMode: "constant",
-      });
-      recorder.ondataavailable = (event) => {
-        if (this._ws.readyState === WebSocket.OPEN) {
-          this._ws.send(event.data);
-        }
-      };
-      recorder.onerror = (event) => {
-        ipcRenderer.emit("ERROR", null, event.error.message);
-      };
-      recorder.start(60);
-    } catch (error) {
-      ipcRenderer.emit("ERROR", null, error.message);
-    }
-
-    this._audioOutputNode.connect(destination);
+    // Create PCM stream node
+    await this._audioContext.audioWorklet.addModule(PCMStream);
+    const pcmStreamNode = new AudioWorkletNode(
+      this._audioContext,
+      "pcm-stream",
+      {
+        parameterData: {
+          frameSize: FRAME_SIZE,
+        },
+      }
+    );
+    pcmStreamNode.port.onmessage = (event) => {
+      if (this._ws.readyState === WebSocket.OPEN) {
+        this._ws.send(event.data);
+      }
+    };
+    this._audioOutputNode.connect(pcmStreamNode);
   }
 
   async _startStream(viewId: number) {

@@ -4,27 +4,12 @@ import PCMStream from "./PCMStream.worklet";
 
 /** Sample rate of the audio context */
 const SAMPLE_RATE = 48000;
-/** Duration of each audio frame in ms */
-const FRAME_DURATION_MS = 20;
-/** Duration of each audio frame in seconds */
-const FRAME_DURATION_SECONDS = FRAME_DURATION_MS / 1000;
 /** Number of channels for the audio context */
 const NUM_CHANNELS = 2;
 /** 16 bit audio data */
 const BIT_DEPTH = 16;
 /** Number of bytes per audio sample */
 const BYTES_PER_SAMPLE = BIT_DEPTH / 8;
-/**
- * Size in bytes of each frame of audio
- * We stream audio to the main context as 16bit PCM data
- * At 48KHz with a frame duration of 20ms (or 0.02s) and a stereo signal
- * our FRAME_SIZE is calculated by:
- * `SAMPLE_RATE * FRAME_DURATION_SECONDS * NUM_CHANNELS / BYTES_PER_SAMPLE`
- * or:
- * `48000 * 0.02 * 2 / 2 = 960`
- */
-const FRAME_SIZE =
-  (SAMPLE_RATE * FRAME_DURATION_SECONDS * NUM_CHANNELS) / BYTES_PER_SAMPLE;
 
 /**
  * Manager to help create and manager browser views
@@ -65,7 +50,7 @@ export class BrowserViewManagerPreload {
 
   async load() {
     await this._setupWebsocket();
-    await this._setupPlayback();
+    await this._setupLoopback();
   }
 
   async createBrowserView(
@@ -85,7 +70,7 @@ export class BrowserViewManagerPreload {
       height,
       preload
     );
-    this._startStream(viewId);
+    this._startBrowserViewStream(viewId);
     return viewId;
   }
 
@@ -214,15 +199,7 @@ export class BrowserViewManagerPreload {
     });
   }
 
-  async _setupPlayback() {
-    ipcRenderer.send(
-      "BROWSER_VIEW_STREAM_START",
-      NUM_CHANNELS,
-      FRAME_DURATION_MS,
-      FRAME_SIZE,
-      SAMPLE_RATE
-    );
-
+  async _setupLoopback() {
     // Create loopback media element
     const mediaDestination = this._audioContext.createMediaStreamDestination();
     this._audioOutputNode.connect(mediaDestination);
@@ -232,7 +209,35 @@ export class BrowserViewManagerPreload {
     this._audioOutputElement.onloadedmetadata = () => {
       this._audioOutputElement.play();
     };
+  }
 
+  /**
+   * Start the internal PCM stream for communicating between the renderer and main context
+   * @param frameDuration Duration of each audio frame in ms
+   */
+  async startBrowserStream(frameDuration: number) {
+    console.log("START", frameDuration);
+    /** Duration of each audio frame in seconds */
+    const frameDurationSeconds = frameDuration / 1000;
+    /**
+     * Size in bytes of each frame of audio
+     * We stream audio to the main context as 16bit PCM data
+     * At 48KHz with a frame duration of 20ms (or 0.02s) and a stereo signal
+     * our `frameSize` is calculated by:
+     * `SAMPLE_RATE * frameDurationSeconds * NUM_CHANNELS / BYTES_PER_SAMPLE`
+     * or:
+     * `48000 * 0.02 * 2 / 2 = 960`
+     */
+    const frameSize =
+      (SAMPLE_RATE * frameDurationSeconds * NUM_CHANNELS) / BYTES_PER_SAMPLE;
+
+    ipcRenderer.send(
+      "BROWSER_VIEW_STREAM_START",
+      NUM_CHANNELS,
+      frameDuration,
+      frameSize,
+      SAMPLE_RATE
+    );
     // Create PCM stream node
     await this._audioContext.audioWorklet.addModule(PCMStream);
     const pcmStreamNode = new AudioWorkletNode(
@@ -240,19 +245,25 @@ export class BrowserViewManagerPreload {
       "pcm-stream",
       {
         parameterData: {
-          frameSize: FRAME_SIZE,
+          frameSize: frameSize,
         },
       }
     );
     pcmStreamNode.port.onmessage = (event) => {
-      if (this._ws.readyState === WebSocket.OPEN) {
+      if (this._ws && this._ws.readyState === WebSocket.OPEN) {
         this._ws.send(event.data);
       }
     };
+
+    // Pipe the audio output into the stream
     this._audioOutputNode.connect(pcmStreamNode);
   }
 
-  async _startStream(viewId: number) {
+  /**
+   * Start an audio capture for the given browser view
+   * @param viewId Browser view id
+   */
+  async _startBrowserViewStream(viewId: number) {
     try {
       const mediaSourceId = await ipcRenderer.invoke(
         "BROWSER_VIEW_GET_MEDIA_SOURCE_ID",

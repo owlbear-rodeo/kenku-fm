@@ -17,9 +17,13 @@ class PCMStream extends AudioWorkletProcessor {
   }
 
   process(inputs) {
-    const samples = this.interleave(inputs[0]);
-    const pcm = this.floatTo16BitPCM(samples);
-    this.bufferPCM(pcm);
+    const input = inputs[0];
+    // Ensure input is a stereo signal
+    if (input && input.length === 2) {
+      const samples = this.interleave(input);
+      const pcm = this.floatTo16BitPCM(samples);
+      this.bufferPCM(pcm);
+    }
     return true;
   }
 

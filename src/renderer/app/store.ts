@@ -46,11 +46,21 @@ const migrations: any = {
       },
     };
   },
+  // v1.1 - Add performance mode
+  3: (state: RootState): RootState => {
+    return {
+      ...state,
+      settings: {
+        ...state.settings,
+        streamingMode: "performance",
+      },
+    };
+  },
 };
 
 const persistConfig = {
   key: "root",
-  version: 2,
+  version: 3,
   storage,
   whitelist: ["bookmarks", "settings"],
   migrate: createMigrate(migrations, { debug: false }),

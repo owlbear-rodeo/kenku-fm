@@ -5,7 +5,7 @@ import PCMStream from "./PCMStream.worklet";
 /** Sample rate of the audio context */
 const SAMPLE_RATE = 48000;
 /** Duration of each audio frame in ms */
-const FRAME_DURATION_MS = 60;
+const FRAME_DURATION_MS = 20;
 /** Duration of each audio frame in seconds */
 const FRAME_DURATION_SECONDS = FRAME_DURATION_MS / 1000;
 /** Number of channels for the audio context */

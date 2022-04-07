@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
@@ -71,7 +71,8 @@ export function SoundboardSounds({
     setDragId(null);
   }
 
-  const hideScrollbar = useHideScrollbar();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const hideScrollbar = useHideScrollbar(scrollRef);
 
   return (
     <Box
@@ -87,6 +88,7 @@ export function SoundboardSounds({
         left: 0,
         px: 2,
       }}
+      ref={scrollRef}
       {...hideScrollbar}
     >
       <Grid

@@ -37,7 +37,7 @@ export function AudioSelector({ value, onChange }: AudioSelectorProps) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: "audio/*",
-    maxFiles: 1,
+    multiple: false,
   });
 
   const warning =

@@ -46,7 +46,7 @@ export function ImageSelector({ value, onChange }: ImageSelectorProps) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: "image/*",
-    maxFiles: 1,
+    multiple: false,
   });
 
   function handleURLChange(event: React.ChangeEvent<HTMLInputElement>) {

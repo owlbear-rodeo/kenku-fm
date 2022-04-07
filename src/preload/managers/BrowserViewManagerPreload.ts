@@ -216,7 +216,6 @@ export class BrowserViewManagerPreload {
    * @param frameDuration Duration of each audio frame in ms
    */
   async startBrowserStream(frameDuration: number) {
-    console.log("START", frameDuration);
     /** Duration of each audio frame in seconds */
     const frameDurationSeconds = frameDuration / 1000;
     /**

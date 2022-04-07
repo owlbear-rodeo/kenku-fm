@@ -27,22 +27,31 @@ export function PlaylistItem({
   onPlay,
 }: PlaylistItemProps) {
   const playlists = useSelector((state: RootState) => state.playlists);
-  const playback = useSelector((state: RootState) => state.playlistPlayback);
+  const playing = useSelector(
+    (state: RootState) =>
+      state.playlistPlayback.playing &&
+      state.playlistPlayback.queue?.playlistId === playlist.id
+  );
+  const queue = useSelector((state: RootState) => state.playlistPlayback.queue);
+  const shuffle = useSelector(
+    (state: RootState) => state.playlistPlayback.shuffle
+  );
+
   const dispatch = useDispatch();
 
   const image = isBackground(playlist.background)
     ? backgrounds[playlist.background]
     : playlist.background;
 
-  const playing =
-    playback.playing && playback.queue?.playlistId === playlist.id;
-
   function handlePlay() {
-    if (playback.queue?.playlistId === playlist.id) {
-      dispatch(playPause(!playback.playing));
+    if (queue?.playlistId === playlist.id) {
+      dispatch(playPause(!playing));
     } else {
       let tracks = [...playlist.tracks];
-      const trackId = tracks[0];
+      const trackIndex = shuffle
+        ? Math.floor(Math.random() * tracks.length)
+        : 0;
+      const trackId = tracks[trackIndex];
       const track = playlists.tracks[trackId];
       if (track) {
         dispatch(startQueue({ tracks, trackId, playlistId: playlist.id }));

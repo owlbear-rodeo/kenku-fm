@@ -28,6 +28,9 @@ export function PlaylistRemote({
 }: PlaylistRemoteProps) {
   const playlists = useSelector((state: RootState) => state.playlists);
   const playback = useSelector((state: RootState) => state.playlistPlayback);
+  const playbackShuffle = useSelector(
+    (state: RootState) => state.playlistPlayback.shuffle
+  );
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -49,7 +52,10 @@ export function PlaylistRemote({
       } else if (id in playlists.playlists.byId) {
         const playlist = playlists.playlists.byId[id];
         const tracks = [...playlist.tracks];
-        const trackId = tracks[0];
+        const trackIndex = playbackShuffle
+          ? Math.floor(Math.random() * tracks.length)
+          : 0;
+        const trackId = tracks[trackIndex];
         const track = playlists.tracks[trackId];
         if (track) {
           onPlay(track);
@@ -61,7 +67,7 @@ export function PlaylistRemote({
     return () => {
       window.player.removeAllListeners("PLAYER_REMOTE_PLAYLIST_PLAY");
     };
-  }, [onPlay, playlists]);
+  }, [onPlay, playlists, playbackShuffle]);
 
   useEffect(() => {
     window.player.on("PLAYER_REMOTE_PLAYLIST_PLAYBACK_REQUEST", () => {

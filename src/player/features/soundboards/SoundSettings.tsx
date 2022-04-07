@@ -28,6 +28,10 @@ export function SoundSettings({ sound, open, onClose }: SoundSettingsProps) {
     dispatch(editSound({ id: sound.id, title: event.target.value }));
   }
 
+  function handleTitleStringChange(title: string) {
+    dispatch(editSound({ id: sound.id, title }));
+  }
+
   function handleURLChange(url: string) {
     dispatch(editSound({ id: sound.id, url }));
   }
@@ -58,7 +62,11 @@ export function SoundSettings({ sound, open, onClose }: SoundSettingsProps) {
       <DialogTitle>Edit Sound</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
-          <AudioSelector value={sound.url} onChange={handleURLChange} />
+          <AudioSelector
+            value={sound.url}
+            onChange={handleURLChange}
+            onFileName={handleTitleStringChange}
+          />
           <TextField
             margin="dense"
             id="name"

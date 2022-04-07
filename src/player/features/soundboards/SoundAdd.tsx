@@ -69,7 +69,7 @@ export function SoundAdd({ soundboardId, open, onClose }: SoundAddProps) {
       <DialogTitle>Add Sound</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
-          <AudioSelector value={url} onChange={setURL} />
+          <AudioSelector value={url} onChange={setURL} onFileName={setTitle} />
           <TextField
             margin="dense"
             id="name"

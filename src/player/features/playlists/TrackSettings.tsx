@@ -23,6 +23,10 @@ export function TrackSettings({ track, open, onClose }: TrackSettingsProps) {
     dispatch(editTrack({ id: track.id, title: event.target.value }));
   }
 
+  function handleTitleStringChange(title: string) {
+    dispatch(editTrack({ id: track.id, title }));
+  }
+
   function handleURLChange(url: string) {
     dispatch(editTrack({ id: track.id, url }));
   }
@@ -43,7 +47,11 @@ export function TrackSettings({ track, open, onClose }: TrackSettingsProps) {
       <DialogTitle>Edit Track</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
-          <AudioSelector value={track.url} onChange={handleURLChange} />
+          <AudioSelector
+            value={track.url}
+            onChange={handleURLChange}
+            onFileName={handleTitleStringChange}
+          />
           <TextField
             margin="dense"
             id="name"

@@ -6,16 +6,25 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { Link } from "@mui/material";
 
-import { getDropURL, encodeFilePath } from "../../renderer/common/drop";
+import {
+  getDropURL,
+  encodeFilePath,
+  cleanFileName,
+} from "../../renderer/common/drop";
 
 type AudioSelectorProps = {
   value: string;
   onChange: (value: string) => void;
+  onFileName: (name: string) => void;
 };
 
 const formats = ["mp3", "flac", "wav", "ogg", "mp4", "3gp", "webm", "mpeg"];
 
-export function AudioSelector({ value, onChange }: AudioSelectorProps) {
+export function AudioSelector({
+  value,
+  onChange,
+  onFileName,
+}: AudioSelectorProps) {
   function handleURLChange(event: React.ChangeEvent<HTMLInputElement>) {
     onChange(event.target.value);
   }
@@ -32,6 +41,7 @@ export function AudioSelector({ value, onChange }: AudioSelectorProps) {
     const file = acceptedFiles[0];
     if (file) {
       onChange(encodeFilePath(file.path));
+      onFileName(cleanFileName(file.name));
     }
   }, []);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

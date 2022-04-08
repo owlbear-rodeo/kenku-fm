@@ -78,15 +78,186 @@ type PlaylistPlayerProps = {
   onPlaylistSeek: (to: number) => void;
 };
 
-export function PlaylistPlayer({
-  onPlaylistNext,
-  onPlaylistPrevious,
-  onPlaylistSeek,
-}: PlaylistPlayerProps) {
-  const dispatch = useDispatch();
+function Title() {
   const playlists = useSelector((state: RootState) => state.playlists);
-  const playlistPlayback = useSelector(
-    (state: RootState) => state.playlistPlayback
+  const queue = useSelector((state: RootState) => state.playlistPlayback.queue);
+  const track = useSelector((state: RootState) => state.playlistPlayback.track);
+  const noTrack = track?.title === undefined;
+
+  const large = useMediaQuery("(min-width: 500px)");
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: large ? "30%" : "100%",
+        flexDirection: "column",
+      }}
+    >
+      <Typography
+        variant="body2"
+        sx={{ width: "100%", textAlign: large ? undefined : "center" }}
+        noWrap
+        gutterBottom
+      >
+        {noTrack ? "" : track.title}
+      </Typography>
+      <Typography
+        variant="caption"
+        color="rgba(255, 255, 255, 0.8)"
+        sx={{ width: "100%", textAlign: large ? undefined : "center" }}
+        noWrap
+      >
+        {noTrack ? "" : playlists.playlists.byId[queue.playlistId]?.title}
+      </Typography>
+    </Box>
+  );
+}
+
+function Controls({
+  onPlaylistPrevious,
+  onPlaylistNext,
+}: Omit<PlaylistPlayerProps, "onPlaylistSeek">) {
+  const dispatch = useDispatch();
+  const playbackShuffle = useSelector(
+    (state: RootState) => state.playlistPlayback.shuffle
+  );
+  const disabled = useSelector(
+    (state: RootState) => !Boolean(state.playlistPlayback.playback)
+  );
+  const playing = useSelector(
+    (state: RootState) => state.playlistPlayback.playing
+  );
+  const playbackRepeat = useSelector(
+    (state: RootState) => state.playlistPlayback.repeat
+  );
+
+  function handlePlay() {
+    dispatch(playPause(!playing));
+  }
+
+  function handlRepeat() {
+    switch (playbackRepeat) {
+      case "off":
+        dispatch(repeat("playlist"));
+        break;
+      case "playlist":
+        dispatch(repeat("track"));
+        break;
+      case "track":
+        dispatch(repeat("off"));
+        break;
+    }
+  }
+
+  function handleShuffle() {
+    const newShuffle = !playbackShuffle;
+    dispatch(shuffle(newShuffle));
+  }
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        mt: -1,
+        flexGrow: 1,
+      }}
+    >
+      <IconButton aria-label="shuffle" onClick={handleShuffle}>
+        <Shuffle color={playbackShuffle ? "primary" : undefined} />
+      </IconButton>
+      <IconButton
+        disabled={disabled}
+        aria-label="previous"
+        onClick={() => onPlaylistPrevious()}
+      >
+        <Previous />
+      </IconButton>
+      <IconButton
+        aria-label={playing ? "pause" : "play"}
+        onClick={handlePlay}
+        disabled={disabled}
+      >
+        {playing ? (
+          <Pause sx={{ fontSize: "3rem" }} />
+        ) : (
+          <PlayArrow sx={{ fontSize: "3rem" }} />
+        )}
+      </IconButton>
+      <IconButton
+        disabled={disabled}
+        aria-label="next"
+        onClick={() => onPlaylistNext()}
+      >
+        <Next />
+      </IconButton>
+      <IconButton aria-label={`repeat ${playbackRepeat}`} onClick={handlRepeat}>
+        {playbackRepeat === "off" ? (
+          <RepeatIcon />
+        ) : playbackRepeat === "playlist" ? (
+          <RepeatIcon color="primary" />
+        ) : (
+          <RepeatOne color="primary" />
+        )}
+      </IconButton>
+    </Box>
+  );
+}
+
+function Volume() {
+  const dispatch = useDispatch();
+  const large = useMediaQuery("(min-width: 500px)");
+
+  const muted = useSelector((state: RootState) => state.playlistPlayback.muted);
+  const volume = useSelector(
+    (state: RootState) => state.playlistPlayback.volume
+  );
+
+  function handleVolumeChange(_: Event, value: number | number[]) {
+    dispatch(adjustVolume(value as number));
+    if (muted && value > 0) {
+      dispatch(mute(false));
+    }
+  }
+
+  function handleMute() {
+    dispatch(mute(!muted));
+  }
+
+  return (
+    <Stack
+      spacing={2}
+      direction="row"
+      sx={{ mb: 1, px: 1, width: large ? "30%" : "100%" }}
+      alignItems="center"
+    >
+      <IconButton aria-label={muted ? "unmute" : "mute"} onClick={handleMute}>
+        {muted ? <VolumeOff /> : <VolumeDown />}
+      </IconButton>
+      <VolumeSlider
+        aria-label="Volume"
+        value={muted ? 0 : volume}
+        step={0.01}
+        min={0}
+        max={1}
+        onChange={handleVolumeChange}
+      />
+      {!large && (
+        <Box px={2} height="24px">
+          <VolumeUp sx={{ color: "rgba(255,255,255,0.4)" }} />
+        </Box>
+      )}
+    </Stack>
+  );
+}
+
+function Time({ onPlaylistSeek }: Pick<PlaylistPlayerProps, "onPlaylistSeek">) {
+  const playback = useSelector(
+    (state: RootState) => state.playlistPlayback.playback
   );
 
   function formatDuration(value: number) {
@@ -103,164 +274,10 @@ export function PlaylistPlayer({
     onPlaylistSeek(value as number);
   }
 
-  function handleVolumeChange(_: Event, value: number | number[]) {
-    dispatch(adjustVolume(value as number));
-    if (playlistPlayback.muted && value > 0) {
-      dispatch(mute(false));
-    }
-  }
+  const time = timeOverride === null ? playback?.progress || 0 : timeOverride;
+  const duration = playback?.duration || 0;
 
-  function handlePlay() {
-    dispatch(playPause(!playlistPlayback.playing));
-  }
-
-  function handlRepeat() {
-    switch (playlistPlayback.repeat) {
-      case "off":
-        dispatch(repeat("playlist"));
-        break;
-      case "playlist":
-        dispatch(repeat("track"));
-        break;
-      case "track":
-        dispatch(repeat("off"));
-        break;
-    }
-  }
-
-  function handleMute() {
-    dispatch(mute(!playlistPlayback.muted));
-  }
-
-  function handleShuffle() {
-    const newShuffle = !playlistPlayback.shuffle;
-    dispatch(shuffle(newShuffle));
-  }
-
-  const time =
-    timeOverride === null
-      ? playlistPlayback.playback?.progress || 0
-      : timeOverride;
-  const duration = playlistPlayback.playback?.duration || 0;
-
-  const noTrack = playlistPlayback.track?.title === undefined;
-
-  const large = useMediaQuery("(min-width: 500px)");
-
-  const title = (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: large ? "30%" : "100%",
-        flexDirection: "column",
-      }}
-    >
-      <Typography
-        variant="body2"
-        sx={{ width: "100%", textAlign: large ? undefined : "center" }}
-        noWrap
-        gutterBottom
-      >
-        {noTrack ? "" : playlistPlayback.track.title}
-      </Typography>
-      <Typography
-        variant="caption"
-        color="rgba(255, 255, 255, 0.8)"
-        sx={{ width: "100%", textAlign: large ? undefined : "center" }}
-        noWrap
-      >
-        {noTrack
-          ? ""
-          : playlists.playlists.byId[playlistPlayback.queue.playlistId]?.title}
-      </Typography>
-    </Box>
-  );
-
-  const controls = (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        mt: -1,
-        flexGrow: 1,
-      }}
-    >
-      <IconButton aria-label="shuffle" onClick={handleShuffle}>
-        <Shuffle color={playlistPlayback.shuffle ? "primary" : undefined} />
-      </IconButton>
-      <IconButton
-        disabled={!Boolean(playlistPlayback.playback)}
-        aria-label="previous"
-        onClick={() => onPlaylistPrevious()}
-      >
-        <Previous />
-      </IconButton>
-      <IconButton
-        aria-label={playlistPlayback.playing ? "pause" : "play"}
-        onClick={handlePlay}
-        disabled={!Boolean(playlistPlayback.playback)}
-      >
-        {playlistPlayback.playing ? (
-          <Pause sx={{ fontSize: "3rem" }} />
-        ) : (
-          <PlayArrow sx={{ fontSize: "3rem" }} />
-        )}
-      </IconButton>
-      <IconButton
-        disabled={!Boolean(playlistPlayback.playback)}
-        aria-label="next"
-        onClick={() => onPlaylistNext()}
-      >
-        <Next />
-      </IconButton>
-      <IconButton
-        aria-label={`repeat ${playlistPlayback.repeat}`}
-        onClick={handlRepeat}
-      >
-        {playlistPlayback.repeat === "off" ? (
-          <RepeatIcon />
-        ) : playlistPlayback.repeat === "playlist" ? (
-          <RepeatIcon color="primary" />
-        ) : (
-          <RepeatOne color="primary" />
-        )}
-      </IconButton>
-    </Box>
-  );
-
-  const volume = (
-    <Stack
-      spacing={2}
-      direction="row"
-      sx={{ mb: 1, px: 1, width: large ? "30%" : "100%" }}
-      alignItems="center"
-    >
-      <IconButton
-        aria-label={playlistPlayback.muted ? "unmute" : "mute"}
-        onClick={handleMute}
-      >
-        {playlistPlayback.muted ? <VolumeOff /> : <VolumeDown />}
-      </IconButton>
-      <VolumeSlider
-        aria-label="Volume"
-        value={playlistPlayback.muted ? 0 : playlistPlayback.volume}
-        step={0.01}
-        min={0}
-        max={1}
-        onChange={handleVolumeChange}
-      />
-      {!large && (
-        <Box px={2} height="24px">
-          <VolumeUp sx={{ color: "rgba(255,255,255,0.4)" }} />
-        </Box>
-      )}
-    </Stack>
-  );
-
-  const timeSlider = (
+  return (
     <Box>
       <TimeSlider
         aria-label="time-indicator"
@@ -269,7 +286,7 @@ export function PlaylistPlayer({
         min={0}
         step={1}
         max={duration}
-        disabled={!Boolean(playlistPlayback.playback)}
+        disabled={!Boolean(playback)}
         onChange={(_, value) => setTimeOverride(value as number)}
         onChangeCommitted={handleTimeChange}
       />
@@ -286,25 +303,39 @@ export function PlaylistPlayer({
       </Box>
     </Box>
   );
+}
+
+export function PlaylistPlayer({
+  onPlaylistNext,
+  onPlaylistPrevious,
+  onPlaylistSeek,
+}: PlaylistPlayerProps) {
+  const large = useMediaQuery("(min-width: 500px)");
 
   if (large) {
     return (
       <>
         <Stack direction="row">
-          {title}
-          {controls}
-          {volume}
+          <Title />
+          <Controls
+            onPlaylistNext={onPlaylistNext}
+            onPlaylistPrevious={onPlaylistPrevious}
+          />
+          <Volume />
         </Stack>
-        {timeSlider}
+        <Time onPlaylistSeek={onPlaylistSeek} />
       </>
     );
   } else {
     return (
       <>
-        {title}
-        {timeSlider}
-        {controls}
-        {volume}
+        <Title />
+        <Time onPlaylistSeek={onPlaylistSeek} />
+        <Controls
+          onPlaylistNext={onPlaylistNext}
+          onPlaylistPrevious={onPlaylistPrevious}
+        />
+        <Volume />
       </>
     );
   }

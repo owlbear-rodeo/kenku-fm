@@ -30,14 +30,12 @@ export function Player({
       maxWidth="md"
     >
       <Paper
-        elevation={5}
+        elevation={8}
         sx={{
           width: "100%",
           display: "flex",
           flexDirection: "column",
           p: 2,
-          backgroundColor: "rgba(34, 38, 57, 0.8)",
-          backdropFilter: "blur(10px)",
         }}
       >
         <SoundboardPlayer onSoundboardStop={onSoundboardStop} />

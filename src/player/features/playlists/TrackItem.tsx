@@ -24,7 +24,12 @@ type TrackItemProps = {
 };
 
 export function TrackItem({ track, playlist, onPlay }: TrackItemProps) {
-  const playback = useSelector((state: RootState) => state.playlistPlayback);
+  const isCurrentTrack = useSelector(
+    (state: RootState) => state.playlistPlayback.track?.id === track.id
+  );
+  const playing = useSelector(
+    (state: RootState) => state.playlistPlayback.playing && isCurrentTrack
+  );
   const dispatch = useDispatch();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -54,14 +59,12 @@ export function TrackItem({ track, playlist, onPlay }: TrackItemProps) {
   }
 
   function handlePlayPause() {
-    if (playback.track?.id === track.id) {
-      dispatch(playPause(!playback.playing));
+    if (isCurrentTrack) {
+      dispatch(playPause(!playing));
     } else {
       onPlay(track.id);
     }
   }
-
-  const playing = playback.track?.id === track.id && playback.playing;
 
   return (
     <ListItem key={track.id} disablePadding>
@@ -77,7 +80,7 @@ export function TrackItem({ track, playlist, onPlay }: TrackItemProps) {
           role={undefined}
           sx={{ m: 0, borderRadius: "16px" }}
           dense
-          selected={playback.track?.id === track.id}
+          selected={isCurrentTrack}
         >
           <ListItemText
             primary={track.title}

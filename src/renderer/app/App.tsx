@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import Snackbar from "@mui/material/Snackbar";
 import Stack from "@mui/material/Stack";
 import styled from "@mui/material/styles/styled";
+import Alert from "@mui/material/Alert";
 
 import { ActionDrawer } from "../common/ActionDrawer";
 
@@ -23,6 +24,7 @@ const WallPaper = styled("div")({
 
 export function App() {
   const [message, setMessage] = useState<string>();
+  const [error, setError] = useState<string>();
 
   useEffect(() => {
     window.kenku.on("MESSAGE", (args) => {
@@ -31,7 +33,7 @@ export function App() {
     });
     window.kenku.on("ERROR", (args) => {
       const error = args[0];
-      setMessage(error);
+      setError(error);
     });
 
     return () => {
@@ -52,6 +54,14 @@ export function App() {
         message={message}
         sx={{ maxWidth: "192px" }}
       />
+      <Snackbar
+        open={Boolean(error)}
+        autoHideDuration={4000}
+        onClose={() => setError(undefined)}
+        sx={{ maxWidth: "192px" }}
+      >
+        <Alert severity="error">{error}</Alert>
+      </Snackbar>
     </Stack>
   );
 }

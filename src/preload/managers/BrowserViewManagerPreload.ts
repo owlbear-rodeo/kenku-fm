@@ -1,4 +1,15 @@
 import { ipcRenderer } from "electron";
+// @ts-ignore
+import PCMStream from "./PCMStream.worklet";
+
+/** Sample rate of the audio context */
+const SAMPLE_RATE = 48000;
+/** Number of channels for the audio context */
+const NUM_CHANNELS = 2;
+/** 16 bit audio data */
+const BIT_DEPTH = 16;
+/** Number of bytes per audio sample */
+const BYTES_PER_SAMPLE = BIT_DEPTH / 8;
 
 /**
  * Manager to help create and manager browser views
@@ -30,14 +41,16 @@ export class BrowserViewManagerPreload {
     this._externalAudioStreams = {};
     this._externalAudioStreamOutputs = {};
 
-    this._audioContext = new AudioContext({ latencyHint: "playback" });
+    this._audioContext = new AudioContext({
+      latencyHint: "playback",
+      sampleRate: SAMPLE_RATE,
+    });
     this._audioOutputNode = this._audioContext.createGain();
   }
 
   async load() {
     await this._setupWebsocket();
-    this._setupPlayback();
-    ipcRenderer.send("BROWSER_VIEW_STREAM_START");
+    await this._setupLoopback();
   }
 
   async createBrowserView(
@@ -57,7 +70,7 @@ export class BrowserViewManagerPreload {
       height,
       preload
     );
-    this._startStream(viewId);
+    this._startBrowserViewStream(viewId);
     return viewId;
   }
 
@@ -177,29 +190,79 @@ export class BrowserViewManagerPreload {
       "BROWSER_VIEW_GET_WEBSOCKET_ADDRESS"
     );
     this._ws = new WebSocket(`ws://localhost:${websocketAddress.port}`);
+    this._ws.addEventListener("close", (event) => {
+      ipcRenderer.emit(
+        "ERROR",
+        null,
+        `WebSocket clossed with code ${event.code}`
+      );
+    });
   }
 
-  _setupPlayback() {
-    const destination = this._audioContext.createMediaStreamDestination();
+  async _setupLoopback() {
+    // Create loopback media element
+    const mediaDestination = this._audioContext.createMediaStreamDestination();
+    this._audioOutputNode.connect(mediaDestination);
 
     this._audioOutputElement = document.createElement("audio");
-    this._audioOutputElement.srcObject = destination.stream;
-    this._audioOutputElement.onloadedmetadata = (e) => {
+    this._audioOutputElement.srcObject = mediaDestination.stream;
+    this._audioOutputElement.onloadedmetadata = () => {
       this._audioOutputElement.play();
     };
+  }
 
-    const recorder = new MediaRecorder(destination.stream);
-    recorder.ondataavailable = (event) => {
-      if (this._ws.readyState === WebSocket.OPEN) {
+  /**
+   * Start the internal PCM stream for communicating between the renderer and main context
+   * @param frameDuration Duration of each audio frame in ms
+   */
+  async startBrowserStream(frameDuration: number) {
+    /** Duration of each audio frame in seconds */
+    const frameDurationSeconds = frameDuration / 1000;
+    /**
+     * Size in bytes of each frame of audio
+     * We stream audio to the main context as 16bit PCM data
+     * At 48KHz with a frame duration of 20ms (or 0.02s) and a stereo signal
+     * our `frameSize` is calculated by:
+     * `SAMPLE_RATE * frameDurationSeconds * NUM_CHANNELS / BYTES_PER_SAMPLE`
+     * or:
+     * `48000 * 0.02 * 2 / 2 = 960`
+     */
+    const frameSize =
+      (SAMPLE_RATE * frameDurationSeconds * NUM_CHANNELS) / BYTES_PER_SAMPLE;
+
+    ipcRenderer.send(
+      "BROWSER_VIEW_STREAM_START",
+      NUM_CHANNELS,
+      frameDuration,
+      frameSize,
+      SAMPLE_RATE
+    );
+    // Create PCM stream node
+    await this._audioContext.audioWorklet.addModule(PCMStream);
+    const pcmStreamNode = new AudioWorkletNode(
+      this._audioContext,
+      "pcm-stream",
+      {
+        parameterData: {
+          frameSize: frameSize,
+        },
+      }
+    );
+    pcmStreamNode.port.onmessage = (event) => {
+      if (this._ws && this._ws.readyState === WebSocket.OPEN) {
         this._ws.send(event.data);
       }
     };
-    recorder.start(60);
 
-    this._audioOutputNode.connect(destination);
+    // Pipe the audio output into the stream
+    this._audioOutputNode.connect(pcmStreamNode);
   }
 
-  async _startStream(viewId: number) {
+  /**
+   * Start an audio capture for the given browser view
+   * @param viewId Browser view id
+   */
+  async _startBrowserViewStream(viewId: number) {
     try {
       const mediaSourceId = await ipcRenderer.invoke(
         "BROWSER_VIEW_GET_MEDIA_SOURCE_ID",

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
@@ -22,7 +22,8 @@ export function ActionDrawer() {
   const connection = useSelector((state: RootState) => state.connection);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const hideScrollbar = useHideScrollbar();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const hideScrollbar = useHideScrollbar(scrollRef);
 
   return (
     <Box component="nav" sx={{ width: drawerWidth, flexShrink: 0 }}>
@@ -59,7 +60,7 @@ export function ActionDrawer() {
             onClose={() => setSettingsOpen(false)}
           />
         </Toolbar>
-        <Box sx={{ overflowY: "auto" }} {...hideScrollbar}>
+        <Box sx={{ overflowY: "auto" }} ref={scrollRef} {...hideScrollbar}>
           <Stack>
             <BookmarkListItems />
             {settings.externalInputsEnabled && <InputListItems />}

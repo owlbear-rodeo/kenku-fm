@@ -81,6 +81,13 @@ const config = {
         devContentSecurityPolicy: "",
       },
     ],
+    [
+      "@timfish/forge-externals-plugin",
+      {
+        externals: ["opusscript", "prism-media"],
+        includeDeps: true,
+      },
+    ],
   ],
 };
 

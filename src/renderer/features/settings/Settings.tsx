@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -11,6 +12,14 @@ import Stack from "@mui/material/Stack";
 import Link from "@mui/material/Link";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
+import FormGroup from "@mui/material/FormGroup";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Switch from "@mui/material/Switch";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import FormHelperText from "@mui/material/FormHelperText";
 
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
@@ -24,10 +33,9 @@ import {
   setRemoteAddress,
   setRemotePort,
   setURLBarEnabled,
+  setStreamingMode,
+  StreamingMode,
 } from "./settingsSlice";
-import FormGroup from "@mui/material/FormGroup";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Switch from "@mui/material/Switch";
 
 type SettingsProps = {
   open: boolean;
@@ -215,6 +223,38 @@ export function Settings({ open, onClose }: SettingsProps) {
     </Stack>
   );
 
+  const [streamingModeChanged, setStreamingModeChanged] = useState(false);
+
+  function handleStreamingModeChnage(event: SelectChangeEvent) {
+    dispatch(setStreamingMode(event.target.value as StreamingMode));
+    setStreamingModeChanged(true);
+  }
+
+  useEffect(() => {
+    const frameDuration = settings.streamingMode === "lowLatency" ? 20 : 60;
+    window.kenku.startBrowserStream(frameDuration);
+  }, []);
+
+  const streamingSettings = (
+    <FormControl fullWidth variant="standard" margin="dense">
+      <InputLabel id="streaming-mode-select-label">Mode</InputLabel>
+      <Select
+        labelId="streaming-mode-select-label"
+        label="Mode"
+        value={settings.streamingMode}
+        onChange={handleStreamingModeChnage}
+      >
+        <MenuItem value="lowLatency">Low Latency</MenuItem>
+        <MenuItem value="performance">Performance</MenuItem>
+      </Select>
+      {streamingModeChanged && (
+        <FormHelperText sx={{ color: "primary.main" }}>
+          * Restart to apply change
+        </FormHelperText>
+      )}
+    </FormControl>
+  );
+
   function handleShowControlsToggle() {
     dispatch(setURLBarEnabled(!settings.urlBarEnabled));
   }
@@ -301,6 +341,9 @@ export function Settings({ open, onClose }: SettingsProps) {
         <Divider sx={{ mb: 2 }} />
         <DialogContentText>Remote</DialogContentText>
         {remoteSettings}
+        <Divider sx={{ mb: 2 }} />
+        <DialogContentText>Streaming</DialogContentText>
+        {streamingSettings}
         <Divider sx={{ mb: 2 }} />
         <DialogContentText>Other</DialogContentText>
         {otherSettings}

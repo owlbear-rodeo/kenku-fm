@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { BrowserWindow, ipcMain } from "electron";
 import Eris from "eris";
 
 type VoiceChannel = {
@@ -14,13 +14,16 @@ type Guild = {
 };
 
 export class DiscordBroadcast {
+  window: BrowserWindow;
   client?: Eris.Client;
   broadcast = new Eris.SharedStream();
-  constructor() {
+  constructor(window: BrowserWindow) {
+    this.window = window;
     ipcMain.on("DISCORD_CONNECT", this._handleConnect);
     ipcMain.on("DISCORD_DISCONNECT", this._handleDisconnect);
     ipcMain.on("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
     ipcMain.on("DISCORD_LEAVE_CHANNEL", this._handleLeaveChannel);
+    this.broadcast.on("error", this._handleBroadcastError);
   }
 
   destroy() {
@@ -28,6 +31,7 @@ export class DiscordBroadcast {
     ipcMain.off("DISCORD_DISCONNECT", this._handleDisconnect);
     ipcMain.off("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
     ipcMain.off("DISCORD_LEAVE_CHANNEL", this._handleLeaveChannel);
+    this.broadcast.off("error", this._handleBroadcastError);
     this.client?.disconnect({ reconnect: false });
     this.client = undefined;
   }
@@ -140,5 +144,10 @@ export class DiscordBroadcast {
     });
     this.client?.leaveVoiceChannel(channelId);
     event.reply("DISCORD_CHANNEL_LEFT", channelId);
+  };
+
+  _handleBroadcastError = (error: Error) => {
+    this.window.webContents.send("ERROR", error.message);
+    console.error(error);
   };
 }

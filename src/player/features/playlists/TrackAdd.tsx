@@ -49,7 +49,7 @@ export function TrackAdd({ playlistId, open, onClose }: TrackAddProps) {
       <DialogTitle>Add Track</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
-          <AudioSelector value={url} onChange={setURL} />
+          <AudioSelector value={url} onChange={setURL} onFileName={setTitle} />
           <TextField
             margin="dense"
             id="name"

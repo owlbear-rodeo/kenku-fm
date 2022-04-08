@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { v4 as uuid } from "uuid";
 
 import Container from "@mui/material/Container";
@@ -120,7 +120,8 @@ export function Soundboards({ onPlay }: SoundboardProps) {
     }
   );
 
-  const hideScrollbar = useHideScrollbar();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const hideScrollbar = useHideScrollbar(scrollRef);
 
   return (
     <>
@@ -164,6 +165,7 @@ export function Soundboards({ onPlay }: SoundboardProps) {
             maskImage:
               "linear-gradient(to bottom, transparent, black 16px, black calc(100% - 16px), transparent)",
           }}
+          ref={scrollRef}
           {...hideScrollbar}
         >
           <DndContext

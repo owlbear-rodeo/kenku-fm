@@ -1,6 +1,10 @@
 import { ipcRenderer } from "electron";
 // @ts-ignore
 import PCMStream from "./PCMStream.worklet";
+// @ts-ignore
+import Worker from "./StreamSender.worker";
+
+const streamSender = new Worker();
 
 /** Sample rate of the audio context */
 const SAMPLE_RATE = 48000;
@@ -31,8 +35,6 @@ export class BrowserViewManagerPreload {
   /** Raw media stream for each external audio source e.g. microphone or virtual audio cables */
   _externalAudioStreams: Record<string, MediaStream>;
   _externalAudioStreamOutputs: Record<string, GainNode>;
-
-  _ws: WebSocket;
 
   constructor() {
     this._mediaStreams = {};
@@ -189,14 +191,19 @@ export class BrowserViewManagerPreload {
     const websocketAddress = await ipcRenderer.invoke(
       "BROWSER_VIEW_GET_WEBSOCKET_ADDRESS"
     );
-    this._ws = new WebSocket(`ws://localhost:${websocketAddress.port}`);
-    this._ws.addEventListener("close", (event) => {
-      ipcRenderer.emit(
-        "ERROR",
-        null,
-        `WebSocket clossed with code ${event.code}`
-      );
-    });
+    streamSender.postMessage([
+      "url",
+      `ws://localhost:${websocketAddress.port}`,
+    ]);
+    streamSender.onmessage = (e: MessageEvent) => {
+      if (e.data[0] === "error") {
+        ipcRenderer.emit(
+          "ERROR",
+          null,
+          `WebSocket clossed with code ${e.data[1]}`
+        );
+      }
+    };
   }
 
   async _setupLoopback() {
@@ -249,9 +256,7 @@ export class BrowserViewManagerPreload {
       }
     );
     pcmStreamNode.port.onmessage = (event) => {
-      if (this._ws && this._ws.readyState === WebSocket.OPEN) {
-        this._ws.send(event.data);
-      }
+      streamSender.postMessage(["data", event.data], [event.data.buffer]);
     };
 
     // Pipe the audio output into the stream

@@ -220,9 +220,9 @@ export class BrowserViewManagerPreload {
 
   /**
    * Start the internal PCM stream for communicating between the renderer and main context
-   * @param frameDuration Duration of each audio frame in ms
    */
-  async startBrowserStream(frameDuration: number) {
+  async startBrowserStream(streamingMode: "lowLatency" | "performance") {
+    const frameDuration = streamingMode === "lowLatency" ? 20 : 60;
     /** Duration of each audio frame in seconds */
     const frameDurationSeconds = frameDuration / 1000;
     /**
@@ -244,6 +244,9 @@ export class BrowserViewManagerPreload {
       frameSize,
       SAMPLE_RATE
     );
+
+    const bufferSize = streamingMode === "lowLatency" ? 256 : 8192;
+
     // Create PCM stream node
     await this._audioContext.audioWorklet.addModule(PCMStream);
     const pcmStreamNode = new AudioWorkletNode(
@@ -251,7 +254,7 @@ export class BrowserViewManagerPreload {
       "pcm-stream",
       {
         parameterData: {
-          frameSize: frameSize,
+          bufferSize,
         },
       }
     );

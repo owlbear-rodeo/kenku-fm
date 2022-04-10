@@ -142,8 +142,8 @@ const api = {
   stopExternalAudioCapture: (deviceId: string) => {
     viewManager.stopExternalAudioCapture(deviceId);
   },
-  startBrowserStream: (frameDuration: number) => {
-    viewManager.startBrowserStream(frameDuration);
+  startBrowserStream: (streamingMode: "lowLatency" | "performance") => {
+    viewManager.startBrowserStream(streamingMode);
   },
 };
 

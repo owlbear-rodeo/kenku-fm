@@ -231,8 +231,7 @@ export function Settings({ open, onClose }: SettingsProps) {
   }
 
   useEffect(() => {
-    const frameDuration = settings.streamingMode === "lowLatency" ? 20 : 60;
-    window.kenku.startBrowserStream(frameDuration);
+    window.kenku.startBrowserStream(settings.streamingMode);
   }, []);
 
   const streamingSettings = (

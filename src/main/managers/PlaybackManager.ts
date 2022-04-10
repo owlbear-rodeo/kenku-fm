@@ -16,6 +16,7 @@ export class PlaybackManager {
           frameDuration,
           frameSize,
           samplingRate: sampleRate,
+          voiceDataTimeout: 60000,
         });
       }
     );

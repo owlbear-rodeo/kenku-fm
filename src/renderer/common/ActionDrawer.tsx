@@ -12,7 +12,6 @@ import { Settings } from "../features/settings/Settings";
 import { RootState } from "../app/store";
 import { useSelector } from "react-redux";
 
-import icon from "../../assets/icon.svg";
 import { useHideScrollbar } from "./useHideScrollbar";
 
 export const drawerWidth = 240;
@@ -42,17 +41,19 @@ export function ActionDrawer() {
       >
         <Toolbar
           sx={{
-            justifyContent: "space-between",
+            justifyContent: "end",
             bgcolor: "background.paper",
             px: 1,
+            WebkitAppRegion: "drag",
+            minHeight: "52px",
           }}
           disableGutters
           variant="dense"
         >
-          <Box sx={{ width: "36px", height: "36px", m: 1 }}>
-            <img src={icon} />
-          </Box>
-          <IconButton onClick={() => setSettingsOpen(true)}>
+          <IconButton
+            onClick={() => setSettingsOpen(true)}
+            sx={{ WebkitAppRegion: "no-drag" }}
+          >
             <SettingsIcon />
           </IconButton>
           <Settings

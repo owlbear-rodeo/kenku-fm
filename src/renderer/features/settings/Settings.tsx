@@ -333,7 +333,7 @@ export function Settings({ open, onClose }: SettingsProps) {
 
   return (
     <Dialog fullScreen sx={{ width: 240 }} open={open} onClose={onClose}>
-      <DialogTitle>Settings</DialogTitle>
+      <DialogTitle sx={{ pt: 5 }}>Settings</DialogTitle>
       <DialogContent>
         <DialogContentText>Discord</DialogContentText>
         {discordSettings}

@@ -123,6 +123,7 @@ export function TabBar() {
         alignItems: "center",
         px: 1,
         overflowX: "auto",
+        WebkitAppRegion: "drag",
       }}
     >
       <PlayerTab />

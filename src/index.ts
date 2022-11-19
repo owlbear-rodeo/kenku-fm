@@ -28,6 +28,7 @@ const createWindow = (): void => {
       // content in the main window
       sandbox: false,
     },
+    titleBarStyle: "hidden",
     icon: icon,
     minWidth: 500,
     minHeight: 375,

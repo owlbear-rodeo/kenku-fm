@@ -92,6 +92,7 @@ export function TabItem({ tab, selected, allowClose, shadow }: TabType) {
               : // None enabled
                 2,
         },
+        WebkitAppRegion: "no-drag",
       }}
       disablePadding
     >

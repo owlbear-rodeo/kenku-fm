@@ -53,9 +53,9 @@ const config = {
     },
   ],
   plugins: [
-    [
-      "@electron-forge/plugin-webpack",
-      {
+    {
+      name: "@electron-forge/plugin-webpack",
+      config: {
         mainConfig: "./webpack.main.config.js",
         renderer: {
           config: "./webpack.renderer.config.js",
@@ -80,14 +80,14 @@ const config = {
         },
         devContentSecurityPolicy: "",
       },
-    ],
-    [
-      "@timfish/forge-externals-plugin",
-      {
+    },
+    {
+      name: "@timfish/forge-externals-plugin",
+      config: {
         externals: ["opusscript", "prism-media"],
         includeDeps: true,
       },
-    ],
+    },
   ],
 };
 

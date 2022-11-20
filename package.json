@@ -70,6 +70,7 @@
     "case": "^1.6.3",
     "discord.js": "^14.6.0",
     "electron-squirrel-startup": "^1.0.0",
+    "electron-store": "^8.1.0",
     "env-cmd": "^10.1.0",
     "fastify": "^3.27.2",
     "howler": "^2.2.3",

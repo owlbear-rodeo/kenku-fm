@@ -4,6 +4,7 @@ import icon from "./assets/icon.png";
 import { getUserAgent } from "./main/userAgent";
 import { SessionManager } from "./main/managers/SessionManager";
 import { runAutoUpdate } from "./autoUpdate";
+import { getSavedBounds, saveWindowBounds } from "./bounds";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -16,6 +17,8 @@ if (require("electron-squirrel-startup")) {
 
 const createWindow = (): void => {
   // Create the browser window.
+  const bounds = getSavedBounds();
+
   const mainWindow = new BrowserWindow({
     height: 600,
     width: 800,
@@ -33,6 +36,7 @@ const createWindow = (): void => {
     icon: icon,
     minWidth: 500,
     minHeight: 375,
+    ...bounds,
   });
 
   // and load the index.html of the app.
@@ -57,6 +61,8 @@ const createWindow = (): void => {
   mainWindow.on("close", () => {
     session.destroy();
   });
+
+  saveWindowBounds(mainWindow);
 
   if (app.isPackaged) {
     runAutoUpdate(mainWindow);

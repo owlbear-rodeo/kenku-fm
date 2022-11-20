@@ -29,6 +29,7 @@ const createWindow = (): void => {
       sandbox: false,
     },
     titleBarStyle: "hidden",
+    trafficLightPosition: { x: 16, y: 18 },
     icon: icon,
     minWidth: 500,
     minHeight: 375,

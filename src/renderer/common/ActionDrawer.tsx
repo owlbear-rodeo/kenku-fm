@@ -49,6 +49,7 @@ export function ActionDrawer() {
           }}
           disableGutters
           variant="dense"
+          onDoubleClick={() => window.kenku.toggleMaximize()}
         >
           <IconButton
             onClick={() => setSettingsOpen(true)}

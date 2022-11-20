@@ -142,6 +142,10 @@ export class BrowserViewManagerPreload {
     ipcRenderer.send("BROWSER_VIEW_RELOAD", id);
   }
 
+  toggleMaximize() {
+    ipcRenderer.send("BROWSER_VIEW_TOGGLE_MAXIMIZE");
+  }
+
   setMuted(id: number, muted: boolean) {
     // Mute the audio context node
     // Note: we can't use `webContents.setAudioMuted()` as we are capturing a

@@ -145,6 +145,9 @@ const api = {
   startBrowserStream: (streamingMode: "lowLatency" | "performance") => {
     viewManager.startBrowserStream(streamingMode);
   },
+  toggleMaximize: () => {
+    viewManager.toggleMaximize();
+  },
 };
 
 declare global {

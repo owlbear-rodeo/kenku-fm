@@ -59,6 +59,7 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     ipcMain.on("BROWSER_VIEW_GO_FORWARD", this._handleGoForward);
     ipcMain.on("BROWSER_VIEW_GO_BACK", this._handleGoBack);
     ipcMain.on("BROWSER_VIEW_RELOAD", this._handleReload);
+    ipcMain.on("BROWSER_VIEW_TOGGLE_MAXIMIZE", this._handleToggleMaximize);
 
     this._wss.on("connection", this._handleWebsocketConnection);
   }
@@ -93,6 +94,8 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     ipcMain.off("BROWSER_VIEW_GO_FORWARD", this._handleGoForward);
     ipcMain.off("BROWSER_VIEW_GO_BACK", this._handleGoBack);
     ipcMain.off("BROWSER_VIEW_RELOAD", this._handleReload);
+    ipcMain.off("BROWSER_VIEW_TOGGLE_MAXIMIZE", this._handleToggleMaximize);
+
     this._handleBrowserViewStreamEnd();
     this.removeAllBrowserViews();
     this._wss.close();
@@ -211,6 +214,8 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
   _handleGoBack = (_: Electron.IpcMainEvent, id: number) => this.goBack(id);
 
   _handleReload = (_: Electron.IpcMainEvent, id: number) => this.reload(id);
+
+  _handleToggleMaximize = (_: Electron.IpcMainEvent) => this.toggleMaximize();
 
   /**
    * Create a new browser view and attach it to the current window
@@ -334,6 +339,14 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
       this.views[id]?.webContents.reload();
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  toggleMaximize() {
+    if (this.window.isMaximized()) {
+      this.window.unmaximize();
+    } else {
+      this.window.maximize();
     }
   }
 }

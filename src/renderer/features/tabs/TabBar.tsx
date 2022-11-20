@@ -125,6 +125,7 @@ export function TabBar() {
         overflowX: "auto",
         WebkitAppRegion: "drag",
       }}
+      onDoubleClick={() => window.kenku.toggleMaximize()}
     >
       <PlayerTab />
       <DndContext

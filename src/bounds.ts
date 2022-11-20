@@ -1,12 +1,18 @@
 import { BrowserWindow, Rectangle, screen } from "electron";
 import Store from "electron-store";
+import throttle from "lodash.throttle";
 
 const store = new Store<{
   bounds: Rectangle;
+  maximized: boolean;
 }>();
 
-export function getSavedBounds(): Partial<Rectangle> {
+export function getSavedBounds(): {
+  bounds: Partial<Rectangle>;
+  maximized: boolean;
+} {
   const bounds = store.get("bounds");
+  const maximized = store.get("maximized");
   const savedBounds: Partial<Rectangle> = {};
   if (bounds) {
     const area = screen.getDisplayMatching(bounds).workArea;
@@ -26,20 +32,26 @@ export function getSavedBounds(): Partial<Rectangle> {
       savedBounds.height = bounds.height;
     }
   }
-  return savedBounds;
+  return { bounds: savedBounds, maximized };
 }
 
 export function saveWindowBounds(window: BrowserWindow) {
-  let timeoutRef: NodeJS.Timeout | undefined = undefined;
-  window.on("resize", handleResizeOrMove);
-  window.on("move", handleResizeOrMove);
   function handleResizeOrMove() {
-    if (timeoutRef) {
-      clearTimeout(timeoutRef);
-    }
-    timeoutRef = setTimeout(() => {
-      timeoutRef = undefined;
+    if (!window.isDestroyed()) {
       store.set("bounds", window.getNormalBounds());
-    }, 1000);
+      store.set("maximized", false);
+    }
   }
+  const throttledResizeOrMove = throttle(handleResizeOrMove, 1000);
+  window.on("resized", throttledResizeOrMove);
+  window.on("moved", throttledResizeOrMove);
+
+  function handleMaximize() {
+    store.set("maximized", true);
+  }
+  function handleUnmaximize() {
+    store.set("maximized", false);
+  }
+  window.on("maximize", handleMaximize);
+  window.on("unmaximize", handleUnmaximize);
 }

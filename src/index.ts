@@ -17,7 +17,7 @@ if (require("electron-squirrel-startup")) {
 
 const createWindow = (): void => {
   // Create the browser window.
-  const bounds = getSavedBounds();
+  const { bounds, maximized } = getSavedBounds();
 
   const mainWindow = new BrowserWindow({
     height: 600,
@@ -38,6 +38,10 @@ const createWindow = (): void => {
     minHeight: 375,
     ...bounds,
   });
+
+  if (maximized) {
+    mainWindow.maximize();
+  }
 
   // and load the index.html of the app.
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);

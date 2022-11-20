@@ -1,5 +1,4 @@
 import { BrowserView, BrowserWindow, ipcMain, shell } from "electron";
-import { PassThrough } from "stream";
 import { TypedEmitter } from "tiny-typed-emitter";
 import { Readable } from "stream";
 import { WebSocketServer, WebSocket } from "ws";
@@ -7,12 +6,7 @@ import { getUserAgent } from "../userAgent";
 import prism from "prism-media";
 
 interface BrowserViewManagerEvents {
-  streamStart: (
-    stream: Readable,
-    frameDuration: number,
-    frameSize: number,
-    sampleRate: number
-  ) => void;
+  streamStart: (stream: Readable) => void;
   streamEnd: () => void;
 }
 
@@ -24,8 +18,6 @@ interface BrowserViewManagerEvents {
 export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvents> {
   window: BrowserWindow;
   views: Record<number, BrowserView>;
-  _inputStream?: PassThrough;
-  _outputStream?: PassThrough;
   _encoder?: prism.opus.Encoder;
   _wss: WebSocketServer;
 
@@ -113,46 +105,29 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
   _handleBrowserViewStreamStart = (
     _: Electron.IpcMainEvent,
     channels: number,
-    frameDuration: number,
     frameSize: number,
     sampleRate: number
   ) => {
-    this._outputStream?.end();
-    this._inputStream?.end();
     this._encoder?.end();
 
     // Create a pipeline for converting raw PCM data into opus packets
-    // We do a manual conversion here instead of passing the PCM stream
-    // into Eris as it requires ffmpeg to handle PCM data.
-    this._outputStream = new PassThrough();
-    this._inputStream = new PassThrough();
-    this._encoder = new prism.opus.Encoder({
+    const encoder = new prism.opus.Encoder({
       channels: channels,
       frameSize: frameSize,
       rate: sampleRate,
     });
-    this._inputStream.pipe(this._encoder).pipe(this._outputStream);
+    this._encoder = encoder;
 
     // Setup any listener streams
-    this.emit(
-      "streamStart",
-      this._outputStream,
-      frameDuration,
-      frameSize,
-      sampleRate
-    );
+    this.emit("streamStart", encoder);
   };
 
   _handleBrowserViewStreamData = async (data: Buffer) => {
-    this._inputStream?.write(data);
+    this._encoder?.write(data);
   };
 
   _handleBrowserViewStreamEnd = () => {
-    this._outputStream?.end();
-    this._inputStream?.end();
     this._encoder?.end();
-    this._inputStream = undefined;
-    this._outputStream = undefined;
     this._encoder = undefined;
     this.emit("streamEnd");
   };

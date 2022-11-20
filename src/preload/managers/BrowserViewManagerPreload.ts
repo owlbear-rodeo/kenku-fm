@@ -14,6 +14,21 @@ const NUM_CHANNELS = 2;
 const BIT_DEPTH = 16;
 /** Number of bytes per audio sample */
 const BYTES_PER_SAMPLE = BIT_DEPTH / 8;
+/** 20ms Opus frame duration */
+const FRAME_DURATION = 20;
+/** Duration of each audio frame in seconds */
+const FRAME_DURATION_SECONDS = FRAME_DURATION / 1000;
+/**
+ * Size in bytes of each frame of audio
+ * We stream audio to the main context as 16bit PCM data
+ * At 48KHz with a frame duration of 20ms (or 0.02s) and a stereo signal
+ * our `frameSize` is calculated by:
+ * `SAMPLE_RATE * FRAME_DURATION_SECONDS * NUM_CHANNELS / BYTES_PER_SAMPLE`
+ * or:
+ * `48000 * 0.02 * 2 / 2 = 960`
+ */
+const FRAME_SIZE =
+  (SAMPLE_RATE * FRAME_DURATION_SECONDS * NUM_CHANNELS) / BYTES_PER_SAMPLE;
 
 /**
  * Manager to help create and manager browser views
@@ -200,7 +215,7 @@ export class BrowserViewManagerPreload {
         ipcRenderer.emit(
           "ERROR",
           null,
-          `WebSocket clossed with code ${e.data[1]}`
+          `WebSocket closed with code ${e.data[1]}`
         );
       }
     };
@@ -222,30 +237,12 @@ export class BrowserViewManagerPreload {
    * Start the internal PCM stream for communicating between the renderer and main context
    */
   async startBrowserStream(streamingMode: "lowLatency" | "performance") {
-    const frameDuration = streamingMode === "lowLatency" ? 20 : 60;
-    /** Duration of each audio frame in seconds */
-    const frameDurationSeconds = frameDuration / 1000;
-    /**
-     * Size in bytes of each frame of audio
-     * We stream audio to the main context as 16bit PCM data
-     * At 48KHz with a frame duration of 20ms (or 0.02s) and a stereo signal
-     * our `frameSize` is calculated by:
-     * `SAMPLE_RATE * frameDurationSeconds * NUM_CHANNELS / BYTES_PER_SAMPLE`
-     * or:
-     * `48000 * 0.02 * 2 / 2 = 960`
-     */
-    const frameSize =
-      (SAMPLE_RATE * frameDurationSeconds * NUM_CHANNELS) / BYTES_PER_SAMPLE;
-
     ipcRenderer.send(
       "BROWSER_VIEW_STREAM_START",
       NUM_CHANNELS,
-      frameDuration,
-      frameSize,
+      FRAME_SIZE,
       SAMPLE_RATE
     );
-
-    const bufferSize = streamingMode === "lowLatency" ? 256 : 8192;
 
     // Create PCM stream node
     await this._audioContext.audioWorklet.addModule(PCMStream);
@@ -254,7 +251,7 @@ export class BrowserViewManagerPreload {
       "pcm-stream",
       {
         parameterData: {
-          bufferSize,
+          bufferSize: streamingMode === "lowLatency" ? 256 : 64000,
         },
       }
     );

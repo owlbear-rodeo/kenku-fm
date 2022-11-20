@@ -1,5 +1,11 @@
 import { BrowserWindow, ipcMain } from "electron";
-import Eris from "eris";
+import { ChannelType, Client, Events, GatewayIntentBits } from "discord.js";
+import {
+  createAudioPlayer,
+  getVoiceConnection,
+  joinVoiceChannel,
+  NoSubscriberBehavior,
+} from "@discordjs/voice";
 
 type VoiceChannel = {
   id: string;
@@ -15,15 +21,17 @@ type Guild = {
 
 export class DiscordBroadcast {
   window: BrowserWindow;
-  client?: Eris.Client;
-  broadcast = new Eris.SharedStream();
+  client?: Client;
+  audioPlayer = createAudioPlayer({
+    behaviors: { noSubscriber: NoSubscriberBehavior.Play },
+  });
   constructor(window: BrowserWindow) {
     this.window = window;
     ipcMain.on("DISCORD_CONNECT", this._handleConnect);
     ipcMain.on("DISCORD_DISCONNECT", this._handleDisconnect);
     ipcMain.on("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
     ipcMain.on("DISCORD_LEAVE_CHANNEL", this._handleLeaveChannel);
-    this.broadcast.on("error", this._handleBroadcastError);
+    this.audioPlayer.on("error", this._handleBroadcastError);
   }
 
   destroy() {
@@ -31,8 +39,8 @@ export class DiscordBroadcast {
     ipcMain.off("DISCORD_DISCONNECT", this._handleDisconnect);
     ipcMain.off("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
     ipcMain.off("DISCORD_LEAVE_CHANNEL", this._handleLeaveChannel);
-    this.broadcast.off("error", this._handleBroadcastError);
-    this.client?.disconnect({ reconnect: false });
+    this.audioPlayer.off("error", this._handleBroadcastError);
+    this.client?.destroy();
     this.client = undefined;
   }
 
@@ -43,25 +51,25 @@ export class DiscordBroadcast {
       return;
     }
     if (this.client) {
-      this.client.voiceConnections.forEach((connection) => {
-        this.broadcast.remove(connection);
-      });
-      this.client.disconnect({ reconnect: false });
+      this.client.destroy();
       this.client = undefined;
     }
 
     try {
-      this.client = new Eris.Client(token, {
-        intents: ["guilds", "guildVoiceStates"],
+      this.client = new Client({
+        intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
       });
-      this.client.once("ready", async () => {
+      this.client.once(Events.ClientReady, async () => {
         event.reply("DISCORD_READY");
         event.reply("MESSAGE", "Connected");
         let guilds: Guild[] = [];
-        for (let guild of Array.from(this.client.guilds.values())) {
+        const rawGuilds = await this.client.guilds.fetch();
+        for (const baseGuild of rawGuilds.values()) {
+          const guild = await baseGuild.fetch();
           let voiceChannels: VoiceChannel[] = [];
-          guild.channels.forEach((channel) => {
-            if (channel instanceof Eris.VoiceChannel) {
+          const channels = await guild.channels.fetch();
+          channels.forEach((channel) => {
+            if (channel.type === ChannelType.GuildVoice) {
               voiceChannels.push({
                 id: channel.id,
                 name: channel.name,
@@ -71,7 +79,7 @@ export class DiscordBroadcast {
           guilds.push({
             id: guild.id,
             name: guild.name,
-            icon: guild.iconURL,
+            icon: guild.iconURL(),
             voiceChannels,
           });
         }
@@ -81,7 +89,7 @@ export class DiscordBroadcast {
         event.reply("DISCORD_DISCONNECTED");
         event.reply("ERROR", `Error connecting to bot: ${err.message}`);
       });
-      await this.client.connect();
+      await this.client.login(token);
     } catch (err) {
       event.reply("DISCORD_DISCONNECTED");
       event.reply("ERROR", `Error connecting to bot: ${err.message}`);
@@ -92,10 +100,7 @@ export class DiscordBroadcast {
     event.reply("DISCORD_DISCONNECTED");
     event.reply("DISCORD_GUILDS", []);
     event.reply("DISCORD_CHANNEL_JOINED", "local");
-    this.client?.voiceConnections.forEach((connection) => {
-      this.broadcast.remove(connection);
-    });
-    this.client?.disconnect({ reconnect: false });
+    this.client.destroy();
     this.client = undefined;
   };
 
@@ -104,16 +109,19 @@ export class DiscordBroadcast {
     channelId: string
   ) => {
     if (this.client) {
-      const channel = this.client.getChannel(channelId);
-      if (channel && channel instanceof Eris.VoiceChannel) {
+      const channel = await this.client.channels.fetch(channelId);
+      if (channel && channel.type === ChannelType.GuildVoice) {
         try {
-          const connection = await channel.join();
-          this.broadcast.add(connection);
+          const connection = joinVoiceChannel({
+            channelId: channel.id,
+            guildId: channel.guild.id,
+            adapterCreator: channel.guild.voiceAdapterCreator,
+          });
+          connection.subscribe(this.audioPlayer);
           event.reply("DISCORD_CHANNEL_JOINED", channelId);
           connection.on("error", (e) => {
             console.error(e);
-            this.broadcast.remove(connection);
-            this.client.leaveVoiceChannel(channelId);
+            connection.destroy();
             event.reply("DISCORD_CHANNEL_LEFT", channelId);
             event.reply(
               "ERROR",
@@ -122,7 +130,6 @@ export class DiscordBroadcast {
           });
         } catch (e) {
           console.error(e);
-          this.client.leaveVoiceChannel(channelId);
           event.reply("DISCORD_CHANNEL_LEFT", channelId);
           event.reply(
             "ERROR",
@@ -137,12 +144,11 @@ export class DiscordBroadcast {
     event: Electron.IpcMainEvent,
     channelId: string
   ) => {
-    this.client.voiceConnections.forEach((connection) => {
-      if (connection.channelID === channelId) {
-        this.broadcast.remove(connection);
-      }
-    });
-    this.client?.leaveVoiceChannel(channelId);
+    const channel = await this.client.channels.fetch(channelId);
+    if (channel.type === ChannelType.GuildVoice) {
+      const connection = getVoiceConnection(channel.guild.id);
+      connection.destroy();
+    }
     event.reply("DISCORD_CHANNEL_LEFT", channelId);
   };
 

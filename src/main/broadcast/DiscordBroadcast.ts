@@ -62,27 +62,28 @@ export class DiscordBroadcast {
       this.client.once(Events.ClientReady, async () => {
         event.reply("DISCORD_READY");
         event.reply("MESSAGE", "Connected");
-        let guilds: Guild[] = [];
         const rawGuilds = await this.client.guilds.fetch();
-        for (const baseGuild of rawGuilds.values()) {
-          const guild = await baseGuild.fetch();
-          let voiceChannels: VoiceChannel[] = [];
-          const channels = await guild.channels.fetch();
-          channels.forEach((channel) => {
-            if (channel.type === ChannelType.GuildVoice) {
-              voiceChannels.push({
-                id: channel.id,
-                name: channel.name,
-              });
-            }
-          });
-          guilds.push({
-            id: guild.id,
-            name: guild.name,
-            icon: guild.iconURL(),
-            voiceChannels,
-          });
-        }
+        const guilds: Guild[] = await Promise.all(
+          rawGuilds.map(async (baseGuild) => {
+            const guild = await baseGuild.fetch();
+            let voiceChannels: VoiceChannel[] = [];
+            const channels = await guild.channels.fetch();
+            channels.forEach((channel) => {
+              if (channel.type === ChannelType.GuildVoice) {
+                voiceChannels.push({
+                  id: channel.id,
+                  name: channel.name,
+                });
+              }
+            });
+            return {
+              id: guild.id,
+              name: guild.name,
+              icon: guild.iconURL(),
+              voiceChannels,
+            };
+          })
+        );
         event.reply("DISCORD_GUILDS", guilds);
       });
       this.client.on("error", (err) => {

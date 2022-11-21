@@ -36,9 +36,6 @@ export class BrowserViewManagerMain {
     ipcMain.on("BROWSER_VIEW_GO_FORWARD", this._handleGoForward);
     ipcMain.on("BROWSER_VIEW_GO_BACK", this._handleGoBack);
     ipcMain.on("BROWSER_VIEW_RELOAD", this._handleReload);
-    ipcMain.on("BROWSER_VIEW_TOGGLE_MAXIMIZE", this._handleToggleMaximize);
-    ipcMain.on("BROWSER_VIEW_MINIMIZE", this._handleMinimize);
-    ipcMain.on("BROWSER_VIEW_CLOSE", this._handleClose);
   }
 
   destroy() {
@@ -64,9 +61,6 @@ export class BrowserViewManagerMain {
     ipcMain.off("BROWSER_VIEW_GO_FORWARD", this._handleGoForward);
     ipcMain.off("BROWSER_VIEW_GO_BACK", this._handleGoBack);
     ipcMain.off("BROWSER_VIEW_RELOAD", this._handleReload);
-    ipcMain.off("BROWSER_VIEW_TOGGLE_MAXIMIZE", this._handleToggleMaximize);
-    ipcMain.off("BROWSER_VIEW_MINIMIZE", this._handleMinimize);
-    ipcMain.off("BROWSER_VIEW_CLOSE", this._handleClose);
 
     this.removeAllBrowserViews();
   }
@@ -137,12 +131,6 @@ export class BrowserViewManagerMain {
   _handleGoBack = (_: Electron.IpcMainEvent, id: number) => this.goBack(id);
 
   _handleReload = (_: Electron.IpcMainEvent, id: number) => this.reload(id);
-
-  _handleToggleMaximize = (_: Electron.IpcMainEvent) => this.toggleMaximize();
-
-  _handleMinimize = (_: Electron.IpcMainEvent) => this.minimize();
-
-  _handleClose = (_: Electron.IpcMainEvent) => this.close();
 
   /**
    * Create a new browser view and attach it to the current window
@@ -267,21 +255,5 @@ export class BrowserViewManagerMain {
     } catch (err) {
       console.error(err);
     }
-  }
-
-  toggleMaximize() {
-    if (this.window.isMaximized()) {
-      this.window.unmaximize();
-    } else {
-      this.window.maximize();
-    }
-  }
-
-  minimize() {
-    this.window.minimize();
-  }
-
-  close() {
-    this.window.close();
   }
 }

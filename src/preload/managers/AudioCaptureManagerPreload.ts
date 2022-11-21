@@ -181,7 +181,6 @@ export class AudioCaptureManagerPreload {
       }
     );
     pcmStreamNode.port.onmessage = (event) => {
-      console.log(event.data);
       if (this._ws && this._ws.readyState === WebSocket.OPEN) {
         this._ws.send(event.data);
       }

@@ -70,19 +70,4 @@ export class BrowserViewManagerPreload {
   reload(id: number) {
     ipcRenderer.send("BROWSER_VIEW_RELOAD", id);
   }
-
-  /** Maximize the main window */
-  toggleMaximize() {
-    ipcRenderer.send("BROWSER_VIEW_TOGGLE_MAXIMIZE");
-  }
-
-  /** Minimize the main window */
-  minimize() {
-    ipcRenderer.send("BROWSER_VIEW_MINIMIZE");
-  }
-
-  /** Close the main window */
-  close() {
-    ipcRenderer.send("BROWSER_VIEW_CLOSE");
-  }
 }

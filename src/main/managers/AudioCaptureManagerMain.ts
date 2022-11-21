@@ -36,7 +36,6 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
       },
     });
     this._browserView.webContents.loadURL(AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY);
-    this._browserView.webContents.openDevTools();
     this._wss = new WebSocketServer({ port: 0 });
 
     ipcMain.on("AUDIO_CAPTURE_START", this._handleStart);

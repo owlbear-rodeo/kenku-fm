@@ -152,13 +152,13 @@ const api = {
     ipcRenderer.send("AUDIO_CAPTURE_START", streamingMode);
   },
   toggleMaximize: () => {
-    viewManager.toggleMaximize();
+    ipcRenderer.send("WINDOW_TOGGLE_MAXIMIZE");
   },
   minimize: () => {
-    viewManager.minimize();
+    ipcRenderer.send("WINDOW_MINIMIZE");
   },
   close: () => {
-    viewManager.close();
+    ipcRenderer.send("WINDOW_CLOSE");
   },
   platform: ipcRenderer.sendSync("GET_PLATFORM") as string,
   version: ipcRenderer.sendSync("GET_VERSION") as string,

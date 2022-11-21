@@ -104,6 +104,23 @@ export function PlaylistRemote({
   }, [playback]);
 
   useEffect(() => {
+    window.player.on("PLAYER_REMOTE_PLAYLIST_GET_ALL_REQUEST", () => {
+      window.player.playlistGetAllReply({
+        playlists: playlists.playlists.allIds.map(
+          (id) => playlists.playlists.byId[id]
+        ),
+        tracks: Object.values(playlists.tracks),
+      });
+    });
+
+    return () => {
+      window.player.removeAllListeners(
+        "PLAYER_REMOTE_PLAYLIST_GET_ALL_REQUEST"
+      );
+    };
+  }, [playlists]);
+
+  useEffect(() => {
     window.player.on("PLAYER_REMOTE_PLAYLIST_PLAYBACK_PLAY", () => {
       if (playback.playback) {
         dispatch(playPause(true));

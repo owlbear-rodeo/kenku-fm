@@ -1,10 +1,13 @@
 import { contextBridge, ipcRenderer } from "electron";
 import {
   PlaylistPlaybackReply,
+  PlaylistsReply,
   SoundboardPlaybackReply,
+  SoundboardsReply,
 } from "../types/player";
 
 type Channel =
+  | "PLAYER_REMOTE_PLAYLIST_GET_ALL_REQUEST"
   | "PLAYER_REMOTE_PLAYLIST_PLAY"
   | "PLAYER_REMOTE_PLAYLIST_PLAYBACK_REQUEST"
   | "PLAYER_REMOTE_PLAYLIST_PLAYBACK_PLAY"
@@ -16,11 +19,13 @@ type Channel =
   | "PLAYER_REMOTE_PLAYLIST_PLAYBACK_PREVIOUS"
   | "PLAYER_REMOTE_PLAYLIST_PLAYBACK_REPEAT"
   | "PLAYER_REMOTE_PLAYLIST_PLAYBACK_SHUFFLE"
+  | "PLAYER_REMOTE_SOUNDBOARD_GET_ALL_REQUEST"
   | "PLAYER_REMOTE_SOUNDBOARD_PLAY"
   | "PLAYER_REMOTE_SOUNDBOARD_STOP"
   | "PLAYER_REMOTE_SOUNDBOARD_PLAYBACK_REQUEST";
 
 const validChannels: Channel[] = [
+  "PLAYER_REMOTE_PLAYLIST_GET_ALL_REQUEST",
   "PLAYER_REMOTE_PLAYLIST_PLAY",
   "PLAYER_REMOTE_PLAYLIST_PLAYBACK_REQUEST",
   "PLAYER_REMOTE_PLAYLIST_PLAYBACK_PLAY",
@@ -32,6 +37,7 @@ const validChannels: Channel[] = [
   "PLAYER_REMOTE_PLAYLIST_PLAYBACK_PREVIOUS",
   "PLAYER_REMOTE_PLAYLIST_PLAYBACK_REPEAT",
   "PLAYER_REMOTE_PLAYLIST_PLAYBACK_SHUFFLE",
+  "PLAYER_REMOTE_SOUNDBOARD_GET_ALL_REQUEST",
   "PLAYER_REMOTE_SOUNDBOARD_PLAY",
   "PLAYER_REMOTE_SOUNDBOARD_STOP",
   "PLAYER_REMOTE_SOUNDBOARD_PLAYBACK_REQUEST",
@@ -54,6 +60,12 @@ const api = {
   },
   soundboardPlaybackReply: (playback: SoundboardPlaybackReply) => {
     ipcRenderer.send("PLAYER_REMOTE_SOUNDBOARD_PLAYBACK_REPLY", playback);
+  },
+  playlistGetAllReply: (playlists: PlaylistsReply) => {
+    ipcRenderer.send("PLAYER_REMOTE_PLAYLIST_GET_ALL_REPLY", playlists);
+  },
+  soundboardGetAllReply: (soundboards: SoundboardsReply) => {
+    ipcRenderer.send("PLAYER_REMOTE_SOUNDBOARD_GET_ALL_REPLY", soundboards);
   },
 };
 

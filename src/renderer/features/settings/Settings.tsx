@@ -346,6 +346,15 @@ export function Settings({ open, onClose }: SettingsProps) {
         <Divider sx={{ mb: 2 }} />
         <DialogContentText>Other</DialogContentText>
         {otherSettings}
+        <Stack my={1}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            textAlign="center"
+          >
+            v{window.kenku.getVersion()}
+          </Typography>
+        </Stack>
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose}>Done</Button>

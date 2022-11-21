@@ -156,6 +156,9 @@ const api = {
     viewManager.close();
   },
   platform: os.platform(),
+  getVersion: () => {
+    return ipcRenderer.sendSync("GET_VERSION");
+  },
 };
 
 declare global {

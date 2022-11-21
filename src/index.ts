@@ -1,4 +1,11 @@
-import { app, BrowserWindow, components, session, shell } from "electron";
+import {
+  app,
+  BrowserWindow,
+  components,
+  session,
+  shell,
+  ipcMain,
+} from "electron";
 import "./menu";
 import icon from "./assets/icon.png";
 import { getUserAgent } from "./main/userAgent";
@@ -112,4 +119,8 @@ app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
+});
+
+ipcMain.on("GET_VERSION", (event: Electron.IpcMainEvent) => {
+  event.returnValue = app.getVersion();
 });

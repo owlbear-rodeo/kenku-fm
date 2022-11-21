@@ -58,7 +58,14 @@ export function AddBookmark({ open, onClose }: AddBookmarkProps) {
 
   return (
     <Dialog fullScreen sx={{ width: 240 }} open={open} onClose={onClose}>
-      <DialogTitle>Add Bookmark</DialogTitle>
+      <DialogTitle
+        sx={{
+          textAlign: window.kenku.platform !== "win32" ? "right" : "left",
+          py: window.kenku.platform !== "win32" ? 1.5 : 2,
+        }}
+      >
+        Add Bookmark
+      </DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <TextField

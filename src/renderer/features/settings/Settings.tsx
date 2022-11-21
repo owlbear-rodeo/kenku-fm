@@ -336,6 +336,7 @@ export function Settings({ open, onClose }: SettingsProps) {
       <DialogTitle
         sx={{
           textAlign: window.kenku.platform !== "win32" ? "right" : "left",
+          py: window.kenku.platform !== "win32" ? 1.5 : 2,
         }}
       >
         Settings

@@ -101,7 +101,7 @@ const template: any = [
             { type: "separator" },
             { role: "window" },
           ]
-        : [{ role: "close" }]),
+        : [{ role: "close", accelerator: "Ctrl+Shift+W" }]),
     ],
   },
   {

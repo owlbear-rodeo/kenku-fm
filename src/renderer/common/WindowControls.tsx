@@ -10,13 +10,28 @@ import IconButton from "@mui/material/IconButton";
 export function WindowControls() {
   return (
     <>
-      <IconButton size="small" onClick={() => window.kenku.minimize()}>
+      <IconButton
+        size="small"
+        sx={{ WebkitAppRegion: "no-drag" }}
+        onClick={() => window.kenku.minimize()}
+        aria-label="minimize"
+      >
         <MinimizeIcon />
       </IconButton>
-      <IconButton size="small" onClick={() => window.kenku.toggleMaximize()}>
+      <IconButton
+        size="small"
+        sx={{ WebkitAppRegion: "no-drag" }}
+        onClick={() => window.kenku.toggleMaximize()}
+        aria-label="maximize"
+      >
         <MaximizeIcon />
       </IconButton>
-      <IconButton size="small" onClick={() => window.kenku.close()}>
+      <IconButton
+        size="small"
+        sx={{ WebkitAppRegion: "no-drag" }}
+        onClick={() => window.kenku.close()}
+        aria-label="close"
+      >
         <CloseIcon />
       </IconButton>
     </>

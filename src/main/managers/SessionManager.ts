@@ -1,4 +1,4 @@
-import { BrowserWindow, ipcMain } from "electron";
+import { BrowserView, BrowserWindow, ipcMain } from "electron";
 import { FaviconManager } from "./FaviconManager";
 import { PlaybackManager } from "./PlaybackManager";
 import { PlayerManager } from "./PlayerManager";

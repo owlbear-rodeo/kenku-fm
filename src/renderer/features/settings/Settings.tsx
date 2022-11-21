@@ -231,7 +231,7 @@ export function Settings({ open, onClose }: SettingsProps) {
   }
 
   useEffect(() => {
-    window.kenku.startBrowserStream(settings.streamingMode);
+    window.kenku.startAudioCapture(settings.streamingMode);
   }, []);
 
   const streamingSettings = (
@@ -359,7 +359,7 @@ export function Settings({ open, onClose }: SettingsProps) {
             color="text.secondary"
             textAlign="center"
           >
-            v{window.kenku.getVersion()}
+            v{window.kenku.version}
           </Typography>
         </Stack>
       </DialogContent>

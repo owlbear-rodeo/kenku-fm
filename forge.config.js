@@ -76,6 +76,14 @@ const config = {
                 js: "./src/player/preload.ts",
               },
             },
+            {
+              html: "./src/audioCapture/index.html",
+              js: "./src/audioCapture/renderer.ts",
+              name: "audio_capture_window",
+              preload: {
+                js: "./src/audioCapture/preload.ts",
+              },
+            },
           ],
         },
         devContentSecurityPolicy: "",

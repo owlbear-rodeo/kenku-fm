@@ -1,3 +1,4 @@
+import os from "os";
 import {
   app,
   BrowserWindow,
@@ -31,12 +32,6 @@ const createWindow = (): void => {
     width: 800,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
-      // Disable sandbox for the main window
-      // This allows us to use a web worker in the preload script
-      // https://github.com/electron/forge/issues/2931
-      // This has little security concerns as we don't load any third party
-      // content in the main window
-      sandbox: false,
     },
     titleBarStyle: "hidden",
     trafficLightPosition: { x: 16, y: 18 },
@@ -123,4 +118,8 @@ app.on("activate", () => {
 
 ipcMain.on("GET_VERSION", (event: Electron.IpcMainEvent) => {
   event.returnValue = app.getVersion();
+});
+
+ipcMain.on("GET_PLATFORM", (event: Electron.IpcMainEvent) => {
+  event.returnValue = os.platform();
 });

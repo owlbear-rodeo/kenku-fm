@@ -23,7 +23,11 @@ export class DiscordBroadcast {
   window: BrowserWindow;
   client?: Client;
   audioPlayer = createAudioPlayer({
-    behaviors: { noSubscriber: NoSubscriberBehavior.Play },
+    behaviors: {
+      noSubscriber: NoSubscriberBehavior.Play,
+      // Set max missed frames to 60 seconds (20ms per frame)
+      maxMissedFrames: 3000,
+    },
   });
   constructor(window: BrowserWindow) {
     this.window = window;

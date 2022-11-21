@@ -333,7 +333,13 @@ export function Settings({ open, onClose }: SettingsProps) {
 
   return (
     <Dialog fullScreen sx={{ width: 240 }} open={open} onClose={onClose}>
-      <DialogTitle sx={{ pt: 5 }}>Settings</DialogTitle>
+      <DialogTitle
+        sx={{
+          textAlign: window.kenku.platform !== "win32" ? "right" : "left",
+        }}
+      >
+        Settings
+      </DialogTitle>
       <DialogContent>
         <DialogContentText>Discord</DialogContentText>
         {discordSettings}

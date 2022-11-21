@@ -51,7 +51,9 @@ export function ActionDrawer() {
           }}
           disableGutters
           variant="dense"
-          onDoubleClick={() => window.kenku.toggleMaximize()}
+          onDoubleClick={(e) =>
+            e.target === e.currentTarget && window.kenku.toggleMaximize()
+          }
         >
           {window.kenku.platform === "win32" && (
             <Box sx={{ width: "36px", height: "36px", m: 1 }}>

@@ -60,6 +60,8 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     ipcMain.on("BROWSER_VIEW_GO_BACK", this._handleGoBack);
     ipcMain.on("BROWSER_VIEW_RELOAD", this._handleReload);
     ipcMain.on("BROWSER_VIEW_TOGGLE_MAXIMIZE", this._handleToggleMaximize);
+    ipcMain.on("BROWSER_VIEW_MINIMIZE", this._handleMinimize);
+    ipcMain.on("BROWSER_VIEW_CLOSE", this._handleClose);
 
     this._wss.on("connection", this._handleWebsocketConnection);
   }
@@ -95,6 +97,8 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     ipcMain.off("BROWSER_VIEW_GO_BACK", this._handleGoBack);
     ipcMain.off("BROWSER_VIEW_RELOAD", this._handleReload);
     ipcMain.off("BROWSER_VIEW_TOGGLE_MAXIMIZE", this._handleToggleMaximize);
+    ipcMain.off("BROWSER_VIEW_MINIMIZE", this._handleMinimize);
+    ipcMain.off("BROWSER_VIEW_CLOSE", this._handleClose);
 
     this._handleBrowserViewStreamEnd();
     this.removeAllBrowserViews();
@@ -216,6 +220,10 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
   _handleReload = (_: Electron.IpcMainEvent, id: number) => this.reload(id);
 
   _handleToggleMaximize = (_: Electron.IpcMainEvent) => this.toggleMaximize();
+
+  _handleMinimize = (_: Electron.IpcMainEvent) => this.minimize();
+
+  _handleClose = (_: Electron.IpcMainEvent) => this.close();
 
   /**
    * Create a new browser view and attach it to the current window
@@ -348,5 +356,13 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     } else {
       this.window.maximize();
     }
+  }
+
+  minimize() {
+    this.window.minimize();
+  }
+
+  close() {
+    this.window.close();
   }
 }

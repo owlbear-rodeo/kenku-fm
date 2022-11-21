@@ -1,3 +1,4 @@
+import os from "os";
 import { contextBridge, ipcRenderer } from "electron";
 
 import { BrowserViewManagerPreload } from "./preload/managers/BrowserViewManagerPreload";
@@ -148,6 +149,13 @@ const api = {
   toggleMaximize: () => {
     viewManager.toggleMaximize();
   },
+  minimize: () => {
+    viewManager.minimize();
+  },
+  close: () => {
+    viewManager.close();
+  },
+  platform: os.platform(),
 };
 
 declare global {

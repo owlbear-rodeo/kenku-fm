@@ -6,6 +6,7 @@ import {
   session,
   shell,
   ipcMain,
+  powerSaveBlocker,
 } from "electron";
 import "./menu";
 import icon from "./assets/icon.png";
@@ -64,8 +65,12 @@ const createWindow = (): void => {
   // Spoof user agent for window.navigator
   mainWindow.webContents.setUserAgent(getUserAgent());
 
+  // Prevent app suspension for Kenku FM to avoid playback issues
+  const powerSaveBlockerId = powerSaveBlocker.start("prevent-app-suspension");
+  
   mainWindow.on("close", () => {
     session.destroy();
+    powerSaveBlocker.stop(powerSaveBlockerId);
   });
 
   saveWindowBounds(mainWindow);

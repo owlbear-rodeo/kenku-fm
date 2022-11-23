@@ -68,8 +68,38 @@ export class AudioCaptureManagerPreload {
     await this._setupLoopback();
   }
 
+  /**
+   * Start the internal PCM stream for communicating between the renderer and main context
+   */
   async start(streamingMode: "lowLatency" | "performance") {
-    await this._startBrowserStream(streamingMode);
+    ipcRenderer.send(
+      "AUDIO_CAPTURE_STREAM_START",
+      NUM_CHANNELS,
+      FRAME_SIZE,
+      SAMPLE_RATE
+    );
+
+    // Create PCM stream node
+    await this._audioContext.audioWorklet.addModule(PCMStream);
+    const pcmStreamNode = new AudioWorkletNode(
+      this._audioContext,
+      "pcm-stream",
+      {
+        parameterData: {
+          // Set performance buffer size to 1 second (0.02 * 50)
+          bufferSize:
+            streamingMode === "lowLatency" ? FRAME_SIZE : FRAME_SIZE * 50,
+        },
+      }
+    );
+    pcmStreamNode.port.onmessage = (event) => {
+      if (this._ws && this._ws.readyState === WebSocket.OPEN) {
+        this._ws.send(event.data);
+      }
+    };
+
+    // Pipe the audio output into the stream
+    this._audioOutputNode.connect(pcmStreamNode);
   }
 
   setMuted(id: number, muted: boolean) {
@@ -156,40 +186,6 @@ export class AudioCaptureManagerPreload {
     this._audioOutputElement.onloadedmetadata = () => {
       this._audioOutputElement.play();
     };
-  }
-
-  /**
-   * Start the internal PCM stream for communicating between the renderer and main context
-   */
-  async _startBrowserStream(streamingMode: "lowLatency" | "performance") {
-    ipcRenderer.send(
-      "AUDIO_CAPTURE_STREAM_START",
-      NUM_CHANNELS,
-      FRAME_SIZE,
-      SAMPLE_RATE
-    );
-
-    // Create PCM stream node
-    await this._audioContext.audioWorklet.addModule(PCMStream);
-    const pcmStreamNode = new AudioWorkletNode(
-      this._audioContext,
-      "pcm-stream",
-      {
-        parameterData: {
-          // Set performance buffer size to 1 second (0.02 * 50)
-          bufferSize:
-            streamingMode === "lowLatency" ? FRAME_SIZE : FRAME_SIZE * 50,
-        },
-      }
-    );
-    pcmStreamNode.port.onmessage = (event) => {
-      if (this._ws && this._ws.readyState === WebSocket.OPEN) {
-        this._ws.send(event.data);
-      }
-    };
-
-    // Pipe the audio output into the stream
-    this._audioOutputNode.connect(pcmStreamNode);
   }
 
   /**

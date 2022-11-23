@@ -1,4 +1,5 @@
 import { ipcRenderer } from "electron";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import PCMStream from "./PCMStream.worklet";
 
@@ -64,7 +65,7 @@ export class AudioCaptureManagerPreload {
     this._audioOutputNode = this._audioContext.createGain();
   }
 
-  async setup() {
+  async setup(): Promise<void> {
     await this._setupWebsocket();
     await this._setupLoopback();
   }
@@ -72,7 +73,7 @@ export class AudioCaptureManagerPreload {
   /**
    * Start the internal PCM stream for communicating between the renderer and main context
    */
-  async start(streamingMode: "lowLatency" | "performance") {
+  async start(streamingMode: "lowLatency" | "performance"): Promise<void> {
     ipcRenderer.send(
       "AUDIO_CAPTURE_STREAM_START",
       NUM_CHANNELS,
@@ -103,7 +104,7 @@ export class AudioCaptureManagerPreload {
     this._audioOutputNode.connect(pcmStreamNode);
   }
 
-  setMuted(id: number, muted: boolean) {
+  setMuted(id: number, muted: boolean): void {
     // Mute the audio context node
     // Note: we can't use `webContents.setAudioMuted()` as we are capturing a
     // separate audio stream then what is being sent to the user
@@ -116,13 +117,13 @@ export class AudioCaptureManagerPreload {
    * Toggle the playback of the view audio in the current window
    * @param {boolean} loopback
    */
-  setLoopback(loopback: boolean) {
+  setLoopback(loopback: boolean): void {
     this._audioOutputElement.muted = !loopback;
   }
 
-  async startExternalAudioCapture(deviceId: string) {
+  async startExternalAudioCapture(deviceId: string): Promise<void> {
     try {
-      const streamConfig = {
+      const streamConfig: MediaStreamConstraints = {
         audio: {
           deviceId: deviceId,
           noiseSuppression: false,
@@ -132,7 +133,7 @@ export class AudioCaptureManagerPreload {
         video: false,
       };
       const stream = await navigator.mediaDevices.getUserMedia(
-        streamConfig as any
+        streamConfig
       );
 
       this._externalAudioStreams[deviceId] = stream;
@@ -152,10 +153,10 @@ export class AudioCaptureManagerPreload {
     }
   }
 
-  stopExternalAudioCapture(deviceId: string) {
+  stopExternalAudioCapture(deviceId: string): void {
     const stream = this._externalAudioStreams[deviceId];
     if (stream) {
-      for (let track of stream.getTracks()) {
+      for (const track of stream.getTracks()) {
         track.stop();
       }
       delete this._externalAudioStreams[deviceId];
@@ -163,7 +164,7 @@ export class AudioCaptureManagerPreload {
     }
   }
 
-  async _setupWebsocket() {
+  async _setupWebsocket(): Promise<void> {
     const websocketAddress = await ipcRenderer.invoke(
       "AUDIO_CAPTURE_GET_WEBSOCKET_ADDRESS"
     );
@@ -177,7 +178,7 @@ export class AudioCaptureManagerPreload {
     });
   }
 
-  async _setupLoopback() {
+  async _setupLoopback(): Promise<void> {
     // Create loopback media element
     const mediaDestination = this._audioContext.createMediaStreamDestination();
     this._audioOutputNode.connect(mediaDestination);
@@ -194,7 +195,7 @@ export class AudioCaptureManagerPreload {
    * @param viewId Browser view id
    * @param mediaSourceId The media source id to use with `getUserMedia`
    */
-  async startBrowserViewStream(viewId: number, mediaSourceId: string) {
+  async startBrowserViewStream(viewId: number, mediaSourceId: string): Promise<void> {
     try {
       const streamConfig = {
         audio: {
@@ -206,6 +207,9 @@ export class AudioCaptureManagerPreload {
         video: false,
       };
       const stream = await navigator.mediaDevices.getUserMedia(
+        // Reason
+        // We use custom chromium MediaStreamConfig values here to capture the tabs audio
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         streamConfig as any
       );
       this._mediaStreams[viewId] = stream;
@@ -227,9 +231,9 @@ export class AudioCaptureManagerPreload {
    * Stop an audio capture for the given browser view
    * @param viewId Browser view id
    */
-  stopBrowserViewStream(viewId: number) {
+  stopBrowserViewStream(viewId: number): void {
     if (this._mediaStreams[viewId]) {
-      for (let track of this._mediaStreams[viewId].getTracks()) {
+      for (const track of this._mediaStreams[viewId].getTracks()) {
         track.stop();
       }
       delete this._mediaStreams[viewId];

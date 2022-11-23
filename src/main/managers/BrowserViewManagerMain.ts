@@ -1,46 +1,19 @@
 import { BrowserView, BrowserWindow, ipcMain, shell } from "electron";
-import { PassThrough } from "stream";
-import { TypedEmitter } from "tiny-typed-emitter";
-import { Readable } from "stream";
-import { WebSocketServer, WebSocket } from "ws";
 import { getUserAgent } from "../userAgent";
-import prism from "prism-media";
-
-interface BrowserViewManagerEvents {
-  streamStart: (
-    stream: Readable,
-    frameDuration: number,
-    frameSize: number,
-    sampleRate: number
-  ) => void;
-  streamEnd: () => void;
-}
 
 /**
  * Manager to help create and manager browser views
  * This class is to be run on the main thread
  * For the render thread counterpart see `BrowserViewManagerPreload.ts`
  */
-export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvents> {
+export class BrowserViewManagerMain {
   window: BrowserWindow;
   views: Record<number, BrowserView>;
-  _inputStream?: PassThrough;
-  _outputStream?: PassThrough;
-  _encoder?: prism.opus.Encoder;
-  _wss: WebSocketServer;
 
   constructor(window: BrowserWindow) {
-    super();
     this.window = window;
     this.views = {};
-    this._wss = new WebSocketServer({ port: 0 });
 
-    ipcMain.on("BROWSER_VIEW_STREAM_START", this._handleBrowserViewStreamStart);
-    ipcMain.on("BROWSER_VIEW_STREAM_END", this._handleBrowserViewStreamEnd);
-    ipcMain.handle(
-      "BROWSER_VIEW_GET_WEBSOCKET_ADDRESS",
-      this._handleGetWebsocketAddress
-    );
     ipcMain.on(
       "BROWSER_VIEW_CREATE_BROWSER_VIEW",
       this._handleCreateBrowserView
@@ -59,25 +32,13 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
       "BROWSER_VIEW_SET_BROWSER_VIEW_BOUNDS",
       this._handleSetBrowserViewBounds
     );
-    ipcMain.handle(
-      "BROWSER_VIEW_GET_MEDIA_SOURCE_ID",
-      this._handleGetMediaSourceId
-    );
     ipcMain.on("BROWSER_VIEW_LOAD_URL", this._handleLoadURL);
     ipcMain.on("BROWSER_VIEW_GO_FORWARD", this._handleGoForward);
     ipcMain.on("BROWSER_VIEW_GO_BACK", this._handleGoBack);
     ipcMain.on("BROWSER_VIEW_RELOAD", this._handleReload);
-
-    this._wss.on("connection", this._handleWebsocketConnection);
   }
 
   destroy() {
-    ipcMain.off(
-      "BROWSER_VIEW_STREAM_START",
-      this._handleBrowserViewStreamStart
-    );
-    ipcMain.off("BROWSER_VIEW_STREAM_END", this._handleBrowserViewStreamEnd);
-    ipcMain.removeHandler("BROWSER_VIEW_GET_WEBSOCKET_ADDRESS");
     ipcMain.off(
       "BROWSER_VIEW_CREATE_BROWSER_VIEW",
       this._handleCreateBrowserView
@@ -96,70 +57,13 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
       "BROWSER_VIEW_SET_BROWSER_VIEW_BOUNDS",
       this._handleSetBrowserViewBounds
     );
-    ipcMain.removeHandler("BROWSER_VIEW_GET_MEDIA_SOURCE_ID");
     ipcMain.off("BROWSER_VIEW_LOAD_URL", this._handleLoadURL);
     ipcMain.off("BROWSER_VIEW_GO_FORWARD", this._handleGoForward);
     ipcMain.off("BROWSER_VIEW_GO_BACK", this._handleGoBack);
     ipcMain.off("BROWSER_VIEW_RELOAD", this._handleReload);
-    this._handleBrowserViewStreamEnd();
+
     this.removeAllBrowserViews();
-    this._wss.close();
   }
-
-  _handleWebsocketConnection = (ws: WebSocket) => {
-    ws.on("message", this._handleBrowserViewStreamData);
-  };
-
-  _handleBrowserViewStreamStart = (
-    _: Electron.IpcMainEvent,
-    channels: number,
-    frameDuration: number,
-    frameSize: number,
-    sampleRate: number
-  ) => {
-    this._outputStream?.end();
-    this._inputStream?.end();
-    this._encoder?.end();
-
-    // Create a pipeline for converting raw PCM data into opus packets
-    // We do a manual conversion here instead of passing the PCM stream
-    // into Eris as it requires ffmpeg to handle PCM data.
-    this._outputStream = new PassThrough();
-    this._inputStream = new PassThrough();
-    this._encoder = new prism.opus.Encoder({
-      channels: channels,
-      frameSize: frameSize,
-      rate: sampleRate,
-    });
-    this._inputStream.pipe(this._encoder).pipe(this._outputStream);
-
-    // Setup any listener streams
-    this.emit(
-      "streamStart",
-      this._outputStream,
-      frameDuration,
-      frameSize,
-      sampleRate
-    );
-  };
-
-  _handleBrowserViewStreamData = async (data: Buffer) => {
-    this._inputStream?.write(data);
-  };
-
-  _handleBrowserViewStreamEnd = () => {
-    this._outputStream?.end();
-    this._inputStream?.end();
-    this._encoder?.end();
-    this._inputStream = undefined;
-    this._outputStream = undefined;
-    this._encoder = undefined;
-    this.emit("streamEnd");
-  };
-
-  _handleGetWebsocketAddress = async () => {
-    return this._wss.address();
-  };
 
   _handleCreateBrowserView = (
     event: Electron.IpcMainEvent,
@@ -217,15 +121,6 @@ export class BrowserViewManagerMain extends TypedEmitter<BrowserViewManagerEvent
     width: number,
     height: number
   ) => this.setBrowserViewBounds(id, x, y, width, height);
-
-  _handleGetMediaSourceId = async (
-    event: Electron.IpcMainEvent,
-    id: number
-  ): Promise<string> => {
-    if (this.views[id]) {
-      return this.views[id].webContents.getMediaSourceId(event.sender);
-    }
-  };
 
   _handleLoadURL = (_: Electron.IpcMainEvent, id: number, url: string) =>
     this.loadURL(id, url);

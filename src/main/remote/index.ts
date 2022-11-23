@@ -1,6 +1,8 @@
 import { PlayerManager } from "../managers/PlayerManager";
+import { get as playlistGet } from "./routes/playlist";
 import { play as playlistPlay } from "./routes/playlist/play";
 import { playback as playlistPlayback } from "./routes/playlist/playback";
+import { get as soundboardGet } from "./routes/soundboard";
 import { play as soundboardPlay } from "./routes/soundboard/play";
 import { stop as soundboardStop } from "./routes/soundboard/stop";
 import { playback as soundboardPlayback } from "./routes/soundboard/playback";
@@ -18,11 +20,17 @@ export const VIEW_ERROR: ReplyError = {
 };
 
 export function registerRemote(manager: PlayerManager) {
+  manager.fastify.register(playlistGet(manager), {
+    prefix: "/v1/playlist",
+  });
   manager.fastify.register(playlistPlay(manager), {
     prefix: "/v1/playlist/play",
   });
   manager.fastify.register(playlistPlayback(manager), {
     prefix: "/v1/playlist/playback",
+  });
+  manager.fastify.register(soundboardGet(manager), {
+    prefix: "/v1/soundboard",
   });
   manager.fastify.register(soundboardPlay(manager), {
     prefix: "/v1/soundboard/play",

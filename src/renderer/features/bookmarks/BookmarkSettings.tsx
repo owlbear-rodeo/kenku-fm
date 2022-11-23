@@ -62,7 +62,14 @@ export function BookmarkSettings({
       onKeyDown={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <DialogTitle>Edit Bookmark</DialogTitle>
+      <DialogTitle
+        sx={{
+          textAlign: window.kenku.platform !== "win32" ? "right" : "left",
+          py: window.kenku.platform !== "win32" ? 1.5 : 2,
+        }}
+      >
+        Edit Bookmark
+      </DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <TextField

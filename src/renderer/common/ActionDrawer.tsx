@@ -42,17 +42,28 @@ export function ActionDrawer() {
       >
         <Toolbar
           sx={{
-            justifyContent: "space-between",
+            justifyContent:
+              window.kenku.platform === "win32" ? "space-between" : "end",
             bgcolor: "background.paper",
             px: 1,
+            WebkitAppRegion: "drag",
+            minHeight: "52px",
           }}
           disableGutters
           variant="dense"
+          onDoubleClick={(e) =>
+            e.target === e.currentTarget && window.kenku.toggleMaximize()
+          }
         >
-          <Box sx={{ width: "36px", height: "36px", m: 1 }}>
-            <img src={icon} />
-          </Box>
-          <IconButton onClick={() => setSettingsOpen(true)}>
+          {window.kenku.platform === "win32" && (
+            <Box sx={{ width: "36px", height: "36px", m: 1 }}>
+              <img src={icon} />
+            </Box>
+          )}
+          <IconButton
+            onClick={() => setSettingsOpen(true)}
+            sx={{ WebkitAppRegion: "no-drag" }}
+          >
             <SettingsIcon />
           </IconButton>
           <Settings

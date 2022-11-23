@@ -5,6 +5,6 @@
   "main": "index.js",
   "license": "MIT",
   "devDependencies": {
-    "electron-winstaller": "^5.0.0"
+    "electron-winstaller": "^5.1.0"
   }
 }

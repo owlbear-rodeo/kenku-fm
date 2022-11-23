@@ -57,7 +57,7 @@ export function OutputListItems() {
       if (output.outputs.includes(channelId)) {
         dispatch(removeOutput(channelId));
         if (channelId === "local") {
-          window.kenku.setLoopack(false);
+          window.kenku.setLoopback(false);
         } else {
           window.kenku.leaveChannel(channelId);
         }
@@ -65,7 +65,7 @@ export function OutputListItems() {
         // Not selected
         dispatch(addOutput(channelId));
         if (channelId === "local") {
-          window.kenku.setLoopack(true);
+          window.kenku.setLoopback(true);
         } else {
           // Check if the channel is in the same guild as one already selected
           const channelsToGuild: Record<string, string> = {};
@@ -102,14 +102,14 @@ export function OutputListItems() {
 
       if (prev) {
         if (prev === "local") {
-          window.kenku.setLoopack(false);
+          window.kenku.setLoopback(false);
         } else {
           window.kenku.leaveChannel(prev);
         }
       }
       dispatch(setOutput(channelId));
       if (channelId === "local") {
-        window.kenku.setLoopack(true);
+        window.kenku.setLoopback(true);
       } else {
         window.kenku.joinChannel(channelId);
       }

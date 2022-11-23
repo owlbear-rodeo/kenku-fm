@@ -26,6 +26,7 @@ import { TabItem } from "./TabItem";
 import { PlayerTab } from "../player/PlayerTab";
 import { AddTabButton } from "./AddTabButton";
 import { SortableItem } from "../../common/SortableItem";
+import { WindowControls } from "../../common/WindowControls";
 
 export function TabBar() {
   const dispatch = useDispatch();
@@ -123,7 +124,11 @@ export function TabBar() {
         alignItems: "center",
         px: 1,
         overflowX: "auto",
+        WebkitAppRegion: "drag",
       }}
+      onDoubleClick={(e) =>
+        e.target === e.currentTarget && window.kenku.toggleMaximize()
+      }
     >
       <PlayerTab />
       <DndContext
@@ -153,6 +158,8 @@ export function TabBar() {
         </SortableContext>
       </DndContext>
       <AddTabButton />
+      {/* Show window controls in the tab bar for windows */}
+      {window.kenku.platform === "win32" && <WindowControls />}
     </List>
   );
 }

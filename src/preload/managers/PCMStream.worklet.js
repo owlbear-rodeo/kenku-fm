@@ -1,6 +1,6 @@
 /**
  * 16Bit PCM data stream that will post a message when a ring buffer with a size
- * of the input pararmeter bufferSize completes a full cycle
+ * of the input parameter `bufferSize` completes a full cycle
  */
 class PCMStream extends AudioWorkletProcessor {
   /** Ring buffer of audio data */
@@ -10,7 +10,7 @@ class PCMStream extends AudioWorkletProcessor {
 
   constructor(config) {
     super(config);
-    // Frame size in bytes
+    // Buffer size in bytes
     const bufferSize = config.parameterData.bufferSize;
     this.buffer = new Int16Array(bufferSize);
     this.pointer = 0;
@@ -51,7 +51,9 @@ class PCMStream extends AudioWorkletProcessor {
   floatTo16BitPCM(samples) {
     const pcm = new Int16Array(samples.length);
     for (let i = 0; i < samples.length; i++) {
+      // Clamp sample
       var s = Math.max(-1, Math.min(1, samples[i]));
+      // Map to int16 range (-32,768 to +32,767)
       pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
     }
     return pcm;

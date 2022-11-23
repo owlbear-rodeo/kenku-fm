@@ -92,6 +92,7 @@ export function TabItem({ tab, selected, allowClose, shadow }: TabType) {
               : // None enabled
                 2,
         },
+        WebkitAppRegion: "no-drag",
       }}
       disablePadding
     >
@@ -118,6 +119,7 @@ export function TabItem({ tab, selected, allowClose, shadow }: TabType) {
               maxHeight: "16px",
               objectFit: "cover",
               marginRight: 1,
+              display: "flex",
             }}
           >
             <img src={tab.icon} />

@@ -53,9 +53,9 @@ const config = {
     },
   ],
   plugins: [
-    [
-      "@electron-forge/plugin-webpack",
-      {
+    {
+      name: "@electron-forge/plugin-webpack",
+      config: {
         mainConfig: "./webpack.main.config.js",
         renderer: {
           config: "./webpack.renderer.config.js",
@@ -76,18 +76,31 @@ const config = {
                 js: "./src/player/preload.ts",
               },
             },
+            {
+              html: "./src/audioCapture/index.html",
+              js: "./src/audioCapture/renderer.ts",
+              name: "audio_capture_window",
+              preload: {
+                js: "./src/audioCapture/preload.ts",
+              },
+            },
           ],
         },
         devContentSecurityPolicy: "",
       },
-    ],
-    [
-      "@timfish/forge-externals-plugin",
-      {
-        externals: ["opusscript", "prism-media"],
+    },
+    {
+      name: "@owlbear-rodeo/forge-externals-plugin",
+      config: {
+        externals: [
+          "opusscript",
+          "prism-media",
+          "libsodium-wrappers",
+          "discord.js",
+        ],
         includeDeps: true,
       },
-    ],
+    },
   ],
 };
 

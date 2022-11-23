@@ -1,9 +1,19 @@
-import { app, BrowserWindow, components, session, shell } from "electron";
+import os from "os";
+import {
+  app,
+  BrowserWindow,
+  components,
+  session,
+  shell,
+  ipcMain,
+  powerSaveBlocker,
+} from "electron";
 import "./menu";
 import icon from "./assets/icon.png";
 import { getUserAgent } from "./main/userAgent";
 import { SessionManager } from "./main/managers/SessionManager";
 import { runAutoUpdate } from "./autoUpdate";
+import { getSavedBounds, saveWindowBounds } from "./bounds";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -16,23 +26,32 @@ if (require("electron-squirrel-startup")) {
 
 const createWindow = (): void => {
   // Create the browser window.
+  const { bounds, maximized } = getSavedBounds();
+
   const mainWindow = new BrowserWindow({
     height: 600,
     width: 800,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
     },
+    titleBarStyle: "hidden",
+    trafficLightPosition: { x: 16, y: 18 },
     icon: icon,
     minWidth: 500,
     minHeight: 375,
+    ...bounds,
   });
+
+  if (maximized) {
+    mainWindow.maximize();
+  }
 
   // and load the index.html of the app.
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
-  mainWindow.webContents.on("new-window", (event, url) => {
-    event.preventDefault();
-    shell.openExternal(url);
+  mainWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url);
+    return { action: "deny" };
   });
 
   let session = new SessionManager(mainWindow);
@@ -46,9 +65,15 @@ const createWindow = (): void => {
   // Spoof user agent for window.navigator
   mainWindow.webContents.setUserAgent(getUserAgent());
 
+  // Prevent app suspension for Kenku FM to avoid playback issues
+  const powerSaveBlockerId = powerSaveBlocker.start("prevent-app-suspension");
+  
   mainWindow.on("close", () => {
     session.destroy();
+    powerSaveBlocker.stop(powerSaveBlockerId);
   });
+
+  saveWindowBounds(mainWindow);
 
   if (app.isPackaged) {
     runAutoUpdate(mainWindow);
@@ -94,4 +119,12 @@ app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
+});
+
+ipcMain.on("GET_VERSION", (event: Electron.IpcMainEvent) => {
+  event.returnValue = app.getVersion();
+});
+
+ipcMain.on("GET_PLATFORM", (event: Electron.IpcMainEvent) => {
+  event.returnValue = os.platform();
 });

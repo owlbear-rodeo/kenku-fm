@@ -231,7 +231,7 @@ export function Settings({ open, onClose }: SettingsProps) {
   }
 
   useEffect(() => {
-    window.kenku.startBrowserStream(settings.streamingMode);
+    window.kenku.startAudioCapture(settings.streamingMode);
   }, []);
 
   const streamingSettings = (
@@ -333,7 +333,14 @@ export function Settings({ open, onClose }: SettingsProps) {
 
   return (
     <Dialog fullScreen sx={{ width: 240 }} open={open} onClose={onClose}>
-      <DialogTitle>Settings</DialogTitle>
+      <DialogTitle
+        sx={{
+          textAlign: window.kenku.platform !== "win32" ? "right" : "left",
+          py: window.kenku.platform !== "win32" ? 1.5 : 2,
+        }}
+      >
+        Settings
+      </DialogTitle>
       <DialogContent>
         <DialogContentText>Discord</DialogContentText>
         {discordSettings}
@@ -346,6 +353,15 @@ export function Settings({ open, onClose }: SettingsProps) {
         <Divider sx={{ mb: 2 }} />
         <DialogContentText>Other</DialogContentText>
         {otherSettings}
+        <Stack my={1}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            textAlign="center"
+          >
+            v{window.kenku.version}
+          </Typography>
+        </Stack>
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose}>Done</Button>

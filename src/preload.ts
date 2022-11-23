@@ -4,10 +4,6 @@ import { BrowserViewManagerPreload } from "./preload/managers/BrowserViewManager
 
 const viewManager = new BrowserViewManagerPreload();
 
-window.addEventListener("load", () => {
-  viewManager.load();
-});
-
 type Channel =
   | "ERROR"
   | "MESSAGE"
@@ -60,10 +56,7 @@ const api = {
   leaveChannel: (channelId: string) => {
     ipcRenderer.send("DISCORD_LEAVE_CHANNEL", channelId);
   },
-  setLoopack: (loopback: boolean) => {
-    viewManager.setLoopback(loopback);
-  },
-  createBrowserView: (
+  createBrowserView: async (
     url: string,
     x: number,
     y: number,
@@ -71,10 +64,20 @@ const api = {
     height: number,
     preload?: string
   ): Promise<number> => {
-    return viewManager.createBrowserView(url, x, y, width, height, preload);
+    const viewId = await viewManager.createBrowserView(
+      url,
+      x,
+      y,
+      width,
+      height,
+      preload
+    );
+    ipcRenderer.send("AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM", viewId);
+    return viewId;
   },
   removeBrowserView: (id: number) => {
     viewManager.removeBrowserView(id);
+    ipcRenderer.send("AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM", id);
   },
   hideBrowserView: (id: number) => {
     viewManager.hideBrowserView(id);
@@ -102,9 +105,6 @@ const api = {
   },
   reload: (id: number) => {
     viewManager.reload(id);
-  },
-  setMuted: (id: number, muted: boolean) => {
-    viewManager.setMuted(id, muted);
   },
   on: (channel: Channel, callback: (...args: any[]) => any) => {
     if (validChannels.includes(channel)) {
@@ -136,15 +136,32 @@ const api = {
   playerStopRemote: () => {
     ipcRenderer.send("PLAYER_STOP_REMOTE");
   },
+  setLoopback: (loopback: boolean) => {
+    ipcRenderer.send("AUDIO_CAPTURE_SET_LOOPBACK", loopback);
+  },
+  setMuted: (id: number, muted: boolean) => {
+    ipcRenderer.send("AUDIO_CAPTURE_SET_MUTED", id, muted);
+  },
   startExternalAudioCapture: (deviceId: string) => {
-    return viewManager.startExternalAudioCapture(deviceId);
+    ipcRenderer.send("AUDIO_CAPTURE_START_EXTERNAL_AUDIO_CAPTURE", deviceId);
   },
   stopExternalAudioCapture: (deviceId: string) => {
-    viewManager.stopExternalAudioCapture(deviceId);
+    ipcRenderer.send("AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE", deviceId);
   },
-  startBrowserStream: (streamingMode: "lowLatency" | "performance") => {
-    viewManager.startBrowserStream(streamingMode);
+  startAudioCapture: (streamingMode: "lowLatency" | "performance") => {
+    ipcRenderer.send("AUDIO_CAPTURE_START", streamingMode);
   },
+  toggleMaximize: () => {
+    ipcRenderer.send("WINDOW_TOGGLE_MAXIMIZE");
+  },
+  minimize: () => {
+    ipcRenderer.send("WINDOW_MINIMIZE");
+  },
+  close: () => {
+    ipcRenderer.send("WINDOW_CLOSE");
+  },
+  platform: ipcRenderer.sendSync("GET_PLATFORM") as string,
+  version: ipcRenderer.sendSync("GET_VERSION") as string,
 };
 
 declare global {

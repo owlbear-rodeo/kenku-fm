@@ -2,7 +2,6 @@ import os from "os";
 import {
   app,
   BrowserWindow,
-  components,
   session,
   shell,
   ipcMain,

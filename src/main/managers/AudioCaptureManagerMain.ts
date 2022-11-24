@@ -8,12 +8,7 @@ declare const AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY: string;
 declare const AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
 interface AudioCaptureManagerEvents {
-  streamStart: (
-    stream: Readable,
-    frameDuration: number,
-    frameSize: number,
-    sampleRate: number
-  ) => void;
+  streamStart: (stream: Readable) => void;
   streamEnd: () => void;
 }
 
@@ -148,7 +143,6 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
   _handleStreamStart = (
     _: Electron.IpcMainEvent,
     channels: number,
-    frameDuration: number,
     frameSize: number,
     sampleRate: number
   ) => {
@@ -163,7 +157,7 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
     this._encoder = encoder;
 
     // Setup any listener streams
-    this.emit("streamStart", encoder, frameDuration, frameSize, sampleRate);
+    this.emit("streamStart", encoder);
   };
 
   _handleStreamData = async (data: Buffer) => {

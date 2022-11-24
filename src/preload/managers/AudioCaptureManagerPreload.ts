@@ -77,7 +77,6 @@ export class AudioCaptureManagerPreload {
     ipcRenderer.send(
       "AUDIO_CAPTURE_STREAM_START",
       NUM_CHANNELS,
-      FRAME_DURATION,
       FRAME_SIZE,
       SAMPLE_RATE
     );
@@ -133,7 +132,9 @@ export class AudioCaptureManagerPreload {
         },
         video: false,
       };
-      const stream = await navigator.mediaDevices.getUserMedia(streamConfig);
+      const stream = await navigator.mediaDevices.getUserMedia(
+        streamConfig
+      );
 
       this._externalAudioStreams[deviceId] = stream;
 
@@ -194,10 +195,7 @@ export class AudioCaptureManagerPreload {
    * @param viewId Browser view id
    * @param mediaSourceId The media source id to use with `getUserMedia`
    */
-  async startBrowserViewStream(
-    viewId: number,
-    mediaSourceId: string
-  ): Promise<void> {
+  async startBrowserViewStream(viewId: number, mediaSourceId: string): Promise<void> {
     try {
       const streamConfig = {
         audio: {

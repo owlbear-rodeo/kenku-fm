@@ -1,3 +1,4 @@
+import { createAudioResource } from "@discordjs/voice";
 import { BrowserWindow } from "electron";
 import { DiscordBroadcast } from "../broadcast/DiscordBroadcast";
 import { AudioCaptureManagerMain } from "./AudioCaptureManagerMain";
@@ -9,20 +10,12 @@ export class PlaybackManager {
   constructor(window: BrowserWindow) {
     this.discord = new DiscordBroadcast(window);
     this.audioCaptureManager = new AudioCaptureManagerMain();
-    this.audioCaptureManager.on(
-      "streamStart",
-      (stream, frameDuration, frameSize, sampleRate) => {
-        this.discord.broadcast.play(stream, {
-          format: "opusPackets",
-          frameDuration,
-          frameSize,
-          samplingRate: sampleRate,
-          voiceDataTimeout: 60000,
-        });
-      }
-    );
+    this.audioCaptureManager.on("streamStart", (stream) => {
+      const resource = createAudioResource(stream);
+      this.discord.audioPlayer.play(resource);
+    });
     this.audioCaptureManager.on("streamEnd", () => {
-      this.discord.broadcast.stopPlaying();
+      this.discord.audioPlayer.stop();
     });
   }
 

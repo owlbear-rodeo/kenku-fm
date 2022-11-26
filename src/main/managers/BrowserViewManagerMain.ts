@@ -99,6 +99,13 @@ export class BrowserViewManagerMain {
       event.preventDefault();
       shell.openExternal(url);
     });
+    let loaded = false;
+    this.views[id].webContents.on("did-finish-load", () => {
+      if (!loaded) {
+        event.reply("BROWSER_VIEW_LOADED", id);
+        loaded = true;
+      }
+    })
     event.returnValue = id;
   };
 

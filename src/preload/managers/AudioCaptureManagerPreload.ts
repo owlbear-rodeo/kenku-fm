@@ -59,7 +59,7 @@ export class AudioCaptureManagerPreload {
 
     this._audioContext = new AudioContext({
       // Ensure that we prioritise low latency and reduce glitches in the audio
-      latencyHint: "interactive",
+      latencyHint: "balanced",
       sampleRate: SAMPLE_RATE,
     });
     this._audioOutputNode = this._audioContext.createGain();

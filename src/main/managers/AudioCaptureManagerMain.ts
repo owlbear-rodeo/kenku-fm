@@ -35,6 +35,8 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
         sandbox: false,
       },
     });
+    // Disable background throttling for the capture window to fix audio playback issues when the window is out of focus
+    this._browserView.webContents.setBackgroundThrottling(false);
     this._browserView.webContents.loadURL(AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY);
     this._wss = new WebSocketServer({ port: 0 });
 

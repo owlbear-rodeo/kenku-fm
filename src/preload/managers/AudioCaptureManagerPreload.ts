@@ -59,7 +59,7 @@ export class AudioCaptureManagerPreload {
 
     this._audioContext = new AudioContext({
       // Ensure that we prioritise low latency and reduce glitches in the audio
-      latencyHint: "playback",
+      latencyHint: 0,
       sampleRate: SAMPLE_RATE,
     });
     this._audioOutputNode = this._audioContext.createGain();
@@ -132,9 +132,7 @@ export class AudioCaptureManagerPreload {
         },
         video: false,
       };
-      const stream = await navigator.mediaDevices.getUserMedia(
-        streamConfig
-      );
+      const stream = await navigator.mediaDevices.getUserMedia(streamConfig);
 
       this._externalAudioStreams[deviceId] = stream;
 
@@ -195,7 +193,10 @@ export class AudioCaptureManagerPreload {
    * @param viewId Browser view id
    * @param mediaSourceId The media source id to use with `getUserMedia`
    */
-  async startBrowserViewStream(viewId: number, mediaSourceId: string): Promise<void> {
+  async startBrowserViewStream(
+    viewId: number,
+    mediaSourceId: string
+  ): Promise<void> {
     try {
       const streamConfig = {
         audio: {

@@ -81,10 +81,10 @@ export class AudioCaptureManagerPreload {
       "pcm-stream",
       {
         parameterData: {
-          // Set performance buffer size to 1 second (0.02 * 50)
+          // Set performance buffer size to 200ms second (0.02 * 10)
           // and lowLatency buffer size to 100ms (0.02 * 5)
           bufferSize:
-            streamingMode === "lowLatency" ? FRAME_SIZE * 5 : FRAME_SIZE * 50,
+            streamingMode === "performance" ? FRAME_SIZE * 10 : FRAME_SIZE * 5,
         },
       }
     );

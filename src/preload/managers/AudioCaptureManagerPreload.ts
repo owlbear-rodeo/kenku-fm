@@ -34,46 +34,37 @@ const FRAME_SIZE =
  */
 export class AudioCaptureManagerPreload {
   /** Audio context to mix media streams into one audio output */
-  _audioContext: AudioContext;
+  _audioContext?: AudioContext;
   /** Audio output node that streams will connect to */
-  _audioOutputNode: AudioNode;
+  _audioOutputNode?: AudioNode;
 
   /** Audio DOM element for the current output / local playback */
-  _audioOutputElement: HTMLAudioElement;
+  _audioOutputElement?: HTMLAudioElement;
   /** Raw media streams for each browser view containing webp/opus audio */
-  _mediaStreams: Record<number, MediaStream>;
-  _mediaStreamOutputs: Record<number, GainNode>;
+  _mediaStreams: Record<number, MediaStream> = {};
+  _mediaStreamOutputs: Record<number, GainNode> = {};
 
   /** Raw media stream for each external audio source e.g. microphone or virtual audio cables */
-  _externalAudioStreams: Record<string, MediaStream>;
-  _externalAudioStreamOutputs: Record<string, GainNode>;
+  _externalAudioStreams: Record<string, MediaStream> = {};
+  _externalAudioStreamOutputs: Record<string, GainNode> = {};
 
-  _ws: WebSocket;
+  _ws?: WebSocket;
 
-  constructor() {
-    this._mediaStreams = {};
-    this._mediaStreamOutputs = {};
-
-    this._externalAudioStreams = {};
-    this._externalAudioStreamOutputs = {};
-
+  /**
+   * Create the Audio Context, setup the communication socket and start the
+   * internal PCM stream for communicating between the renderer and main context
+   */
+  async start(streamingMode: "lowLatency" | "performance"): Promise<void> {
     this._audioContext = new AudioContext({
-      // Ensure that we prioritise low latency and reduce glitches in the audio
-      latencyHint: "interactive",
+      // Setting the latency hint to `playback` fixes audio glitches on some Windows 11 machines.
+      latencyHint: "playback",
       sampleRate: SAMPLE_RATE,
     });
     this._audioOutputNode = this._audioContext.createGain();
-  }
 
-  async setup(): Promise<void> {
     await this._setupWebsocket();
     await this._setupLoopback();
-  }
 
-  /**
-   * Start the internal PCM stream for communicating between the renderer and main context
-   */
-  async start(streamingMode: "lowLatency" | "performance"): Promise<void> {
     ipcRenderer.send(
       "AUDIO_CAPTURE_STREAM_START",
       NUM_CHANNELS,
@@ -89,8 +80,9 @@ export class AudioCaptureManagerPreload {
       {
         parameterData: {
           // Set performance buffer size to 1 second (0.02 * 50)
+          // and lowLatency buffer size to 20ms (0.02)
           bufferSize:
-            streamingMode === "lowLatency" ? FRAME_SIZE : FRAME_SIZE * 50,
+            streamingMode === "performance" ? FRAME_SIZE * 50 : FRAME_SIZE,
         },
       }
     );
@@ -132,9 +124,7 @@ export class AudioCaptureManagerPreload {
         },
         video: false,
       };
-      const stream = await navigator.mediaDevices.getUserMedia(
-        streamConfig
-      );
+      const stream = await navigator.mediaDevices.getUserMedia(streamConfig);
 
       this._externalAudioStreams[deviceId] = stream;
 
@@ -195,7 +185,10 @@ export class AudioCaptureManagerPreload {
    * @param viewId Browser view id
    * @param mediaSourceId The media source id to use with `getUserMedia`
    */
-  async startBrowserViewStream(viewId: number, mediaSourceId: string): Promise<void> {
+  async startBrowserViewStream(
+    viewId: number,
+    mediaSourceId: string
+  ): Promise<void> {
     try {
       const streamConfig = {
         audio: {

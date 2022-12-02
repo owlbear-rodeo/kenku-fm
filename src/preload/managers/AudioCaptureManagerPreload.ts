@@ -57,9 +57,7 @@ export class AudioCaptureManagerPreload {
   async start(streamingMode: "lowLatency" | "performance"): Promise<void> {
     this._audioContext = new AudioContext({
       // Setting the latency hint to `playback` fixes audio glitches on some Windows 11 machines.
-      // However, using `interactive` fixes playback on some Windows 10 machines.
-      // ¯\_(ツ)_/¯
-      latencyHint: streamingMode === "performance" ? "playback" : "interactive",
+      latencyHint: "playback",
       sampleRate: SAMPLE_RATE,
     });
     this._audioOutputNode = this._audioContext.createGain();
@@ -81,10 +79,10 @@ export class AudioCaptureManagerPreload {
       "pcm-stream",
       {
         parameterData: {
-          // Set performance buffer size to 200ms second (0.02 * 10)
-          // and lowLatency buffer size to 100ms (0.02 * 5)
+          // Set performance buffer size to 1 second (0.02 * 50)
+          // and lowLatency buffer size to 20ms (0.02)
           bufferSize:
-            streamingMode === "performance" ? FRAME_SIZE * 10 : FRAME_SIZE * 5,
+            streamingMode === "performance" ? FRAME_SIZE * 50 : FRAME_SIZE,
         },
       }
     );

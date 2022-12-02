@@ -100,8 +100,11 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
     ws.on("message", this._handleStreamData);
   };
 
-  _handleStart = (_: Electron.IpcMainEvent) => {
-    this._browserView.webContents.send("AUDIO_CAPTURE_START");
+  _handleStart = (
+    _: Electron.IpcMainEvent,
+    streamingMode: "lowLatency" | "performance"
+  ) => {
+    this._browserView.webContents.send("AUDIO_CAPTURE_START", streamingMode);
   };
 
   _handleSetLoopback = (_: Electron.IpcMainEvent, loopback: boolean) => {

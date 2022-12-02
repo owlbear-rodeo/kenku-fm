@@ -4,10 +4,6 @@ import { AudioCaptureManagerPreload } from "../preload/managers/AudioCaptureMana
 
 const audioCaptureManager = new AudioCaptureManagerPreload();
 
-window.addEventListener("load", () => {
-  audioCaptureManager.setup();
-});
-
 ipcRenderer.on(
   "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
   (_, viewId: number, mediaSourceId: string) => {

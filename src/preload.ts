@@ -43,6 +43,11 @@ const validChannels: Channel[] = [
   "PLAYER_REMOTE_ENABLED",
 ];
 
+// Capture audio when new views are loaded
+ipcRenderer.on("BROWSER_VIEW_LOADED",  (_, viewId: number) => {
+  ipcRenderer.send("AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM", viewId);
+})
+
 const api = {
   connect: (token: string) => {
     ipcRenderer.send("DISCORD_CONNECT", token);
@@ -72,7 +77,6 @@ const api = {
       height,
       preload
     );
-    ipcRenderer.send("AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM", viewId);
     return viewId;
   },
   removeBrowserView: (id: number) => {

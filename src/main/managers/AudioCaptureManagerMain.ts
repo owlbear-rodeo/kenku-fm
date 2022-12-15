@@ -69,7 +69,7 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
 
   destroy() {
     ipcMain.off("AUDIO_CAPTURE_START", this._handleStart);
-    ipcMain.off("AUDIO_CAPTURE_SET_LOOPBACK", this._handleStreamStart);
+    ipcMain.off("AUDIO_CAPTURE_SET_LOOPBACK", this._handleSetLoopback);
     ipcMain.off("AUDIO_CAPTURE_SET_MUTED", this._handleSetMuted);
     ipcMain.off(
       "AUDIO_CAPTURE_START_EXTERNAL_AUDIO_CAPTURE",

@@ -67,14 +67,14 @@ export function SoundboardItem({
           padding: 2,
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: "flex-end",
           position: "absolute",
           bottom: 0,
           width: "100%",
           pointerEvents: "none",
         }}
       >
-        <Typography variant="h5" component="div">
+        <Typography variant="h6" component="div" sx={{overflow: "hidden", paddingBottom: "8px"}}>
           {soundboard.title}
         </Typography>
         <IconButton

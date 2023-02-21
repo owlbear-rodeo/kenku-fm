@@ -124,11 +124,11 @@ jobs:
       - run:
           name: Signtool
           command: |
-            echo $env:WINDOWS_CERT_P12 | openssl base64 -A -d -out certificate.pfx
+            echo $env:WINDOWS_CERT | openssl base64 -A -d -out certificate.pfx
             
             $DIR = $(pwd)
             $CERT = "${DIR}\certificate.pfx"
-            $CERT_PASSWORD = $(echo $env:WINDOWS_CERT_PASSWORD | openssl base64 -A -d)
+            $CERT_PASSWORD = $(echo $env:WINDOWS_CERT_PWD | openssl base64 -A -d)
 
             C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\kenku-fm.exe"
             C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\Squirrel.exe"
@@ -141,7 +141,7 @@ jobs:
           name: Create App
           shell: bash.exe
           command: |
-            CERT_PASSWORD=$(echo "${WINDOWS_CERT_PASSWORD}" | openssl base64 -A -d)
+            CERT_PASSWORD=$(echo "${WINDOWS_CERT_PWD}" | openssl base64 -A -d)
             yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows
             
             VERSION=${CIRCLE_TAG//v}

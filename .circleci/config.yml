@@ -32,15 +32,6 @@ commands:
           name: Publish
           command: yarn run publish
   
-  yarn-make:
-    steps:
-      - run:
-          name: Make Package
-          shell: bash.exe
-          command: |
-            VERSION=${CIRCLE_TAG//v}
-            yarn run make
-
   get-images:
     steps:
       - run:
@@ -123,7 +114,12 @@ jobs:
           command: | 
             mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
             rm -rf ./kenku-fm-assets
-      - yarn-make
+      - run:
+          name: Yarn Make
+          shell: bash.exe
+          command: |
+            VERSION=${CIRCLE_TAG//v}
+            yarn run make
       - run:
           name: Signtool
           command: |
@@ -180,7 +176,11 @@ jobs:
             - ./node_modules
       - get-images
       - move-images
-      - yarn-make
+      - run:
+          name: Yarn Make
+          command: |
+            VERSION=${CIRCLE_TAG//v}
+            yarn run make
       - run:
           name: Widevine Signature
           command: |

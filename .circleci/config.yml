@@ -118,6 +118,7 @@ jobs:
           name: Yarn Make
           shell: bash.exe
           command: |
+            NODE_ENV="production"
             VERSION=${CIRCLE_TAG//v}
             yarn run make
       - run:
@@ -179,6 +180,7 @@ jobs:
       - run:
           name: Yarn Make
           command: |
+            NODE_ENV="production"
             VERSION=${CIRCLE_TAG//v}
             yarn run make
       - run:

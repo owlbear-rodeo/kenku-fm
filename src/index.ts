@@ -14,6 +14,13 @@ import { getUserAgent } from "./main/userAgent";
 import { SessionManager } from "./main/managers/SessionManager";
 import { runAutoUpdate } from "./autoUpdate";
 import { getSavedBounds, saveWindowBounds } from "./bounds";
+import * as Sentry from "@sentry/electron/main";
+
+if (app.isPackaged) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+  });
+}
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;

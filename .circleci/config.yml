@@ -36,7 +36,10 @@ commands:
     steps:
       - run:
           name: Make Package
-          command: yarn run make
+          shell: bash.exe
+          command: |
+            VERSION=${CIRCLE_TAG//v}
+            yarn run make
 
   get-images:
     steps:

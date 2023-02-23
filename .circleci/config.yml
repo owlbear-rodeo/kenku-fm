@@ -78,7 +78,7 @@ jobs:
   publish-electron-app-win:
     executor:
       name: win/default
-      size: "medium"
+      size: "large"
     working_directory: ~/repo
     steps:
       - checkout

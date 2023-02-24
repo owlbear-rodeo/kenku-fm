@@ -11,11 +11,9 @@ commands:
   install-npm:
     steps:
       - node/install:
-          install-yarn: true
           node-version: "16.13.2"
-          parameters:
-            install-yarn:
-              version: "1.22.5"
+      - node/install-yarn:
+          version: "1.22.5"
   
   install-dependencies:
     steps:

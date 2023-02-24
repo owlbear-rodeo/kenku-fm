@@ -1,6 +1,6 @@
 const SentryWebpackPlugin = require("@sentry/webpack-plugin");
 
-const isDevelopment = process.env.NODE_ENV !== 'production';
+const isProduction = process.env.CI;
 
 module.exports = {
   /**
@@ -19,9 +19,9 @@ module.exports = {
     extensions: [".js", ".ts", ".jsx", ".tsx", ".css", ".json"],
   },
   devtool: "source-map",
-  mode: isDevelopment ? 'development' : 'production',
+  mode: isProduction ? 'production' : 'development',
   plugins: [
-    isDevelopment === 'production' && new SentryWebpackPlugin({
+    isProduction && new SentryWebpackPlugin({
           org: "owlbear-rodeo",
           project: "kenku-fm",
           include: ["./.webpack/main/**/*"],

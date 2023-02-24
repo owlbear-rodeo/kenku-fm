@@ -88,6 +88,7 @@ const createWindow = (): void => {
 };
 
 const spoofUserAgent = () => {
+  throw Error("An error")
   session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
     // Google blocks sign in on CEF so spoof user agent for network requests
     details.requestHeaders["User-Agent"] = getUserAgent();

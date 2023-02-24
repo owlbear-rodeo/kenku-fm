@@ -30,7 +30,12 @@ commands:
     steps:
       - run:
           name: Publish
-          command: yarn run publish
+          command: |
+            CI=true
+            SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
+            SENTRY_DSN=${SENTRY_DSN}
+            VERSION=${CIRCLE_TAG//v}
+            yarn run publish
   
   get-images:
     steps:
@@ -120,6 +125,7 @@ jobs:
           command: |
             CI=true
             SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
+            SENTRY_DSN=${SENTRY_DSN}
             VERSION=${CIRCLE_TAG//v}
             yarn run make
       - run:
@@ -183,6 +189,7 @@ jobs:
           command: |
             CI=true
             SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
+            SENTRY_DSN=${SENTRY_DSN}
             VERSION=${CIRCLE_TAG//v}
             yarn run make
       - run:

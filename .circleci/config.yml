@@ -34,7 +34,6 @@ commands:
             CI=true
             SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
             SENTRY_DSN=${SENTRY_DSN}
-            VERSION=${CIRCLE_TAG//v}
             yarn run publish
   
   get-images:
@@ -121,12 +120,10 @@ jobs:
             rm -rf ./kenku-fm-assets
       - run:
           name: Yarn Make
-          shell: bash.exe
           command: |
-            CI=true
-            SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
-            SENTRY_DSN=${SENTRY_DSN}
-            VERSION=${CIRCLE_TAG//v}
+            $CI="true"
+            $SENTRY_AUTH_TOKEN="${SENTRY_AUTH_TOKEN}"
+            $SENTRY_DSN="${SENTRY_DSN}"
             yarn run make
       - run:
           name: Signtool
@@ -190,7 +187,6 @@ jobs:
             export CI=true
             export SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
             export SENTRY_DSN=${SENTRY_DSN}
-            export VERSION=${CIRCLE_TAG//v}
             yarn run make
       - run:
           name: Widevine Signature

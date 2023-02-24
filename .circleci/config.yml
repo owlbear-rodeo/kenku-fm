@@ -185,9 +185,9 @@ jobs:
       - run:
           name: Yarn Make
           command: |
-            export CI=true
-            export SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
-            export SENTRY_DSN=${SENTRY_DSN}
+            export CI="true"
+            export SENTRY_AUTH_TOKEN="${SENTRY_AUTH_TOKEN}"
+            export SENTRY_DSN="${SENTRY_DSN}"
             yarn run make
       - run:
           name: Widevine Signature

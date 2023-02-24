@@ -1,4 +1,5 @@
 const SentryWebpackPlugin = require("@sentry/webpack-plugin");
+const version = require('./package.json').version;
 
 const isProduction = process.env.CI;
 
@@ -34,7 +35,7 @@ if (isProduction) {
       include: ["./.webpack/main/**/*"],
       urlPrefix: "~/.webpack/main",
       authToken: process.env.SENTRY_AUTH_TOKEN,
-      release: `Kenku-FM@${process.env.VERSION}`,
+      release: `Kenku-FM@${version}`,
     }),
   ]
 }

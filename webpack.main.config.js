@@ -9,7 +9,7 @@ module.exports = {
    */
   entry: "./src/index.ts",
   output: {
-    sourceMapFilename: "[id].[contenthash].min.cjs"
+    sourceMapFilename: "[id].[contenthash].min.js"
   },
   // Put your normal webpack config below here
   module: {

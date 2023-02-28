@@ -4,12 +4,9 @@ import {
   createAudioPlayer,
   getVoiceConnection,
   joinVoiceChannel,
-  NoSubscriberBehavior,
-  generateDependencyReport
+  NoSubscriberBehavior
 } from "@discordjs/voice";
 import log from "electron-log";
-
-console.log(generateDependencyReport())
 
 type VoiceChannel = {
   id: string;

@@ -25,16 +25,26 @@ commands:
       - run:
           name: Install Dependencies
           command: yarn install --non-interactive --frozen-lockfile
+
+  yarn-make:
+      steps:
+        - run:
+            name: Make Package
+            command: yarn run make
+      environment:
+        CI: true
+        SENTRY_AUTH_TOKEN: ${SENTRY_AUTH_TOKEN}
+        SENTRY_DSN: ${SENTRY_DSN}
   
   publish-electron-app:
     steps:
       - run:
           name: Publish
-          command: |
-            CI=true
-            SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
-            SENTRY_DSN=${SENTRY_DSN}
-            yarn run publish
+          command: yarn run publish
+    environment:
+      CI: true
+      SENTRY_AUTH_TOKEN: ${SENTRY_AUTH_TOKEN}
+      SENTRY_DSN: ${SENTRY_DSN}
   
   get-images:
     steps:
@@ -118,14 +128,7 @@ jobs:
           command: | 
             mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
             rm -rf ./kenku-fm-assets
-      - run:
-          name: Yarn Make
-          shell: bash.exe
-          command: |
-            export CI="true"
-            export SENTRY_AUTH_TOKEN="${SENTRY_AUTH_TOKEN}"
-            export SENTRY_DSN="${SENTRY_DSN}"
-            yarn run make
+      - yarn-make
       - run:
           name: Signtool
           command: |
@@ -182,13 +185,7 @@ jobs:
             - ./node_modules
       - get-images
       - move-images
-      - run:
-          name: Yarn Make
-          command: |
-            export CI="true"
-            export SENTRY_AUTH_TOKEN="${SENTRY_AUTH_TOKEN}"
-            export SENTRY_DSN="${SENTRY_DSN}"
-            yarn run make
+      - yarn-make
       - run:
           name: Widevine Signature
           command: |

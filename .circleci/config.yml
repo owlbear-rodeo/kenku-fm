@@ -189,7 +189,7 @@ jobs:
       - run:
           name: Make Package
           command: |
-            echo "${SENTRY_DSN}"
+            echo $SENTRY_DSN
             yarn run make
           environment:
             CI: "true"

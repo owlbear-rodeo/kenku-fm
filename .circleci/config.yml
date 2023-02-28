@@ -34,8 +34,6 @@ commands:
             command: yarn run make
             environment:
               CI: "true"
-              SENTRY_AUTH_TOKEN: "${SENTRY_AUTH_TOKEN}"
-              SENTRY_DSN: "${SENTRY_DSN}"
   
   publish-electron-app:
     steps:
@@ -44,8 +42,6 @@ commands:
           command: yarn run publish
           environment:
             CI: "true"
-            SENTRY_AUTH_TOKEN: "${SENTRY_AUTH_TOKEN}"
-            SENTRY_DSN: "${SENTRY_DSN}"
   
   get-images:
     steps:

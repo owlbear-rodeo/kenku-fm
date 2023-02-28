@@ -7,7 +7,7 @@
   "scripts": {
     "start": "electron-forge start",
     "package": "env-cmd electron-forge package",
-    "make": "env-cmd electron-forge make",
+    "make": "env-cmd --no-override electron-forge make",
     "publish": "env-cmd electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },

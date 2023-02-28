@@ -34,8 +34,8 @@ commands:
             command: yarn run make
             environment:
               CI: "true"
-              SENTRY_AUTH_TOKEN: ${SENTRY_AUTH_TOKEN}
-              SENTRY_DSN: ${SENTRY_DSN}
+              SENTRY_AUTH_TOKEN: "${SENTRY_AUTH_TOKEN}"
+              SENTRY_DSN: "${SENTRY_DSN}"
   
   publish-electron-app:
     steps:
@@ -44,8 +44,8 @@ commands:
           command: yarn run publish
           environment:
             CI: "true"
-            SENTRY_AUTH_TOKEN: ${SENTRY_AUTH_TOKEN}
-            SENTRY_DSN: ${SENTRY_DSN}
+            SENTRY_AUTH_TOKEN: "${SENTRY_AUTH_TOKEN}"
+            SENTRY_DSN: "${SENTRY_DSN}"
   
   get-images:
     steps:
@@ -186,7 +186,15 @@ jobs:
             - ./node_modules
       - get-images
       - move-images
-      - yarn-make
+      - run:
+          name: Make Package
+          command: |
+            echo "${SENTRY_DSN}"
+            yarn run make
+          environment:
+            CI: "true"
+            SENTRY_AUTH_TOKEN: "${SENTRY_AUTH_TOKEN}"
+            SENTRY_DSN: "${SENTRY_DSN}"
       - run:
           name: Widevine Signature
           command: |

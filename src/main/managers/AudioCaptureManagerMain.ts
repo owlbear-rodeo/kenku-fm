@@ -179,7 +179,6 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
   };
 
   _handleStreamData = async (data: Buffer) => {
-    console.log(data);
     this._encoder?.write(data);
   };
 

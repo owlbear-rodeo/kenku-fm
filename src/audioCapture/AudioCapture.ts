@@ -4,7 +4,10 @@ import { ipcRenderer } from "electron";
 import PCMStream from "./PCMStream.worklet";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import Worker from "./StreamSender.worker";
+import Sync from "./StreamSync.worker";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import Sender from "./StreamSender.worker";
 
 /** Sample rate of the audio context */
 const SAMPLE_RATE = 48000;
@@ -29,6 +32,20 @@ const FRAME_DURATION_SECONDS = FRAME_DURATION / 1000;
  */
 const FRAME_SIZE =
   (SAMPLE_RATE * FRAME_DURATION_SECONDS * NUM_CHANNELS) / BYTES_PER_SAMPLE;
+
+const BUFFER_LENGTH = FRAME_SIZE * BYTES_PER_SAMPLE * 4;
+const KERNEL_LENGTH = FRAME_SIZE * BYTES_PER_SAMPLE * 2;
+const STATE_BUFFER_LENGTH = 16;
+const BYTES_PER_STATE = Float32Array.BYTES_PER_ELEMENT;
+
+const STATE = {
+  REQUEST_SEND: 0,
+  FRAMES_AVAILABLE: 1,
+  READ_INDEX: 2,
+  WRITE_INDEX: 3,
+  BUFFER_LENGTH: 4,
+  KERNEL_LENGTH: 5,
+};
 
 /**
  * Capture audio from browser views and external audio devices
@@ -70,12 +87,12 @@ export class AudioCapture {
       SAMPLE_RATE
     );
 
-    const states = new SharedArrayBuffer(16);
-    // Set performance buffer size to 1 second (0.02 * 50)
-    // and lowLatency buffer size to 20ms (0.02)
-    const bufferSize =
-      streamingMode === "performance" ? FRAME_SIZE * 50 : FRAME_SIZE;
-    const buffer = new SharedArrayBuffer(bufferSize);
+    const buffer = new SharedArrayBuffer(BUFFER_LENGTH * BYTES_PER_SAMPLE);
+    const states = new SharedArrayBuffer(STATE_BUFFER_LENGTH * BYTES_PER_STATE);
+
+    const States = new Int32Array(states);
+    Atomics.store(States, STATE.BUFFER_LENGTH, BUFFER_LENGTH);
+    Atomics.store(States, STATE.KERNEL_LENGTH, KERNEL_LENGTH);
 
     // Create PCM stream node
     await this._audioContext.audioWorklet.addModule(PCMStream);
@@ -88,16 +105,27 @@ export class AudioCapture {
     // Pipe the audio output into the stream
     this._audioOutputNode.connect(pcmStreamNode);
 
-    const streamSender = new Worker();
+    // Create websocket sender thread
+    const streamSender: Worker = new Sender();
     const websocketAddress = await ipcRenderer.invoke(
       "AUDIO_CAPTURE_GET_WEBSOCKET_ADDRESS"
     );
-    console.log(websocketAddress);
     streamSender.postMessage({
-      states,
-      buffer,
+      message: "init",
       address: `ws://localhost:${websocketAddress.port}`,
     });
+
+    // Create an audio sync thread
+    const streamSync: Worker = new Sync();
+    streamSync.postMessage({
+      states,
+      buffer,
+    });
+    streamSync.onmessage = (event) => {
+      streamSender.postMessage({ message: "data", data: event.data }, [
+        event.data.buffer,
+      ]);
+    };
   }
 
   setMuted(id: number, muted: boolean): void {

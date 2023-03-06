@@ -1,51 +1,51 @@
-import { ipcRenderer } from "electron";
+import { contextBridge, ipcRenderer } from "electron";
 
-import { AudioCapture } from "./AudioCapture";
+type Channel =
+  | "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM"
+  | "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM"
+  | "AUDIO_CAPTURE_BROWSER_VIEW_MUTED"
+  | "AUDIO_CAPTURE_SET_LOOPBACK"
+  | "AUDIO_CAPTURE_START_EXTERNAL_AUDIO_CAPTURE"
+  | "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE"
+  | "AUDIO_CAPTURE_START";
 
-const audioCapture = new AudioCapture();
-
-ipcRenderer.on(
+const validChannels: Channel[] = [
   "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
-  (_, viewId: number, mediaSourceId: string) => {
-    audioCapture.startBrowserViewStream(viewId, mediaSourceId);
-  }
-);
-
-ipcRenderer.on(
   "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
-  (_, viewId: number) => {
-    audioCapture.stopBrowserViewStream(viewId);
-  }
-);
-
-ipcRenderer.on(
   "AUDIO_CAPTURE_BROWSER_VIEW_MUTED",
-  (_, viewId: number, muted: boolean) => {
-    audioCapture.setMuted(viewId, muted);
-  }
-);
-
-ipcRenderer.on("AUDIO_CAPTURE_SET_LOOPBACK", (_, loopback: boolean) => {
-  audioCapture.setLoopback(loopback);
-});
-
-ipcRenderer.on(
+  "AUDIO_CAPTURE_SET_LOOPBACK",
   "AUDIO_CAPTURE_START_EXTERNAL_AUDIO_CAPTURE",
-  (_, deviceId: string) => {
-    audioCapture.startExternalAudioCapture(deviceId);
-  }
-);
-
-ipcRenderer.on(
   "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE",
-  (_, deviceId: string) => {
-    audioCapture.stopExternalAudioCapture(deviceId);
-  }
-);
-
-ipcRenderer.on(
   "AUDIO_CAPTURE_START",
-  (_, streamingMode: "lowLatency" | "performance") => {
-    audioCapture.start(streamingMode);
+];
+
+const api = {
+  on: (channel: Channel, callback: (...args: any[]) => any) => {
+    if (validChannels.includes(channel)) {
+      const newCallback = (_: any, ...args: any[]) => callback(args);
+      ipcRenderer.on(channel, newCallback);
+    }
+  },
+  error: (message: string) => {
+    ipcRenderer.emit("ERROR", null, message);
+  },
+  startStream: (numChannels: number, frameSize: number, sampleRate: number) => {
+    ipcRenderer.send(
+      "AUDIO_CAPTURE_STREAM_START",
+      numChannels,
+      frameSize,
+      sampleRate
+    );
+  },
+  getWebsocketAddress: async () => {
+    return ipcRenderer.invoke("AUDIO_CAPTURE_GET_WEBSOCKET_ADDRESS");
+  },
+};
+
+declare global {
+  interface Window {
+    capture: typeof api;
   }
-);
+}
+
+contextBridge.exposeInMainWorld("capture", api);

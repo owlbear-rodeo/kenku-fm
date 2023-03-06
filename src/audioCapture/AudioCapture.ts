@@ -1,4 +1,3 @@
-import { ipcRenderer } from "electron";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import SharedBuffer from "./SharedBuffer.worklet";
@@ -82,12 +81,7 @@ export class AudioCapture {
 
     await this._setupLoopback();
 
-    ipcRenderer.send(
-      "AUDIO_CAPTURE_STREAM_START",
-      NUM_CHANNELS,
-      FRAME_SIZE,
-      SAMPLE_RATE
-    );
+    window.capture.startStream(NUM_CHANNELS, FRAME_SIZE, SAMPLE_RATE);
 
     const buffers = Array.from(Array(NUM_CHANNELS)).map(
       () =>
@@ -114,9 +108,7 @@ export class AudioCapture {
 
     // Create websocket sender thread
     const streamSender: Worker = new Sender();
-    const websocketAddress = await ipcRenderer.invoke(
-      "AUDIO_CAPTURE_GET_WEBSOCKET_ADDRESS"
-    );
+    const websocketAddress = await window.capture.getWebsocketAddress();
     streamSender.postMessage({
       message: "init",
       address: `ws://localhost:${websocketAddress.port}`,
@@ -178,9 +170,7 @@ export class AudioCapture {
       console.error(
         `Unable to start stream for external audio device ${deviceId}`
       );
-      ipcRenderer.emit(
-        "ERROR",
-        null,
+      window.capture.error(
         `Unable to start stream for external audio device ${deviceId}`
       );
       console.error(error);
@@ -246,11 +236,7 @@ export class AudioCapture {
       output.connect(this._audioOutputNode);
     } catch (error) {
       console.error(`Unable to start stream for web view ${viewId}`);
-      ipcRenderer.emit(
-        "ERROR",
-        null,
-        `Unable to start stream for web view ${viewId}`
-      );
+      window.capture.error(`Unable to start stream for web view ${viewId}`);
       console.error(error);
     }
   }

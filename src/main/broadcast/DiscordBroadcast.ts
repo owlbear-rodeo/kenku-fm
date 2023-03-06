@@ -73,7 +73,7 @@ export class DiscordBroadcast {
             let voiceChannels: VoiceChannel[] = [];
             const channels = await guild.channels.fetch();
             channels.forEach((channel) => {
-              if (channel.type === ChannelType.GuildVoice) {
+              if (channel.isVoiceBased()) {
                 voiceChannels.push({
                   id: channel.id,
                   name: channel.name,
@@ -115,7 +115,7 @@ export class DiscordBroadcast {
   ) => {
     if (this.client) {
       const channel = await this.client.channels.fetch(channelId);
-      if (channel && channel.type === ChannelType.GuildVoice) {
+      if (channel && channel.isVoiceBased() && channel.joinable) {
         try {
           const connection = joinVoiceChannel({
             channelId: channel.id,
@@ -158,6 +158,12 @@ export class DiscordBroadcast {
             `Error connecting to voice channel: ${e.message}`
           );
         }
+      } else {
+        event.reply("DISCORD_CHANNEL_LEFT", channelId);
+        event.reply(
+          "ERROR",
+          `Unable to join voice channel. This channel might be full or this bot might not have permission to join.`
+        );
       }
     }
   };

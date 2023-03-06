@@ -15,7 +15,6 @@ interface AudioCaptureManagerEvents {
 /**
  * Manager to capture audio from browser views and external audio devices
  * This class is to be run on the main thread
- * For the render thread counterpart see `AudioCaptureManagerPreload.ts`
  */
 export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEvents> {
   _browserView: BrowserView;
@@ -36,6 +35,22 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
       },
     });
     this._browserView.webContents.loadURL(AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY);
+    this._browserView.webContents.openDevTools();
+    this._browserView.webContents.session.webRequest.onHeadersReceived(
+      (details, callback) => {
+        if (details.url.endsWith("audio_capture_window")) {
+          details.responseHeaders["Cross-Origin-Opener-Policy"] = [
+            "same-origin",
+          ];
+          details.responseHeaders["Cross-Origin-Embedder-Policy"] = [
+            "require-corp",
+          ];
+          callback({ responseHeaders: details.responseHeaders });
+        } else {
+          callback({});
+        }
+      }
+    );
     this._wss = new WebSocketServer({ port: 0 });
 
     ipcMain.on("AUDIO_CAPTURE_START", this._handleStart);
@@ -164,6 +179,7 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
   };
 
   _handleStreamData = async (data: Buffer) => {
+    console.log(data);
     this._encoder?.write(data);
   };
 

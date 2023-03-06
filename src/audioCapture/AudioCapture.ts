@@ -2,6 +2,9 @@ import { ipcRenderer } from "electron";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import PCMStream from "./PCMStream.worklet";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import Worker from "./StreamSender.worker";
 
 /** Sample rate of the audio context */
 const SAMPLE_RATE = 48000;
@@ -28,11 +31,9 @@ const FRAME_SIZE =
   (SAMPLE_RATE * FRAME_DURATION_SECONDS * NUM_CHANNELS) / BYTES_PER_SAMPLE;
 
 /**
- * Manager to capture audio from browser views and external audio devices
- * This class is to be run on the renderer thread
- * For the main thread counterpart see `AudioCaptureManagerMain.ts`
+ * Capture audio from browser views and external audio devices
  */
-export class AudioCaptureManagerPreload {
+export class AudioCapture {
   /** Audio context to mix media streams into one audio output */
   _audioContext?: AudioContext;
   /** Audio output node that streams will connect to */
@@ -48,8 +49,6 @@ export class AudioCaptureManagerPreload {
   _externalAudioStreams: Record<string, MediaStream> = {};
   _externalAudioStreamOutputs: Record<string, GainNode> = {};
 
-  _ws?: WebSocket;
-
   /**
    * Create the Audio Context, setup the communication socket and start the
    * internal PCM stream for communicating between the renderer and main context
@@ -62,7 +61,6 @@ export class AudioCaptureManagerPreload {
     });
     this._audioOutputNode = this._audioContext.createGain();
 
-    await this._setupWebsocket();
     await this._setupLoopback();
 
     ipcRenderer.send(
@@ -72,28 +70,34 @@ export class AudioCaptureManagerPreload {
       SAMPLE_RATE
     );
 
+    const states = new SharedArrayBuffer(16);
+    // Set performance buffer size to 1 second (0.02 * 50)
+    // and lowLatency buffer size to 20ms (0.02)
+    const bufferSize =
+      streamingMode === "performance" ? FRAME_SIZE * 50 : FRAME_SIZE;
+    const buffer = new SharedArrayBuffer(bufferSize);
+
     // Create PCM stream node
     await this._audioContext.audioWorklet.addModule(PCMStream);
     const pcmStreamNode = new AudioWorkletNode(
       this._audioContext,
-      "pcm-stream",
-      {
-        parameterData: {
-          // Set performance buffer size to 1 second (0.02 * 50)
-          // and lowLatency buffer size to 20ms (0.02)
-          bufferSize:
-            streamingMode === "performance" ? FRAME_SIZE * 50 : FRAME_SIZE,
-        },
-      }
+      "pcm-stream"
     );
-    pcmStreamNode.port.onmessage = (event) => {
-      if (this._ws && this._ws.readyState === WebSocket.OPEN) {
-        this._ws.send(event.data);
-      }
-    };
+    pcmStreamNode.port.postMessage({ states, buffer });
 
     // Pipe the audio output into the stream
     this._audioOutputNode.connect(pcmStreamNode);
+
+    const streamSender = new Worker();
+    const websocketAddress = await ipcRenderer.invoke(
+      "AUDIO_CAPTURE_GET_WEBSOCKET_ADDRESS"
+    );
+    console.log(websocketAddress);
+    streamSender.postMessage({
+      states,
+      buffer,
+      address: `ws://localhost:${websocketAddress.port}`,
+    });
   }
 
   setMuted(id: number, muted: boolean): void {
@@ -139,6 +143,11 @@ export class AudioCaptureManagerPreload {
       console.error(
         `Unable to start stream for external audio device ${deviceId}`
       );
+      ipcRenderer.emit(
+        "ERROR",
+        null,
+        `Unable to start stream for external audio device ${deviceId}`
+      );
       console.error(error);
     }
   }
@@ -152,20 +161,6 @@ export class AudioCaptureManagerPreload {
       delete this._externalAudioStreams[deviceId];
       delete this._externalAudioStreamOutputs[deviceId];
     }
-  }
-
-  async _setupWebsocket(): Promise<void> {
-    const websocketAddress = await ipcRenderer.invoke(
-      "AUDIO_CAPTURE_GET_WEBSOCKET_ADDRESS"
-    );
-    this._ws = new WebSocket(`ws://localhost:${websocketAddress.port}`);
-    this._ws.addEventListener("close", (event) => {
-      ipcRenderer.emit(
-        "ERROR",
-        null,
-        `WebSocket closed with code ${event.code}`
-      );
-    });
   }
 
   async _setupLoopback(): Promise<void> {
@@ -216,6 +211,11 @@ export class AudioCaptureManagerPreload {
       output.connect(this._audioOutputNode);
     } catch (error) {
       console.error(`Unable to start stream for web view ${viewId}`);
+      ipcRenderer.emit(
+        "ERROR",
+        null,
+        `Unable to start stream for web view ${viewId}`
+      );
       console.error(error);
     }
   }

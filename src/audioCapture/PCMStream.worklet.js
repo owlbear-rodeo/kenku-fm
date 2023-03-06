@@ -1,22 +1,39 @@
+const STATE = {
+  // Flag for Atomics.wait() and notify()
+  REQUEST_SEND: 0,
+};
+
 /**
  * 16Bit PCM data stream that will post a message when a ring buffer with a size
  * of the input parameter `bufferSize` completes a full cycle
  */
 class PCMStream extends AudioWorkletProcessor {
-  /** Ring buffer of audio data */
+  /** @type {Int16Array} - Ring buffer of audio data */
   buffer;
-  /** Current index of the ring buffer */
+  /** @type {Int32Array} - Shared states between this and the sender */
+  states;
+  /** @type {number} - Current index of the ring buffer */
   pointer;
+  /** @type {boolean} - Has the processor received the shared buffers */
+  isInitialized;
 
   constructor(config) {
     super(config);
-    // Buffer size in bytes
-    const bufferSize = config.parameterData.bufferSize;
-    this.buffer = new Int16Array(bufferSize);
     this.pointer = 0;
+    this.isInitialized = false;
+    this.port.onmessage = (event) => {
+      this.states = new Int32Array(event.data.states);
+      this.buffer = new Int16Array(event.data.buffer);
+      this.isInitialized = true;
+    };
   }
 
+  /**
+   * @param {Float32Array[][]} inputs
+   */
   process(inputs) {
+    if (!this.isInitialized) return true;
+
     const input = inputs[0];
     // Ensure input is a stereo signal
     if (input && input.length === 2) {
@@ -37,8 +54,8 @@ class PCMStream extends AudioWorkletProcessor {
       this.buffer[this.pointer] = pcm[i];
       this.pointer = (this.pointer + 1) % this.buffer.length;
       if (this.pointer === 0) {
-        // Copy data and post it back
-        this.port.postMessage(this.buffer);
+        // Notify worker
+        Atomics.notify(this.states, STATE.REQUEST_SEND, 1);
       }
     }
   }

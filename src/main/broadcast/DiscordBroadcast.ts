@@ -133,6 +133,23 @@ export class DiscordBroadcast {
               `Error connecting to voice channel: ${e.message}`
             );
           });
+          // Work around Discord API breakage
+          // https://github.com/discordjs/discord.js/issues/9185
+          connection.on("stateChange", (oldState, newState) => {
+            const oldNetworking = Reflect.get(oldState, "networking");
+            const newNetworking = Reflect.get(newState, "networking");
+
+            const networkStateChangeHandler = (
+              oldNetworkState: any,
+              newNetworkState: any
+            ) => {
+              const newUdp = Reflect.get(newNetworkState, "udp");
+              clearInterval(newUdp?.keepAliveInterval);
+            };
+
+            oldNetworking?.off("stateChange", networkStateChangeHandler);
+            newNetworking?.on("stateChange", networkStateChangeHandler);
+          });
         } catch (e) {
           console.error(e);
           event.reply("DISCORD_CHANNEL_LEFT", channelId);

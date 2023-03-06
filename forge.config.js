@@ -92,7 +92,12 @@ const config = {
     {
       name: "@owlbear-rodeo/forge-externals-plugin",
       config: {
-        externals: ["opusscript", "prism-media"],
+        externals: [
+          "opusscript",
+          "prism-media",
+          "libsodium-wrappers",
+          "discord.js",
+        ],
         includeDeps: true,
       },
     },

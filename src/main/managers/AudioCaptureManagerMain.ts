@@ -29,7 +29,6 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
       },
     });
     this._browserView.webContents.loadURL(AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY);
-    this._browserView.webContents.openDevTools();
     this._browserView.webContents.session.webRequest.onHeadersReceived(
       (details, callback) => {
         if (

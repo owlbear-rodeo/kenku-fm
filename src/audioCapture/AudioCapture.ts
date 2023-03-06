@@ -1,7 +1,7 @@
 import { ipcRenderer } from "electron";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import PCMStream from "./PCMStream.worklet";
+import SharedBuffer from "./SharedBuffer.worklet";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Sync from "./StreamSync.worker";
@@ -33,10 +33,12 @@ const FRAME_DURATION_SECONDS = FRAME_DURATION / 1000;
 const FRAME_SIZE =
   (SAMPLE_RATE * FRAME_DURATION_SECONDS * NUM_CHANNELS) / BYTES_PER_SAMPLE;
 
-const BUFFER_LENGTH = FRAME_SIZE * BYTES_PER_SAMPLE * 4;
-const KERNEL_LENGTH = FRAME_SIZE * BYTES_PER_SAMPLE * 2;
-const STATE_BUFFER_LENGTH = 16;
-const BYTES_PER_STATE = Float32Array.BYTES_PER_ELEMENT;
+/** Worklet uses Float32 samples */
+const WORKLET_BYTES_PER_SAMPLE = Float32Array.BYTES_PER_ELEMENT;
+const WORKLET_BUFFER_LENGTH = 8192;
+const WORKLET_KERNEL_LENGTH = FRAME_SIZE * WORKLET_BYTES_PER_SAMPLE;
+const WORKLET_STATE_BUFFER_LENGTH = 16;
+const WORKLET_BYTES_PER_STATE = Float32Array.BYTES_PER_ELEMENT;
 
 const STATE = {
   REQUEST_SEND: 0,
@@ -87,23 +89,28 @@ export class AudioCapture {
       SAMPLE_RATE
     );
 
-    const buffer = new SharedArrayBuffer(BUFFER_LENGTH * BYTES_PER_SAMPLE);
-    const states = new SharedArrayBuffer(STATE_BUFFER_LENGTH * BYTES_PER_STATE);
+    const buffers = Array.from(Array(NUM_CHANNELS)).map(
+      () =>
+        new SharedArrayBuffer(WORKLET_BUFFER_LENGTH * WORKLET_BYTES_PER_SAMPLE)
+    );
+    const states = new SharedArrayBuffer(
+      WORKLET_STATE_BUFFER_LENGTH * WORKLET_BYTES_PER_STATE
+    );
 
     const States = new Int32Array(states);
-    Atomics.store(States, STATE.BUFFER_LENGTH, BUFFER_LENGTH);
-    Atomics.store(States, STATE.KERNEL_LENGTH, KERNEL_LENGTH);
+    Atomics.store(States, STATE.BUFFER_LENGTH, WORKLET_BUFFER_LENGTH);
+    Atomics.store(States, STATE.KERNEL_LENGTH, WORKLET_KERNEL_LENGTH);
 
-    // Create PCM stream node
-    await this._audioContext.audioWorklet.addModule(PCMStream);
-    const pcmStreamNode = new AudioWorkletNode(
+    // Create shared buffer worklet
+    await this._audioContext.audioWorklet.addModule(SharedBuffer);
+    const sharedBufferNode = new AudioWorkletNode(
       this._audioContext,
-      "pcm-stream"
+      "shared-buffer"
     );
-    pcmStreamNode.port.postMessage({ states, buffer });
+    sharedBufferNode.port.postMessage({ states, buffers });
 
     // Pipe the audio output into the stream
-    this._audioOutputNode.connect(pcmStreamNode);
+    this._audioOutputNode.connect(sharedBufferNode);
 
     // Create websocket sender thread
     const streamSender: Worker = new Sender();
@@ -119,7 +126,7 @@ export class AudioCapture {
     const streamSync: Worker = new Sync();
     streamSync.postMessage({
       states,
-      buffer,
+      buffers,
     });
     streamSync.onmessage = (event) => {
       streamSender.postMessage({ message: "data", data: event.data }, [

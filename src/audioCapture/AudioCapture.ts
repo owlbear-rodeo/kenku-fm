@@ -34,8 +34,6 @@ const FRAME_SIZE =
 
 /** Worklet uses Float32 samples */
 const WORKLET_BYTES_PER_SAMPLE = Float32Array.BYTES_PER_ELEMENT;
-const WORKLET_BUFFER_LENGTH = 8192;
-const WORKLET_KERNEL_LENGTH = FRAME_SIZE * WORKLET_BYTES_PER_SAMPLE;
 const WORKLET_STATE_BUFFER_LENGTH = 16;
 const WORKLET_BYTES_PER_STATE = Float32Array.BYTES_PER_ELEMENT;
 
@@ -83,17 +81,23 @@ export class AudioCapture {
 
     window.capture.startStream(NUM_CHANNELS, FRAME_SIZE, SAMPLE_RATE);
 
+    let bufferLength = 8192;
+    let kernelLength = FRAME_SIZE * WORKLET_BYTES_PER_SAMPLE;
+    if (streamingMode === "performance") {
+      bufferLength *= 10;
+      kernelLength *= 10;
+    }
+
     const buffers = Array.from(Array(NUM_CHANNELS)).map(
-      () =>
-        new SharedArrayBuffer(WORKLET_BUFFER_LENGTH * WORKLET_BYTES_PER_SAMPLE)
+      () => new SharedArrayBuffer(bufferLength * WORKLET_BYTES_PER_SAMPLE)
     );
     const states = new SharedArrayBuffer(
       WORKLET_STATE_BUFFER_LENGTH * WORKLET_BYTES_PER_STATE
     );
 
     const States = new Int32Array(states);
-    Atomics.store(States, STATE.BUFFER_LENGTH, WORKLET_BUFFER_LENGTH);
-    Atomics.store(States, STATE.KERNEL_LENGTH, WORKLET_KERNEL_LENGTH);
+    Atomics.store(States, STATE.BUFFER_LENGTH, bufferLength);
+    Atomics.store(States, STATE.KERNEL_LENGTH, kernelLength);
 
     // Create shared buffer worklet
     await this._audioContext.audioWorklet.addModule(SharedBuffer);

@@ -26,12 +26,6 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
     this._browserView = new BrowserView({
       webPreferences: {
         preload: AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY,
-        // Disable sandbox for the audio capture window
-        // This allows us to use a web worker in the preload script
-        // https://github.com/electron/forge/issues/2931
-        // This has little security concerns as we don't load any third party
-        // content in the capture window
-        sandbox: false,
       },
     });
     this._browserView.webContents.loadURL(AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY);

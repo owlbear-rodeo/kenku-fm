@@ -38,7 +38,10 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
     this._browserView.webContents.openDevTools();
     this._browserView.webContents.session.webRequest.onHeadersReceived(
       (details, callback) => {
-        if (details.url.endsWith("audio_capture_window")) {
+        if (
+          details.url.endsWith("audio_capture_window") ||
+          details.url.endsWith("audio_capture_window/index.html")
+        ) {
           details.responseHeaders["Cross-Origin-Opener-Policy"] = [
             "same-origin",
           ];
@@ -47,7 +50,7 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
           ];
           callback({ responseHeaders: details.responseHeaders });
         } else {
-          callback({});
+          callback(details.responseHeaders);
         }
       }
     );

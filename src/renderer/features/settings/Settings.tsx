@@ -16,10 +16,9 @@ import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import Select, { SelectChangeEvent } from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
+import FormLabel from "@mui/material/FormLabel";
 import FormHelperText from "@mui/material/FormHelperText";
+import Slider from "@mui/material/Slider";
 
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
@@ -33,8 +32,7 @@ import {
   setRemoteAddress,
   setRemotePort,
   setURLBarEnabled,
-  setStreamingMode,
-  StreamingMode,
+  setStreamingBufferScale,
 } from "./settingsSlice";
 
 type SettingsProps = {
@@ -223,30 +221,37 @@ export function Settings({ open, onClose }: SettingsProps) {
     </Stack>
   );
 
-  const [streamingModeChanged, setStreamingModeChanged] = useState(false);
+  const [streamingBufferChanged, setStreamingBufferChanged] = useState(false);
 
-  function handleStreamingModeChnage(event: SelectChangeEvent) {
-    dispatch(setStreamingMode(event.target.value as StreamingMode));
-    setStreamingModeChanged(true);
+  function handleStreamingBufferChange(value: number) {
+    dispatch(setStreamingBufferScale(value));
   }
 
   useEffect(() => {
-    window.kenku.startAudioCapture(settings.streamingMode);
+    window.kenku.startAudioCapture(settings.streamingBufferScale);
   }, []);
 
   const streamingSettings = (
     <FormControl fullWidth variant="standard" margin="dense">
-      <InputLabel id="streaming-mode-select-label">Mode</InputLabel>
-      <Select
-        labelId="streaming-mode-select-label"
-        label="Mode"
-        value={settings.streamingMode}
-        onChange={handleStreamingModeChnage}
-      >
-        <MenuItem value="lowLatency">Low Latency</MenuItem>
-        <MenuItem value="performance">Performance</MenuItem>
-      </Select>
-      {streamingModeChanged && (
+      <FormLabel id="buffer-slider-label">Buffer Size</FormLabel>
+      <FormHelperText>
+        Increasing the buffer size will add a delay but help prevent stuttering
+      </FormHelperText>
+      <Slider
+        aria-label="Buffer size"
+        value={settings.streamingBufferScale}
+        defaultValue={30}
+        valueLabelFormat={(v) => `${v}x`}
+        valueLabelDisplay="auto"
+        step={1}
+        marks
+        min={1}
+        max={20}
+        onChange={(_, v) => handleStreamingBufferChange(v as number)}
+        onChangeCommitted={() => setStreamingBufferChanged(true)}
+      />
+
+      {streamingBufferChanged && (
         <FormHelperText sx={{ color: "primary.main" }}>
           * Restart to apply change
         </FormHelperText>

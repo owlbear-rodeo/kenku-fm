@@ -56,11 +56,21 @@ const migrations: any = {
       },
     };
   },
+  // v1.2.5 - Add buffer scale
+  4: (state: RootState): RootState => {
+    return {
+      ...state,
+      settings: {
+        ...state.settings,
+        streamingBufferScale: 1,
+      },
+    };
+  },
 };
 
 const persistConfig = {
   key: "root",
-  version: 3,
+  version: 4,
   storage,
   whitelist: ["bookmarks", "settings"],
   migrate: createMigrate(migrations, { debug: false }),

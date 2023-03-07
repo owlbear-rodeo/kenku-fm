@@ -69,7 +69,7 @@ export class AudioCapture {
    * Create the Audio Context, setup the communication socket and start the
    * internal PCM stream for communicating between the renderer and main context
    */
-  async start(streamingMode: "lowLatency" | "performance"): Promise<void> {
+  async start(bufferScale = 1): Promise<void> {
     this._audioContext = new AudioContext({
       // Setting the latency hint to `playback` fixes audio glitches on some Windows 11 machines.
       latencyHint: "playback",
@@ -81,12 +81,8 @@ export class AudioCapture {
 
     window.capture.startStream(NUM_CHANNELS, FRAME_SIZE, SAMPLE_RATE);
 
-    let bufferLength = 8192;
-    let kernelLength = FRAME_SIZE * WORKLET_BYTES_PER_SAMPLE;
-    if (streamingMode === "performance") {
-      bufferLength *= 10;
-      kernelLength *= 10;
-    }
+    let bufferLength = 8192 * bufferScale;
+    let kernelLength = FRAME_SIZE * WORKLET_BYTES_PER_SAMPLE * bufferScale;
 
     const buffers = Array.from(Array(NUM_CHANNELS)).map(
       () => new SharedArrayBuffer(bufferLength * WORKLET_BYTES_PER_SAMPLE)

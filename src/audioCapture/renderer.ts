@@ -41,6 +41,6 @@ window.capture.on("AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE", (args) => {
 });
 
 window.capture.on("AUDIO_CAPTURE_START", (args) => {
-  const [streamingMode] = args;
-  audioCapture.start(streamingMode);
+  const [bufferScale] = args;
+  audioCapture.start(bufferScale);
 });

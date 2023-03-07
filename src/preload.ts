@@ -44,9 +44,9 @@ const validChannels: Channel[] = [
 ];
 
 // Capture audio when new views are loaded
-ipcRenderer.on("BROWSER_VIEW_LOADED",  (_, viewId: number) => {
+ipcRenderer.on("BROWSER_VIEW_LOADED", (_, viewId: number) => {
   ipcRenderer.send("AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM", viewId);
-})
+});
 
 const api = {
   connect: (token: string) => {
@@ -152,8 +152,8 @@ const api = {
   stopExternalAudioCapture: (deviceId: string) => {
     ipcRenderer.send("AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE", deviceId);
   },
-  startAudioCapture: (streamingMode: "lowLatency" | "performance") => {
-    ipcRenderer.send("AUDIO_CAPTURE_START", streamingMode);
+  startAudioCapture: (bufferScale: number) => {
+    ipcRenderer.send("AUDIO_CAPTURE_START", bufferScale);
   },
   toggleMaximize: () => {
     ipcRenderer.send("WINDOW_TOGGLE_MAXIMIZE");

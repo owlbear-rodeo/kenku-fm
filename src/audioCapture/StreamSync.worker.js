@@ -1,3 +1,7 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import Sender from "./StreamSender.worker";
+
 const STATE = {
   REQUEST_SEND: 0,
   FRAMES_AVAILABLE: 1,
@@ -6,6 +10,9 @@ const STATE = {
   BUFFER_LENGTH: 4,
   KERNEL_LENGTH: 5,
 };
+
+/** @type {Worker} - A sub worker for sending the stream over websocket */
+const streamSender = new Sender();
 
 /** Sync data from the Audio Worklet and convert it to PCM */
 class Sync {
@@ -55,9 +62,9 @@ class Sync {
       // Mark frames as processed
       this.states[STATE.FRAMES_AVAILABLE] -= this.kernelLength;
 
-      // Send PCM data back to main thread
-      const result = this.converter.convert(this.kernelBuffers).slice();
-      postMessage(result, [result.buffer]);
+      // Send PCM data to the sub worker
+      const data = this.converter.convert(this.kernelBuffers);
+      streamSender.postMessage({ message: "data", data });
 
       // Reset the request render bit, and wait again.
       Atomics.store(this.states, STATE.REQUEST_SEND, 0);
@@ -133,5 +140,11 @@ onmessage = (event) => {
   const kernelLength = states[STATE.KERNEL_LENGTH];
   const buffers = event.data.buffers.map((buffer) => new Float32Array(buffer));
   const sync = new Sync(states, buffers, bufferLength, kernelLength);
-  sync.waitOnSendRequest();
+  streamSender.postMessage({
+    message: "init",
+    address: event.data.websocketAddress,
+  });
+  streamSender.onmessage = () => {
+    sync.waitOnSendRequest();
+  };
 };

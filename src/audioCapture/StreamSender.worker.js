@@ -12,6 +12,7 @@ onmessage = (event) => {
     ws.addEventListener("error", (event) => {
       console.error(event);
     });
+    postMessage("init");
   } else if (event.data.message === "data") {
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(event.data.data);

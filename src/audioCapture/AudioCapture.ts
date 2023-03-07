@@ -4,9 +4,6 @@ import SharedBuffer from "./SharedBuffer.worklet";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Sync from "./StreamSync.worker";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import Sender from "./StreamSender.worker";
 
 /** Sample rate of the audio context */
 const SAMPLE_RATE = 48000;
@@ -106,25 +103,14 @@ export class AudioCapture {
     // Pipe the audio output into the stream
     this._audioOutputNode.connect(sharedBufferNode);
 
-    // Create websocket sender thread
-    const streamSender: Worker = new Sender();
     const websocketAddress = await window.capture.getWebsocketAddress();
-    streamSender.postMessage({
-      message: "init",
-      address: `ws://localhost:${websocketAddress.port}`,
-    });
-
     // Create an audio sync thread
     const streamSync: Worker = new Sync();
     streamSync.postMessage({
       states,
       buffers,
+      websocketAddress: `ws://localhost:${websocketAddress.port}`,
     });
-    streamSync.onmessage = (event) => {
-      streamSender.postMessage({ message: "data", data: event.data }, [
-        event.data.buffer,
-      ]);
-    };
   }
 
   setMuted(id: number, muted: boolean): void {

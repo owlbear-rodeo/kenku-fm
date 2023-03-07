@@ -164,6 +164,9 @@ const api = {
   close: () => {
     ipcRenderer.send("WINDOW_CLOSE");
   },
+  clearCache: () => {
+    return ipcRenderer.invoke("CLEAR_CACHE");
+  },
   platform: ipcRenderer.sendSync("GET_PLATFORM") as string,
   version: ipcRenderer.sendSync("GET_VERSION") as string,
 };

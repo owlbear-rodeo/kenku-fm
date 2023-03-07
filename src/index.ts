@@ -67,7 +67,7 @@ const createWindow = (): void => {
 
   // Prevent app suspension for Kenku FM to avoid playback issues
   const powerSaveBlockerId = powerSaveBlocker.start("prevent-app-suspension");
-  
+
   mainWindow.on("close", () => {
     session.destroy();
     powerSaveBlocker.stop(powerSaveBlockerId);
@@ -127,4 +127,11 @@ ipcMain.on("GET_VERSION", (event: Electron.IpcMainEvent) => {
 
 ipcMain.on("GET_PLATFORM", (event: Electron.IpcMainEvent) => {
   event.returnValue = os.platform();
+});
+
+ipcMain.handle("CLEAR_CACHE", async () => {
+  await session.defaultSession.clearCache();
+  await session.defaultSession.clearStorageData({
+    storages: ["cookies", "shadercache", "cachestorage"],
+  });
 });

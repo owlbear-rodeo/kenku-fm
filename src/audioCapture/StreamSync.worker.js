@@ -61,8 +61,8 @@ class Sync {
       this.states[STATE.FRAMES_AVAILABLE] -= this.kernelLength;
 
       // Send PCM data to the sub worker
-      const data = this.converter.convert(this.kernelBuffers);
-      streamSender.postMessage({ message: "data", data });
+      const data = this.converter.convert(this.kernelBuffers).slice();
+      streamSender.postMessage({ message: "data", data }, [data.buffer]);
 
       // Reset the request render bit, and wait again.
       Atomics.store(this.states, STATE.REQUEST_SEND, 0);

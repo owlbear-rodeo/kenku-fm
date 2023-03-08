@@ -61,7 +61,7 @@ class Sync {
       this.states[STATE.FRAMES_AVAILABLE] -= this.kernelLength;
 
       // Send PCM data to the sub worker
-      const data = this.converter.convert(this.kernelBuffers).slice();
+      const data = this.converter.convert(this.kernelBuffers);
       streamSender.postMessage({ message: "data", data }, [data.buffer]);
 
       // Reset the request render bit, and wait again.
@@ -71,64 +71,35 @@ class Sync {
 }
 
 class PCMConverter {
-  /** @type {Float32Array} */
-  interleaveBuffer;
-  /** @type {Int16Array} */
-  pcmBuffer;
-
   /**
-   *
+   * Interleave multichannel samples to match PCM format
+   * Then convert from 32 bit float samples to 16 bit int
    * @param {Float32Array[]} input
    * @returns {Int16Array}
    */
   convert(input) {
-    return this.floatTo16BitPCM(this.interleave(input));
-  }
-
-  /**
-   * Convert from 32 bit float samples to 16 bit int
-   * @param {Float32Array} samples
-   * @returns {Int16Array}
-   */
-  floatTo16BitPCM(samples) {
-    if (!this.pcmBuffer) {
-      this.pcmBuffer = new Int16Array(samples.length);
-    }
-    let s;
-    for (let i = 0; i < samples.length; i++) {
-      // Clamp sample
-      s = Math.max(-1, Math.min(1, samples[i]));
-      // Map to int16 range (-32,768 to +32,767)
-      this.pcmBuffer[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
-    }
-    return this.pcmBuffer;
-  }
-
-  /**
-   * Interleave multichannel samples to match PCM format
-   * @param {Float32Array[]} input
-   * @returns {Float32Array}
-   */
-  interleave(input) {
     let length = 0;
     let channel = 0;
     for (channel = 0; channel < input.length; channel++) {
       length += input[channel].length;
     }
-    if (!this.interleaveBuffer) {
-      this.interleaveBuffer = new Float32Array(length);
-    }
+    const pcmBuffer = new Int16Array(length);
 
     let index = 0;
     let inputIndex = 0;
+    let s;
     while (index < length) {
       for (channel = 0; channel < input.length; channel++) {
-        this.interleaveBuffer[index] = input[channel][inputIndex];
+        // Clamp sample
+        s = Math.max(-1, Math.min(1, input[channel][inputIndex]));
+        // Map to int16 range (-32,768 to +32,767)
+        pcmBuffer[index] = s < 0 ? s * 0x8000 : s * 0x7fff;
         index++;
       }
       inputIndex++;
     }
-    return this.interleaveBuffer;
+
+    return pcmBuffer;
   }
 }
 

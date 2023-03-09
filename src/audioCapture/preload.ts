@@ -7,7 +7,8 @@ type Channel =
   | "AUDIO_CAPTURE_SET_LOOPBACK"
   | "AUDIO_CAPTURE_START_EXTERNAL_AUDIO_CAPTURE"
   | "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE"
-  | "AUDIO_CAPTURE_START";
+  | "AUDIO_CAPTURE_START"
+  | "AUDIO_CAPTURE_SIGNAL";
 
 const validChannels: Channel[] = [
   "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
@@ -17,6 +18,7 @@ const validChannels: Channel[] = [
   "AUDIO_CAPTURE_START_EXTERNAL_AUDIO_CAPTURE",
   "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE",
   "AUDIO_CAPTURE_START",
+  "AUDIO_CAPTURE_SIGNAL",
 ];
 
 const api = {
@@ -29,16 +31,8 @@ const api = {
   error: (message: string) => {
     ipcRenderer.emit("ERROR", null, message);
   },
-  startStream: (numChannels: number, frameSize: number, sampleRate: number) => {
-    ipcRenderer.send(
-      "AUDIO_CAPTURE_STREAM_START",
-      numChannels,
-      frameSize,
-      sampleRate
-    );
-  },
-  getWebsocketAddress: async () => {
-    return ipcRenderer.invoke("AUDIO_CAPTURE_GET_WEBSOCKET_ADDRESS");
+  signal: (data: unknown) => {
+    ipcRenderer.emit("AUDIO_CAPTURE_SIGNAL", data);
   },
 };
 

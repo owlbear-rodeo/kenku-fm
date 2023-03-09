@@ -40,7 +40,11 @@ window.capture.on("AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE", (args) => {
   audioCapture.stopExternalAudioCapture(deviceId);
 });
 
-window.capture.on("AUDIO_CAPTURE_START", (args) => {
-  const [bufferScale] = args;
-  audioCapture.start(bufferScale);
+window.capture.on("AUDIO_CAPTURE_START", () => {
+  audioCapture.start();
+});
+
+window.capture.on("AUDIO_CAPTURE_SIGNAL", (args) => {
+  const [data] = args;
+  audioCapture.signal(data);
 });

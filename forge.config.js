@@ -89,18 +89,6 @@ const config = {
         devContentSecurityPolicy: "",
       },
     },
-    {
-      name: "@owlbear-rodeo/forge-externals-plugin",
-      config: {
-        externals: [
-          "opusscript",
-          "prism-media",
-          "libsodium-wrappers",
-          "discord.js",
-        ],
-        includeDeps: true,
-      },
-    },
   ],
 };
 

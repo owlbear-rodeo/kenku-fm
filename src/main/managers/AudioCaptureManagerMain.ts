@@ -1,28 +1,16 @@
 import { BrowserView, ipcMain, webContents } from "electron";
-import { TypedEmitter } from "tiny-typed-emitter";
-import { Readable } from "stream";
-import { WebSocketServer, WebSocket } from "ws";
-import prism from "prism-media";
 
 declare const AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY: string;
 declare const AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
-
-interface AudioCaptureManagerEvents {
-  streamStart: (stream: Readable) => void;
-  streamEnd: () => void;
-}
 
 /**
  * Manager to capture audio from browser views and external audio devices
  * This class is to be run on the main thread
  */
-export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEvents> {
+export class AudioCaptureManagerMain {
   _browserView: BrowserView;
-  _encoder?: prism.opus.Encoder;
-  _wss: WebSocketServer;
 
   constructor() {
-    super();
     this._browserView = new BrowserView({
       webPreferences: {
         preload: AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY,
@@ -47,7 +35,6 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
         }
       }
     );
-    this._wss = new WebSocketServer({ port: 0 });
 
     ipcMain.on("AUDIO_CAPTURE_START", this._handleStart);
     ipcMain.on("AUDIO_CAPTURE_SET_LOOPBACK", this._handleSetLoopback);
@@ -60,12 +47,7 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
       "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE",
       this._handleStopExternalAudioCapture
     );
-    ipcMain.on("AUDIO_CAPTURE_STREAM_START", this._handleStreamStart);
-    ipcMain.on("AUDIO_CAPTURE_STREAM_END", this._handleStreamEnd);
-    ipcMain.handle(
-      "AUDIO_CAPTURE_GET_WEBSOCKET_ADDRESS",
-      this._handleGetWebsocketAddress
-    );
+    ipcMain.on("AUDIO_CAPTURE_SIGNAL", this._handleSignal);
     ipcMain.on(
       "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
       this._handleStartBrowserViewStream
@@ -74,8 +56,6 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
       "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
       this._handleStopBrowserViewStream
     );
-
-    this._wss.on("connection", this._handleWebsocketConnection);
   }
 
   destroy() {
@@ -90,9 +70,7 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
       "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE",
       this._handleStopExternalAudioCapture
     );
-    ipcMain.off("AUDIO_CAPTURE_STREAM_START", this._handleStreamStart);
-    ipcMain.off("AUDIO_CAPTURE_STREAM_END", this._handleStreamEnd);
-    ipcMain.removeHandler("AUDIO_CAPTURE_GET_WEBSOCKET_ADDRESS");
+    ipcMain.off("AUDIO_CAPTURE_SIGNAL", this._handleSignal);
     ipcMain.off(
       "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
       this._handleStartBrowserViewStream
@@ -103,13 +81,7 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
     );
 
     (this._browserView.webContents as any).destroy();
-    this._handleStreamEnd();
-    this._wss.close();
   }
-
-  _handleWebsocketConnection = (ws: WebSocket) => {
-    ws.on("message", this._handleStreamData);
-  };
 
   _handleStart = (_: Electron.IpcMainEvent, bufferScale: number) => {
     this._browserView.webContents.send("AUDIO_CAPTURE_START", bufferScale);
@@ -151,38 +123,8 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
     );
   };
 
-  _handleStreamStart = (
-    _: Electron.IpcMainEvent,
-    channels: number,
-    frameSize: number,
-    sampleRate: number
-  ) => {
-    this._encoder?.end();
-
-    // Create a pipeline for converting raw PCM data into opus packets
-    const encoder = new prism.opus.Encoder({
-      channels: channels,
-      frameSize: frameSize,
-      rate: sampleRate,
-    });
-    this._encoder = encoder;
-
-    // Setup any listener streams
-    this.emit("streamStart", encoder);
-  };
-
-  _handleStreamData = async (data: Buffer) => {
-    this._encoder?.write(data);
-  };
-
-  _handleStreamEnd = () => {
-    this._encoder?.end();
-    this._encoder = undefined;
-    this.emit("streamEnd");
-  };
-
-  _handleGetWebsocketAddress = async () => {
-    return this._wss.address();
+  _handleSignal = async () => {
+    // TODO
   };
 
   _handleStartBrowserViewStream = (

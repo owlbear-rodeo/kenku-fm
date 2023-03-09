@@ -1,47 +1,7 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import SharedBuffer from "./SharedBuffer.worklet";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import Sync from "./StreamSync.worker";
+import Peer from "simple-peer";
 
 /** Sample rate of the audio context */
 const SAMPLE_RATE = 48000;
-/** Number of channels for the audio context */
-const NUM_CHANNELS = 2;
-/** 16 bit audio data */
-const BIT_DEPTH = 16;
-/** Number of bytes per audio sample */
-const BYTES_PER_SAMPLE = BIT_DEPTH / 8;
-/** 20ms Opus frame duration */
-const FRAME_DURATION = 20;
-/** Duration of each audio frame in seconds */
-const FRAME_DURATION_SECONDS = FRAME_DURATION / 1000;
-/**
- * Size in bytes of each frame of audio
- * We stream audio to the main context as 16bit PCM data
- * At 48KHz with a frame duration of 20ms (or 0.02s) and a stereo signal
- * our `frameSize` is calculated by:
- * `SAMPLE_RATE * FRAME_DURATION_SECONDS * NUM_CHANNELS / BYTES_PER_SAMPLE`
- * or:
- * `48000 * 0.02 * 2 / 2 = 960`
- */
-const FRAME_SIZE =
-  (SAMPLE_RATE * FRAME_DURATION_SECONDS * NUM_CHANNELS) / BYTES_PER_SAMPLE;
-
-/** Worklet uses Float32 samples */
-const WORKLET_BYTES_PER_SAMPLE = Float32Array.BYTES_PER_ELEMENT;
-const WORKLET_STATE_BUFFER_LENGTH = 16;
-const WORKLET_BYTES_PER_STATE = Float32Array.BYTES_PER_ELEMENT;
-
-const STATE = {
-  REQUEST_SEND: 0,
-  FRAMES_AVAILABLE: 1,
-  READ_INDEX: 2,
-  WRITE_INDEX: 3,
-  BUFFER_LENGTH: 4,
-  KERNEL_LENGTH: 5,
-};
 
 /**
  * Capture audio from browser views and external audio devices
@@ -62,11 +22,13 @@ export class AudioCapture {
   _externalAudioStreams: Record<string, MediaStream> = {};
   _externalAudioStreamOutputs: Record<string, GainNode> = {};
 
+  _peer: Peer.Instance;
+
   /**
    * Create the Audio Context, setup the communication socket and start the
    * internal PCM stream for communicating between the renderer and main context
    */
-  async start(bufferScale = 1): Promise<void> {
+  start() {
     this._audioContext = new AudioContext({
       // Setting the latency hint to `playback` fixes audio glitches on some Windows 11 machines.
       latencyHint: "playback",
@@ -74,43 +36,24 @@ export class AudioCapture {
     });
     this._audioOutputNode = this._audioContext.createGain();
 
-    await this._setupLoopback();
+    const mediaDestination = this._audioContext.createMediaStreamDestination();
+    this._audioOutputNode.connect(mediaDestination);
 
-    window.capture.startStream(NUM_CHANNELS, FRAME_SIZE, SAMPLE_RATE);
+    // Setup loopback element for local playback
+    this._audioOutputElement = document.createElement("audio");
+    this._audioOutputElement.srcObject = mediaDestination.stream;
+    this._audioOutputElement.onloadedmetadata = () => {
+      this._audioOutputElement.play();
+    };
 
-    let bufferLength = 8192 * bufferScale;
-    let kernelLength = FRAME_SIZE * WORKLET_BYTES_PER_SAMPLE * bufferScale;
-
-    const buffers = Array.from(Array(NUM_CHANNELS)).map(
-      () => new SharedArrayBuffer(bufferLength * WORKLET_BYTES_PER_SAMPLE)
-    );
-    const states = new SharedArrayBuffer(
-      WORKLET_STATE_BUFFER_LENGTH * WORKLET_BYTES_PER_STATE
-    );
-
-    const States = new Int32Array(states);
-    Atomics.store(States, STATE.BUFFER_LENGTH, bufferLength);
-    Atomics.store(States, STATE.KERNEL_LENGTH, kernelLength);
-
-    // Create shared buffer worklet
-    await this._audioContext.audioWorklet.addModule(SharedBuffer);
-    const sharedBufferNode = new AudioWorkletNode(
-      this._audioContext,
-      "shared-buffer"
-    );
-    sharedBufferNode.port.postMessage({ states, buffers });
-
-    // Pipe the audio output into the stream
-    this._audioOutputNode.connect(sharedBufferNode);
-
-    const websocketAddress = await window.capture.getWebsocketAddress();
-    // Create an audio sync thread
-    const streamSync: Worker = new Sync();
-    streamSync.postMessage({
-      states,
-      buffers,
-      websocketAddress: `ws://localhost:${websocketAddress.port}`,
+    this._peer = new Peer({ initiator: true, stream: mediaDestination.stream });
+    this._peer.on("signal", (data) => {
+      window.capture.signal(data);
     });
+  }
+
+  signal(data: Peer.SignalData) {
+    this._peer.signal(data);
   }
 
   setMuted(id: number, muted: boolean): void {

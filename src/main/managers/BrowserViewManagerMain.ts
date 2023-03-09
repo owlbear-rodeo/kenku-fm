@@ -1,5 +1,7 @@
 import { BrowserView, BrowserWindow, ipcMain, shell } from "electron";
 import { getUserAgent } from "../userAgent";
+import log from "electron-log";
+
 
 /**
  * Manager to help create and manager browser views
@@ -174,6 +176,8 @@ export class BrowserViewManagerMain {
     try {
       view.webContents.loadURL(url);
     } catch (err) {
+      log.info("Error occurred when calling view.webContents.loadURL");
+      log.errorHandler.handle(err, { showDialog: false });
       console.error(err);
     }
 
@@ -228,6 +232,8 @@ export class BrowserViewManagerMain {
     try {
       this.views[id]?.setBounds({ x, y, width, height });
     } catch (err) {
+      log.info("Error when calling setBounds in BrowserViewManagerMain");
+      log.errorHandler.handle(err, { showDialog: false });
       console.error(err);
     }
   }
@@ -236,6 +242,8 @@ export class BrowserViewManagerMain {
     try {
       this.views[id]?.webContents.loadURL(url);
     } catch (err) {
+      log.info("Error in loadURL in BrowserViewManagerMain");
+      log.errorHandler.handle(err, { showDialog: false });
       console.error(err);
     }
   }
@@ -244,6 +252,8 @@ export class BrowserViewManagerMain {
     try {
       this.views[id]?.webContents.goForward();
     } catch (err) {
+      log.info("Error in goForward in BrowserViewManagerMain");
+      log.errorHandler.handle(err, { showDialog: false });
       console.error(err);
     }
   }
@@ -252,6 +262,8 @@ export class BrowserViewManagerMain {
     try {
       this.views[id]?.webContents.goBack();
     } catch (err) {
+      log.info("Error in goBack in BrowserViewManagerMain");
+      log.errorHandler.handle(err, { showDialog: false });
       console.error(err);
     }
   }
@@ -260,6 +272,8 @@ export class BrowserViewManagerMain {
     try {
       this.views[id]?.webContents.reload();
     } catch (err) {
+      log.info("Error in reload in BrowserViewManagerMain");
+      log.errorHandler.handle(err, { showDialog: false });
       console.error(err);
     }
   }

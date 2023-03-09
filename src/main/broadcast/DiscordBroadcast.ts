@@ -4,8 +4,9 @@ import {
   createAudioPlayer,
   getVoiceConnection,
   joinVoiceChannel,
-  NoSubscriberBehavior,
+  NoSubscriberBehavior
 } from "@discordjs/voice";
+import log from "electron-log";
 
 type VoiceChannel = {
   id: string;
@@ -125,6 +126,8 @@ export class DiscordBroadcast {
           connection.subscribe(this.audioPlayer);
           event.reply("DISCORD_CHANNEL_JOINED", channelId);
           connection.on("error", (e) => {
+            log.info("Error occured in _handleJoinChannel for joinVoiceChannelConnection");
+            log.errorHandler.handle(e, { showDialog: false });
             console.error(e);
             connection.destroy();
             event.reply("DISCORD_CHANNEL_LEFT", channelId);
@@ -151,6 +154,9 @@ export class DiscordBroadcast {
             newNetworking?.on("stateChange", networkStateChangeHandler);
           });
         } catch (e) {
+          log.info("Unexpected error occurred at _handleJoinChannel");
+          log.errorHandler.handle(e, { showDialog: false });
+
           console.error(e);
           event.reply("DISCORD_CHANNEL_LEFT", channelId);
           event.reply(
@@ -182,6 +188,8 @@ export class DiscordBroadcast {
 
   _handleBroadcastError = (error: Error) => {
     this.window.webContents.send("ERROR", error.message);
+    log.info("Error occurred and handled by _handleBroadcastError");
+    log.errorHandler.handle(error, { showDialog: false });
     console.error(error);
   };
 }

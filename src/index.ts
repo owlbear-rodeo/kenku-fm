@@ -14,9 +14,14 @@ import { getUserAgent } from "./main/userAgent";
 import { SessionManager } from "./main/managers/SessionManager";
 import { runAutoUpdate } from "./autoUpdate";
 import { getSavedBounds, saveWindowBounds } from "./bounds";
+import log from "electron-log";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
+
+// It makes a renderer logger available trough a global electronLog instance
+log.initialize({ preload: false, spyRendererConsole: true });
+log.errorHandler.startCatching();
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -99,6 +104,8 @@ app.whenReady().then(async () => {
   // Wait for widevine to load
   await widevine.whenReady();
   console.log("components ready:", components.status());
+  log.info(`System information: OS: ${os.platform()} Arch: ${os.arch()} Version: ${os.release()}`)
+  log.info("components ready:", components.status());
 
   createWindow();
   spoofUserAgent();
@@ -109,6 +116,7 @@ app.whenReady().then(async () => {
 // explicitly with Cmd + Q.
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
+    log.errorHandler.stopCatching();
     app.quit();
   }
 });

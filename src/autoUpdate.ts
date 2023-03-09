@@ -1,4 +1,5 @@
 import { app, autoUpdater, BrowserWindow } from "electron";
+import log from "electron-log";
 
 function checkForAppUpdates() {
   if (process.platform === "win32") {
@@ -13,7 +14,7 @@ function checkForAppUpdates() {
   }
 }
 
-export function runAutoUpdate(window: BrowserWindow) {
+export function runAutoUpdate(window: BrowserWindow): void {
   if (process.platform === "win32" || process.platform == "darwin") {
     const server = "https://download.kenku.fm"
     let url = `${server}/update/${process.platform}/${app.getVersion()}`
@@ -24,7 +25,9 @@ export function runAutoUpdate(window: BrowserWindow) {
 
     autoUpdater.setFeedURL({ url })
 
-    const handleError = () => { }
+    const handleError = (e: Error) => {
+      log.errorHandler.handle(e, { showDialog: false });
+    }
     const handleUpdateDownloaded = () => {
       window.webContents.send("MESSAGE", "Update Available. Restart to apply.");
     }

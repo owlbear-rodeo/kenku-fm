@@ -4,7 +4,8 @@ import {
   createAudioPlayer,
   getVoiceConnection,
   joinVoiceChannel,
-  NoSubscriberBehavior
+  NoSubscriberBehavior,
+  VoiceConnectionState,
 } from "@discordjs/voice";
 import log from "electron-log";
 
@@ -39,7 +40,7 @@ export class DiscordBroadcast {
     this.audioPlayer.on("error", this._handleBroadcastError);
   }
 
-  destroy() {
+  destroy(): void {
     ipcMain.off("DISCORD_CONNECT", this._handleConnect);
     ipcMain.off("DISCORD_DISCONNECT", this._handleDisconnect);
     ipcMain.off("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
@@ -49,7 +50,10 @@ export class DiscordBroadcast {
     this.client = undefined;
   }
 
-  _handleConnect = async (event: Electron.IpcMainEvent, token: string) => {
+  _handleConnect = async (
+    event: Electron.IpcMainEvent,
+    token: string
+  ): Promise<void> => {
     if (!token) {
       event.reply("DISCORD_DISCONNECTED");
       event.reply("ERROR", "Error connecting to bot: Invalid token");
@@ -71,7 +75,7 @@ export class DiscordBroadcast {
         const guilds: Guild[] = await Promise.all(
           rawGuilds.map(async (baseGuild) => {
             const guild = await baseGuild.fetch();
-            let voiceChannels: VoiceChannel[] = [];
+            const voiceChannels: VoiceChannel[] = [];
             const channels = await guild.channels.fetch();
             channels.forEach((channel) => {
               if (channel.isVoiceBased()) {
@@ -102,7 +106,7 @@ export class DiscordBroadcast {
     }
   };
 
-  _handleDisconnect = async (event: Electron.IpcMainEvent) => {
+  _handleDisconnect = async (event: Electron.IpcMainEvent): Promise<void> => {
     event.reply("DISCORD_DISCONNECTED");
     event.reply("DISCORD_GUILDS", []);
     event.reply("DISCORD_CHANNEL_JOINED", "local");
@@ -110,10 +114,18 @@ export class DiscordBroadcast {
     this.client = undefined;
   };
 
+  networkStateChangeHandler = (
+    _: VoiceConnectionState,
+    newNetworkState: VoiceConnectionState
+  ): void => {
+    const newUdp = Reflect.get(newNetworkState, "udp");
+    clearInterval(newUdp?.keepAliveInterval);
+  };
+
   _handleJoinChannel = async (
     event: Electron.IpcMainEvent,
     channelId: string
-  ) => {
+  ): Promise<void> => {
     if (this.client) {
       const channel = await this.client.channels.fetch(channelId);
       if (channel && channel.isVoiceBased() && channel.joinable) {
@@ -126,7 +138,9 @@ export class DiscordBroadcast {
           connection.subscribe(this.audioPlayer);
           event.reply("DISCORD_CHANNEL_JOINED", channelId);
           connection.on("error", (e) => {
-            log.info("Error occured in _handleJoinChannel for joinVoiceChannelConnection");
+            log.info(
+              "Error occured in _handleJoinChannel for joinVoiceChannelConnection"
+            );
             log.errorHandler.handle(e, { showDialog: false });
             console.error(e);
             connection.destroy();
@@ -137,21 +151,16 @@ export class DiscordBroadcast {
             );
           });
           // Work around Discord API breakage
-          // https://github.com/discordjs/discord.js/issues/9185
+          // https://github.com/discordjs/discord.js/issues/9185#issuecomment-1459083216
           connection.on("stateChange", (oldState, newState) => {
-            const oldNetworking = Reflect.get(oldState, "networking");
-            const newNetworking = Reflect.get(newState, "networking");
-
-            const networkStateChangeHandler = (
-              oldNetworkState: any,
-              newNetworkState: any
-            ) => {
-              const newUdp = Reflect.get(newNetworkState, "udp");
-              clearInterval(newUdp?.keepAliveInterval);
-            };
-
-            oldNetworking?.off("stateChange", networkStateChangeHandler);
-            newNetworking?.on("stateChange", networkStateChangeHandler);
+            Reflect.get(oldState, "networking")?.off(
+              "stateChange",
+              this.networkStateChangeHandler
+            );
+            Reflect.get(newState, "networking")?.on(
+              "stateChange",
+              this.networkStateChangeHandler
+            );
           });
         } catch (e) {
           log.info("Unexpected error occurred at _handleJoinChannel");
@@ -177,7 +186,7 @@ export class DiscordBroadcast {
   _handleLeaveChannel = async (
     event: Electron.IpcMainEvent,
     channelId: string
-  ) => {
+  ): Promise<void> => {
     const channel = await this.client.channels.fetch(channelId);
     if (channel.type === ChannelType.GuildVoice) {
       const connection = getVoiceConnection(channel.guild.id);
@@ -186,7 +195,7 @@ export class DiscordBroadcast {
     event.reply("DISCORD_CHANNEL_LEFT", channelId);
   };
 
-  _handleBroadcastError = (error: Error) => {
+  _handleBroadcastError = (error: Error): void => {
     this.window.webContents.send("ERROR", error.message);
     log.info("Error occurred and handled by _handleBroadcastError");
     log.errorHandler.handle(error, { showDialog: false });

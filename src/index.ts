@@ -19,8 +19,7 @@ import log from "electron-log";
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
-// It makes a renderer logger available trough a global electronLog instance
-log.initialize({ preload: false, spyRendererConsole: true });
+log.initialize({ preload: false });
 log.errorHandler.startCatching();
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -104,7 +103,9 @@ app.whenReady().then(async () => {
   // Wait for widevine to load
   await widevine.whenReady();
   console.log("components ready:", components.status());
-  log.info(`System information: OS: ${os.platform()} Arch: ${os.arch()} Version: ${os.release()}`)
+  log.info(
+    `System information: OS: ${os.platform()} Arch: ${os.arch()} Version: ${os.release()}`
+  );
   log.info("components ready:", components.status());
 
   createWindow();

@@ -1,5 +1,3 @@
-import Peer from "simple-peer";
-
 /** Sample rate of the audio context */
 const SAMPLE_RATE = 48000;
 
@@ -21,8 +19,6 @@ export class AudioCapture {
   /** Raw media stream for each external audio source e.g. microphone or virtual audio cables */
   _externalAudioStreams: Record<string, MediaStream> = {};
   _externalAudioStreamOutputs: Record<string, GainNode> = {};
-
-  _peer: Peer.Instance;
 
   /**
    * Create the Audio Context, setup the communication socket and start the
@@ -46,14 +42,34 @@ export class AudioCapture {
       this._audioOutputElement.play();
     };
 
-    this._peer = new Peer({ initiator: true, stream: mediaDestination.stream });
-    this._peer.on("signal", (data) => {
-      window.capture.signal(data);
-    });
-  }
+    const peerConnection = new RTCPeerConnection();
+    peerConnection.oniceconnectionstatechange = console.log;
 
-  signal(data: Peer.SignalData) {
-    this._peer.signal(data);
+    mediaDestination.stream
+      .getTracks()
+      .forEach((track) =>
+        peerConnection.addTrack(track, mediaDestination.stream)
+      );
+
+    peerConnection.onicecandidate = async (event) => {
+      console.log("CANDIDATE", event);
+      if (event.candidate === null) {
+        console.log("SIGNALLING", peerConnection.localDescription);
+        const answer = await window.capture.signal(
+          JSON.stringify(peerConnection.localDescription)
+        );
+        console.log("RECEIVING: ", answer);
+        peerConnection.setRemoteDescription(
+          new RTCSessionDescription(JSON.parse(answer))
+        );
+        await window.capture.record("output.opus");
+      }
+    };
+
+    peerConnection
+      .createOffer()
+      .then((d) => peerConnection.setLocalDescription(d))
+      .catch(console.error);
   }
 
   setMuted(id: number, muted: boolean): void {

@@ -1,5 +1,5 @@
-use std::sync::Arc;
-
+use anyhow::Result;
+use futures::StreamExt;
 use neon::context::Context;
 use neon::prelude::FunctionContext;
 use neon::prelude::*;
@@ -11,11 +11,17 @@ use neon::types::JsBox;
 use neon::types::JsPromise;
 use neon::types::JsString;
 use once_cell::sync::OnceCell;
-use serenity::model::prelude::ChannelType;
-use serenity::model::prelude::GuildId;
-use serenity::prelude::GatewayIntents;
-use serenity::Client;
+use std::sync::Arc;
 use tokio::runtime::Runtime;
+use twilight_gateway::Cluster;
+use twilight_gateway::Intents;
+use twilight_http::Client;
+use twilight_model::channel::ChannelType;
+use twilight_model::id::marker::ChannelMarker;
+use twilight_model::id::marker::GuildMarker;
+use twilight_model::id::Id;
+
+use songbird::Songbird;
 
 static RUNTIME: OnceCell<Runtime> = OnceCell::new();
 
@@ -24,53 +30,68 @@ fn runtime<'a, C: Context<'a>>(cx: &mut C) -> NeonResult<&'static Runtime> {
 }
 
 struct Voice {
-    id: String,
+    id: Id<ChannelMarker>,
     name: String,
 }
 struct Guild {
-    id: GuildId,
+    id: Id<GuildMarker>,
     name: String,
     icon: String,
     voice_channels: Vec<Voice>,
 }
+
 pub struct Discord {
     client: Client,
+    voice: Songbird,
 }
 
 impl Finalize for Discord {}
 
 impl Discord {
-    async fn new(token: &str) -> Result<Arc<Self>, serenity::Error> {
-        let intents = GatewayIntents::GUILDS;
+    async fn new(token: &str, rt: &Runtime) -> Result<Arc<Self>> {
+        let (mut events, discord) = {
+            let token = String::from(token);
+            let client = Client::new(token.clone());
 
-        if let Err(_) = serenity::utils::validate_token(&token) {
-            return Err(serenity::Error::Other("Invalid token"));
-        }
+            let intents = Intents::GUILDS | Intents::GUILD_VOICE_STATES;
+            let (cluster, events) = Cluster::new(String::from(token), intents).await?;
 
-        let client = Client::builder(&token, intents).await;
+            cluster.up().await;
 
-        match client {
-            Ok(c) => Ok(Arc::new(Self { client: c })),
-            Err(e) => Err(e),
-        }
+            let user_id = client.current_user().exec().await?.model().await?.id;
+
+            let voice = Songbird::twilight(Arc::new(cluster), user_id);
+            (events, Arc::new(Discord { client, voice }))
+        };
+
+        let d2 = Arc::clone(&discord);
+        rt.spawn(async move {
+            while let Some((_, event)) = events.next().await {
+                d2.voice.process(&event).await;
+            }
+        });
+
+        Ok(discord)
     }
 
-    async fn get_info(&self) -> Result<Vec<Guild>, serenity::Error> {
+    async fn get_info(&self) -> Result<Vec<Guild>> {
         let mut guilds_vec: Vec<Guild> = Vec::new();
-        let http = &self.client.cache_and_http.http;
+        let http = &self.client;
 
-        let user = http.get_current_user().await?;
-        let guilds = user.guilds(&http).await?;
+        let guilds = http.current_user_guilds().exec().await?.model().await?;
 
         for (_, guild) in guilds.iter().enumerate() {
-            if let Ok(channels) = http.get_channels(guild.id.0).await {
+            if let Ok(channels) = http.guild_channels(guild.id).exec().await?.model().await {
                 let mut voice_channels = vec![];
                 for (_, channel) in channels.iter().enumerate() {
-                    match channel.kind == ChannelType::Voice {
+                    match channel.kind == ChannelType::GuildVoice {
                         true => {
                             let chan = Voice {
-                                id: channel.id.to_string(),
-                                name: channel.name.to_string(),
+                                id: channel.id,
+                                name: match &channel.name {
+                                    Some(n) => n.to_string(),
+                                    None => String::new(),
+                                },
                             };
                             voice_channels.push(chan)
                         }
@@ -80,8 +101,11 @@ impl Discord {
                 let new_guild = Guild {
                     id: guild.id,
                     name: guild.name.to_string(),
-                    icon: guild.icon_url().unwrap_or_else(|| "".to_string()),
-                    voice_channels: voice_channels,
+                    icon: match guild.icon {
+                        Some(i) => i.to_string(),
+                        None => String::new(),
+                    },
+                    voice_channels,
                 };
 
                 guilds_vec.push(new_guild);
@@ -89,6 +113,16 @@ impl Discord {
         }
 
         Ok(guilds_vec)
+    }
+
+    async fn join(&self, guild_id: Id<GuildMarker>, channel_id: Id<ChannelMarker>) -> Result<()> {
+        self.voice.join(guild_id, channel_id).await.1?;
+        Ok(())
+    }
+
+    async fn leave(&self, guild_id: Id<GuildMarker>) -> Result<()> {
+        self.voice.remove(guild_id).await?;
+        Ok(())
     }
 }
 
@@ -101,7 +135,7 @@ impl Discord {
         let (deferred, promise) = cx.promise();
 
         rt.spawn(async move {
-            let discord = Discord::new(&token).await;
+            let discord = Discord::new(&token, rt).await;
             deferred.settle_with(&channel, move |mut cx| match discord {
                 Ok(d) => Ok(cx.boxed(d)),
                 Err(e) => cx.throw_error(e.to_string()),
@@ -120,7 +154,6 @@ impl Discord {
         rt.spawn(async move {
             let guilds = discord.get_info().await;
 
-            // Code here executes blocking on the JavaScript main thread
             deferred.settle_with(&channel, move |mut cx| match guilds {
                 Ok(g) => {
                     let arr = JsArray::new(&mut cx, g.len() as u32);
@@ -157,6 +190,54 @@ impl Discord {
 
                     Ok(arr)
                 }
+                Err(e) => cx.throw_error(e.to_string()),
+            });
+        });
+
+        Ok(promise)
+    }
+
+    pub fn js_join(mut cx: FunctionContext) -> JsResult<JsPromise> {
+        let rt = runtime(&mut cx)?;
+        let discord = Arc::clone(&&cx.argument::<JsBox<Arc<Discord>>>(0)?);
+        let guild_id = cx.argument::<JsString>(1)?.value(&mut cx);
+        let channel_id = cx.argument::<JsString>(2)?.value(&mut cx);
+
+        let channel = cx.channel();
+        let (deferred, promise) = cx.promise();
+
+        rt.spawn(async move {
+            let join = discord
+                .join(
+                    Id::new(guild_id.parse::<u64>().unwrap()),
+                    Id::new(channel_id.parse::<u64>().unwrap()),
+                )
+                .await;
+
+            deferred.settle_with(&channel, move |mut cx| match join {
+                Ok(_) => Ok(cx.undefined()),
+                Err(e) => cx.throw_error(e.to_string()),
+            });
+        });
+
+        Ok(promise)
+    }
+
+    pub fn js_leave(mut cx: FunctionContext) -> JsResult<JsPromise> {
+        let rt = runtime(&mut cx)?;
+        let discord = Arc::clone(&&cx.argument::<JsBox<Arc<Discord>>>(0)?);
+        let guild_id = cx.argument::<JsString>(1)?.value(&mut cx);
+
+        let channel = cx.channel();
+        let (deferred, promise) = cx.promise();
+
+        rt.spawn(async move {
+            let leave = discord
+                .leave(Id::new(guild_id.parse::<u64>().unwrap()))
+                .await;
+
+            deferred.settle_with(&channel, move |mut cx| match leave {
+                Ok(_) => Ok(cx.undefined()),
                 Err(e) => cx.throw_error(e.to_string()),
             });
         });

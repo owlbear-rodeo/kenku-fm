@@ -3,12 +3,15 @@ import { BrowserView, ipcMain, webContents } from "electron";
 declare const AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY: string;
 declare const AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
+import severus, { RTCClient } from "severus";
+
 /**
  * Manager to capture audio from browser views and external audio devices
  * This class is to be run on the main thread
  */
 export class AudioCaptureManagerMain {
   _browserView: BrowserView;
+  _rtc: RTCClient;
 
   constructor() {
     this._browserView = new BrowserView({
@@ -35,6 +38,7 @@ export class AudioCaptureManagerMain {
         }
       }
     );
+    this._browserView.webContents.openDevTools();
 
     ipcMain.on("AUDIO_CAPTURE_START", this._handleStart);
     ipcMain.on("AUDIO_CAPTURE_SET_LOOPBACK", this._handleSetLoopback);
@@ -47,7 +51,8 @@ export class AudioCaptureManagerMain {
       "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE",
       this._handleStopExternalAudioCapture
     );
-    ipcMain.on("AUDIO_CAPTURE_SIGNAL", this._handleSignal);
+    ipcMain.handle("AUDIO_CAPTURE_SIGNAL", this._handleSignal);
+    ipcMain.handle("AUDIO_CAPTURE_RECORD", this._handleRecord);
     ipcMain.on(
       "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
       this._handleStartBrowserViewStream
@@ -70,7 +75,8 @@ export class AudioCaptureManagerMain {
       "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE",
       this._handleStopExternalAudioCapture
     );
-    ipcMain.off("AUDIO_CAPTURE_SIGNAL", this._handleSignal);
+    ipcMain.removeHandler("AUDIO_CAPTURE_SIGNAL");
+    ipcMain.removeHandler("AUDIO_CAPTURE_RECORD");
     ipcMain.off(
       "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
       this._handleStartBrowserViewStream
@@ -123,8 +129,13 @@ export class AudioCaptureManagerMain {
     );
   };
 
-  _handleSignal = async () => {
-    // TODO
+  _handleSignal = async (_: Electron.IpcMainEvent, offer: string) => {
+    this._rtc = await severus.rtcNew();
+    return severus.rtcSignal(this._rtc, offer);
+  };
+
+  _handleRecord = async (_: Electron.IpcMainEvent, fileName: string) => {
+    return severus.rtcStartRecorder(this._rtc, fileName);
   };
 
   _handleStartBrowserViewStream = (

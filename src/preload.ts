@@ -55,11 +55,11 @@ const api = {
   disconnect: () => {
     ipcRenderer.send("DISCORD_DISCONNECT");
   },
-  joinChannel: (channelId: string) => {
-    ipcRenderer.send("DISCORD_JOIN_CHANNEL", channelId);
+  joinChannel: (channelId: string, guildId: string) => {
+    ipcRenderer.send("DISCORD_JOIN_CHANNEL", channelId, guildId);
   },
-  leaveChannel: (channelId: string) => {
-    ipcRenderer.send("DISCORD_LEAVE_CHANNEL", channelId);
+  leaveChannel: (channelId: string, guildId: string) => {
+    ipcRenderer.send("DISCORD_LEAVE_CHANNEL", channelId, guildId);
   },
   createBrowserView: async (
     url: string,

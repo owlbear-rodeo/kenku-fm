@@ -43,8 +43,3 @@ window.capture.on("AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE", (args) => {
 window.capture.on("AUDIO_CAPTURE_START", () => {
   audioCapture.start();
 });
-
-window.capture.on("AUDIO_CAPTURE_SIGNAL", (args) => {
-  const [data] = args;
-  audioCapture.signal(data);
-});

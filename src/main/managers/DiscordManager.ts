@@ -55,13 +55,28 @@ export class DiscordManager {
 
   _handleJoinChannel = async (
     event: Electron.IpcMainEvent,
-    channelId: string
-  ) => {};
+    channelId: string,
+    guildId: string
+  ) => {
+    try {
+      await severus.discordJoin(this.client, guildId, channelId);
+      event.reply("DISCORD_CHANNEL_JOINED", channelId);
+    } catch (err) {
+      event.reply("DISCORD_CHANNEL_LEFT", channelId);
+      event.reply("ERROR", `Error joining channel: ${err?.message}`);
+    }
+  };
 
   _handleLeaveChannel = async (
     event: Electron.IpcMainEvent,
-    channelId: string
+    channelId: string,
+    guildId: string
   ) => {
+    try {
+      await severus.discordLeave(this.client, guildId);
+    } catch (err) {
+      event.reply("ERROR", `Error leaving channel: ${err?.message}`);
+    }
     event.reply("DISCORD_CHANNEL_LEFT", channelId);
   };
 

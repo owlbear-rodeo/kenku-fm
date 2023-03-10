@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.node",
   "scripts": {
-    "build": "cargo-cp-artifact -nc index.node -- cargo build --message-format=json-render-diagnostics",
-    "build-debug": "yarn build --",
-    "build-release": "yarn build -- --release",
-    "install": "yarn build-release",
+    "build": "RUST_LOG=debug  cargo-cp-artifact -nc index.node -- cargo build --message-format=json-render-diagnostics",
+    "build-debug": "RUST_LOG=debug yarn build --",
+    "build-release": "RUST_LOG=debug yarn build -- --release",
+    "install": "RUST_LOG=debug yarn build-debug",
     "test": "cargo test"
   },
   "author": "",

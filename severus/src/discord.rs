@@ -43,6 +43,7 @@ struct Guild {
 pub struct Discord {
     client: Client,
     voice: Songbird,
+    cluster: Arc<Cluster>,
 }
 
 impl Finalize for Discord {}
@@ -58,10 +59,21 @@ impl Discord {
 
             cluster.up().await;
 
+            let cluster_arc = Arc::new(cluster);
+
+            let cluster_spawn = Arc::clone(&cluster_arc);
+
             let user_id = client.current_user().exec().await?.model().await?.id;
 
-            let voice = Songbird::twilight(Arc::new(cluster), user_id);
-            (events, Arc::new(Discord { client, voice }))
+            let voice = Songbird::twilight(cluster_arc, user_id);
+            (
+                events,
+                Arc::new(Discord {
+                    client,
+                    voice,
+                    cluster: cluster_spawn,
+                }),
+            )
         };
 
         let d2 = Arc::clone(&discord);
@@ -123,6 +135,10 @@ impl Discord {
     async fn leave(&self, guild_id: Id<GuildMarker>) -> Result<()> {
         self.voice.remove(guild_id).await?;
         Ok(())
+    }
+
+    fn destroy(&self) {
+        self.cluster.down();
     }
 }
 
@@ -243,5 +259,13 @@ impl Discord {
         });
 
         Ok(promise)
+    }
+
+    pub fn js_destroy(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+        let discord = Arc::clone(&&cx.argument::<JsBox<Arc<Discord>>>(0)?);
+
+        discord.destroy();
+
+        Ok(cx.undefined())
     }
 }

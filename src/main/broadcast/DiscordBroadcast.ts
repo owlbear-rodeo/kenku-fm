@@ -114,14 +114,6 @@ export class DiscordBroadcast {
     this.client = undefined;
   };
 
-  networkStateChangeHandler = (
-    _: VoiceConnectionState,
-    newNetworkState: VoiceConnectionState
-  ): void => {
-    const newUdp = Reflect.get(newNetworkState, "udp");
-    clearInterval(newUdp?.keepAliveInterval);
-  };
-
   _handleJoinChannel = async (
     event: Electron.IpcMainEvent,
     channelId: string
@@ -148,18 +140,6 @@ export class DiscordBroadcast {
             event.reply(
               "ERROR",
               `Error connecting to voice channel: ${e.message}`
-            );
-          });
-          // Work around Discord API breakage
-          // https://github.com/discordjs/discord.js/issues/9185#issuecomment-1459083216
-          connection.on("stateChange", (oldState, newState) => {
-            Reflect.get(oldState, "networking")?.off(
-              "stateChange",
-              this.networkStateChangeHandler
-            );
-            Reflect.get(newState, "networking")?.on(
-              "stateChange",
-              this.networkStateChangeHandler
             );
           });
         } catch (e) {

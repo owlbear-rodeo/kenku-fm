@@ -32,8 +32,8 @@ const api = {
   signal: (offer: string): Promise<string> => {
     return ipcRenderer.invoke("AUDIO_CAPTURE_SIGNAL", offer);
   },
-  record: (fileName: string): Promise<void> => {
-    return ipcRenderer.invoke("AUDIO_CAPTURE_RECORD", fileName);
+  stream: (): Promise<void> => {
+    return ipcRenderer.invoke("AUDIO_CAPTURE_STREAM");
   },
 };
 

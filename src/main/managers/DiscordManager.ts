@@ -1,12 +1,15 @@
 import { BrowserWindow, ipcMain } from "electron";
 import severus, { DiscordClient } from "severus";
+import { AudioCaptureManagerMain } from "./AudioCaptureManagerMain";
 
 export class DiscordManager {
   window: BrowserWindow;
   client?: DiscordClient;
+  audio: AudioCaptureManagerMain;
 
-  constructor(window: BrowserWindow) {
+  constructor(window: BrowserWindow, audio: AudioCaptureManagerMain) {
     this.window = window;
+    this.audio = audio;
     ipcMain.on("DISCORD_CONNECT", this._handleConnect);
     ipcMain.on("DISCORD_DISCONNECT", this._handleDisconnect);
     ipcMain.on("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
@@ -20,6 +23,7 @@ export class DiscordManager {
     ipcMain.off("DISCORD_LEAVE_CHANNEL", this._handleLeaveChannel);
     severus.discordDestroy(this.client);
     this.client = undefined;
+    this.audio = undefined;
   }
 
   _handleConnect = async (event: Electron.IpcMainEvent, token: string) => {
@@ -60,7 +64,15 @@ export class DiscordManager {
     guildId: string
   ) => {
     try {
-      await severus.discordJoin(this.client, guildId, channelId);
+      if (!this.audio.rtc) {
+        throw Error("Audio capture no running");
+      }
+      await severus.discordJoin(
+        this.client,
+        this.audio.rtc,
+        guildId,
+        channelId
+      );
       event.reply("DISCORD_CHANNEL_JOINED", channelId);
     } catch (err) {
       event.reply("DISCORD_CHANNEL_LEFT", channelId);

@@ -7,8 +7,8 @@ export class PlaybackManager {
   audioCaptureManager: AudioCaptureManagerMain;
 
   constructor(window: BrowserWindow) {
-    this.discord = new DiscordManager(window);
     this.audioCaptureManager = new AudioCaptureManagerMain();
+    this.discord = new DiscordManager(window, this.audioCaptureManager);
   }
 
   destroy() {

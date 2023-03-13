@@ -11,7 +11,12 @@ use neon::types::JsBox;
 use neon::types::JsPromise;
 use neon::types::JsString;
 use once_cell::sync::OnceCell;
+use songbird::input::codec::OpusDecoderState;
+use songbird::input::Codec;
+use songbird::input::Container;
+use songbird::input::Input;
 use std::sync::Arc;
+use symphonia_core::io::ReadOnlySource;
 use tokio::runtime::Runtime;
 use twilight_gateway::Cluster;
 use twilight_gateway::Intents;
@@ -22,6 +27,9 @@ use twilight_model::id::marker::GuildMarker;
 use twilight_model::id::Id;
 
 use songbird::Songbird;
+
+use crate::rtc::RTC;
+use crate::stream::OpusReader;
 
 static RUNTIME: OnceCell<Runtime> = OnceCell::new();
 
@@ -42,8 +50,8 @@ struct Guild {
 
 pub struct Discord {
     client: Client,
-    voice: Songbird,
     cluster: Arc<Cluster>,
+    voice: Songbird,
 }
 
 impl Finalize for Discord {}
@@ -127,8 +135,26 @@ impl Discord {
         Ok(guilds_vec)
     }
 
-    async fn join(&self, guild_id: Id<GuildMarker>, channel_id: Id<ChannelMarker>) -> Result<()> {
-        self.voice.join(guild_id, channel_id).await.1?;
+    async fn join(
+        &self,
+        rtc: Arc<RTC>,
+        guild_id: Id<GuildMarker>,
+        channel_id: Id<ChannelMarker>,
+    ) -> Result<()> {
+        let (handler, _) = self.voice.join(guild_id, channel_id).await;
+        let mut handler_lock = handler.lock().await;
+
+        let codec = OpusDecoderState::new().expect("Codec");
+        let writer = Arc::clone(&rtc.writer);
+        let reader = OpusReader::new(writer);
+        let source = Box::new(ReadOnlySource::new(reader));
+        handler_lock.play_only_source(Input::new(
+            true,
+            songbird::input::Reader::Extension(source),
+            Codec::Opus(codec),
+            Container::Dca { first_frame: 0 },
+            None,
+        ));
         Ok(())
     }
 
@@ -216,8 +242,9 @@ impl Discord {
     pub fn js_join(mut cx: FunctionContext) -> JsResult<JsPromise> {
         let rt = runtime(&mut cx)?;
         let discord = Arc::clone(&&cx.argument::<JsBox<Arc<Discord>>>(0)?);
-        let guild_id = cx.argument::<JsString>(1)?.value(&mut cx);
-        let channel_id = cx.argument::<JsString>(2)?.value(&mut cx);
+        let rtc = Arc::clone(&&cx.argument::<JsBox<Arc<RTC>>>(1)?);
+        let guild_id = cx.argument::<JsString>(2)?.value(&mut cx);
+        let channel_id = cx.argument::<JsString>(3)?.value(&mut cx);
 
         let channel = cx.channel();
         let (deferred, promise) = cx.promise();
@@ -225,6 +252,7 @@ impl Discord {
         rt.spawn(async move {
             let join = discord
                 .join(
+                    rtc,
                     Id::new(guild_id.parse::<u64>().unwrap()),
                     Id::new(channel_id.parse::<u64>().unwrap()),
                 )

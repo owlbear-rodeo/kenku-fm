@@ -62,7 +62,7 @@ export class AudioCapture {
         peerConnection.setRemoteDescription(
           new RTCSessionDescription(JSON.parse(answer))
         );
-        await window.capture.record("output.opus");
+        await window.capture.stream();
       }
     };
 

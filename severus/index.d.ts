@@ -16,6 +16,7 @@ declare module "severus" {
     discordGetInfo: (client: DiscordClient) => Promise<Guild[]>;
     discordJoin: (
       client: DiscordClient,
+      rtc: RTCClient,
       guildId: string,
       channelId: string
     ) => Promise<void>;
@@ -23,7 +24,7 @@ declare module "severus" {
     discordDestroy: (client: DiscordClient) => void;
     rtcNew: () => Promise<RTCClient>;
     rtcSignal: (rtc: RTCClient, offer: string) => Promise<string>;
-    rtcStartRecorder: (rtc: RTCClient, fileName: string) => Promise<void>;
+    rtcStartStream: (rtc: RTCClient) => Promise<void>;
     rtcClose: (rtc: RTCClient) => Promise<void>;
   }
 

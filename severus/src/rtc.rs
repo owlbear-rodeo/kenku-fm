@@ -3,22 +3,22 @@ use neon::prelude::{Context, FunctionContext};
 use neon::result::{JsResult, NeonResult};
 use neon::types::{Finalize, JsBox, JsPromise, JsString};
 use once_cell::sync::OnceCell;
-use std::fs::File;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use tokio::runtime::Runtime;
-use tokio::sync::{Mutex, Notify};
+use tokio::sync::Notify;
 use webrtc::api::interceptor_registry::register_default_interceptors;
 use webrtc::api::media_engine::{MediaEngine, MIME_TYPE_OPUS};
 use webrtc::api::APIBuilder;
 use webrtc::ice_transport::ice_connection_state::RTCIceConnectionState;
 use webrtc::interceptor::registry::Registry;
-use webrtc::media::io::ogg_writer::OggWriter;
 use webrtc::peer_connection::configuration::RTCConfiguration;
 use webrtc::peer_connection::sdp::session_description::RTCSessionDescription;
 use webrtc::peer_connection::RTCPeerConnection;
 use webrtc::rtp_transceiver::rtp_codec::{
     RTCRtpCodecCapability, RTCRtpCodecParameters, RTPCodecType,
 };
+
+use crate::stream::{write_to_stream, OpusWriter};
 
 static RUNTIME: OnceCell<Runtime> = OnceCell::new();
 
@@ -28,6 +28,7 @@ fn runtime<'a, C: Context<'a>>(cx: &mut C) -> NeonResult<&'static Runtime> {
 
 pub struct RTC {
     connection: RTCPeerConnection,
+    pub writer: Arc<Mutex<OpusWriter>>,
 }
 
 impl Finalize for RTC {}
@@ -62,14 +63,17 @@ impl RTC {
             ..Default::default()
         };
 
-        let peer_connection = api.new_peer_connection(config).await?;
+        let connection = api.new_peer_connection(config).await?;
 
-        peer_connection
+        connection
             .add_transceiver_from_kind(RTPCodecType::Audio, None)
             .await?;
 
+        let stream = Arc::new(Mutex::new(OpusWriter::new().unwrap()));
+
         Ok(Arc::new(Self {
-            connection: peer_connection,
+            connection,
+            writer: stream,
         }))
     }
     async fn signal(&self, offer: RTCSessionDescription) -> Result<RTCSessionDescription> {
@@ -93,25 +97,20 @@ impl RTC {
             None => Err(anyhow::anyhow!("No local description found")),
         }
     }
-    async fn start_recorder(&self, file_name: &str) -> Result<()> {
-        let ogg_writer: Arc<Mutex<dyn webrtc::media::io::Writer + Send + Sync>> = Arc::new(
-            Mutex::new(OggWriter::new(File::create(file_name)?, 48000, 2)?),
-        );
-
+    async fn start_stream(&self) -> Result<()> {
         let notify_tx = Arc::new(Notify::new());
         let notify_rx = notify_tx.clone();
 
+        let stream = Arc::clone(&self.writer);
+
         self.connection.on_track(Box::new(move |track, _, _| {
             let notify_rx2 = Arc::clone(&notify_rx);
-            let ogg_writer2 = Arc::clone(&ogg_writer);
+            let opus_stream2 = Arc::clone(&stream);
             Box::pin(async move {
                 let codec = track.codec();
                 let mime_type = codec.capability.mime_type.to_lowercase();
                 if mime_type == MIME_TYPE_OPUS.to_lowercase() {
-                    println!("Got Opus track, saving to disk as output.opus (48 kHz, 2 channels)");
-                    tokio::spawn(async move {
-                        // TODO: Send to discord
-                    });
+                    let _ = write_to_stream(opus_stream2, track, notify_rx2).await;
                 }
             })
         }));
@@ -190,15 +189,14 @@ impl RTC {
         Ok(promise)
     }
 
-    pub fn js_start_recorder(mut cx: FunctionContext) -> JsResult<JsPromise> {
+    pub fn js_start_stream(mut cx: FunctionContext) -> JsResult<JsPromise> {
         let rt = runtime(&mut cx)?;
         let rtc = Arc::clone(&&cx.argument::<JsBox<Arc<RTC>>>(0)?);
-        let file_name = cx.argument::<JsString>(1)?.value(&mut cx);
         let channel = cx.channel();
         let (deferred, promise) = cx.promise();
 
         rt.spawn(async move {
-            let rec = rtc.start_recorder(&file_name).await;
+            let rec = rtc.start_stream().await;
             deferred.settle_with(&channel, move |mut cx| match rec {
                 Ok(_) => Ok(cx.undefined()),
                 Err(e) => cx.throw_error(e.to_string()),
@@ -210,7 +208,7 @@ impl RTC {
 
     pub fn js_close(mut cx: FunctionContext) -> JsResult<JsPromise> {
         let rt = runtime(&mut cx)?;
-        let rtc = Arc::clone(&&cx.argument::<JsBox<Arc<RTC>>>(0)?);
+        // let rtc = Arc::clone(&&cx.argument::<JsBox<Arc<RTC>>>(0)?);
         let channel = cx.channel();
         let (deferred, promise) = cx.promise();
 

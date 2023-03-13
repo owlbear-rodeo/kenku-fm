@@ -2152,11 +2152,16 @@ name = "severus"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "byteorder",
+ "bytes",
  "futures",
  "neon",
  "once_cell",
+ "rand",
+ "rtp",
  "serde_json",
  "songbird",
+ "symphonia-core",
  "tokio",
  "tracing",
  "twilight-gateway",

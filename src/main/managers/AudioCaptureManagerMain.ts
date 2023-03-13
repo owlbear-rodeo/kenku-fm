@@ -11,7 +11,7 @@ import severus, { RTCClient } from "severus";
  */
 export class AudioCaptureManagerMain {
   _browserView: BrowserView;
-  _rtc: RTCClient;
+  rtc?: RTCClient;
 
   constructor() {
     this._browserView = new BrowserView({
@@ -52,7 +52,7 @@ export class AudioCaptureManagerMain {
       this._handleStopExternalAudioCapture
     );
     ipcMain.handle("AUDIO_CAPTURE_SIGNAL", this._handleSignal);
-    ipcMain.handle("AUDIO_CAPTURE_RECORD", this._handleRecord);
+    ipcMain.handle("AUDIO_CAPTURE_STREAM", this._handleStream);
     ipcMain.on(
       "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
       this._handleStartBrowserViewStream
@@ -76,7 +76,7 @@ export class AudioCaptureManagerMain {
       this._handleStopExternalAudioCapture
     );
     ipcMain.removeHandler("AUDIO_CAPTURE_SIGNAL");
-    ipcMain.removeHandler("AUDIO_CAPTURE_RECORD");
+    ipcMain.removeHandler("AUDIO_CAPTURE_STREAM");
     ipcMain.off(
       "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
       this._handleStartBrowserViewStream
@@ -130,12 +130,12 @@ export class AudioCaptureManagerMain {
   };
 
   _handleSignal = async (_: Electron.IpcMainEvent, offer: string) => {
-    this._rtc = await severus.rtcNew();
-    return severus.rtcSignal(this._rtc, offer);
+    this.rtc = await severus.rtcNew();
+    return severus.rtcSignal(this.rtc, offer);
   };
 
-  _handleRecord = async (_: Electron.IpcMainEvent, fileName: string) => {
-    return severus.rtcStartRecorder(this._rtc, fileName);
+  _handleStream = async (_: Electron.IpcMainEvent) => {
+    return severus.rtcStartStream(this.rtc);
   };
 
   _handleStartBrowserViewStream = (

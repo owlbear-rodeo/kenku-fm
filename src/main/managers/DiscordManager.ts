@@ -55,6 +55,7 @@ export class DiscordManager {
     event.reply("DISCORD_DISCONNECTED");
     event.reply("DISCORD_GUILDS", []);
     event.reply("DISCORD_CHANNEL_JOINED", "local");
+    severus.discordDestroy(this.client);
     this.client = undefined;
   };
 

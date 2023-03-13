@@ -69,7 +69,7 @@ impl RTC {
             .add_transceiver_from_kind(RTPCodecType::Audio, None)
             .await?;
 
-        let stream = Arc::new(Mutex::new(OpusWriter::new().unwrap()));
+        let stream = Arc::new(Mutex::new(OpusWriter::new(10).unwrap()));
 
         Ok(Arc::new(Self {
             connection,

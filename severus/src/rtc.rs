@@ -138,11 +138,6 @@ impl RTC {
 
         Ok(())
     }
-
-    async fn close(&self) -> Result<(), webrtc::Error> {
-        self.connection.close().await?;
-        Ok(())
-    }
 }
 
 impl RTC {

@@ -38,7 +38,6 @@ export class AudioCaptureManagerMain {
         }
       }
     );
-    this._browserView.webContents.openDevTools();
 
     ipcMain.on("AUDIO_CAPTURE_START", this._handleStart);
     ipcMain.on("AUDIO_CAPTURE_SET_LOOPBACK", this._handleSetLoopback);

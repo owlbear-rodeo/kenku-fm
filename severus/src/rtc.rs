@@ -19,7 +19,7 @@ use webrtc::rtp_transceiver::rtp_codec::{
     RTCRtpCodecCapability, RTCRtpCodecParameters, RTPCodecType,
 };
 
-use crate::stream::{write_to_stream, OpusWriter};
+use crate::stream::{write_to_builder, OpusBuilder};
 
 static RUNTIME: OnceCell<Runtime> = OnceCell::new();
 
@@ -29,7 +29,7 @@ fn runtime<'a, C: Context<'a>>(cx: &mut C) -> NeonResult<&'static Runtime> {
 
 pub struct RTC {
     connection: RTCPeerConnection,
-    pub writer: Arc<Mutex<OpusWriter>>,
+    pub opus_builder: Arc<Mutex<OpusBuilder>>,
 }
 
 impl Finalize for RTC {}
@@ -70,11 +70,11 @@ impl RTC {
             .add_transceiver_from_kind(RTPCodecType::Audio, None)
             .await?;
 
-        let stream = Arc::new(Mutex::new(OpusWriter::new(10).unwrap()));
+        let opus_builder = Arc::new(Mutex::new(OpusBuilder::new(10)));
 
         Ok(Arc::new(Self {
             connection,
-            writer: stream,
+            opus_builder,
         }))
     }
     async fn signal(&self, offer: RTCSessionDescription) -> Result<RTCSessionDescription> {
@@ -102,16 +102,16 @@ impl RTC {
         let notify_tx = Arc::new(Notify::new());
         let notify_rx = notify_tx.clone();
 
-        let stream = Arc::clone(&self.writer);
+        let builder = Arc::clone(&self.opus_builder);
 
         self.connection.on_track(Box::new(move |track, _, _| {
             let notify_rx2 = Arc::clone(&notify_rx);
-            let opus_stream2 = Arc::clone(&stream);
+            let opus_builder = Arc::clone(&builder);
             Box::pin(async move {
                 let codec = track.codec();
                 let mime_type = codec.capability.mime_type.to_lowercase();
                 if mime_type == MIME_TYPE_OPUS.to_lowercase() {
-                    let _ = write_to_stream(opus_stream2, track, notify_rx2).await;
+                    let _ = write_to_builder(opus_builder, track, notify_rx2).await;
                 }
             })
         }));

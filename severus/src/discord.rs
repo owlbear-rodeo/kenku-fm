@@ -145,8 +145,8 @@ impl Discord {
         let mut handler_lock = handler.lock().await;
 
         let codec = OpusDecoderState::new().expect("Codec");
-        let writer = Arc::clone(&rtc.writer);
-        let reader = OpusReader::new(writer);
+        let builder = Arc::clone(&rtc.opus_builder);
+        let reader = OpusReader::new(builder);
         let source = Box::new(ReadOnlySource::new(reader));
         handler_lock.play_only_source(Input::new(
             true,

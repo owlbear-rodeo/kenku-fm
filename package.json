@@ -37,7 +37,6 @@
     "@types/react-dom": "^17.0.11",
     "@types/react-router": "^5.1.18",
     "@types/react-router-dom": "^5.3.3",
-    "@types/simple-peer": "^9.11.5",
     "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^4.0.1",
     "@typescript-eslint/parser": "^4.0.1",
@@ -78,7 +77,6 @@
     "react-redux": "^7.2.6",
     "react-router-dom": "^6.2.1",
     "redux-persist": "^6.0.0",
-    "simple-peer": "^9.11.1",
     "tiny-typed-emitter": "^2.1.0",
     "uuid": "^8.3.2"
   }

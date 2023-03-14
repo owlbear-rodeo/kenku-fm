@@ -1,9 +1,8 @@
 use anyhow::Result;
-use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use bytes::{Buf, BufMut, Bytes, BytesMut};
+use byteorder::{LittleEndian, WriteBytesExt};
+use bytes::{BufMut, Bytes, BytesMut};
 use log::debug;
 use std::{
-    convert::TryInto,
     io::{Read, Write},
     sync::{Arc, Mutex},
 };
@@ -43,9 +42,8 @@ impl Read for OpusReader {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         let writer = self.writer.lock().unwrap();
         let buf_len = buf.len();
-        let index = self.read_page_index % writer.max_buffered_pages as u32;
 
-        let page_len = writer.pages[index as usize].len();
+        let page_len = writer.page.len();
 
         // The songbird input will first read an i16 to determine the payload size
         // Detect this and read the next header
@@ -57,7 +55,7 @@ impl Read for OpusReader {
                 return Ok(buf_len);
             }
             // Get the payload size at index 27
-            let payload_size = writer.pages[index as usize][27];
+            let payload_size = writer.page[27];
 
             buf.as_mut()
                 .write_i16::<LittleEndian>(payload_size as i16)?;
@@ -69,7 +67,7 @@ impl Read for OpusReader {
                 // Return an empty payload if we don't have any data
                 return Ok(payload_size);
             }
-            let payload = &writer.pages[index as usize][PAGE_HEADER_SIZE + 1..];
+            let payload = &writer.page[PAGE_HEADER_SIZE + 1..];
 
             buf.as_mut().write_all(payload)?;
 
@@ -81,7 +79,7 @@ impl Read for OpusReader {
 }
 
 pub struct OpusWriter {
-    pub pages: Vec<BytesMut>,
+    pub page: BytesMut,
     pub sample_rate: u32,
     pub channel_count: u8,
     pub max_buffered_pages: usize,
@@ -93,13 +91,9 @@ pub struct OpusWriter {
 
 impl OpusWriter {
     pub fn new(max_buffered_pages: usize) -> Result<Self> {
-        let mut pages = Vec::with_capacity(max_buffered_pages);
-        for i in 0..max_buffered_pages {
-            let page = BytesMut::with_capacity(PAGE_SIZE);
-            pages.insert(i, page);
-        }
+        let page = BytesMut::with_capacity(PAGE_SIZE);
         Ok(OpusWriter {
-            pages,
+            page,
             sample_rate: 48000,
             channel_count: 2,
             max_buffered_pages,
@@ -119,23 +113,18 @@ impl OpusWriter {
     ) -> Result<(), webrtc::media::Error> {
         self.last_payload_size = payload.len();
 
-        let mut page = BytesMut::with_capacity(PAGE_HEADER_SIZE + 1 + self.last_payload_size);
+        self.page.clear();
 
-        page.put(PAGE_HEADER_SIGNATURE); // page headers starts with 'OggS'//0-3
-        page.put_u8(0); // Version//4
-        page.put_u8(header_type); // 1 = continuation, 2 = beginning of stream, 4 = end of stream//5
-        page.put_u64(granule_pos); // granule position //6-13
-        page.put_u32(self.serial); // Bitstream serial number//14-17
-        page.put_u32(page_index); // Page sequence number//18-21
-        page.put_u32(0); //Checksum reserve //22-25
-        page.put_u8(1); // Number of segments in page, giving always 1 segment //26
-        page.put_u8(self.last_payload_size as u8); // Segment Table inserting at 27th position since page header length is 27
-        page.put(payload.clone()); // inserting at 28th since Segment Table(1) + header length(27)
-
-        let index = page_index % self.max_buffered_pages as u32;
-        let buf = self.pages.get_mut(index as usize).unwrap();
-        buf.clear();
-        buf.put(page);
+        self.page.put(PAGE_HEADER_SIGNATURE); // page headers starts with 'OggS'//0-3
+        self.page.put_u8(0); // Version//4
+        self.page.put_u8(header_type); // 1 = continuation, 2 = beginning of stream, 4 = end of stream//5
+        self.page.put_u64(granule_pos); // granule position //6-13
+        self.page.put_u32(self.serial); // Bitstream serial number//14-17
+        self.page.put_u32(page_index); // Page sequence number//18-21
+        self.page.put_u32(0); //Checksum reserve //22-25
+        self.page.put_u8(1); // Number of segments in page, giving always 1 segment //26
+        self.page.put_u8(self.last_payload_size as u8); // Segment Table inserting at 27th position since page header length is 27
+        self.page.put(payload.clone()); // inserting at 28th since Segment Table(1) + header length(27)
 
         Ok(())
     }

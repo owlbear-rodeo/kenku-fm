@@ -25,7 +25,6 @@ declare module "severus" {
     rtcNew: () => Promise<RTCClient>;
     rtcSignal: (rtc: RTCClient, offer: string) => Promise<string>;
     rtcStartStream: (rtc: RTCClient) => Promise<void>;
-    rtcClose: (rtc: RTCClient) => Promise<void>;
   }
 
   const severus: Severus;

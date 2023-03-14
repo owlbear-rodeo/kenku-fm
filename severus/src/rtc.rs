@@ -140,8 +140,8 @@ impl RTC {
     }
 
     async fn close(&self) -> Result<(), webrtc::Error> {
-        self.connection.close().await
-        // Ok(())
+        self.connection.close().await?;
+        Ok(())
     }
 }
 
@@ -199,20 +199,6 @@ impl RTC {
                 Ok(_) => Ok(cx.undefined()),
                 Err(e) => cx.throw_error(e.to_string()),
             });
-        });
-
-        Ok(promise)
-    }
-
-    pub fn js_close(mut cx: FunctionContext) -> JsResult<JsPromise> {
-        let rt = runtime(&mut cx)?;
-        // let rtc = Arc::clone(&&cx.argument::<JsBox<Arc<RTC>>>(0)?);
-        let channel = cx.channel();
-        let (deferred, promise) = cx.promise();
-
-        rt.spawn(async move {
-            // rtc.close().await;
-            deferred.settle_with(&channel, move |mut cx| Ok(cx.undefined()));
         });
 
         Ok(promise)

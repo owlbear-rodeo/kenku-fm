@@ -24,7 +24,7 @@ export class AudioCapture {
    * Create the Audio Context, setup the communication socket and start the
    * internal PCM stream for communicating between the renderer and main context
    */
-  start() {
+  async start() {
     this._audioContext = new AudioContext({
       // Setting the latency hint to `playback` fixes audio glitches on some Windows 11 machines.
       latencyHint: "playback",
@@ -43,7 +43,6 @@ export class AudioCapture {
     };
 
     const peerConnection = new RTCPeerConnection();
-    peerConnection.oniceconnectionstatechange = console.log;
 
     mediaDestination.stream
       .getTracks()
@@ -51,25 +50,26 @@ export class AudioCapture {
         peerConnection.addTrack(track, mediaDestination.stream)
       );
 
-    peerConnection.onicecandidate = async (event) => {
-      console.log("CANDIDATE", event);
-      if (event.candidate === null) {
-        console.log("SIGNALLING", peerConnection.localDescription);
+    peerConnection.onnegotiationneeded = async () => {
+      try {
+        let offer = await peerConnection.createOffer();
+        offer.sdp = offer.sdp.replace(
+          "useinbandfec=1",
+          // Increase bitrate and set a cbr
+          "useinbandfec=1; maxaveragebitrate=64000; stereo=1; sprop-stereo=1; cbr=1"
+        );
+        await peerConnection.setLocalDescription(offer);
         const answer = await window.capture.signal(
           JSON.stringify(peerConnection.localDescription)
         );
-        console.log("RECEIVING: ", answer);
-        peerConnection.setRemoteDescription(
+        await peerConnection.setRemoteDescription(
           new RTCSessionDescription(JSON.parse(answer))
         );
         await window.capture.stream();
+      } catch (err) {
+        console.error(err);
       }
     };
-
-    peerConnection
-      .createOffer()
-      .then((d) => peerConnection.setLocalDescription(d))
-      .catch(console.error);
   }
 
   setMuted(id: number, muted: boolean): void {

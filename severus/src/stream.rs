@@ -1,7 +1,9 @@
 use anyhow::Result;
-use byteorder::{LittleEndian, WriteBytesExt};
-use bytes::{BufMut, Bytes, BytesMut};
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use bytes::{Buf, BufMut, Bytes, BytesMut};
+use log::debug;
 use std::{
+    convert::TryInto,
     io::{Read, Write},
     sync::{Arc, Mutex},
 };
@@ -16,7 +18,8 @@ use webrtc::{
     track::track_remote::TrackRemote,
 };
 
-pub const PAGE_SIZE: usize = 60;
+// Header size + payload size + payload size byte
+pub const PAGE_SIZE: usize = PAGE_HEADER_SIZE + 160 + 1;
 
 pub struct OpusReader {
     writer: Arc<Mutex<OpusWriter>>,
@@ -176,25 +179,25 @@ pub async fn write_to_stream(
                     let mut w = writer.lock().unwrap();
                     let res = w.write_rtp(&rtp_packet);
                     if let Err(e) = res {
-                        println!("rtp write error: {}", e);
+                        debug!("rtp write error: {}", e);
                     }
                 } else {
-                    println!("stream closing begin after read_rtp error");
+                    debug!("stream closing begin after read_rtp error");
                     let mut w = writer.lock().unwrap();
                     if let Err(err) = w.close() {
-                        println!("stream close err: {err}");
+                        debug!("stream close err: {err}");
                     }
-                    println!("stream closing end after read_rtp error");
+                    debug!("stream closing end after read_rtp error");
                     return Ok(());
                 }
             }
             _ = notify.notified() => {
-                println!("stream closing begin after notified");
+                debug!("stream closing begin after notified");
                 let mut w = writer.lock().unwrap();
                 if let Err(err) = w.close() {
-                    println!("stream close err: {err}");
+                    debug!("stream close err: {err}");
                 }
-                println!("stream closing end after notified");
+                debug!("stream closing end after notified");
                 return Ok(());
             }
         }

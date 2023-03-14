@@ -26,6 +26,7 @@ byteorder = "1"
 rtp = "0.6.7"
 bytes = "1"
 rand = "0.8.5"
+log = "0.4.17"
 
 [dependencies.neon]
 version = "0.10"

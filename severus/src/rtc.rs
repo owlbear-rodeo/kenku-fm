@@ -1,4 +1,5 @@
 use anyhow::Result;
+use log::debug;
 use neon::prelude::{Context, FunctionContext};
 use neon::result::{JsResult, NeonResult};
 use neon::types::{Finalize, JsBox, JsPromise, JsString};
@@ -121,15 +122,12 @@ impl RTC {
         // This will notify you when the peer has connected/disconnected
         self.connection.on_ice_connection_state_change(Box::new(
             move |connection_state: RTCIceConnectionState| {
-                println!("Connection State has changed {connection_state}");
-
+                debug!("RTC Connection State has changed {connection_state}");
                 if connection_state == RTCIceConnectionState::Connected {
-                    println!("Ctrl+C the remote client to stop the demo");
+                    debug!("RTC connected");
                 } else if connection_state == RTCIceConnectionState::Failed {
+                    debug!("RTC failed");
                     notify_tx.notify_waiters();
-
-                    println!("Done writing media files");
-
                     let _ = done_tx.try_send(());
                 }
                 Box::pin(async {})

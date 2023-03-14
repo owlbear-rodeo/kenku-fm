@@ -4,7 +4,7 @@ use neon::prelude::{Context, FunctionContext};
 use neon::result::{JsResult, NeonResult};
 use neon::types::{Finalize, JsBox, JsPromise, JsString};
 use once_cell::sync::OnceCell;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use tokio::runtime::Runtime;
 use tokio::sync::Notify;
 use webrtc::api::interceptor_registry::register_default_interceptors;
@@ -19,7 +19,7 @@ use webrtc::rtp_transceiver::rtp_codec::{
     RTCRtpCodecCapability, RTCRtpCodecParameters, RTPCodecType,
 };
 
-use crate::stream::{write_to_builder, OpusBuilder};
+use crate::stream::{runner, OpusEvents};
 
 static RUNTIME: OnceCell<Runtime> = OnceCell::new();
 
@@ -29,7 +29,7 @@ fn runtime<'a, C: Context<'a>>(cx: &mut C) -> NeonResult<&'static Runtime> {
 
 pub struct RTC {
     connection: RTCPeerConnection,
-    pub opus_builder: Arc<Mutex<OpusBuilder>>,
+    pub events: Arc<OpusEvents>,
 }
 
 impl Finalize for RTC {}
@@ -70,12 +70,9 @@ impl RTC {
             .add_transceiver_from_kind(RTPCodecType::Audio, None)
             .await?;
 
-        let opus_builder = Arc::new(Mutex::new(OpusBuilder::new(10)));
+        let events = Arc::new(OpusEvents::new());
 
-        Ok(Arc::new(Self {
-            connection,
-            opus_builder,
-        }))
+        Ok(Arc::new(Self { connection, events }))
     }
     async fn signal(&self, offer: RTCSessionDescription) -> Result<RTCSessionDescription> {
         self.connection.set_remote_description(offer).await?;
@@ -102,16 +99,16 @@ impl RTC {
         let notify_tx = Arc::new(Notify::new());
         let notify_rx = notify_tx.clone();
 
-        let builder = Arc::clone(&self.opus_builder);
+        let events = Arc::clone(&self.events);
 
         self.connection.on_track(Box::new(move |track, _, _| {
             let notify_rx2 = Arc::clone(&notify_rx);
-            let opus_builder = Arc::clone(&builder);
+            let events2 = Arc::clone(&events);
             Box::pin(async move {
                 let codec = track.codec();
                 let mime_type = codec.capability.mime_type.to_lowercase();
                 if mime_type == MIME_TYPE_OPUS.to_lowercase() {
-                    let _ = write_to_builder(opus_builder, track, notify_rx2).await;
+                    let _ = runner(events2, track, notify_rx2).await;
                 }
             })
         }));

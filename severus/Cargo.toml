@@ -36,8 +36,8 @@ features = ["channel-api", "napi-6", "promise-api"]
 
 [dependencies.songbird]
 default-features = false
-# git = 'https://github.com/owlbear-rodeo/songbird.git'
-path = "/Users/mitch/Documents/GitHub/songbird"
+git = 'https://github.com/owlbear-rodeo/songbird.git'
+branch = "streaming"
 version = "0.3.2"
 features = ["driver", "twilight-rustls", "zlib-stock"]
 

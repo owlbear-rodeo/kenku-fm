@@ -1,12 +1,13 @@
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
+use bytes::Bytes;
 use discortp::{
     rtp::{MutableRtpPacket, RtpPacket},
     MutablePacket,
 };
 use log::debug;
 use rand::random;
-use rtp::packet::Packet;
+use rtp::{codecs::opus::OpusPacket, packet::Packet};
 use songbird::{
     constants::{MONO_FRAME_SIZE, RTP_PROFILE_TYPE, RTP_VERSION, VOICE_PACKET_MAX},
     driver::{
@@ -20,6 +21,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 use tokio::sync::watch::Receiver;
+use webrtc::media::io::sample_builder::SampleBuilder;
 use xsalsa20poly1305::XSalsa20Poly1305 as Cipher;
 use xsalsa20poly1305::TAG_SIZE;
 
@@ -43,9 +45,7 @@ impl DriverEvents {
 #[async_trait]
 impl EventHandler for DriverEvents {
     async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
-        println!("event: {:?}", ctx);
         if let EventContext::DriverConnect(connection, udp_tx, ws, c) = ctx {
-            println!("connect: {:?}", connection);
             let conn = Connection {
                 ssrc: connection.ssrc,
                 udp_tx: udp_tx.clone(),
@@ -53,18 +53,26 @@ impl EventHandler for DriverEvents {
                 cipher: (*c).clone(),
             };
             self.tx.send(Some(conn)).unwrap();
-        } else if let EventContext::DriverReconnect(connection) = ctx {
-            println!("reconnect: {:?}", connection);
-        } else if let EventContext::DriverDisconnect(disconnect) = ctx {
-            println!("disconnect: {:?}", disconnect);
+            debug!("driver connected");
+        } else if let EventContext::DriverReconnect(connection, udp_tx, ws, c) = ctx {
+            let conn = Connection {
+                ssrc: connection.ssrc,
+                udp_tx: udp_tx.clone(),
+                ws: ws.clone(),
+                cipher: (*c).clone(),
+            };
+            self.tx.send(Some(conn)).unwrap();
+            debug!("driver reconnected");
+        } else if let EventContext::DriverDisconnect(_) = ctx {
             self.tx.send(None).unwrap();
+            debug!("driver disconnected");
         }
         None
     }
 }
 
-fn send_packet(
-    rtc_packet: Packet,
+fn send_payload(
+    payload: Bytes,
     packet: &mut [u8],
     conn: &Connection,
     crypto: &mut CryptoState,
@@ -75,15 +83,12 @@ fn send_packet(
           (Blame: VOICE_PACKET_MAX?)",
         );
         rtp.set_ssrc(conn.ssrc);
-        if rtc_packet.payload.is_empty() {
-            return Ok(());
-        }
-        let payload_len = rtc_packet.payload.len();
+        let payload_len = payload.len();
 
-        let payload = rtp.payload_mut();
-        payload[TAG_SIZE..]
+        let rtp_payload = rtp.payload_mut();
+        rtp_payload[TAG_SIZE..]
             .as_mut()
-            .write_all(&rtc_packet.payload)
+            .write_all(&payload)
             .unwrap();
 
         let final_payload_size = crypto.write_packet_nonce(&mut rtp, TAG_SIZE + payload_len);
@@ -136,13 +141,22 @@ pub fn runner(rtp_rx: Receiver<Packet>, driver_rx: flume::Receiver<Option<Connec
 
         let mut rx = rtp_rx.clone();
 
+        let mut sample_builder = SampleBuilder::new(10, OpusPacket::default(), 48000);
+
         while rx.changed().await.is_ok() && !driver2.is_disconnected() {
+            let rtc_packet = rx.borrow().clone();
+            if rtc_packet.payload.is_empty() {
+                println!("empty");
+            }
+            sample_builder.push(rtc_packet);
             let conn_lock = conn2.lock().unwrap();
             if let Some(ref conn) = *conn_lock {
-                let rtc_packet = rx.borrow().clone();
-                if let Err(e) = send_packet(rtc_packet, &mut packet, &conn, &mut crypto) {
-                    debug!("packet send failed, {}", e);
-                    break;
+                let sample = sample_builder.pop();
+                if let Some(s) = sample {
+                    if let Err(e) = send_payload(s.data, &mut packet, &conn, &mut crypto) {
+                        debug!("packet send failed, {}", e);
+                        break;
+                    }
                 }
             }
         }

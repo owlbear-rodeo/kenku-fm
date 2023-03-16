@@ -155,8 +155,8 @@ impl Discord {
             songbird::Event::Core(CoreEvent::DriverDisconnect),
             DriverEvents::new(driver_tx.clone()),
         );
-        sender::runner(events.rx.clone(), driver_rx);
         drop(handler_lock);
+        sender::runner(events.rx.clone(), driver_rx);
         let _ = self.voice.join(guild_id, channel_id).await;
         Ok(())
     }

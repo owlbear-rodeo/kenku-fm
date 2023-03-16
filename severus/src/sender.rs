@@ -145,17 +145,14 @@ pub fn runner(rtp_rx: Receiver<Packet>, driver_rx: flume::Receiver<Option<Connec
 
         while rx.changed().await.is_ok() && !driver2.is_disconnected() {
             let rtc_packet = rx.borrow().clone();
-            if rtc_packet.payload.is_empty() {
-                println!("empty");
-            }
             sample_builder.push(rtc_packet);
-            let conn_lock = conn2.lock().unwrap();
+            let mut conn_lock = conn2.lock().unwrap();
             if let Some(ref conn) = *conn_lock {
                 let sample = sample_builder.pop();
                 if let Some(s) = sample {
                     if let Err(e) = send_payload(s.data, &mut packet, &conn, &mut crypto) {
                         debug!("packet send failed, {}", e);
-                        break;
+                        *conn_lock = None;
                     }
                 }
             }

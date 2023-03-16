@@ -19,7 +19,7 @@ use webrtc::rtp_transceiver::rtp_codec::{
     RTCRtpCodecCapability, RTCRtpCodecParameters, RTPCodecType,
 };
 
-use crate::stream::{runner, OpusEvents};
+use crate::receiver::{runner, OpusEvents};
 
 static RUNTIME: OnceCell<Runtime> = OnceCell::new();
 

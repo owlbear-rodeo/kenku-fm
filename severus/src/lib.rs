@@ -1,8 +1,9 @@
 use neon::prelude::*;
 
 mod discord;
+mod receiver;
 mod rtc;
-mod stream;
+mod sender;
 
 #[neon::main]
 fn main(mut cx: ModuleContext) -> NeonResult<()> {

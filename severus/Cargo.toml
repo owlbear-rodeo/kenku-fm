@@ -27,6 +27,7 @@ rtp = "0.6.7"
 bytes = "1"
 rand = "0.8.5"
 log = "0.4.17"
+st3 = "0.4.1"
 
 [dependencies.neon]
 version = "0.10"
@@ -35,10 +36,25 @@ features = ["channel-api", "napi-6", "promise-api"]
 
 [dependencies.songbird]
 default-features = false
-git = 'https://github.com/owlbear-rodeo/songbird.git'
+# git = 'https://github.com/owlbear-rodeo/songbird.git'
+path = "/Users/mitch/Documents/GitHub/songbird"
 version = "0.3.2"
 features = ["driver", "twilight-rustls", "zlib-stock"]
 
 [dependencies.tokio]
 version = "1.26"
 features = ["macros", "rt-multi-thread"]
+
+[dependencies.async-trait]
+version = "0.1"
+
+[dependencies.flume]
+version = "0.10"
+
+[dependencies.discortp]
+features = ["discord-full"]
+version = "0.4"
+
+[dependencies.xsalsa20poly1305]
+version = "0.9"
+features = ["std"]

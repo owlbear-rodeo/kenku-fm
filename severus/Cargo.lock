@@ -2152,8 +2152,11 @@ name = "severus"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "byteorder",
  "bytes",
+ "discortp",
+ "flume",
  "futures",
  "log",
  "neon",
@@ -2162,6 +2165,7 @@ dependencies = [
  "rtp",
  "serde_json",
  "songbird",
+ "st3",
  "symphonia-core",
  "tokio",
  "tracing",
@@ -2170,6 +2174,7 @@ dependencies = [
  "twilight-model",
  "twilight-standby",
  "webrtc",
+ "xsalsa20poly1305",
 ]
 
 [[package]]
@@ -2274,7 +2279,6 @@ dependencies = [
 [[package]]
 name = "songbird"
 version = "0.3.2"
-source = "git+https://github.com/owlbear-rodeo/songbird.git#f11121f652c8bd50e4d68a95c72123226081823f"
 dependencies = [
  "async-trait",
  "async-tungstenite",
@@ -2327,6 +2331,16 @@ checksum = "67cf02bbac7a337dc36e4f5a693db6c21e7863f45070f7064577eb4367a3212b"
 dependencies = [
  "base64ct",
  "der",
+]
+
+[[package]]
+name = "st3"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c5a1d2cec4c9904d238075cb3a212615e67aee6acce849e4e565acf2320a7bf1"
+dependencies = [
+ "crossbeam-utils",
+ "loom",
 ]
 
 [[package]]

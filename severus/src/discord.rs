@@ -11,12 +11,8 @@ use neon::types::JsBox;
 use neon::types::JsPromise;
 use neon::types::JsString;
 use once_cell::sync::OnceCell;
-use songbird::input::codec::OpusDecoderState;
-use songbird::input::Codec;
-use songbird::input::Container;
-use songbird::input::Input;
+use songbird::CoreEvent;
 use std::sync::Arc;
-use symphonia_core::io::ReadOnlySource;
 use tokio::runtime::Runtime;
 use twilight_gateway::Cluster;
 use twilight_gateway::Intents;
@@ -29,7 +25,8 @@ use twilight_model::id::Id;
 use songbird::Songbird;
 
 use crate::rtc::RTC;
-use crate::stream::OpusReader;
+use crate::sender;
+use crate::sender::DriverEvents;
 
 static RUNTIME: OnceCell<Runtime> = OnceCell::new();
 
@@ -141,20 +138,26 @@ impl Discord {
         guild_id: Id<GuildMarker>,
         channel_id: Id<ChannelMarker>,
     ) -> Result<()> {
-        let (handler, _) = self.voice.join(guild_id, channel_id).await;
+        let handler = self.voice.get_or_insert(guild_id);
         let mut handler_lock = handler.lock().await;
-
-        let codec = OpusDecoderState::new().expect("Codec");
+        handler_lock.disable_mixer(true);
         let events = Arc::clone(&rtc.events);
-        let reader = OpusReader::new(events.rx.clone());
-        let source = Box::new(ReadOnlySource::new(reader));
-        handler_lock.play_only_source(Input::new(
-            true,
-            songbird::input::Reader::Extension(source),
-            Codec::Opus(codec),
-            Container::Dca { first_frame: 0 },
-            None,
-        ));
+        let (driver_tx, driver_rx) = flume::unbounded();
+        handler_lock.add_global_event(
+            songbird::Event::Core(CoreEvent::DriverConnect),
+            DriverEvents::new(driver_tx.clone()),
+        );
+        handler_lock.add_global_event(
+            songbird::Event::Core(CoreEvent::DriverReconnect),
+            DriverEvents::new(driver_tx.clone()),
+        );
+        handler_lock.add_global_event(
+            songbird::Event::Core(CoreEvent::DriverDisconnect),
+            DriverEvents::new(driver_tx.clone()),
+        );
+        sender::runner(events.rx.clone(), driver_rx);
+        drop(handler_lock);
+        let _ = self.voice.join(guild_id, channel_id).await;
         Ok(())
     }
 

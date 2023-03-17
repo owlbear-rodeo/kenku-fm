@@ -54,10 +54,12 @@ export class AudioCapture {
       try {
         let offer = await peerConnection.createOffer();
         offer.sdp = offer.sdp.replace(
-          "useinbandfec=1",
-          // Increase bitrate and set a cbr
-          "useinbandfec=1; maxaveragebitrate=64000; stereo=1; sprop-stereo=1; cbr=1"
+          "minptime=10;useinbandfec=1",
+          // Increase bitrate and enable stereo
+          "minptime=10; useinbandfec=1; maxaveragebitrate=64000; stereo=1; sprop-stereo=1"
         );
+        // Disable ice trickle
+        offer.sdp = offer.sdp.replace(/a=ice-options:trickle\s\n/g, "");
         await peerConnection.setLocalDescription(offer);
         const answer = await window.capture.signal(
           JSON.stringify(peerConnection.localDescription)

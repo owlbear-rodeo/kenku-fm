@@ -1,15 +1,14 @@
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
-use bytes::Bytes;
 use discortp::{
     rtp::{MutableRtpPacket, RtpPacket},
+    wrap::{Wrap16, Wrap32},
     MutablePacket,
 };
 use log::debug;
-use rand::random;
-use rtp::{codecs::opus::OpusPacket, packet::Packet};
+use rtp::packet::Packet;
 use songbird::{
-    constants::{MONO_FRAME_SIZE, RTP_PROFILE_TYPE, RTP_VERSION, VOICE_PACKET_MAX},
+    constants::{RTP_PROFILE_TYPE, RTP_VERSION, VOICE_PACKET_MAX},
     driver::{
         tasks::message::{UdpTxMessage, WsMessage},
         CryptoState,
@@ -19,9 +18,9 @@ use songbird::{
 use std::{
     io::Write,
     sync::{Arc, Mutex},
+    time::Instant,
 };
 use tokio::sync::watch::Receiver;
-use webrtc::media::io::sample_builder::SampleBuilder;
 use xsalsa20poly1305::XSalsa20Poly1305 as Cipher;
 use xsalsa20poly1305::TAG_SIZE;
 
@@ -71,8 +70,8 @@ impl EventHandler for DriverEvents {
     }
 }
 
-fn send_payload(
-    payload: Bytes,
+fn send_packet(
+    rtp_packet: Packet,
     packet: &mut [u8],
     conn: &Connection,
     crypto: &mut CryptoState,
@@ -83,12 +82,14 @@ fn send_payload(
           (Blame: VOICE_PACKET_MAX?)",
         );
         rtp.set_ssrc(conn.ssrc);
-        let payload_len = payload.len();
+        rtp.set_timestamp(Wrap32::new(rtp_packet.header.timestamp));
+        rtp.set_sequence(Wrap16::new(rtp_packet.header.sequence_number));
+        let payload_len = rtp_packet.payload.len();
 
         let rtp_payload = rtp.payload_mut();
         rtp_payload[TAG_SIZE..]
             .as_mut()
-            .write_all(&payload)
+            .write_all(&rtp_packet.payload)
             .unwrap();
 
         let final_payload_size = crypto.write_packet_nonce(&mut rtp, TAG_SIZE + payload_len);
@@ -104,19 +105,16 @@ fn send_payload(
     }
 
     let index = RtpPacket::minimum_packet_size() + final_payload_size;
-    if let Err(_) = conn
-        .udp_tx
-        .send(UdpTxMessage::Packet(packet[..index].to_vec()))
-    {
+    let start = Instant::now();
+    let data = packet[..index].to_vec();
+    println!(
+        "{} convert: {:?}",
+        rtp_packet.header.sequence_number,
+        start.elapsed()
+    );
+    if let Err(_) = conn.udp_tx.send(UdpTxMessage::Packet(data)) {
         return Err(anyhow!("udp error"));
     }
-
-    let mut rtp = MutableRtpPacket::new(&mut packet[..]).expect(
-        "FATAL: Too few bytes in self.packet for RTP header.\
-          (Blame: VOICE_PACKET_MAX?)",
-    );
-    rtp.set_sequence(rtp.get_sequence() + 1);
-    rtp.set_timestamp(rtp.get_timestamp() + MONO_FRAME_SIZE as u32);
 
     Ok(())
 }
@@ -134,26 +132,18 @@ pub fn runner(rtp_rx: Receiver<Packet>, driver_rx: flume::Receiver<Option<Connec
         );
         rtp.set_version(RTP_VERSION);
         rtp.set_payload_type(RTP_PROFILE_TYPE);
-        rtp.set_sequence(random::<u16>().into());
-        rtp.set_timestamp(random::<u32>().into());
 
         let mut crypto = CryptoState::Normal;
 
         let mut rx = rtp_rx.clone();
 
-        let mut sample_builder = SampleBuilder::new(10, OpusPacket::default(), 48000);
-
         while rx.changed().await.is_ok() && !driver2.is_disconnected() {
             let rtc_packet = rx.borrow().clone();
-            sample_builder.push(rtc_packet);
             let mut conn_lock = conn2.lock().unwrap();
             if let Some(ref conn) = *conn_lock {
-                let sample = sample_builder.pop();
-                if let Some(s) = sample {
-                    if let Err(e) = send_payload(s.data, &mut packet, &conn, &mut crypto) {
-                        debug!("packet send failed, {}", e);
-                        *conn_lock = None;
-                    }
+                if let Err(e) = send_packet(rtc_packet, &mut packet, &conn, &mut crypto) {
+                    debug!("packet send failed, {}", e);
+                    *conn_lock = None;
                 }
             }
         }

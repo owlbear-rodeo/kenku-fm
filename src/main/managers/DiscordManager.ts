@@ -66,7 +66,7 @@ export class DiscordManager {
   ) => {
     try {
       if (!this.audio.rtc) {
-        throw Error("Audio capture no running");
+        throw Error("Audio capture not running");
       }
       await severus.discordJoin(
         this.client,

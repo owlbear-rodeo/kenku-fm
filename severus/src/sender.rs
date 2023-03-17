@@ -5,6 +5,7 @@ use discortp::{
     wrap::{Wrap16, Wrap32},
     MutablePacket,
 };
+use flume::Receiver;
 use log::debug;
 use rtp::packet::Packet;
 use songbird::{
@@ -18,9 +19,7 @@ use songbird::{
 use std::{
     io::Write,
     sync::{Arc, Mutex},
-    time::Instant,
 };
-use tokio::sync::watch::Receiver;
 use xsalsa20poly1305::XSalsa20Poly1305 as Cipher;
 use xsalsa20poly1305::TAG_SIZE;
 
@@ -135,10 +134,12 @@ pub fn runner(rtp_rx: Receiver<Packet>, driver_rx: flume::Receiver<Option<Connec
 
         let mut crypto = CryptoState::Normal;
 
-        let mut rx = rtp_rx.clone();
+        let rx = rtp_rx.clone();
 
-        while rx.changed().await.is_ok() && !driver2.is_disconnected() {
-            let rtc_packet = rx.borrow().clone();
+        while let Ok(rtc_packet) = rx.recv_async().await {
+            if driver2.is_disconnected() {
+                break;
+            }
             let mut conn_lock = conn2.lock().unwrap();
             if let Some(ref conn) = *conn_lock {
                 if let Err(e) = send_packet(rtc_packet, &mut packet, &conn, &mut crypto) {

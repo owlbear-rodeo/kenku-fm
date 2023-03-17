@@ -1,12 +1,10 @@
 use anyhow::Result;
+use flume::{Receiver, Sender};
 use log::debug;
 use rand::random;
 use rtp::packet::Packet;
 use std::sync::Arc;
-use tokio::sync::{
-    watch::{self, Receiver, Sender},
-    Notify,
-};
+use tokio::sync::Notify;
 use webrtc::track::track_remote::TrackRemote;
 
 pub struct OpusEvents {
@@ -16,8 +14,7 @@ pub struct OpusEvents {
 
 impl OpusEvents {
     pub fn new() -> Self {
-        let packet = Packet::default();
-        let (tx, rx) = watch::channel(packet);
+        let (tx, rx) = flume::unbounded();
         OpusEvents { tx, rx }
     }
 

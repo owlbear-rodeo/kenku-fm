@@ -104,17 +104,10 @@ fn send_packet(
     }
 
     let index = RtpPacket::minimum_packet_size() + final_payload_size;
-    let start = Instant::now();
     let data = packet[..index].to_vec();
-    println!(
-        "{} convert: {:?}",
-        rtp_packet.header.sequence_number,
-        start.elapsed()
-    );
     if let Err(_) = conn.udp_tx.send(UdpTxMessage::Packet(data)) {
         return Err(anyhow!("udp error"));
     }
-
     Ok(())
 }
 

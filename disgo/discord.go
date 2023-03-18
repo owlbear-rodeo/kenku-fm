@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 
 	discord "github.com/owlbear-rodeo/discordgo"
 )
@@ -25,8 +24,7 @@ type Discord struct {
 	bot *discord.Session
 }
 
-func Create(ctx context.Context) (s *Discord) {
-	token := os.Getenv("DISCORD_TOKEN")
+func Create(ctx context.Context, token string) (s Discord) {
 	// Create a new Discord session using the provided bot token.
 	dg, err := discord.New("Bot " + token)
 	if err != nil {
@@ -41,7 +39,7 @@ func Create(ctx context.Context) (s *Discord) {
 		ctx = context.Background()
 	}
 
-	return &Discord{
+	return Discord{
 		ctx: ctx,
 		bot: dg,
 	}

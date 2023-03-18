@@ -18,6 +18,14 @@ type SignalWebRTCPayload struct {
 	Offer string `json:"offer"`
 }
 
+func start(discord *Discord) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		*discord = Create(context.Background(), token)
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
 func getInfo(discord *Discord) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		info := discord.GetInfo()
@@ -92,23 +100,24 @@ func stream(webrtc *RTC, c chan *discord.RealtimePacket) http.HandlerFunc {
 }
 
 func main() {
-	fmt.Println("Server running on port 8091")
+	addr := ":8091"
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c := Create(context.Background())
+	d := Discord{}
 	w := CreateNewWebRTC()
-
 	rtpChan := make(chan *discord.RealtimePacket)
 	broadcaster := NewBroadcastServer(ctx, rtpChan)
 
-	http.HandleFunc("/disgo/get-info", getInfo(c))
-	http.HandleFunc("/disgo/close", closeDiscord(c))
-	http.HandleFunc("/disgo/join", join(w, c, broadcaster))
-	http.HandleFunc("/disgo/leave", leave(c))
+	http.HandleFunc("/disgo/discord/start", start(&d))
+	http.HandleFunc("/disgo/get-info", getInfo(&d))
+	http.HandleFunc("/disgo/close", closeDiscord(&d))
+	http.HandleFunc("/disgo/join", join(w, &d, broadcaster))
+	http.HandleFunc("/disgo/leave", leave(&d))
 	http.HandleFunc("/disgo/webrtc/signal", signal(w))
 	http.HandleFunc("/disgo/webrtc/stream", stream(w, rtpChan))
 
-	http.ListenAndServe(":8091", nil)
+	fmt.Printf("Server running on port %s", addr)
+	http.ListenAndServe(addr, nil)
 }

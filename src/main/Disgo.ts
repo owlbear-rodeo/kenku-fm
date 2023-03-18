@@ -1,5 +1,18 @@
 import fetch from "node-fetch";
 
+export async function startDiscord(token: string): Promise<void> {
+  const response = await fetch("http://localhost:8091/disgo/discord/start", {
+    method: "POST",
+    headers: {
+      Authorization: token,
+    },
+  });
+
+  if (response.ok) {
+    console.log("Discord client created");
+  }
+}
+
 export async function getDiscordInfo() {
   const response = await fetch("http://localhost:8091/disgo/get-info");
 

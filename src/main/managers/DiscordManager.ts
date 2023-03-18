@@ -4,6 +4,7 @@ import {
   getDiscordInfo,
   joinVoiceChannel,
   leaveVoiceChannel,
+  startDiscord,
 } from "../Disgo";
 import { AudioCaptureManagerMain } from "./AudioCaptureManagerMain";
 
@@ -37,6 +38,7 @@ export class DiscordManager {
     }
 
     try {
+      await startDiscord(token);
       event.reply("DISCORD_READY");
       event.reply("MESSAGE", "Connected");
       const guilds = await getDiscordInfo();

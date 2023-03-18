@@ -21,9 +21,8 @@ type Guild struct {
 }
 
 type Discord struct {
-	ctx   context.Context
-	bot   *discord.Session
-	voice *discord.VoiceConnection
+	ctx context.Context
+	bot *discord.Session
 }
 
 func Create(ctx context.Context) (s *Discord) {

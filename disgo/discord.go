@@ -20,11 +20,12 @@ type Guild struct {
 }
 
 type Discord struct {
-	ctx context.Context
-	bot *discord.Session
+	ctx               context.Context
+	bot               *discord.Session
+	voice_connections map[string]*discord.VoiceConnection
 }
 
-func Create(ctx context.Context, token string) (s Discord) {
+func Create(token string) (s *Discord) {
 	// Create a new Discord session using the provided bot token.
 	dg, err := discord.New("Bot " + token)
 	if err != nil {
@@ -35,19 +36,18 @@ func Create(ctx context.Context, token string) (s Discord) {
 	// In this example, we only care about receiving message events.
 	dg.Identify.Intents = discord.IntentGuilds | discord.IntentGuildVoiceStates
 
-	if ctx == nil {
-		ctx = context.Background()
-	}
+	ctx := context.Background()
 
-	return Discord{
-		ctx: ctx,
-		bot: dg,
+	return &Discord{
+		ctx:               ctx,
+		bot:               dg,
+		voice_connections: make(map[string]*discord.VoiceConnection),
 	}
 }
 
 func (d *Discord) Open() {
 	if err := d.bot.Open(); err != nil {
-		println(`open connection failed: %v`, err)
+		fmt.Printf(`open connection failed: %+v`, err)
 	}
 }
 
@@ -102,7 +102,10 @@ func (s *Discord) JoinVoiceChannel(guildID string, channelID string) (*discord.V
 }
 
 func (s *Discord) LeaveVoiceChannel(guildID string, channelID string) {
-	_, err := s.bot.ChannelVoiceJoin(guildID, "", false, true)
+	voice := s.voice_connections[channelID]
+
+	err := voice.Disconnect()
+	// close(voice.OpusSend)
 	if err != nil {
 		fmt.Println("failed to join voice channel:", err)
 		return
@@ -119,8 +122,14 @@ func (s *Discord) SendAudio(v *discord.VoiceConnection, listener <-chan *discord
 		return
 	}
 
-	for {
-		payload := <-listener
-		v.OpusSend <- *payload
-	}
+	go func() {
+		for {
+			payload := <-listener
+			if len(payload.Payload) == 0 {
+				fmt.Println("There isn't any more")
+				break
+			}
+			v.OpusSend <- *payload
+		}
+	}()
 }

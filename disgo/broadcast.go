@@ -18,14 +18,21 @@ type broadcastServer struct {
 	removeListener chan (<-chan *discord.RealtimePacket)
 }
 
-func (s *broadcastServer) Subscribe() <-chan *discord.RealtimePacket {
+func (s *broadcastServer) Subscribe() chan *discord.RealtimePacket {
 	newListener := make(chan *discord.RealtimePacket)
 	s.addListener <- newListener
 	return newListener
 }
 
-func (s *broadcastServer) CancelSubscription(channel <-chan *discord.RealtimePacket) {
-	s.removeListener <- channel
+func (s *broadcastServer) CancelSubscription(channel chan *discord.RealtimePacket) {
+	for i, ch := range s.listeners {
+		if ch == channel {
+			s.listeners[i] = s.listeners[len(s.listeners)-1]
+			s.listeners = s.listeners[:len(s.listeners)-1]
+			close(ch)
+			break
+		}
+	}
 }
 
 func NewBroadcastServer(ctx context.Context, source <-chan *discord.RealtimePacket) *broadcastServer {
@@ -54,15 +61,6 @@ func (s *broadcastServer) serve(ctx context.Context) {
 			return
 		case newListener := <-s.addListener:
 			s.listeners = append(s.listeners, newListener)
-		case listenerToRemove := <-s.removeListener:
-			for i, ch := range s.listeners {
-				if ch == listenerToRemove {
-					s.listeners[i] = s.listeners[len(s.listeners)-1]
-					s.listeners = s.listeners[:len(s.listeners)-1]
-					close(ch)
-					break
-				}
-			}
 		case val, ok := <-s.source:
 			if !ok {
 				return
@@ -70,13 +68,24 @@ func (s *broadcastServer) serve(ctx context.Context) {
 			for _, listener := range s.listeners {
 				if listener != nil {
 					select {
-					case listener <- val:
 					case <-ctx.Done():
 						return
+					default:
+						SafeSend(listener, val)
 					}
-
 				}
 			}
 		}
 	}
+}
+
+func SafeSend(ch chan *discord.RealtimePacket, value *discord.RealtimePacket) (closed bool) {
+	defer func() {
+		if recover() != nil {
+			closed = true
+		}
+	}()
+
+	ch <- value  // panic if ch is closed
+	return false // <=> closed = false; return
 }

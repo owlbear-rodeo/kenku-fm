@@ -18,54 +18,61 @@ type SignalWebRTCPayload struct {
 	Offer string `json:"offer"`
 }
 
-func start(discord *Discord) http.HandlerFunc {
+var d *Discord
+var listeners map[string]chan *discord.RealtimePacket
+
+func start() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := r.Header.Get("Authorization")
-		*discord = Create(context.Background(), token)
+		d = Create(token)
+		d.Open()
 		w.WriteHeader(http.StatusOK)
 	}
 }
 
-func getInfo(discord *Discord) http.HandlerFunc {
+func getInfo() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		info := discord.GetInfo()
+		info := d.GetInfo()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(info)
 	}
 }
 
-func closeDiscord(discord *Discord) http.HandlerFunc {
+func closeDiscord() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		discord.Close()
+		d.Close()
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("ok"))
 	}
 }
 
-func join(webrtc *RTC, discord *Discord, broadcaster *broadcastServer) http.HandlerFunc {
+func join(webrtc *RTC, broadcaster *broadcastServer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		t := &JoinVoiceChannelPayload{}
 		err := json.NewDecoder(r.Body).Decode(t)
 		if err != nil {
 			panic(err)
 		}
 
-		discord.Open()
-		v, err := discord.JoinVoiceChannel(t.GuildId, t.ChannelId)
+		v, err := d.JoinVoiceChannel(t.GuildId, t.ChannelId)
 		if err != nil {
 			fmt.Println("failed to join voice channel:", err)
 			w.WriteHeader(http.StatusBadGateway)
 		}
 
+		d.voice_connections[t.ChannelId] = v
 		l := broadcaster.Subscribe()
-		discord.SendAudio(v, l)
+		listeners[t.ChannelId] = l
+
+		d.SendAudio(v, l)
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte("ok"))
 	}
 }
 
-func leave(discord *Discord) http.HandlerFunc {
+func leave(broadcaster *broadcastServer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		t := &JoinVoiceChannelPayload{}
 		err := json.NewDecoder(r.Body).Decode(t)
@@ -73,7 +80,10 @@ func leave(discord *Discord) http.HandlerFunc {
 			panic(err)
 		}
 
-		discord.LeaveVoiceChannel(t.GuildId, t.ChannelId)
+		d.LeaveVoiceChannel(t.GuildId, t.ChannelId)
+		broadcaster.CancelSubscription(listeners[t.ChannelId])
+
+		delete(listeners, t.ChannelId)
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte("ok"))
 	}
@@ -105,16 +115,17 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	d := Discord{}
 	w := CreateNewWebRTC()
 	rtpChan := make(chan *discord.RealtimePacket)
 	broadcaster := NewBroadcastServer(ctx, rtpChan)
 
-	http.HandleFunc("/disgo/discord/start", start(&d))
-	http.HandleFunc("/disgo/get-info", getInfo(&d))
-	http.HandleFunc("/disgo/close", closeDiscord(&d))
-	http.HandleFunc("/disgo/join", join(w, &d, broadcaster))
-	http.HandleFunc("/disgo/leave", leave(&d))
+	listeners = make(map[string]chan *discord.RealtimePacket)
+
+	http.HandleFunc("/disgo/discord/start", start())
+	http.HandleFunc("/disgo/get-info", getInfo())
+	http.HandleFunc("/disgo/close", closeDiscord())
+	http.HandleFunc("/disgo/join", join(w, broadcaster))
+	http.HandleFunc("/disgo/leave", leave(broadcaster))
 	http.HandleFunc("/disgo/webrtc/signal", signal(w))
 	http.HandleFunc("/disgo/webrtc/stream", stream(w, rtpChan))
 

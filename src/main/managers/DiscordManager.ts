@@ -55,8 +55,10 @@ export class DiscordManager {
     event.reply("DISCORD_DISCONNECTED");
     event.reply("DISCORD_GUILDS", []);
     event.reply("DISCORD_CHANNEL_JOINED", "local");
-    severus.discordDestroy(this.client);
-    this.client = undefined;
+    if (this.client) {
+      severus.discordDestroy(this.client);
+      this.client = undefined;
+    }
   };
 
   _handleJoinChannel = async (
@@ -67,6 +69,9 @@ export class DiscordManager {
     try {
       if (!this.audio.rtc) {
         throw Error("Audio capture not running");
+      }
+      if (!this.client) {
+        throw Error("Discord client not ready");
       }
       await severus.discordJoin(
         this.client,
@@ -87,6 +92,9 @@ export class DiscordManager {
     guildId: string
   ) => {
     try {
+      if (!this.client) {
+        throw Error("Discord client not ready");
+      }
       await severus.discordLeave(this.client, guildId);
     } catch (err) {
       event.reply("ERROR", `Error leaving channel: ${err?.message}`);

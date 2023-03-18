@@ -5,7 +5,7 @@
   "description": "Online tabletop audio sharing for Discord",
   "main": "./.webpack/main",
   "scripts": {
-    "start": "yarn --cwd ./severus && electron-forge start",
+    "start": "electron-forge start",
     "package": "env-cmd electron-forge package",
     "make": "env-cmd electron-forge make",
     "publish": "env-cmd electron-forge publish",
@@ -71,6 +71,7 @@
     "fastify": "3.29.4",
     "howler": "^2.2.3",
     "lodash.throttle": "^4.1.1",
+    "node-fetch": "^3.3.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-dropzone": "^11.4.2",

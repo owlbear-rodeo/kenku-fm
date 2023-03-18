@@ -1,9 +1,8 @@
 import { BrowserView, ipcMain, webContents } from "electron";
+import { signalWebRtc, streamWebRtc } from "../Drongo";
 
 declare const AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY: string;
 declare const AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
-
-import severus, { RTCClient } from "severus";
 
 /**
  * Manager to capture audio from browser views and external audio devices
@@ -11,7 +10,6 @@ import severus, { RTCClient } from "severus";
  */
 export class AudioCaptureManagerMain {
   _browserView: BrowserView;
-  rtc?: RTCClient;
 
   constructor() {
     this._browserView = new BrowserView({
@@ -129,12 +127,13 @@ export class AudioCaptureManagerMain {
   };
 
   _handleSignal = async (_: Electron.IpcMainEvent, offer: string) => {
-    this.rtc = await severus.rtcNew();
-    return severus.rtcSignal(this.rtc, offer);
+    const answer = await signalWebRtc(offer);
+
+    return answer;
   };
 
   _handleStream = async (_: Electron.IpcMainEvent) => {
-    return severus.rtcStartStream(this.rtc);
+    await streamWebRtc();
   };
 
   _handleStartBrowserViewStream = (

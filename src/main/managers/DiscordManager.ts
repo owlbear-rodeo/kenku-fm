@@ -1,10 +1,14 @@
 import { BrowserWindow, ipcMain } from "electron";
-import severus, { DiscordClient } from "severus";
+import {
+  discordClose,
+  getDiscordInfo,
+  joinVoiceChannel,
+  leaveVoiceChannel,
+} from "../Drongo";
 import { AudioCaptureManagerMain } from "./AudioCaptureManagerMain";
 
 export class DiscordManager {
   window: BrowserWindow;
-  client?: DiscordClient;
   audio: AudioCaptureManagerMain;
 
   constructor(window: BrowserWindow, audio: AudioCaptureManagerMain) {
@@ -21,8 +25,7 @@ export class DiscordManager {
     ipcMain.off("DISCORD_DISCONNECT", this._handleDisconnect);
     ipcMain.off("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
     ipcMain.off("DISCORD_LEAVE_CHANNEL", this._handleLeaveChannel);
-    severus.discordDestroy(this.client);
-    this.client = undefined;
+    discordClose();
     this.audio = undefined;
   }
 
@@ -33,17 +36,10 @@ export class DiscordManager {
       return;
     }
 
-    if (this.client) {
-      event.reply("DISCORD_DISCONNECTED");
-      event.reply("ERROR", "Error connecting to bot: Already collected");
-      return;
-    }
-
     try {
-      this.client = await severus.discordNew(token);
       event.reply("DISCORD_READY");
       event.reply("MESSAGE", "Connected");
-      const guilds = await severus.discordGetInfo(this.client);
+      const guilds = await getDiscordInfo();
       event.reply("DISCORD_GUILDS", guilds);
     } catch (err) {
       event.reply("DISCORD_DISCONNECTED");
@@ -55,8 +51,7 @@ export class DiscordManager {
     event.reply("DISCORD_DISCONNECTED");
     event.reply("DISCORD_GUILDS", []);
     event.reply("DISCORD_CHANNEL_JOINED", "local");
-    severus.discordDestroy(this.client);
-    this.client = undefined;
+    discordClose();
   };
 
   _handleJoinChannel = async (
@@ -65,15 +60,10 @@ export class DiscordManager {
     guildId: string
   ) => {
     try {
-      if (!this.audio.rtc) {
-        throw Error("Audio capture no running");
-      }
-      await severus.discordJoin(
-        this.client,
-        this.audio.rtc,
-        guildId,
-        channelId
-      );
+      // if (!this.audio.rtc) {
+      //   throw Error("Audio capture no running");
+      // }
+      await joinVoiceChannel(guildId, channelId);
       event.reply("DISCORD_CHANNEL_JOINED", channelId);
     } catch (err) {
       event.reply("DISCORD_CHANNEL_LEFT", channelId);
@@ -87,7 +77,7 @@ export class DiscordManager {
     guildId: string
   ) => {
     try {
-      await severus.discordLeave(this.client, guildId);
+      await leaveVoiceChannel(guildId, channelId);
     } catch (err) {
       event.reply("ERROR", `Error leaving channel: ${err?.message}`);
     }

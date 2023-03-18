@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	discord "github.com/bwmarrin/discordgo"
+	discord "github.com/owlbear-rodeo/discordgo"
 )
 
 type Voice struct {
@@ -21,8 +21,9 @@ type Guild struct {
 }
 
 type Discord struct {
-	ctx context.Context
-	bot *discord.Session
+	ctx   context.Context
+	bot   *discord.Session
+	voice *discord.VoiceConnection
 }
 
 func Create(ctx context.Context) (s *Discord) {
@@ -111,12 +112,12 @@ func (s *Discord) LeaveVoiceChannel(guildID string, channelID string) {
 	}
 }
 
-func (s *Discord) SendAudio(v *discord.VoiceConnection, listener <-chan *[]byte) {
+func (s *Discord) SendAudio(v *discord.VoiceConnection, listener <-chan *discord.RealtimePacket) {
 	var err error
 
 	if !v.Ready || v.OpusSend == nil {
 		if err != nil {
-			fmt.Println("Discordgo not to receive opus packets. %+v : %+v", v.Ready, v.OpusSend)
+			fmt.Printf("Discordgo not to receive opus packets. %+v : %+v", v.Ready, v.OpusSend)
 		}
 		return
 	}

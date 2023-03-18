@@ -4,7 +4,7 @@ import {
   getDiscordInfo,
   joinVoiceChannel,
   leaveVoiceChannel,
-} from "../Drongo";
+} from "../Disgo";
 import { AudioCaptureManagerMain } from "./AudioCaptureManagerMain";
 
 export class DiscordManager {
@@ -60,9 +60,6 @@ export class DiscordManager {
     guildId: string
   ) => {
     try {
-      // if (!this.audio.rtc) {
-      //   throw Error("Audio capture no running");
-      // }
       await joinVoiceChannel(guildId, channelId);
       event.reply("DISCORD_CHANNEL_JOINED", channelId);
     } catch (err) {

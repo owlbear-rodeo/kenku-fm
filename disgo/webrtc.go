@@ -5,14 +5,13 @@ import (
 	"fmt"
 
 	"github.com/pion/interceptor"
-	"github.com/pion/rtp/codecs"
 	"github.com/pion/webrtc/v3"
-	"github.com/pion/webrtc/v3/pkg/media/samplebuilder"
+
+	discord "github.com/owlbear-rodeo/discordgo"
 )
 
 type RTC struct {
-	connection   *webrtc.PeerConnection
-	mediaBuilder *samplebuilder.SampleBuilder
+	connection *webrtc.PeerConnection
 }
 
 func CreateNewWebRTC() *RTC {
@@ -55,11 +54,8 @@ func CreateNewWebRTC() *RTC {
 		panic(err)
 	}
 
-	builder := samplebuilder.New(2, &codecs.OpusPacket{}, 48000)
-
 	return &RTC{
-		connection:   peerConnection,
-		mediaBuilder: builder,
+		connection: peerConnection,
 	}
 }
 
@@ -99,26 +95,32 @@ func (p *RTC) Signal(offer string) webrtc.SessionDescription {
 	return local_description
 }
 
-func (p *RTC) StartStream(c chan *[]byte) {
+func (p *RTC) StartStream(c chan *discord.RealtimePacket) {
 	// Set a handler for when a new remote track starts, this handler copies inbound RTP packets,
 	// replaces the SSRC and sends them back
 	p.connection.OnTrack(func(track *webrtc.TrackRemote, receiver *webrtc.RTPReceiver) {
 		fmt.Printf("Track has started, of type %d: %s \n", track.PayloadType(), track.Codec().MimeType)
 
-		for {
-			// Read RTP packets being sent to Pion
-			packet, _, readErr := track.ReadRTP()
-			if readErr != nil {
-				panic(readErr)
-			}
+		var sequenceNumber uint16
+		go func() {
+			for {
+				// Read RTP packets being sent to Pion
+				packet, _, readErr := track.ReadRTP()
+				if readErr != nil {
+					panic(readErr)
+				}
 
-			p.mediaBuilder.Push(packet)
-
-			sample := p.mediaBuilder.Pop()
-			if sample != nil {
-				c <- &sample.Data
+				if len(packet.Payload) > 0 {
+					realtimePacket := discord.RealtimePacket{
+						Payload:        packet.Payload,
+						SequenceNumber: sequenceNumber,
+						Timestamp:      packet.Timestamp,
+					}
+					c <- &realtimePacket
+					sequenceNumber++
+				}
 			}
-		}
+		}()
 	})
 
 	// Set the handler for Peer connection state

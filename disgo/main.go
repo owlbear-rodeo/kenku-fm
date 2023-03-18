@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	discord "github.com/owlbear-rodeo/discordgo"
 )
 
 type JoinVoiceChannelPayload struct {
@@ -82,7 +84,7 @@ func signal(webrtc *RTC) http.HandlerFunc {
 	}
 }
 
-func stream(webrtc *RTC, c chan *[]byte) http.HandlerFunc {
+func stream(webrtc *RTC, c chan *discord.RealtimePacket) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		webrtc.StartStream(c)
 		w.WriteHeader(http.StatusAccepted)
@@ -95,18 +97,18 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c := Create(nil)
+	c := Create(context.Background())
 	w := CreateNewWebRTC()
 
-	rtpChan := make(chan *[]byte)
+	rtpChan := make(chan *discord.RealtimePacket)
 	broadcaster := NewBroadcastServer(ctx, rtpChan)
 
-	http.HandleFunc("/drongo/get-info", getInfo(c))
-	http.HandleFunc("/drongo/close", closeDiscord(c))
-	http.HandleFunc("/drongo/join", join(w, c, broadcaster))
-	http.HandleFunc("/drongo/leave", leave(c))
-	http.HandleFunc("/drongo/webrtc/signal", signal(w))
-	http.HandleFunc("/drongo/webrtc/stream", stream(w, rtpChan))
+	http.HandleFunc("/disgo/get-info", getInfo(c))
+	http.HandleFunc("/disgo/close", closeDiscord(c))
+	http.HandleFunc("/disgo/join", join(w, c, broadcaster))
+	http.HandleFunc("/disgo/leave", leave(c))
+	http.HandleFunc("/disgo/webrtc/signal", signal(w))
+	http.HandleFunc("/disgo/webrtc/stream", stream(w, rtpChan))
 
 	http.ListenAndServe(":8091", nil)
 }

@@ -1,23 +1,21 @@
 import fetch from "node-fetch";
 
 export async function getDiscordInfo() {
-  const response = await fetch("http://localhost:8091/drongo/get-info");
+  const response = await fetch("http://localhost:8091/disgo/get-info");
 
   if (response.ok) {
     const body = await response.json();
-
-    console.log("body", JSON.stringify(body, null, 2));
 
     return body;
   }
 }
 
-export async function discordClose() {
-  const response = await fetch("http://localhost:8091/drongo/close");
+export async function discordClose(): Promise<void> {
+  await fetch("http://localhost:8091/disgo/close");
 }
 
 export async function joinVoiceChannel(guildId: string, channelId: string) {
-  const response = await fetch("http://localhost:8091/drongo/join", {
+  const response = await fetch("http://localhost:8091/disgo/join", {
     method: "POST",
     body: JSON.stringify({ guildId, channelId }),
   });
@@ -25,25 +23,17 @@ export async function joinVoiceChannel(guildId: string, channelId: string) {
   if (response.ok) {
     console.log("ok");
   }
-
-  const res = await response.text();
-
-  console.log("res", res);
 }
 
 export async function leaveVoiceChannel(guildId: string, channelId: string) {
-  const response = await fetch("http://localhost:8091/drongo/leave", {
+  await fetch("http://localhost:8091/disgo/leave", {
     method: "POST",
     body: JSON.stringify({ guildId, channelId }),
   });
-
-  const res = await response.text();
-
-  console.log("res", res);
 }
 
 export async function signalWebRtc(offer: string) {
-  const response = await fetch("http://localhost:8091/drongo/webrtc/signal", {
+  const response = await fetch("http://localhost:8091/disgo/webrtc/signal", {
     method: "POST",
     body: JSON.stringify({ offer }),
   });
@@ -55,7 +45,7 @@ export async function signalWebRtc(offer: string) {
 }
 
 export async function streamWebRtc() {
-  const response = await fetch("http://localhost:8091/drongo/webrtc/stream");
+  const response = await fetch("http://localhost:8091/disgo/webrtc/stream");
 
   if (response.ok) {
     console.log("ok");

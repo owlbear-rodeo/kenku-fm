@@ -2,36 +2,38 @@ package main
 
 import (
 	"context"
+
+	discord "github.com/owlbear-rodeo/discordgo"
 )
 
 type BroadcastServer interface {
-	Subscribe() <-chan []byte
-	CancelSubscription(<-chan []byte)
+	Subscribe() <-chan discord.RealtimePacket
+	CancelSubscription(<-chan discord.RealtimePacket)
 }
 
 type broadcastServer struct {
-	source         <-chan *[]byte
-	listeners      []chan *[]byte
-	addListener    chan chan *[]byte
-	removeListener chan (<-chan *[]byte)
+	source         <-chan *discord.RealtimePacket
+	listeners      []chan *discord.RealtimePacket
+	addListener    chan chan *discord.RealtimePacket
+	removeListener chan (<-chan *discord.RealtimePacket)
 }
 
-func (s *broadcastServer) Subscribe() <-chan *[]byte {
-	newListener := make(chan *[]byte)
+func (s *broadcastServer) Subscribe() <-chan *discord.RealtimePacket {
+	newListener := make(chan *discord.RealtimePacket)
 	s.addListener <- newListener
 	return newListener
 }
 
-func (s *broadcastServer) CancelSubscription(channel <-chan *[]byte) {
+func (s *broadcastServer) CancelSubscription(channel <-chan *discord.RealtimePacket) {
 	s.removeListener <- channel
 }
 
-func NewBroadcastServer(ctx context.Context, source <-chan *[]byte) *broadcastServer {
+func NewBroadcastServer(ctx context.Context, source <-chan *discord.RealtimePacket) *broadcastServer {
 	service := &broadcastServer{
 		source:         source,
-		listeners:      make([]chan *[]byte, 0),
-		addListener:    make(chan chan *[]byte),
-		removeListener: make(chan (<-chan *[]byte)),
+		listeners:      make([]chan *discord.RealtimePacket, 0),
+		addListener:    make(chan chan *discord.RealtimePacket),
+		removeListener: make(chan (<-chan *discord.RealtimePacket)),
 	}
 	go service.serve(ctx)
 	return service

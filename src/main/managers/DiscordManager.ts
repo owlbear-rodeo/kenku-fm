@@ -10,11 +10,9 @@ import { AudioCaptureManagerMain } from "./AudioCaptureManagerMain";
 
 export class DiscordManager {
   window: BrowserWindow;
-  audio: AudioCaptureManagerMain;
 
-  constructor(window: BrowserWindow, audio: AudioCaptureManagerMain) {
+  constructor(window: BrowserWindow) {
     this.window = window;
-    this.audio = audio;
     ipcMain.on("DISCORD_CONNECT", this._handleConnect);
     ipcMain.on("DISCORD_DISCONNECT", this._handleDisconnect);
     ipcMain.on("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
@@ -26,8 +24,7 @@ export class DiscordManager {
     ipcMain.off("DISCORD_DISCONNECT", this._handleDisconnect);
     ipcMain.off("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
     ipcMain.off("DISCORD_LEAVE_CHANNEL", this._handleLeaveChannel);
-    discordClose();
-    this.audio = undefined;
+    discordClose().catch(() => {});
   }
 
   _handleConnect = async (event: Electron.IpcMainEvent, token: string) => {

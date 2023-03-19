@@ -1,4 +1,5 @@
 const path = require("path");
+const fs = require("fs");
 
 const config = {
   packagerConfig: {
@@ -90,6 +91,14 @@ const config = {
       },
     },
   ],
+  hooks: {
+    packageAfterCopy: async (_, buildPath) => {
+      await fs.promises.copyFile(
+        path.join(__dirname, "disgo", "disgo"),
+        path.resolve(buildPath, path.join(".webpack", "main", "disgo"))
+      );
+    },
+  },
 };
 
 module.exports = config;

@@ -14,6 +14,7 @@ import { getUserAgent } from "./main/userAgent";
 import { SessionManager } from "./main/managers/SessionManager";
 import { runAutoUpdate } from "./autoUpdate";
 import { getSavedBounds, saveWindowBounds } from "./bounds";
+import { runDisgo } from "./main/disgo";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -135,3 +136,5 @@ ipcMain.handle("CLEAR_CACHE", async () => {
     storages: ["cookies", "shadercache", "cachestorage"],
   });
 });
+
+runDisgo();

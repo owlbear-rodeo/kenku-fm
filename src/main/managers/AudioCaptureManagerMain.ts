@@ -1,5 +1,5 @@
 import { BrowserView, ipcMain, webContents } from "electron";
-import { signalWebRtc, streamWebRtc } from "../Disgo";
+import { signalWebRtc, streamWebRtc } from "../disgo";
 
 declare const AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY: string;
 declare const AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY: string;

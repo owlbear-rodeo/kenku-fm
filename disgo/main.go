@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
 	discord "github.com/owlbear-rodeo/discordgo"
 )
@@ -110,7 +111,8 @@ func stream(webrtc *RTC, c chan *discord.RealtimePacket) http.HandlerFunc {
 }
 
 func main() {
-	addr := ":8091"
+	port := os.Args[1]
+	fmt.Printf("Server running on port :%s", port)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -129,6 +131,5 @@ func main() {
 	http.HandleFunc("/disgo/webrtc/signal", signal(w))
 	http.HandleFunc("/disgo/webrtc/stream", stream(w, rtpChan))
 
-	fmt.Printf("Server running on port %s", addr)
-	http.ListenAndServe(addr, nil)
+	http.ListenAndServe(":"+port, nil)
 }

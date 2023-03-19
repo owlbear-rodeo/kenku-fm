@@ -5,7 +5,7 @@ import {
   joinVoiceChannel,
   leaveVoiceChannel,
   startDiscord,
-} from "../Disgo";
+} from "../disgo";
 import { AudioCaptureManagerMain } from "./AudioCaptureManagerMain";
 
 export class DiscordManager {

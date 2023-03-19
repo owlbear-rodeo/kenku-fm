@@ -5,9 +5,9 @@
   "description": "Online tabletop audio sharing for Discord",
   "main": "./.webpack/main",
   "scripts": {
-    "start": "electron-forge start",
+    "start": "go build -C disgo && electron-forge start",
     "package": "env-cmd electron-forge package",
-    "make": "env-cmd electron-forge make",
+    "make": "go build -C disgo && env-cmd electron-forge make",
     "publish": "env-cmd electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },

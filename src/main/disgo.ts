@@ -27,6 +27,7 @@ export async function runDisgo() {
   disgo.stdout.on("data", (data) => {
     console.log(`disgo: ${data}`);
   });
+  app.on("before-quit", () => discordClose().catch(() => {}));
   process.on("exit", () => disgo.kill());
 }
 

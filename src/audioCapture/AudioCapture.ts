@@ -56,7 +56,7 @@ export class AudioCapture {
         offer.sdp = offer.sdp.replace(
           "useinbandfec=1",
           // Increase bitrate and set a cbr
-          "useinbandfec=1; maxaveragebitrate=64000; stereo=1; sprop-stereo=1; cbr=1"
+          "useinbandfec=1; maxaveragebitrate=64000; stereo=1; sprop-stereo=1"
         );
         await peerConnection.setLocalDescription(offer);
         const answer = await window.capture.signal(

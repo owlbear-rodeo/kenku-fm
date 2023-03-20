@@ -7,7 +7,7 @@
   "scripts": {
     "start": "yarn --cwd ./severus && electron-forge start",
     "package": "env-cmd electron-forge package",
-    "make": "env-cmd electron-forge make",
+    "make": "yarn --cwd ./severus build-release && env-cmd electron-forge make",
     "publish": "env-cmd electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },

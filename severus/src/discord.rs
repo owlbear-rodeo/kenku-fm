@@ -115,10 +115,20 @@ impl Discord {
                         false => {}
                     }
                 }
+
+                let guild_icon = guild.icon.as_ref().map(|icon| {
+                    let ext = if icon.is_animated() { "gif" } else { "webp" };
+
+                    format!(
+                        "https://cdn.discordapp.com/icons/{}/{}.{}",
+                        guild.id, icon, ext
+                    )
+                });
+
                 let new_guild = Guild {
                     id: guild.id,
                     name: guild.name.to_string(),
-                    icon: match guild.icon {
+                    icon: match guild_icon {
                         Some(i) => i.to_string(),
                         None => String::new(),
                     },

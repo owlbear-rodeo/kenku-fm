@@ -125,10 +125,6 @@ func (s *Discord) SendAudio(v *discord.VoiceConnection, listener <-chan *discord
 	go func() {
 		for {
 			payload := <-listener
-			if len(payload.Payload) == 0 {
-				fmt.Println("There isn't any more")
-				break
-			}
 			v.OpusSend <- *payload
 		}
 	}()

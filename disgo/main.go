@@ -131,5 +131,5 @@ func main() {
 	http.HandleFunc("/disgo/webrtc/signal", signal(w))
 	http.HandleFunc("/disgo/webrtc/stream", stream(w, rtpChan))
 
-	http.ListenAndServe(":"+port, nil)
+	http.ListenAndServe("127.0.0.1:"+port, nil)
 }

@@ -3,6 +3,7 @@ import net from "net";
 import { spawn } from "child_process";
 import { join } from "path";
 import { app } from "electron";
+import os from "os";
 
 async function getFreePort(): Promise<string> {
   return new Promise((resolve) => {
@@ -17,11 +18,13 @@ async function getFreePort(): Promise<string> {
 let port: string = "";
 export async function runDisgo() {
   port = await getFreePort();
+  const extension = os.platform() === "win32" ? ".exe" : "";
+  const fileName = `disgo${extension}`;
   let disgoPath;
   if (app.isPackaged) {
-    disgoPath = join(__dirname, "disgo");
+    disgoPath = join(__dirname, fileName);
   } else {
-    disgoPath = join("disgo", "disgo");
+    disgoPath = join("disgo", fileName);
   }
   const disgo = spawn(disgoPath, [port]);
   disgo.stdout.on("data", (data) => {

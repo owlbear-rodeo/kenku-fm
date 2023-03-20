@@ -1,5 +1,6 @@
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
 
 const config = {
   packagerConfig: {
@@ -93,9 +94,11 @@ const config = {
   ],
   hooks: {
     packageAfterCopy: async (_, buildPath) => {
+      const extension = os.platform() === "win32" ? ".exe" : "";
+      const fileName = `disgo${extension}`;
       await fs.promises.copyFile(
-        path.join(__dirname, "disgo", "disgo"),
-        path.resolve(buildPath, path.join(".webpack", "main", "disgo"))
+        path.join(__dirname, "disgo", fileName),
+        path.resolve(buildPath, path.join(".webpack", "main", fileName))
       );
     },
   },

@@ -88,8 +88,8 @@ export class AudioCaptureManagerMain {
     (this._browserView.webContents as any).destroy();
   }
 
-  _handleStart = (_: Electron.IpcMainEvent, bufferScale: number) => {
-    this._browserView.webContents.send("AUDIO_CAPTURE_START", bufferScale);
+  _handleStart = (_: Electron.IpcMainEvent) => {
+    this._browserView.webContents.send("AUDIO_CAPTURE_START");
   };
 
   _handleSetLoopback = (_: Electron.IpcMainEvent, loopback: boolean) => {

@@ -15,10 +15,6 @@ import Typography from "@mui/material/Typography";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
-import FormControl from "@mui/material/FormControl";
-import FormLabel from "@mui/material/FormLabel";
-import FormHelperText from "@mui/material/FormHelperText";
-import Slider from "@mui/material/Slider";
 
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
@@ -32,7 +28,6 @@ import {
   setRemoteAddress,
   setRemotePort,
   setURLBarEnabled,
-  setStreamingBufferScale,
 } from "./settingsSlice";
 
 type SettingsProps = {
@@ -221,43 +216,9 @@ export function Settings({ open, onClose }: SettingsProps) {
     </Stack>
   );
 
-  const [streamingBufferChanged, setStreamingBufferChanged] = useState(false);
-
-  function handleStreamingBufferChange(value: number) {
-    dispatch(setStreamingBufferScale(value));
-  }
-
   useEffect(() => {
-    window.kenku.startAudioCapture(settings.streamingBufferScale);
+    window.kenku.startAudioCapture();
   }, []);
-
-  const streamingSettings = (
-    <FormControl fullWidth variant="standard" margin="dense">
-      <FormLabel id="buffer-slider-label">Buffer Size</FormLabel>
-      <FormHelperText>
-        Increasing the buffer size will add a delay but help prevent stuttering
-      </FormHelperText>
-      <Slider
-        aria-label="Buffer size"
-        value={settings.streamingBufferScale}
-        defaultValue={30}
-        valueLabelFormat={(v) => `${v}x`}
-        valueLabelDisplay="auto"
-        step={1}
-        marks
-        min={1}
-        max={20}
-        onChange={(_, v) => handleStreamingBufferChange(v as number)}
-        onChangeCommitted={() => setStreamingBufferChanged(true)}
-      />
-
-      {streamingBufferChanged && (
-        <FormHelperText sx={{ color: "primary.main" }}>
-          * Restart to apply change
-        </FormHelperText>
-      )}
-    </FormControl>
-  );
 
   function handleShowControlsToggle() {
     dispatch(setURLBarEnabled(!settings.urlBarEnabled));
@@ -367,9 +328,6 @@ export function Settings({ open, onClose }: SettingsProps) {
         <Divider sx={{ mb: 2 }} />
         <DialogContentText>Remote</DialogContentText>
         {remoteSettings}
-        <Divider sx={{ mb: 2 }} />
-        <DialogContentText>Streaming</DialogContentText>
-        {streamingSettings}
         <Divider sx={{ mb: 2 }} />
         <DialogContentText>Other</DialogContentText>
         {otherSettings}

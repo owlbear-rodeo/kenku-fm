@@ -127,6 +127,9 @@ jobs:
           command: |
             # choco install visualstudio2019-workload-vctools, llvm, rustup.install
             choco install rustup.install
+      - run: 
+          name: Install Rust Version
+          command: |
             rustup install 1.68.0
             rustc --version
       - run:

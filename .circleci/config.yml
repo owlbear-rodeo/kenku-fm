@@ -36,6 +36,7 @@ commands:
     steps:
       - run:
           name: Make Package
+          shell: bash.exe
           command: yarn run make
 
   get-images:

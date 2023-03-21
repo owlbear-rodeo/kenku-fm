@@ -122,7 +122,9 @@ jobs:
       - run: 
           name: Install Rust
           command: |
-            choco install rust --version=1.68.0
+            # choco install visualstudio2019-workload-vctools, llvm, rustup.install
+            choco install rustup.install
+            rustup install 1.68.0
             rustc --version
       - run:
           name: Get Images

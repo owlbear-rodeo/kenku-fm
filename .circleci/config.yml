@@ -59,10 +59,11 @@ jobs:
     steps:
       - install-npm
       - run:
-          name: Install dpkg and fakeroot
+          name: Install dpkg, fakeroot and rust
           command: |
             sudo apt-get update -y
             sudo apt-get install -y dpkg fakeroot rpm
+            sudo apt-get install -y rustc=1.68.0
       - checkout
       - restore_cache:
           key: dependency-cache-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}

@@ -9,7 +9,10 @@ import { ActionDrawer } from "../common/ActionDrawer";
 
 import { Tabs } from "../features/tabs/Tabs";
 
+import icon from "../../assets/icon.svg";
+
 import "./App.css";
+import Typography from "@mui/material/Typography";
 
 const WallPaper = styled("div")({
   position: "absolute",
@@ -25,6 +28,7 @@ const WallPaper = styled("div")({
 export function App() {
   const [message, setMessage] = useState<string>();
   const [error, setError] = useState<string>();
+  const [fatalError, setFatalError] = useState<string>();
 
   useEffect(() => {
     window.kenku.on("MESSAGE", (args) => {
@@ -35,12 +39,40 @@ export function App() {
       const error = args[0];
       setError(error);
     });
+    window.kenku.on("FATAL_ERROR", (args) => {
+      const error = args[0];
+      setFatalError(error);
+    });
 
     return () => {
       window.kenku.removeAllListeners("MESSAGE");
       window.kenku.removeAllListeners("ERROR");
+      window.kenku.removeAllListeners("FATAL_ERROR");
     };
   }, []);
+
+  if (fatalError) {
+    return (
+      <Stack direction="row">
+        <WallPaper />
+        <Stack
+          position="absolute"
+          left="0"
+          right="0"
+          width="100%"
+          height="100%"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <Stack sx={{ width: "68px", height: "68px", m: 1 }}>
+            <img src={icon} />
+          </Stack>
+          <Typography variant="h4">Fatal Error</Typography>
+          <Typography variant="body1">{fatalError}</Typography>
+        </Stack>
+      </Stack>
+    );
+  }
 
   return (
     <Stack direction="row">

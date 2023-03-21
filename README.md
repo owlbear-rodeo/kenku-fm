@@ -26,19 +26,20 @@ Docs on using Kenku FM can be found [here](https://www.kenku.fm/docs).
 1. Kenku FM is an [Electron](https://www.electronjs.org/) application primarily written in [Typescript](https://www.typescriptlang.org/) and [React](https://reactjs.org/).
 2. Electron browser views are used to display external web content or the built in audio player app.
 3. The user creates and provides their own Discord bot token to connect to Discord.
-4. The Electron media capture API is used to capture audio from each browser view. The audio is then mixed using a Web Audio Context and sent to a Discord voice call using [Eris](https://github.com/abalabahaha/eris).
-5. An optional HTTP server allows users to trigger and control the playback of the built in player app. An example of this in action can be seen with our [Stream Deck plugin](https://www.kenku.fm/docs/using-kenku-remote).
-6. Enable external inputs to allow mixing in OS audio inputs.
-7. Enable multiple outputs to send your audio to multiple Discord servers at once.
-8. If you plan to use Kenku FM for streaming you can also output to your local machine for capture by a streaming app and a discord call for your players at the same time.
+4. The Electron media capture API is used to capture audio from each browser view. The audio is then mixed using a Web Audio Context and sent to a Severus.
+5. Severus is an audio server written in Rust that sits along side Kenku FM. It receives an incoming RTC connection and broadcasts it to multiple Discord servers.
+6. An optional HTTP server allows users to trigger and control the playback of the built in player app. An example of this in action can be seen with our [Stream Deck plugin](https://www.kenku.fm/docs/using-kenku-remote).
+7. Enable external inputs to allow mixing in OS audio inputs.
+8. Enable multiple outputs to send your audio to multiple Discord servers at once.
+9. If you plan to use Kenku FM for streaming you can also output to your local machine for capture by a streaming app and a discord call for your players at the same time.
 
 ## Building
 
 Kenku FM uses [Yarn](https://yarnpkg.com/) as a package manager and [Electron Forge](https://www.electronforge.io/) as an Electron builder.
 
-To install all the dependencies run:
+You will need NodeJS installed as well as Rust.
 
-`yarn`
+To install all the dependencies run `yarn` in both the base folder and severus folder.
 
 To run Kenku FM in a development mode run:
 
@@ -70,13 +71,17 @@ If any of these change we'll be happy to update Kenku FM with full support for p
 
 All source files can be found in the `src` folder, our build scripts for CI/CD are in the `publish` folder.
 
-Within the `src` folder the `index.ts` file and `main` folder contains the code for the main process of Electron. This includes things like managing the Discord connection, creating the HTTP server for the remote control and managing the browser views.
+Within the `src` folder the `index.ts` file and `main` folder contains the code for the main process of Electron. This includes things like managing the Severus connection, creating the HTTP server for the remote control and managing the browser views.
 
 The `renderer.ts` file and `renderer` folder contains code for the renderer process of Electron. The renderer is written in React and uses Redux Toolkit for state management.
 
 The `preload.ts` file and `preload` folder contains code for the preload script for the renderer. The preload script mainly acts as a bridge to expose functionality from the main process to the renderer.
 
 The `player` folder contains the code for the built in audio player. This runs as a separate web view and is loaded as a separate entry point in the `forge.config.js`. The player app is written in React and also uses Redux Toolkit for state management.
+
+The `audioCapture` folder contains the code used for mixing and capturing browser tabs. It also creates the RTC connection to Severus.
+
+The `severus` folder contains the Rust project for the audio server.
 
 ## Licence
 

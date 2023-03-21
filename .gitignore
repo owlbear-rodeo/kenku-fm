@@ -91,3 +91,5 @@ out/
 .terraform/
 
 dist/
+
+native_modules/

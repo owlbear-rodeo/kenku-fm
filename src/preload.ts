@@ -6,6 +6,7 @@ const viewManager = new BrowserViewManagerPreload();
 
 type Channel =
   | "ERROR"
+  | "FATAL_ERROR"
   | "MESSAGE"
   | "INFO"
   | "DISCORD_READY"
@@ -25,6 +26,7 @@ type Channel =
 
 const validChannels: Channel[] = [
   "ERROR",
+  "FATAL_ERROR",
   "MESSAGE",
   "INFO",
   "DISCORD_READY",
@@ -44,9 +46,9 @@ const validChannels: Channel[] = [
 ];
 
 // Capture audio when new views are loaded
-ipcRenderer.on("BROWSER_VIEW_LOADED",  (_, viewId: number) => {
+ipcRenderer.on("BROWSER_VIEW_LOADED", (_, viewId: number) => {
   ipcRenderer.send("AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM", viewId);
-})
+});
 
 const api = {
   connect: (token: string) => {
@@ -55,11 +57,11 @@ const api = {
   disconnect: () => {
     ipcRenderer.send("DISCORD_DISCONNECT");
   },
-  joinChannel: (channelId: string) => {
-    ipcRenderer.send("DISCORD_JOIN_CHANNEL", channelId);
+  joinChannel: (channelId: string, guildId: string) => {
+    ipcRenderer.send("DISCORD_JOIN_CHANNEL", channelId, guildId);
   },
-  leaveChannel: (channelId: string) => {
-    ipcRenderer.send("DISCORD_LEAVE_CHANNEL", channelId);
+  leaveChannel: (channelId: string, guildId: string) => {
+    ipcRenderer.send("DISCORD_LEAVE_CHANNEL", channelId, guildId);
   },
   createBrowserView: async (
     url: string,
@@ -152,8 +154,8 @@ const api = {
   stopExternalAudioCapture: (deviceId: string) => {
     ipcRenderer.send("AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE", deviceId);
   },
-  startAudioCapture: (streamingMode: "lowLatency" | "performance") => {
-    ipcRenderer.send("AUDIO_CAPTURE_START", streamingMode);
+  startAudioCapture: () => {
+    ipcRenderer.send("AUDIO_CAPTURE_START");
   },
   toggleMaximize: () => {
     ipcRenderer.send("WINDOW_TOGGLE_MAXIMIZE");
@@ -163,6 +165,9 @@ const api = {
   },
   close: () => {
     ipcRenderer.send("WINDOW_CLOSE");
+  },
+  clearCache: () => {
+    return ipcRenderer.invoke("CLEAR_CACHE");
   },
   platform: ipcRenderer.sendSync("GET_PLATFORM") as string,
   version: ipcRenderer.sendSync("GET_VERSION") as string,

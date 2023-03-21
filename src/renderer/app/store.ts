@@ -60,7 +60,7 @@ const migrations: any = {
 
 const persistConfig = {
   key: "root",
-  version: 3,
+  version: 4,
   storage,
   whitelist: ["bookmarks", "settings"],
   migrate: createMigrate(migrations, { debug: false }),

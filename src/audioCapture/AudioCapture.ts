@@ -1,38 +1,10 @@
-import { ipcRenderer } from "electron";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import PCMStream from "./PCMStream.worklet";
-
 /** Sample rate of the audio context */
 const SAMPLE_RATE = 48000;
-/** Number of channels for the audio context */
-const NUM_CHANNELS = 2;
-/** 16 bit audio data */
-const BIT_DEPTH = 16;
-/** Number of bytes per audio sample */
-const BYTES_PER_SAMPLE = BIT_DEPTH / 8;
-/** 20ms Opus frame duration */
-const FRAME_DURATION = 20;
-/** Duration of each audio frame in seconds */
-const FRAME_DURATION_SECONDS = FRAME_DURATION / 1000;
-/**
- * Size in bytes of each frame of audio
- * We stream audio to the main context as 16bit PCM data
- * At 48KHz with a frame duration of 20ms (or 0.02s) and a stereo signal
- * our `frameSize` is calculated by:
- * `SAMPLE_RATE * FRAME_DURATION_SECONDS * NUM_CHANNELS / BYTES_PER_SAMPLE`
- * or:
- * `48000 * 0.02 * 2 / 2 = 960`
- */
-const FRAME_SIZE =
-  (SAMPLE_RATE * FRAME_DURATION_SECONDS * NUM_CHANNELS) / BYTES_PER_SAMPLE;
 
 /**
- * Manager to capture audio from browser views and external audio devices
- * This class is to be run on the renderer thread
- * For the main thread counterpart see `AudioCaptureManagerMain.ts`
+ * Capture audio from browser views and external audio devices
  */
-export class AudioCaptureManagerPreload {
+export class AudioCapture {
   /** Audio context to mix media streams into one audio output */
   _audioContext?: AudioContext;
   /** Audio output node that streams will connect to */
@@ -48,13 +20,11 @@ export class AudioCaptureManagerPreload {
   _externalAudioStreams: Record<string, MediaStream> = {};
   _externalAudioStreamOutputs: Record<string, GainNode> = {};
 
-  _ws?: WebSocket;
-
   /**
    * Create the Audio Context, setup the communication socket and start the
    * internal PCM stream for communicating between the renderer and main context
    */
-  async start(streamingMode: "lowLatency" | "performance"): Promise<void> {
+  async start() {
     this._audioContext = new AudioContext({
       // Setting the latency hint to `playback` fixes audio glitches on some Windows 11 machines.
       latencyHint: "playback",
@@ -62,38 +32,46 @@ export class AudioCaptureManagerPreload {
     });
     this._audioOutputNode = this._audioContext.createGain();
 
-    await this._setupWebsocket();
-    await this._setupLoopback();
+    const mediaDestination = this._audioContext.createMediaStreamDestination();
+    this._audioOutputNode.connect(mediaDestination);
 
-    ipcRenderer.send(
-      "AUDIO_CAPTURE_STREAM_START",
-      NUM_CHANNELS,
-      FRAME_SIZE,
-      SAMPLE_RATE
-    );
-
-    // Create PCM stream node
-    await this._audioContext.audioWorklet.addModule(PCMStream);
-    const pcmStreamNode = new AudioWorkletNode(
-      this._audioContext,
-      "pcm-stream",
-      {
-        parameterData: {
-          // Set performance buffer size to 1 second (0.02 * 50)
-          // and lowLatency buffer size to 20ms (0.02)
-          bufferSize:
-            streamingMode === "performance" ? FRAME_SIZE * 50 : FRAME_SIZE,
-        },
-      }
-    );
-    pcmStreamNode.port.onmessage = (event) => {
-      if (this._ws && this._ws.readyState === WebSocket.OPEN) {
-        this._ws.send(event.data);
-      }
+    // Setup loopback element for local playback
+    this._audioOutputElement = document.createElement("audio");
+    this._audioOutputElement.srcObject = mediaDestination.stream;
+    this._audioOutputElement.onloadedmetadata = () => {
+      this._audioOutputElement.play();
     };
 
-    // Pipe the audio output into the stream
-    this._audioOutputNode.connect(pcmStreamNode);
+    const peerConnection = new RTCPeerConnection();
+
+    mediaDestination.stream
+      .getTracks()
+      .forEach((track) =>
+        peerConnection.addTrack(track, mediaDestination.stream)
+      );
+
+    peerConnection.onnegotiationneeded = async () => {
+      try {
+        let offer = await peerConnection.createOffer();
+        offer.sdp = offer.sdp.replace(
+          "minptime=10;useinbandfec=1",
+          // Increase bitrate and enable stereo
+          "minptime=10; useinbandfec=1; maxaveragebitrate=64000; stereo=1; sprop-stereo=1"
+        );
+        // Disable ice trickle
+        offer.sdp = offer.sdp.replace(/a=ice-options:trickle\s\n/g, "");
+        await peerConnection.setLocalDescription(offer);
+        const answer = await window.capture.signal(
+          JSON.stringify(peerConnection.localDescription)
+        );
+        await peerConnection.setRemoteDescription(
+          new RTCSessionDescription(JSON.parse(answer))
+        );
+        await window.capture.stream();
+      } catch (err) {
+        console.error(err);
+      }
+    };
   }
 
   setMuted(id: number, muted: boolean): void {
@@ -139,6 +117,9 @@ export class AudioCaptureManagerPreload {
       console.error(
         `Unable to start stream for external audio device ${deviceId}`
       );
+      window.capture.error(
+        `Unable to start stream for external audio device ${deviceId}`
+      );
       console.error(error);
     }
   }
@@ -152,20 +133,6 @@ export class AudioCaptureManagerPreload {
       delete this._externalAudioStreams[deviceId];
       delete this._externalAudioStreamOutputs[deviceId];
     }
-  }
-
-  async _setupWebsocket(): Promise<void> {
-    const websocketAddress = await ipcRenderer.invoke(
-      "AUDIO_CAPTURE_GET_WEBSOCKET_ADDRESS"
-    );
-    this._ws = new WebSocket(`ws://localhost:${websocketAddress.port}`);
-    this._ws.addEventListener("close", (event) => {
-      ipcRenderer.emit(
-        "ERROR",
-        null,
-        `WebSocket closed with code ${event.code}`
-      );
-    });
   }
 
   async _setupLoopback(): Promise<void> {
@@ -216,6 +183,7 @@ export class AudioCaptureManagerPreload {
       output.connect(this._audioOutputNode);
     } catch (error) {
       console.error(`Unable to start stream for web view ${viewId}`);
+      window.capture.error(`Unable to start stream for web view ${viewId}`);
       console.error(error);
     }
   }

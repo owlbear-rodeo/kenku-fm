@@ -134,6 +134,9 @@ jobs:
           command: |
             rustup install --no-self-update 1.68.0
             rustc --version
+      - run: 
+          name: Install CMake
+          command: choco install cmake
       - run:
           name: Get Images
           shell: bash.exe

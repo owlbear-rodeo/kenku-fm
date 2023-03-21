@@ -132,7 +132,7 @@ jobs:
       - run: 
           name: Install Rust Version
           command: |
-            rustup install 1.68.0
+            rustup install --no-self-update 1.68.0
             rustc --version
       - run:
           name: Get Images

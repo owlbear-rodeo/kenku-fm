@@ -213,6 +213,10 @@ jobs:
             rustup install 1.68.0
             rustc --version
       - run:
+          name: Install CMake
+          command: |
+            brew install cmake
+      - run:
           name: Install Cargo CP Artifcact
           command: npm install -g cargo-cp-artifact
       - yarn-make

@@ -71,6 +71,9 @@ jobs:
           name: Install Rust Version
           command: |
             rustup install 1.68.0
+      - run: 
+          name: Install CMake
+          command: sudo apt-get install cmake -y
       - checkout
       - restore_cache:
           key: dependency-cache-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}

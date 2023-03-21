@@ -6,7 +6,7 @@ use neon::types::{Finalize, JsBox, JsPromise, JsString};
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
-use tokio::sync::Notify;
+use tokio::sync::{Mutex, Notify};
 use webrtc::api::interceptor_registry::register_default_interceptors;
 use webrtc::api::media_engine::{MediaEngine, MIME_TYPE_OPUS};
 use webrtc::api::APIBuilder;
@@ -29,7 +29,7 @@ fn runtime<'a, C: Context<'a>>(cx: &mut C) -> NeonResult<&'static Runtime> {
 
 pub struct RTC {
     connection: RTCPeerConnection,
-    pub events: Arc<OpusEvents>,
+    pub events: Arc<Mutex<OpusEvents>>,
 }
 
 impl Finalize for RTC {}
@@ -70,7 +70,7 @@ impl RTC {
             .add_transceiver_from_kind(RTPCodecType::Audio, None)
             .await?;
 
-        let events = Arc::new(OpusEvents::new());
+        let events = Arc::new(Mutex::new(OpusEvents::new()));
 
         Ok(Arc::new(Self { connection, events }))
     }

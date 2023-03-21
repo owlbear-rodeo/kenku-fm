@@ -151,7 +151,6 @@ impl Discord {
         let handler = self.voice.get_or_insert(guild_id);
         let mut handler_lock = handler.lock().await;
         handler_lock.disable_mixer(true);
-        let events = Arc::clone(&rtc.events);
         let (driver_tx, driver_rx) = flume::unbounded();
         handler_lock.add_global_event(
             songbird::Event::Core(CoreEvent::DriverConnect),
@@ -166,7 +165,9 @@ impl Discord {
             DriverEvents::new(driver_tx.clone()),
         );
         drop(handler_lock);
-        sender::runner(events.rx.clone(), driver_rx);
+        let mut events_lock = rtc.events.lock().await;
+        sender::runner(events_lock.get_receiver(), driver_rx);
+        drop(events_lock);
         let _ = self.voice.join(guild_id, channel_id).await;
         Ok(())
     }

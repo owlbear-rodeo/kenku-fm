@@ -1,32 +1,32 @@
 use anyhow::Result;
-use flume::{Receiver, Sender};
+use bus::{Bus, BusReader};
 use log::debug;
 use rand::random;
 use rtp::packet::Packet;
 use std::sync::Arc;
-use tokio::sync::Notify;
+use tokio::sync::{Mutex, Notify};
 use webrtc::track::track_remote::TrackRemote;
 
 pub struct OpusEvents {
-    tx: Sender<Packet>,
-    pub rx: Receiver<Packet>,
+    bus: Bus<Packet>,
 }
 
 impl OpusEvents {
     pub fn new() -> Self {
-        let (tx, rx) = flume::unbounded();
-        OpusEvents { tx, rx }
+        OpusEvents { bus: Bus::new(10) }
     }
 
-    pub fn notify(&self, packet: Packet) -> () {
-        if let Err(e) = self.tx.send(packet) {
-            debug!("stream notify failed: {}", e);
-        }
+    pub fn notify(&mut self, packet: Packet) -> () {
+        self.bus.broadcast(packet);
+    }
+
+    pub fn get_receiver(&mut self) -> BusReader<Packet> {
+        self.bus.add_rx()
     }
 }
 
 pub async fn runner(
-    events: Arc<OpusEvents>,
+    events: Arc<Mutex<OpusEvents>>,
     track: Arc<TrackRemote>,
     notify: Arc<Notify>,
 ) -> Result<()> {
@@ -38,7 +38,8 @@ pub async fn runner(
                     if !rtp_packet.payload.is_empty() {
                         // Re-sequence the packets to remove empty payloads
                         rtp_packet.header.sequence_number = sequence_number;
-                        events.notify(rtp_packet);
+                        let mut events_lock = events.lock().await;
+                        events_lock.notify(rtp_packet);
                         sequence_number = sequence_number.wrapping_add(1);
                     }
                 } else {

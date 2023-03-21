@@ -1,11 +1,11 @@
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
+use bus::BusReader;
 use discortp::{
     rtp::{MutableRtpPacket, RtpPacket},
     wrap::{Wrap16, Wrap32},
     MutablePacket,
 };
-use flume::Receiver;
 use log::debug;
 use rtp::packet::Packet;
 use songbird::{
@@ -111,7 +111,7 @@ fn send_packet(
     Ok(())
 }
 
-pub fn runner(rtp_rx: Receiver<Packet>, driver_rx: flume::Receiver<Option<Connection>>) -> () {
+pub fn runner(mut rtp_rx: BusReader<Packet>, driver_rx: flume::Receiver<Option<Connection>>) -> () {
     let connection = Arc::new(Mutex::new(None));
 
     let conn2 = Arc::clone(&connection);
@@ -127,17 +127,17 @@ pub fn runner(rtp_rx: Receiver<Packet>, driver_rx: flume::Receiver<Option<Connec
 
         let mut crypto = CryptoState::Normal;
 
-        let rx = rtp_rx.clone();
-
-        while let Ok(rtc_packet) = rx.recv_async().await {
+        loop {
             if driver2.is_disconnected() {
                 break;
             }
-            let mut conn_lock = conn2.lock().unwrap();
-            if let Some(ref conn) = *conn_lock {
-                if let Err(e) = send_packet(rtc_packet, &mut packet, &conn, &mut crypto) {
-                    debug!("packet send failed, {}", e);
-                    *conn_lock = None;
+            if let Ok(rtc_packet) = rtp_rx.recv() {
+                let mut conn_lock = conn2.lock().unwrap();
+                if let Some(ref conn) = *conn_lock {
+                    if let Err(e) = send_packet(rtc_packet, &mut packet, &conn, &mut crypto) {
+                        debug!("packet send failed, {}", e);
+                        *conn_lock = None;
+                    }
                 }
             }
         }

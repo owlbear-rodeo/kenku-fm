@@ -110,6 +110,11 @@ jobs:
           key: dependency-cache-win-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
           paths:
             - ./node_modules
+      - run: 
+          name: Install Rust
+          command: |
+            choco install rust --version=1.68.0
+            rustc --version
       - run:
           name: Get Images
           shell: bash.exe
@@ -177,6 +182,10 @@ jobs:
             - ./node_modules
       - get-images
       - move-images
+      - run: 
+          name: Install Rust
+          command: |
+            brew install rustup@1.68.0 && rustup-init && rustc --version
       - yarn-make
       - run:
           name: Widevine Signature

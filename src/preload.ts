@@ -6,6 +6,7 @@ const viewManager = new BrowserViewManagerPreload();
 
 type Channel =
   | "ERROR"
+  | "FATAL_ERROR"
   | "MESSAGE"
   | "INFO"
   | "DISCORD_READY"
@@ -25,6 +26,7 @@ type Channel =
 
 const validChannels: Channel[] = [
   "ERROR",
+  "FATAL_ERROR",
   "MESSAGE",
   "INFO",
   "DISCORD_READY",

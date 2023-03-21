@@ -1,4 +1,4 @@
-import { BrowserView, ipcMain, webContents } from "electron";
+import { BrowserView, BrowserWindow, ipcMain, webContents } from "electron";
 
 declare const AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY: string;
 declare const AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -129,12 +129,27 @@ export class AudioCaptureManagerMain {
   };
 
   _handleSignal = async (_: Electron.IpcMainEvent, offer: string) => {
-    this.rtc = await severus.rtcNew();
-    return severus.rtcSignal(this.rtc, offer);
+    try {
+      this.rtc = await severus.rtcNew();
+      const answer = await severus.rtcSignal(this.rtc, offer);
+      return answer;
+    } catch (err) {
+      const windows = BrowserWindow.getAllWindows();
+      for (let window of windows) {
+        window.webContents.send("FATAL_ERROR", err.message);
+      }
+    }
   };
 
   _handleStream = async (_: Electron.IpcMainEvent) => {
-    return severus.rtcStartStream(this.rtc);
+    try {
+      return severus.rtcStartStream(this.rtc);
+    } catch (err) {
+      const windows = BrowserWindow.getAllWindows();
+      for (let window of windows) {
+        window.webContents.send("FATAL_ERROR", err.message);
+      }
+    }
   };
 
   _handleStartBrowserViewStream = (

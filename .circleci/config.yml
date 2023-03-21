@@ -104,6 +104,9 @@ jobs:
       - run:
           name: Install Yarn
           command: npm install -g yarn
+      - run:
+          name: Install Cargo CP Artifcact
+          command: npm install -g cargo-cp-artifact
       - restore_cache:
           key: dependency-cache-win-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
       - install-dependencies
@@ -186,7 +189,7 @@ jobs:
       - run: 
           name: Install Rust
           command: |
-            brew install rustup@1.68.0 && rustup-init && rustc --version
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install rust@1.68.0 && rustc --version
       - yarn-make
       - run:
           name: Widevine Signature

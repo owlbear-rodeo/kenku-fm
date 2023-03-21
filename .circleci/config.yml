@@ -31,6 +31,8 @@ commands:
       - run:
           name: Publish
           command: yarn run publish
+          environment: 
+            CARGO_NET_GIT_FETCH_WITH_CLI: "true"
   
   yarn-make:
     steps:

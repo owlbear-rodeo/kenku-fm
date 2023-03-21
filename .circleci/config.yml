@@ -37,6 +37,8 @@ commands:
       - run:
           name: Make Package
           command: yarn run make
+          environment: 
+            CARGO_NET_GIT_FETCH_WITH_CLI: "true"
 
   get-images:
     steps:

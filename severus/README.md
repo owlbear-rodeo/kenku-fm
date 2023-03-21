@@ -1,5 +1,7 @@
 # severus
 
+<img src="assets/icon.png" alt="icon" width="160" height="160" />
+
 ## Installing severus
 
 Installing severus requires a [supported version of Node and Rust](https://github.com/neon-bindings/neon#platform-support).

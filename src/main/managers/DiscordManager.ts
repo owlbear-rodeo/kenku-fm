@@ -21,7 +21,9 @@ export class DiscordManager {
     ipcMain.off("DISCORD_DISCONNECT", this._handleDisconnect);
     ipcMain.off("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
     ipcMain.off("DISCORD_LEAVE_CHANNEL", this._handleLeaveChannel);
-    severus.discordDestroy(this.client);
+    if (this.client) {
+      severus.discordDestroy(this.client);
+    }
     this.client = undefined;
     this.audio = undefined;
   }

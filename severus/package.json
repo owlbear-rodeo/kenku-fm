@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.node",
   "scripts": {
-    "build": "cargo-cp-artifact -nc ../native_modules/index.node -- cargo build --message-format=json-render-diagnostics",
+    "build": "cargo-cp-artifact -nc ../dist/index.node -- cargo build --message-format=json-render-diagnostics",
     "build-debug": "yarn build --",
     "build-release": "yarn build -- --release",
     "install": "yarn build-debug",

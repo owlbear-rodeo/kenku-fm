@@ -13,7 +13,7 @@ module.exports = {
   resolve: {
     extensions: [".js", ".ts", ".jsx", ".tsx", ".css", ".json"],
     alias: {
-      severus: path.resolve(__dirname, "native_modules/index.node"),
+      severus: path.resolve(__dirname, "dist/index.node"),
     },
   },
 };

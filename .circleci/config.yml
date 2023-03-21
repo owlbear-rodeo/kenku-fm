@@ -63,7 +63,8 @@ jobs:
           command: |
             sudo apt-get update -y
             sudo apt-get install -y dpkg fakeroot rpm
-            sudo apt-get install -y rustc=1.68.0
+            sudo apt-get install -y rustup
+            rustup install 1.68.0
       - checkout
       - restore_cache:
           key: dependency-cache-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
@@ -189,7 +190,10 @@ jobs:
       - run: 
           name: Install Rust
           command: |
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install rust@1.68.0 && rustc --version
+            brew install rustup
+            rustup-init -y
+            rustup install 1.68.0
+            rustc --version
       - yarn-make
       - run:
           name: Widevine Signature

@@ -79,6 +79,9 @@ jobs:
             - ./node_modules
       - get-images
       - move-images
+      - run:
+          name: Install Cargo CP Artifcact
+          command: npm install -g cargo-cp-artifact
       - publish-electron-app
 
   publish-electron-app-win:
@@ -204,6 +207,9 @@ jobs:
           command: |
             rustup install 1.68.0
             rustc --version
+      - run:
+          name: Install Cargo CP Artifcact
+          command: npm install -g cargo-cp-artifact
       - yarn-make
       - run:
           name: Widevine Signature

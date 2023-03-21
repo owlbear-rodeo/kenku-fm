@@ -1,42 +1,43 @@
-import { BrowserView, ipcMain, webContents } from "electron";
-import { TypedEmitter } from "tiny-typed-emitter";
-import { Readable } from "stream";
-import { WebSocketServer, WebSocket } from "ws";
-import prism from "prism-media";
+import { BrowserView, BrowserWindow, ipcMain, webContents } from "electron";
 
 declare const AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY: string;
 declare const AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
-interface AudioCaptureManagerEvents {
-  streamStart: (stream: Readable) => void;
-  streamEnd: () => void;
-}
+import severus, { RTCClient } from "severus";
 
 /**
  * Manager to capture audio from browser views and external audio devices
  * This class is to be run on the main thread
- * For the render thread counterpart see `AudioCaptureManagerPreload.ts`
  */
-export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEvents> {
+export class AudioCaptureManagerMain {
   _browserView: BrowserView;
-  _encoder?: prism.opus.Encoder;
-  _wss: WebSocketServer;
+  rtc?: RTCClient;
 
   constructor() {
-    super();
     this._browserView = new BrowserView({
       webPreferences: {
         preload: AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY,
-        // Disable sandbox for the audio capture window
-        // This allows us to use a web worker in the preload script
-        // https://github.com/electron/forge/issues/2931
-        // This has little security concerns as we don't load any third party
-        // content in the capture window
-        sandbox: false,
       },
     });
     this._browserView.webContents.loadURL(AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY);
-    this._wss = new WebSocketServer({ port: 0 });
+    this._browserView.webContents.session.webRequest.onHeadersReceived(
+      (details, callback) => {
+        if (
+          details.url.endsWith("audio_capture_window") ||
+          details.url.endsWith("audio_capture_window/index.html")
+        ) {
+          details.responseHeaders["Cross-Origin-Opener-Policy"] = [
+            "same-origin",
+          ];
+          details.responseHeaders["Cross-Origin-Embedder-Policy"] = [
+            "require-corp",
+          ];
+          callback({ responseHeaders: details.responseHeaders });
+        } else {
+          callback(details.responseHeaders);
+        }
+      }
+    );
 
     ipcMain.on("AUDIO_CAPTURE_START", this._handleStart);
     ipcMain.on("AUDIO_CAPTURE_SET_LOOPBACK", this._handleSetLoopback);
@@ -49,12 +50,8 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
       "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE",
       this._handleStopExternalAudioCapture
     );
-    ipcMain.on("AUDIO_CAPTURE_STREAM_START", this._handleStreamStart);
-    ipcMain.on("AUDIO_CAPTURE_STREAM_END", this._handleStreamEnd);
-    ipcMain.handle(
-      "AUDIO_CAPTURE_GET_WEBSOCKET_ADDRESS",
-      this._handleGetWebsocketAddress
-    );
+    ipcMain.handle("AUDIO_CAPTURE_SIGNAL", this._handleSignal);
+    ipcMain.handle("AUDIO_CAPTURE_STREAM", this._handleStream);
     ipcMain.on(
       "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
       this._handleStartBrowserViewStream
@@ -63,8 +60,6 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
       "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
       this._handleStopBrowserViewStream
     );
-
-    this._wss.on("connection", this._handleWebsocketConnection);
   }
 
   destroy() {
@@ -79,9 +74,8 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
       "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE",
       this._handleStopExternalAudioCapture
     );
-    ipcMain.off("AUDIO_CAPTURE_STREAM_START", this._handleStreamStart);
-    ipcMain.off("AUDIO_CAPTURE_STREAM_END", this._handleStreamEnd);
-    ipcMain.removeHandler("AUDIO_CAPTURE_GET_WEBSOCKET_ADDRESS");
+    ipcMain.removeHandler("AUDIO_CAPTURE_SIGNAL");
+    ipcMain.removeHandler("AUDIO_CAPTURE_STREAM");
     ipcMain.off(
       "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
       this._handleStartBrowserViewStream
@@ -92,19 +86,10 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
     );
 
     (this._browserView.webContents as any).destroy();
-    this._handleStreamEnd();
-    this._wss.close();
   }
 
-  _handleWebsocketConnection = (ws: WebSocket) => {
-    ws.on("message", this._handleStreamData);
-  };
-
-  _handleStart = (
-    _: Electron.IpcMainEvent,
-    streamingMode: "lowLatency" | "performance"
-  ) => {
-    this._browserView.webContents.send("AUDIO_CAPTURE_START", streamingMode);
+  _handleStart = (_: Electron.IpcMainEvent) => {
+    this._browserView.webContents.send("AUDIO_CAPTURE_START");
   };
 
   _handleSetLoopback = (_: Electron.IpcMainEvent, loopback: boolean) => {
@@ -143,38 +128,28 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
     );
   };
 
-  _handleStreamStart = (
-    _: Electron.IpcMainEvent,
-    channels: number,
-    frameSize: number,
-    sampleRate: number
-  ) => {
-    this._encoder?.end();
-
-    // Create a pipeline for converting raw PCM data into opus packets
-    const encoder = new prism.opus.Encoder({
-      channels: channels,
-      frameSize: frameSize,
-      rate: sampleRate,
-    });
-    this._encoder = encoder;
-
-    // Setup any listener streams
-    this.emit("streamStart", encoder);
+  _handleSignal = async (_: Electron.IpcMainEvent, offer: string) => {
+    try {
+      this.rtc = await severus.rtcNew();
+      const answer = await severus.rtcSignal(this.rtc, offer);
+      return answer;
+    } catch (err) {
+      const windows = BrowserWindow.getAllWindows();
+      for (let window of windows) {
+        window.webContents.send("FATAL_ERROR", err.message);
+      }
+    }
   };
 
-  _handleStreamData = async (data: Buffer) => {
-    this._encoder?.write(data);
-  };
-
-  _handleStreamEnd = () => {
-    this._encoder?.end();
-    this._encoder = undefined;
-    this.emit("streamEnd");
-  };
-
-  _handleGetWebsocketAddress = async () => {
-    return this._wss.address();
+  _handleStream = async (_: Electron.IpcMainEvent) => {
+    try {
+      return severus.rtcStartStream(this.rtc);
+    } catch (err) {
+      const windows = BrowserWindow.getAllWindows();
+      for (let window of windows) {
+        window.webContents.send("FATAL_ERROR", err.message);
+      }
+    }
   };
 
   _handleStartBrowserViewStream = (

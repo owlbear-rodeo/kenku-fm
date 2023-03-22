@@ -68,7 +68,9 @@ export class AudioCapture {
           new RTCSessionDescription(JSON.parse(answer))
         );
         await window.capture.stream();
+        throw Error("Stream capture unexpectedly ended");
       } catch (err) {
+        window.capture.error(err.message);
         console.error(err);
       }
     };

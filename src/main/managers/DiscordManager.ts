@@ -72,6 +72,9 @@ export class DiscordManager {
       if (!this.audio.rtc) {
         throw Error("Audio capture not running");
       }
+      if (!this.audio.streaming) {
+        throw Error("Audio stream not running");
+      }
       if (!this.client) {
         throw Error("Discord client not ready");
       }

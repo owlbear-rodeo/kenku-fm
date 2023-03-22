@@ -121,11 +121,11 @@ app.on("activate", () => {
   }
 });
 
-ipcMain.on("GET_VERSION", (event: Electron.IpcMainEvent) => {
+ipcMain.on("GET_VERSION", (event) => {
   event.returnValue = app.getVersion();
 });
 
-ipcMain.on("GET_PLATFORM", (event: Electron.IpcMainEvent) => {
+ipcMain.on("GET_PLATFORM", (event) => {
   event.returnValue = os.platform();
 });
 

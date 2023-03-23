@@ -12,6 +12,7 @@ import severus, { RTCClient } from "severus";
 export class AudioCaptureManagerMain {
   _browserView: BrowserView;
   rtc?: RTCClient;
+  streaming = false;
 
   constructor() {
     this._browserView = new BrowserView({
@@ -60,6 +61,7 @@ export class AudioCaptureManagerMain {
       "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
       this._handleStopBrowserViewStream
     );
+    ipcMain.on("ERROR", this._handleError);
   }
 
   destroy() {
@@ -84,6 +86,7 @@ export class AudioCaptureManagerMain {
       "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
       this._handleStopBrowserViewStream
     );
+    ipcMain.off("ERROR", this._handleError);
 
     (this._browserView.webContents as any).destroy();
   }
@@ -143,7 +146,9 @@ export class AudioCaptureManagerMain {
 
   _handleStream = async (_: Electron.IpcMainEvent) => {
     try {
-      return severus.rtcStartStream(this.rtc);
+      this.streaming = true;
+      await severus.rtcStartStream(this.rtc);
+      this.streaming = false;
     } catch (err) {
       const windows = BrowserWindow.getAllWindows();
       for (let window of windows) {
@@ -172,5 +177,12 @@ export class AudioCaptureManagerMain {
       "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
       viewId
     );
+  };
+
+  _handleError = (_: Electron.IpcMainEvent, message: string) => {
+    const windows = BrowserWindow.getAllWindows();
+    for (let window of windows) {
+      window.webContents.send("ERROR", message);
+    }
   };
 }

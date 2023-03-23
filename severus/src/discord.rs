@@ -11,8 +11,10 @@ use neon::types::JsBox;
 use neon::types::JsPromise;
 use neon::types::JsString;
 use once_cell::sync::OnceCell;
+use songbird::Config;
 use songbird::CoreEvent;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::runtime::Runtime;
 use twilight_gateway::Cluster;
 use twilight_gateway::Intents;
@@ -70,7 +72,12 @@ impl Discord {
 
             let user_id = client.current_user().exec().await?.model().await?.id;
 
-            let voice = Songbird::twilight(cluster_arc, user_id);
+            let timeout = Duration::new(60, 0);
+            let songbird_config = Config::default()
+                .gateway_timeout(Some(timeout))
+                .driver_timeout(Some(timeout));
+
+            let voice = Songbird::twilight_from_config(cluster_arc, user_id, songbird_config);
             (
                 events,
                 Arc::new(Discord {

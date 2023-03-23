@@ -27,7 +27,7 @@ const api = {
     }
   },
   error: (message: string) => {
-    ipcRenderer.emit("ERROR", null, message);
+    ipcRenderer.send("ERROR", message);
   },
   signal: (offer: string): Promise<string> => {
     return ipcRenderer.invoke("AUDIO_CAPTURE_SIGNAL", offer);

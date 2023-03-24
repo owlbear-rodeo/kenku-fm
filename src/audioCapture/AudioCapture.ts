@@ -24,7 +24,7 @@ export class AudioCapture {
    * Create the Audio Context, setup the communication socket and start the
    * internal PCM stream for communicating between the renderer and main context
    */
-  async start() {
+  async start(): Promise<void> {
     this._audioContext = new AudioContext({
       // Setting the latency hint to `playback` fixes audio glitches on some Windows 11 machines.
       latencyHint: "playback",
@@ -42,7 +42,15 @@ export class AudioCapture {
       this._audioOutputElement.play();
     };
 
-    const peerConnection = new RTCPeerConnection();
+    const config = {
+      iceServers: [
+        {
+          urls: "stun:stun.l.google.com:19302",
+        },
+      ],
+    };
+
+    const peerConnection = new RTCPeerConnection(config);
 
     mediaDestination.stream
       .getTracks()
@@ -52,7 +60,7 @@ export class AudioCapture {
 
     peerConnection.onnegotiationneeded = async () => {
       try {
-        let offer = await peerConnection.createOffer();
+        const offer = await peerConnection.createOffer();
         offer.sdp = offer.sdp.replace(
           "minptime=10;useinbandfec=1",
           // Increase bitrate and enable stereo

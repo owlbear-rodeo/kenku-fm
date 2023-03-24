@@ -43,10 +43,6 @@ impl RTC {
         let keep_alive_interval = Some(Duration::new(15, 0));
         let mut setting_engine = SettingEngine::default();
         setting_engine.set_ice_timeouts(disconnected_timeout, failed_timeout, keep_alive_interval);
-        setting_engine
-            .set_ice_multicast_dns_mode(webrtc::ice::mdns::MulticastDnsMode::QueryAndGather);
-        setting_engine
-            .set_multicast_dns_host_name("offline-browser-communication.local".to_string());
 
         // Create a MediaEngine object to configure the supported codec
         let mut media_engine = MediaEngine::default();

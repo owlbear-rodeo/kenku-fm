@@ -5,10 +5,12 @@ use neon::result::{JsResult, NeonResult};
 use neon::types::{Finalize, JsBox, JsPromise, JsString};
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::runtime::Runtime;
 use tokio::sync::{Mutex, Notify};
 use webrtc::api::interceptor_registry::register_default_interceptors;
 use webrtc::api::media_engine::{MediaEngine, MIME_TYPE_OPUS};
+use webrtc::api::setting_engine::SettingEngine;
 use webrtc::api::APIBuilder;
 use webrtc::ice_transport::ice_connection_state::RTCIceConnectionState;
 use webrtc::interceptor::registry::Registry;
@@ -36,6 +38,12 @@ impl Finalize for RTC {}
 
 impl RTC {
     async fn new() -> Result<Arc<Self>> {
+        let disconnected_timeout = Some(Duration::new(30, 0));
+        let failed_timeout = Some(Duration::new(60, 0));
+        let keep_alive_interval = Some(Duration::new(15, 0));
+        let mut setting_engine = SettingEngine::default();
+        setting_engine.set_ice_timeouts(disconnected_timeout, failed_timeout, keep_alive_interval);
+
         // Create a MediaEngine object to configure the supported codec
         let mut media_engine = MediaEngine::default();
         media_engine.register_codec(
@@ -58,6 +66,7 @@ impl RTC {
         let api = APIBuilder::new()
             .with_media_engine(media_engine)
             .with_interceptor_registry(registry)
+            .with_setting_engine(setting_engine)
             .build();
 
         let config = RTCConfiguration {
@@ -74,6 +83,7 @@ impl RTC {
 
         Ok(Arc::new(Self { connection, events }))
     }
+
     async fn signal(&self, offer: RTCSessionDescription) -> Result<RTCSessionDescription> {
         self.connection.set_remote_description(offer).await?;
 
@@ -90,11 +100,13 @@ impl RTC {
         let _ = gather_complete.recv().await;
 
         let local_desc = self.connection.local_description().await;
+
         match local_desc {
             Some(d) => Ok(d),
             None => Err(anyhow::anyhow!("No local description found")),
         }
     }
+
     async fn start_stream(&self) -> Result<()> {
         let notify_tx = Arc::new(Notify::new());
         let notify_rx = notify_tx.clone();

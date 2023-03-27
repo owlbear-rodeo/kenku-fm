@@ -12,6 +12,7 @@ use webrtc::api::interceptor_registry::register_default_interceptors;
 use webrtc::api::media_engine::{MediaEngine, MIME_TYPE_OPUS};
 use webrtc::api::setting_engine::SettingEngine;
 use webrtc::api::APIBuilder;
+use webrtc::ice::udp_network::EphemeralUDP;
 use webrtc::ice_transport::ice_connection_state::RTCIceConnectionState;
 use webrtc::interceptor::registry::Registry;
 use webrtc::peer_connection::configuration::RTCConfiguration;
@@ -38,11 +39,23 @@ impl Finalize for RTC {}
 
 impl RTC {
     async fn new() -> Result<Arc<Self>> {
+        let mut setting_engine = SettingEngine::default();
+
+        // Increase timeouts to help on flaky networks
         let disconnected_timeout = Some(Duration::new(30, 0));
         let failed_timeout = Some(Duration::new(60, 0));
         let keep_alive_interval = Some(Duration::new(15, 0));
-        let mut setting_engine = SettingEngine::default();
         setting_engine.set_ice_timeouts(disconnected_timeout, failed_timeout, keep_alive_interval);
+
+        // Use a local static ephemeral UDP range with mDNS
+        // Doing this means we don't need to rely on STUN/TURN servers for our
+        // local only connection as traditional ICE gathering techniques can get blocked by firewalls
+        setting_engine
+            .set_ice_multicast_dns_mode(webrtc::ice::mdns::MulticastDnsMode::QueryAndGather);
+        setting_engine.set_multicast_dns_host_name(String::from("kenku-fm.local"));
+        let mut udp = EphemeralUDP::default();
+        udp.set_ports(5000, 5005)?;
+        setting_engine.set_udp_network(webrtc::ice::udp_network::UDPNetwork::Ephemeral(udp));
 
         // Create a MediaEngine object to configure the supported codec
         let mut media_engine = MediaEngine::default();

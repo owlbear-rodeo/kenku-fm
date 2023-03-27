@@ -15,8 +15,6 @@ once_cell = "1"
 webrtc = "0.7.1"
 anyhow = "1.0"
 serde_json = "1.0"
-twilight-model = "0.12"
-twilight-standby = "0.12"
 tracing = "0.1"
 futures = "0.3"
 symphonia-core = "0.5"
@@ -28,27 +26,40 @@ log = "0.4.17"
 st3 = "0.4.1"
 bus = "2.3.0"
 
+[dependencies.twilight-model]
+version = "0.12.0"
+git = "https://github.com/owlbear-rodeo/twilight.git"
+branch = "feature/native-tls-vendored"
+
+[dependencies.twilight-standby]
+version = "0.12.0"
+git = "https://github.com/owlbear-rodeo/twilight.git"
+branch = "feature/native-tls-vendored"
+
 [dependencies.twilight-http]
-version = "0.12"
+version = "0.12.0"
+git = "https://github.com/owlbear-rodeo/twilight.git"
+branch = "feature/native-tls-vendored"
 default-features = false
-features = ["native"]
+features = ["native-vendored"]
 
 [dependencies.twilight-gateway]
-version = "0.12"
+version = "0.12.0"
+git = "https://github.com/owlbear-rodeo/twilight.git"
+branch = "feature/native-tls-vendored"
 default-features = false
-features = ["native"]
+features = ["native-vendored"]
+
+[dependencies.songbird]
+default-features = false
+git = "https://github.com/owlbear-rodeo/songbird.git"
+branch = "gateway"
+features = ["driver", "twilight-native-vendored", "zlib-stock"]
 
 [dependencies.neon]
 version = "0.10"
 default-features = false
 features = ["channel-api", "napi-6", "promise-api"]
-
-[dependencies.songbird]
-default-features = false
-git = 'https://github.com/owlbear-rodeo/songbird.git'
-branch = "streaming"
-version = "0.3.2"
-features = ["driver", "twilight-native", "zlib-stock"]
 
 [dependencies.tokio]
 version = "1.26"
@@ -67,4 +78,3 @@ version = "0.4"
 [dependencies.xsalsa20poly1305]
 version = "0.9"
 features = ["std"]
-

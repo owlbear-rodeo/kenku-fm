@@ -61,6 +61,10 @@ export class AudioCaptureManagerMain {
       "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
       this._handleStopBrowserViewStream
     );
+    ipcMain.on(
+      "AUDIO_CAPTURE_STOP_ALL_BROWSER_VIEW_STREAMS",
+      this._handleStopAllBrowserViewStreams
+    );
     ipcMain.on("ERROR", this._handleError);
   }
 
@@ -85,6 +89,10 @@ export class AudioCaptureManagerMain {
     ipcMain.off(
       "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
       this._handleStopBrowserViewStream
+    );
+    ipcMain.off(
+      "AUDIO_CAPTURE_STOP_ALL_BROWSER_VIEW_STREAMS",
+      this._handleStopAllBrowserViewStreams
     );
     ipcMain.off("ERROR", this._handleError);
 
@@ -176,6 +184,12 @@ export class AudioCaptureManagerMain {
     this._browserView.webContents.send(
       "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
       viewId
+    );
+  };
+
+  _handleStopAllBrowserViewStreams = (_: Electron.IpcMainEvent) => {
+    this._browserView.webContents.send(
+      "AUDIO_CAPTURE_STOP_ALL_BROWSER_VIEW_STREAMS"
     );
   };
 

@@ -20,6 +20,10 @@ window.capture.on("AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM", (args) => {
   audioCapture.stopBrowserViewStream(viewId);
 });
 
+window.capture.on("AUDIO_CAPTURE_STOP_ALL_BROWSER_VIEW_STREAMS", () => {
+  audioCapture.stopAllBrowserViewStreams();
+});
+
 window.capture.on("AUDIO_CAPTURE_BROWSER_VIEW_MUTED", (args) => {
   const [viewId, muted] = args;
   audioCapture.setMuted(viewId, muted);

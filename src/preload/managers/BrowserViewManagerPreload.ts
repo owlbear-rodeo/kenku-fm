@@ -30,6 +30,10 @@ export class BrowserViewManagerPreload {
     ipcRenderer.send("BROWSER_VIEW_REMOVE_BROWSER_VIEW", id);
   }
 
+  removeAllBrowserViews() {
+    ipcRenderer.send("BROWSER_VIEW_REMOVE_ALL_BROWSER_VIEWS");
+  }
+
   hideBrowserView(id: number) {
     ipcRenderer.send("BROWSER_VIEW_HIDE_BROWSER_VIEW", id);
   }

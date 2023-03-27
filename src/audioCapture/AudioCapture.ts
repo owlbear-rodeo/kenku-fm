@@ -202,4 +202,13 @@ export class AudioCapture {
       delete this._mediaStreams[viewId];
     }
   }
+
+  stopAllBrowserViewStreams(): void {
+    for (let viewId in this._mediaStreams) {
+      for (const track of this._mediaStreams[viewId].getTracks()) {
+        track.stop();
+      }
+      delete this._mediaStreams[viewId];
+    }
+  }
 }

@@ -24,7 +24,7 @@ export class AudioCapture {
    * Create the Audio Context, setup the communication socket and start the
    * internal PCM stream for communicating between the renderer and main context
    */
-  async start() {
+  async start(): Promise<void> {
     this._audioContext = new AudioContext({
       // Setting the latency hint to `playback` fixes audio glitches on some Windows 11 machines.
       latencyHint: "playback",
@@ -52,7 +52,7 @@ export class AudioCapture {
 
     peerConnection.onnegotiationneeded = async () => {
       try {
-        let offer = await peerConnection.createOffer();
+        const offer = await peerConnection.createOffer();
         offer.sdp = offer.sdp.replace(
           "minptime=10;useinbandfec=1",
           // Increase bitrate and enable stereo
@@ -196,6 +196,15 @@ export class AudioCapture {
    */
   stopBrowserViewStream(viewId: number): void {
     if (this._mediaStreams[viewId]) {
+      for (const track of this._mediaStreams[viewId].getTracks()) {
+        track.stop();
+      }
+      delete this._mediaStreams[viewId];
+    }
+  }
+
+  stopAllBrowserViewStreams(): void {
+    for (let viewId in this._mediaStreams) {
       for (const track of this._mediaStreams[viewId].getTracks()) {
         track.stop();
       }

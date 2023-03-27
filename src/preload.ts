@@ -85,6 +85,10 @@ const api = {
     viewManager.removeBrowserView(id);
     ipcRenderer.send("AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM", id);
   },
+  removeAllBrowserViews: () => {
+    viewManager.removeAllBrowserViews();
+    ipcRenderer.send("AUDIO_CAPTURE_STOP_ALL_BROWSER_VIEW_STREAMS");
+  },
   hideBrowserView: (id: number) => {
     viewManager.hideBrowserView(id);
   },

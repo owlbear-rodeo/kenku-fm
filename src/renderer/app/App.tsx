@@ -40,6 +40,7 @@ export function App() {
       setError(error);
     });
     window.kenku.on("FATAL_ERROR", (args) => {
+      window.kenku.removeAllBrowserViews();
       const error = args[0];
       setFatalError(error);
     });

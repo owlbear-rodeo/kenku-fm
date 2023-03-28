@@ -47,3 +47,8 @@ window.capture.on("AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE", (args) => {
 window.capture.on("AUDIO_CAPTURE_START", () => {
   audioCapture.start();
 });
+
+window.capture.on("AUDIO_CAPTURE_CANDIDATE", (args) => {
+  const [candidate] = args;
+  audioCapture.addIceCandidate(candidate);
+});

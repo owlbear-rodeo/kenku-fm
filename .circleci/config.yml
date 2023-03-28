@@ -31,16 +31,12 @@ commands:
       - run:
           name: Publish
           command: yarn run publish
-          environment: 
-            CARGO_NET_GIT_FETCH_WITH_CLI: "true"
   
   yarn-make:
     steps:
       - run:
           name: Make Package
           command: yarn run make
-          environment: 
-            CARGO_NET_GIT_FETCH_WITH_CLI: "true"
 
   get-images:
     steps:
@@ -63,19 +59,10 @@ jobs:
     steps:
       - install-npm
       - run:
-          name: Install dpkg, fakeroot and rust
+          name: Install dpkg, fakeroot
           command: |
             sudo apt-get update -y
             sudo apt-get install -y dpkg fakeroot rpm
-            curl https://sh.rustup.rs -sSf | sh -s -- -y
-            source $HOME/.cargo/env
-      - run: 
-          name: Install Rust Version
-          command: |
-            rustup install 1.68.0
-      - run: 
-          name: Install CMake
-          command: sudo apt-get install cmake -y
       - checkout
       - restore_cache:
           key: dependency-cache-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
@@ -86,9 +73,6 @@ jobs:
             - ./node_modules
       - get-images
       - move-images
-      - run:
-          name: Install Cargo CP Artifcact
-          command: npm install -g cargo-cp-artifact
       - publish-electron-app
 
   publish-electron-app-win:
@@ -119,9 +103,6 @@ jobs:
       - run:
           name: Install Yarn
           command: npm install -g yarn
-      - run:
-          name: Install Cargo CP Artifcact
-          command: npm install -g cargo-cp-artifact
       - restore_cache:
           key: dependency-cache-win-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
       - install-dependencies
@@ -129,19 +110,6 @@ jobs:
           key: dependency-cache-win-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
           paths:
             - ./node_modules
-      - run: 
-          name: Install Rust
-          command: |
-            # choco install visualstudio2019-workload-vctools, llvm, rustup.install
-            choco install rustup.install
-      - run: 
-          name: Install Rust Version
-          command: |
-            rustup install --no-self-update 1.68.0
-            rustc --version
-      - run: 
-          name: Install CMake
-          command: choco install cmake --installargs 'ADD_CMAKE_TO_PATH=User'
       - run:
           name: Get Images
           shell: bash.exe
@@ -209,24 +177,6 @@ jobs:
             - ./node_modules
       - get-images
       - move-images
-      - run: 
-          name: Install Rust
-          command: |
-            brew install rustup
-            rustup-init -y
-            source "$HOME/.cargo/env"
-      - run: 
-          name: Install Rust Version
-          command: |
-            rustup install 1.68.0
-            rustc --version
-      - run:
-          name: Install CMake
-          command: |
-            brew install cmake
-      - run:
-          name: Install Cargo CP Artifcact
-          command: npm install -g cargo-cp-artifact
       - yarn-make
       - run:
           name: Widevine Signature

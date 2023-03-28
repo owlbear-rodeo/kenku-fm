@@ -57,11 +57,11 @@ const api = {
   disconnect: () => {
     ipcRenderer.send("DISCORD_DISCONNECT");
   },
-  joinChannel: (channelId: string, guildId: string) => {
-    ipcRenderer.send("DISCORD_JOIN_CHANNEL", channelId, guildId);
+  joinChannel: (channelId: string) => {
+    ipcRenderer.send("DISCORD_JOIN_CHANNEL", channelId);
   },
-  leaveChannel: (channelId: string, guildId: string) => {
-    ipcRenderer.send("DISCORD_LEAVE_CHANNEL", channelId, guildId);
+  leaveChannel: (channelId: string) => {
+    ipcRenderer.send("DISCORD_LEAVE_CHANNEL", channelId);
   },
   createBrowserView: async (
     url: string,
@@ -154,8 +154,8 @@ const api = {
   stopExternalAudioCapture: (deviceId: string) => {
     ipcRenderer.send("AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE", deviceId);
   },
-  startAudioCapture: () => {
-    ipcRenderer.send("AUDIO_CAPTURE_START");
+  startAudioCapture: (streamingMode: "lowLatency" | "performance") => {
+    ipcRenderer.send("AUDIO_CAPTURE_START", streamingMode);
   },
   toggleMaximize: () => {
     ipcRenderer.send("WINDOW_TOGGLE_MAXIMIZE");

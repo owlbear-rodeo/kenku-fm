@@ -12,7 +12,6 @@ import "./menu";
 import icon from "./assets/icon.png";
 import { getUserAgent } from "./main/userAgent";
 import { SessionManager } from "./main/managers/SessionManager";
-import { runAutoUpdate } from "./autoUpdate";
 import { getSavedBounds, saveWindowBounds } from "./bounds";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
@@ -67,17 +66,13 @@ const createWindow = (): void => {
 
   // Prevent app suspension for Kenku FM to avoid playback issues
   const powerSaveBlockerId = powerSaveBlocker.start("prevent-app-suspension");
-  
+
   mainWindow.on("close", () => {
     session.destroy();
     powerSaveBlocker.stop(powerSaveBlockerId);
   });
 
   saveWindowBounds(mainWindow);
-
-  if (app.isPackaged) {
-    runAutoUpdate(mainWindow);
-  }
 };
 
 const spoofUserAgent = () => {

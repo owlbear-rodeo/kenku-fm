@@ -56,16 +56,12 @@ export class AudioCapture {
       };
 
       this._peerConnection = new RTCPeerConnection(config);
-
-      mediaDestination.stream
-        .getTracks()
-        .forEach((track) =>
-          this._peerConnection.addTrack(track, mediaDestination.stream)
-        );
+      window.capture.error("peer connection created");
 
       let makingOffer = true;
       let bufferedCandidates: RTCIceCandidate[] = [];
       this._peerConnection.onnegotiationneeded = async () => {
+        window.capture.error("negotiating");
         try {
           const offer = await this._peerConnection.createOffer();
           offer.sdp = offer.sdp.replace(
@@ -77,6 +73,7 @@ export class AudioCapture {
           const answer = await window.capture.signal(
             JSON.stringify(this._peerConnection.localDescription)
           );
+          window.capture.error("got answer");
           await this._peerConnection.setRemoteDescription(
             new RTCSessionDescription(JSON.parse(answer))
           );
@@ -90,6 +87,10 @@ export class AudioCapture {
           window.capture.error(err.message);
           console.error(err);
         }
+      };
+
+      this._peerConnection.onsignalingstatechange = async () => {
+        window.capture.error(this._peerConnection.signalingState);
       };
 
       this._peerConnection.onicecandidate = async ({ candidate }) => {
@@ -106,6 +107,13 @@ export class AudioCapture {
         window.capture.error("Connection candidate failed");
         console.error(e);
       };
+
+      window.capture.error("adding media tracks");
+      mediaDestination.stream
+        .getTracks()
+        .forEach((track) =>
+          this._peerConnection.addTrack(track, mediaDestination.stream)
+        );
     } catch (err) {
       window.capture.error(err.message);
       console.error(err);

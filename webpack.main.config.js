@@ -1,5 +1,3 @@
-const path = require("path");
-
 module.exports = {
   /**
    * This is the main entry point for your application, it's the first file
@@ -12,8 +10,11 @@ module.exports = {
   },
   resolve: {
     extensions: [".js", ".ts", ".jsx", ".tsx", ".css", ".json"],
-    alias: {
-      severus: path.resolve(__dirname, "dist/index.node"),
-    },
+  },
+  externals: {
+    opusscript: "commonjs2 opusscript",
+    "prism-media": "commonjs2 prism-media",
+    "libsodium-wrappers": "commonjs2 libsodium-wrappers",
+    "discord.js": "commonjs2 discord.js",
   },
 };

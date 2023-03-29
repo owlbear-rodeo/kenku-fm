@@ -63,12 +63,17 @@ export function App() {
           height="100%"
           alignItems="center"
           justifyContent="center"
+          gap={1}
         >
           <Stack sx={{ width: "68px", height: "68px", m: 1 }}>
             <img src={icon} />
           </Stack>
-          <Typography variant="h4">Fatal Error</Typography>
-          <Typography variant="body1">{fatalError}</Typography>
+          <Typography variant="h4" color="white">
+            Oops, something went wrong..
+          </Typography>
+          <Typography variant="body1" color="white">
+            {fatalError}
+          </Typography>
         </Stack>
       </Stack>
     );

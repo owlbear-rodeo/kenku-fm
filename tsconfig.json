@@ -16,5 +16,5 @@
       "*": ["node_modules/*"]
     }
   },
-  "include": ["src/**/*", "severus/index.d.ts"]
+  "include": ["src/**/*"]
 }

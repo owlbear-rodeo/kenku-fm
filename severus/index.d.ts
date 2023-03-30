@@ -24,6 +24,11 @@ declare module "severus" {
     discordDestroy: (client: DiscordClient) => void;
     rtcNew: () => Promise<RTCClient>;
     rtcSignal: (rtc: RTCClient, offer: string) => Promise<string>;
+    rtcAddCandidate: (rtc: RTCClient, candidate: string) => Promise<void>;
+    rtcOnCandidate: (
+      rtc: RTCClient,
+      onCandidate: (candidate: string) => void
+    ) => void;
     rtcStartStream: (rtc: RTCClient) => Promise<void>;
   }
 

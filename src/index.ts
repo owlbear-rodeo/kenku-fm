@@ -74,6 +74,10 @@ const createWindow = (): void => {
   });
 
   saveWindowBounds(mainWindow);
+
+  if (app.isPackaged) {
+    runAutoUpdate(mainWindow);
+  }
 };
 
 const spoofUserAgent = () => {

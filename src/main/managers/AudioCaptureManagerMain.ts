@@ -51,7 +51,9 @@ export class AudioCaptureManagerMain {
       "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE",
       this._handleStopExternalAudioCapture
     );
+    ipcMain.handle("AUDIO_CAPTURE_RTC", this._handleRTC);
     ipcMain.handle("AUDIO_CAPTURE_SIGNAL", this._handleSignal);
+    ipcMain.handle("AUDIO_CAPTURE_ADD_CANDIDATE", this._handleAddCandidate);
     ipcMain.handle("AUDIO_CAPTURE_STREAM", this._handleStream);
     ipcMain.on(
       "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
@@ -60,6 +62,10 @@ export class AudioCaptureManagerMain {
     ipcMain.on(
       "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
       this._handleStopBrowserViewStream
+    );
+    ipcMain.on(
+      "AUDIO_CAPTURE_STOP_ALL_BROWSER_VIEW_STREAMS",
+      this._handleStopAllBrowserViewStreams
     );
     ipcMain.on("ERROR", this._handleError);
   }
@@ -76,7 +82,9 @@ export class AudioCaptureManagerMain {
       "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE",
       this._handleStopExternalAudioCapture
     );
+    ipcMain.removeHandler("AUDIO_CAPTURE_RTC");
     ipcMain.removeHandler("AUDIO_CAPTURE_SIGNAL");
+    ipcMain.removeHandler("AUDIO_CAPTURE_ADD_CANDIDATE");
     ipcMain.removeHandler("AUDIO_CAPTURE_STREAM");
     ipcMain.off(
       "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
@@ -85,6 +93,10 @@ export class AudioCaptureManagerMain {
     ipcMain.off(
       "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
       this._handleStopBrowserViewStream
+    );
+    ipcMain.off(
+      "AUDIO_CAPTURE_STOP_ALL_BROWSER_VIEW_STREAMS",
+      this._handleStopAllBrowserViewStreams
     );
     ipcMain.off("ERROR", this._handleError);
 
@@ -131,11 +143,37 @@ export class AudioCaptureManagerMain {
     );
   };
 
-  _handleSignal = async (_: Electron.IpcMainEvent, offer: string) => {
+  _handleRTC = async (_: Electron.IpcMainEvent) => {
     try {
       this.rtc = await severus.rtcNew();
-      const answer = await severus.rtcSignal(this.rtc, offer);
-      return answer;
+      severus.rtcOnCandidate(this.rtc, (candidate) => {
+        this._browserView.webContents.send(
+          "AUDIO_CAPTURE_CANDIDATE",
+          candidate
+        );
+      });
+    } catch (err) {
+      const windows = BrowserWindow.getAllWindows();
+      for (let window of windows) {
+        window.webContents.send("FATAL_ERROR", err.message);
+      }
+    }
+  };
+
+  _handleSignal = async (_: Electron.IpcMainEvent, offer: string) => {
+    try {
+      return await severus.rtcSignal(this.rtc, offer);
+    } catch (err) {
+      const windows = BrowserWindow.getAllWindows();
+      for (let window of windows) {
+        window.webContents.send("FATAL_ERROR", err.message);
+      }
+    }
+  };
+
+  _handleAddCandidate = async (_: Electron.IpcMainEvent, candidate: string) => {
+    try {
+      return await severus.rtcAddCandidate(this.rtc, candidate);
     } catch (err) {
       const windows = BrowserWindow.getAllWindows();
       for (let window of windows) {
@@ -176,6 +214,12 @@ export class AudioCaptureManagerMain {
     this._browserView.webContents.send(
       "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
       viewId
+    );
+  };
+
+  _handleStopAllBrowserViewStreams = (_: Electron.IpcMainEvent) => {
+    this._browserView.webContents.send(
+      "AUDIO_CAPTURE_STOP_ALL_BROWSER_VIEW_STREAMS"
     );
   };
 

@@ -20,6 +20,10 @@ window.capture.on("AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM", (args) => {
   audioCapture.stopBrowserViewStream(viewId);
 });
 
+window.capture.on("AUDIO_CAPTURE_STOP_ALL_BROWSER_VIEW_STREAMS", () => {
+  audioCapture.stopAllBrowserViewStreams();
+});
+
 window.capture.on("AUDIO_CAPTURE_BROWSER_VIEW_MUTED", (args) => {
   const [viewId, muted] = args;
   audioCapture.setMuted(viewId, muted);
@@ -42,4 +46,9 @@ window.capture.on("AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE", (args) => {
 
 window.capture.on("AUDIO_CAPTURE_START", () => {
   audioCapture.start();
+});
+
+window.capture.on("AUDIO_CAPTURE_CANDIDATE", (args) => {
+  const [candidate] = args;
+  audioCapture.addIceCandidate(candidate);
 });

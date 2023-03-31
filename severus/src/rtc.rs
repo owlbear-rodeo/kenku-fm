@@ -1,15 +1,18 @@
 use anyhow::Result;
 use log::debug;
-use neon::prelude::{Context, FunctionContext};
+use neon::prelude::{Context, FunctionContext, Object};
 use neon::result::{JsResult, NeonResult};
-use neon::types::{Finalize, JsBox, JsPromise, JsString};
+use neon::types::{Finalize, JsBox, JsFunction, JsPromise, JsString, JsUndefined};
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::runtime::Runtime;
 use tokio::sync::{Mutex, Notify};
 use webrtc::api::interceptor_registry::register_default_interceptors;
 use webrtc::api::media_engine::{MediaEngine, MIME_TYPE_OPUS};
+use webrtc::api::setting_engine::SettingEngine;
 use webrtc::api::APIBuilder;
+use webrtc::ice_transport::ice_candidate::{RTCIceCandidate, RTCIceCandidateInit};
 use webrtc::ice_transport::ice_connection_state::RTCIceConnectionState;
 use webrtc::interceptor::registry::Registry;
 use webrtc::peer_connection::configuration::RTCConfiguration;
@@ -36,6 +39,14 @@ impl Finalize for RTC {}
 
 impl RTC {
     async fn new() -> Result<Arc<Self>> {
+        let mut setting_engine = SettingEngine::default();
+
+        // Increase timeouts to help on flaky networks
+        let disconnected_timeout = Some(Duration::new(30, 0));
+        let failed_timeout = Some(Duration::new(60, 0));
+        let keep_alive_interval = Some(Duration::new(15, 0));
+        setting_engine.set_ice_timeouts(disconnected_timeout, failed_timeout, keep_alive_interval);
+
         // Create a MediaEngine object to configure the supported codec
         let mut media_engine = MediaEngine::default();
         media_engine.register_codec(
@@ -58,6 +69,7 @@ impl RTC {
         let api = APIBuilder::new()
             .with_media_engine(media_engine)
             .with_interceptor_registry(registry)
+            .with_setting_engine(setting_engine)
             .build();
 
         let config = RTCConfiguration {
@@ -74,27 +86,39 @@ impl RTC {
 
         Ok(Arc::new(Self { connection, events }))
     }
+
     async fn signal(&self, offer: RTCSessionDescription) -> Result<RTCSessionDescription> {
         self.connection.set_remote_description(offer).await?;
 
         // Create an answer
         let answer = self.connection.create_answer(None).await?;
 
-        // Create channel that is blocked until ICE Gathering is complete
-        let mut gather_complete = self.connection.gathering_complete_promise().await;
-
         // Sets the LocalDescription, and starts our UDP listeners
         self.connection.set_local_description(answer).await?;
 
-        // Block until ICE Gathering is complete, disabling trickle ICE
-        let _ = gather_complete.recv().await;
-
         let local_desc = self.connection.local_description().await;
+
         match local_desc {
             Some(d) => Ok(d),
             None => Err(anyhow::anyhow!("No local description found")),
         }
     }
+
+    async fn add_candidate(&self, candidate: RTCIceCandidateInit) -> Result<()> {
+        self.connection.add_ice_candidate(candidate).await?;
+
+        Ok(())
+    }
+
+    fn on_candidate(&self, tx: flume::Sender<RTCIceCandidate>) -> () {
+        self.connection.on_ice_candidate(Box::new(move |candidate| {
+            if let Some(candidate) = candidate {
+                tx.send(candidate).unwrap();
+            }
+            Box::pin(async move {})
+        }));
+    }
+
     async fn start_stream(&self) -> Result<()> {
         let notify_tx = Arc::new(Notify::new());
         let notify_rx = notify_tx.clone();
@@ -177,6 +201,58 @@ impl RTC {
         });
 
         Ok(promise)
+    }
+
+    pub fn js_add_candidate(mut cx: FunctionContext) -> JsResult<JsPromise> {
+        let rt = runtime(&mut cx)?;
+        let rtc = Arc::clone(&&cx.argument::<JsBox<Arc<RTC>>>(0)?);
+        let candidate_str = cx.argument::<JsString>(1)?.value(&mut cx);
+        let channel = cx.channel();
+        let (deferred, promise) = cx.promise();
+
+        rt.spawn(async move {
+            let candidate = serde_json::from_str::<RTCIceCandidateInit>(&candidate_str)
+                .expect("Unable to convert candidate from JSON");
+            let result = rtc.add_candidate(candidate).await;
+
+            deferred.settle_with(&channel, move |mut cx| match result {
+                Ok(_) => Ok(cx.undefined()),
+                Err(e) => cx.throw_error(e.to_string()),
+            });
+        });
+
+        Ok(promise)
+    }
+
+    pub fn js_on_candidate(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+        let rt = runtime(&mut cx)?;
+        let rtc = Arc::clone(&&cx.argument::<JsBox<Arc<RTC>>>(0)?);
+        let candidate_cb = Arc::new(cx.argument::<JsFunction>(1)?.root(&mut cx));
+        let channel = cx.channel();
+
+        let (tx, rx) = flume::unbounded();
+
+        rt.spawn(async move {
+            rtc.on_candidate(tx);
+            while let Ok(candidate) = rx.recv_async().await {
+                let candidate_cb = Arc::clone(&candidate_cb);
+                channel.send(move |mut cx| {
+                    let callback = candidate_cb.to_inner(&mut cx);
+                    let this = cx.undefined();
+                    let json = candidate
+                        .to_json()
+                        .expect("Unable to convert ice candidate to json");
+                    let json_str =
+                        serde_json::to_string(&json).expect("Unable to convert candidate to JSON");
+                    let args = vec![cx.string(json_str).upcast()];
+                    callback.call(&mut cx, this, args)?;
+
+                    Ok(())
+                });
+            }
+        });
+
+        Ok(cx.undefined())
     }
 
     pub fn js_start_stream(mut cx: FunctionContext) -> JsResult<JsPromise> {

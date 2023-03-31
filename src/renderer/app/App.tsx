@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { v4 as uuid } from "uuid";
 
 import Snackbar from "@mui/material/Snackbar";
 import Stack from "@mui/material/Stack";
@@ -26,20 +27,21 @@ const WallPaper = styled("div")({
 });
 
 export function App() {
-  const [message, setMessage] = useState<string>();
-  const [error, setError] = useState<string>();
+  const [messages, setMessages] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [fatalError, setFatalError] = useState<string>();
 
   useEffect(() => {
     window.kenku.on("MESSAGE", (args) => {
       const message = args[0];
-      setMessage(message);
+      setMessages((messages) => ({ ...messages, [uuid()]: message }));
     });
     window.kenku.on("ERROR", (args) => {
       const error = args[0];
-      setError(error);
+      setErrors((errors) => ({ ...errors, [uuid()]: error }));
     });
     window.kenku.on("FATAL_ERROR", (args) => {
+      window.kenku.removeAllBrowserViews();
       const error = args[0];
       setFatalError(error);
     });
@@ -63,12 +65,17 @@ export function App() {
           height="100%"
           alignItems="center"
           justifyContent="center"
+          gap={1}
         >
           <Stack sx={{ width: "68px", height: "68px", m: 1 }}>
             <img src={icon} />
           </Stack>
-          <Typography variant="h4">Fatal Error</Typography>
-          <Typography variant="body1">{fatalError}</Typography>
+          <Typography variant="h4" color="white">
+            Oops, something went wrong..
+          </Typography>
+          <Typography variant="body1" color="white">
+            {fatalError}
+          </Typography>
         </Stack>
       </Stack>
     );
@@ -79,21 +86,33 @@ export function App() {
       <WallPaper />
       <ActionDrawer />
       <Tabs />
-      <Snackbar
-        open={Boolean(message)}
-        autoHideDuration={4000}
-        onClose={() => setMessage(undefined)}
-        message={message}
-        sx={{ maxWidth: "192px" }}
-      />
-      <Snackbar
-        open={Boolean(error)}
-        autoHideDuration={4000}
-        onClose={() => setError(undefined)}
-        sx={{ maxWidth: "192px" }}
+      <Stack
+        sx={{ position: "fixed", bottom: 24, left: 24, gap: 1, zIndex: 1400 }}
       >
-        <Alert severity="error">{error}</Alert>
-      </Snackbar>
+        {Object.entries(messages).map(([key, message], i) => (
+          <Snackbar
+            key={key}
+            open={Boolean(message)}
+            autoHideDuration={4000}
+            onClose={() => setMessages(({ [key]: _, ...rest }) => rest)}
+            message={message}
+            sx={{ maxWidth: "192px", position: "initial" }}
+          />
+        ))}
+        {Object.entries(errors).map(([key, error], i) => (
+          <Snackbar
+            key={key}
+            open={Boolean(error)}
+            onClose={() => setErrors(({ [key]: _, ...rest }) => rest)}
+            sx={{
+              maxWidth: "192px",
+              position: "initial",
+            }}
+          >
+            <Alert severity="error">{error}</Alert>
+          </Snackbar>
+        ))}
+      </Stack>
     </Stack>
   );
 }

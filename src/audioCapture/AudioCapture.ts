@@ -20,11 +20,13 @@ export class AudioCapture {
   _externalAudioStreams: Record<string, MediaStream> = {};
   _externalAudioStreamOutputs: Record<string, GainNode> = {};
 
+  _peerConnection: RTCPeerConnection;
+
   /**
    * Create the Audio Context, setup the communication socket and start the
    * internal PCM stream for communicating between the renderer and main context
    */
-  async start() {
+  async start(): Promise<void> {
     this._audioContext = new AudioContext({
       // Setting the latency hint to `playback` fixes audio glitches on some Windows 11 machines.
       latencyHint: "playback",
@@ -42,38 +44,81 @@ export class AudioCapture {
       this._audioOutputElement.play();
     };
 
-    const peerConnection = new RTCPeerConnection();
+    try {
+      await window.capture.rtc();
 
-    mediaDestination.stream
-      .getTracks()
-      .forEach((track) =>
-        peerConnection.addTrack(track, mediaDestination.stream)
-      );
+      const config = {
+        iceServers: [
+          {
+            urls: "stun:stun.l.google.com:19302",
+          },
+        ],
+      };
 
-    peerConnection.onnegotiationneeded = async () => {
-      try {
-        let offer = await peerConnection.createOffer();
-        offer.sdp = offer.sdp.replace(
-          "minptime=10;useinbandfec=1",
-          // Increase bitrate and enable stereo
-          "minptime=10; useinbandfec=1; maxaveragebitrate=64000; stereo=1; sprop-stereo=1"
+      this._peerConnection = new RTCPeerConnection(config);
+
+      mediaDestination.stream
+        .getTracks()
+        .forEach((track) =>
+          this._peerConnection.addTrack(track, mediaDestination.stream)
         );
-        // Disable ice trickle
-        offer.sdp = offer.sdp.replace(/a=ice-options:trickle\s\n/g, "");
-        await peerConnection.setLocalDescription(offer);
-        const answer = await window.capture.signal(
-          JSON.stringify(peerConnection.localDescription)
-        );
-        await peerConnection.setRemoteDescription(
-          new RTCSessionDescription(JSON.parse(answer))
-        );
-        await window.capture.stream();
-        throw Error("Stream capture unexpectedly ended");
-      } catch (err) {
-        window.capture.error(err.message);
-        console.error(err);
-      }
-    };
+
+      let makingOffer = true;
+      let bufferedCandidates: RTCIceCandidate[] = [];
+      this._peerConnection.onnegotiationneeded = async () => {
+        try {
+          const offer = await this._peerConnection.createOffer();
+          offer.sdp = offer.sdp.replace(
+            "minptime=10;useinbandfec=1",
+            // Increase bitrate and enable stereo
+            "minptime=10; useinbandfec=1; maxaveragebitrate=64000; stereo=1; sprop-stereo=1"
+          );
+          await this._peerConnection.setLocalDescription(offer);
+          const answer = await window.capture.signal(
+            JSON.stringify(this._peerConnection.localDescription)
+          );
+          await this._peerConnection.setRemoteDescription(
+            new RTCSessionDescription(JSON.parse(answer))
+          );
+          makingOffer = false;
+          for (const candidate of bufferedCandidates) {
+            await window.capture.addCandidate(JSON.stringify(candidate));
+          }
+          await window.capture.stream();
+          throw Error("Stream capture unexpectedly ended");
+        } catch (err) {
+          window.capture.error(err.message);
+          console.error(err);
+        }
+      };
+
+      this._peerConnection.onicecandidate = async ({ candidate }) => {
+        if (candidate) {
+          if (makingOffer) {
+            bufferedCandidates.push(candidate);
+          } else {
+            await window.capture.addCandidate(JSON.stringify(candidate));
+          }
+        }
+      };
+
+      this._peerConnection.onicecandidateerror = (e) => {
+        window.capture.error("Connection candidate failed");
+        console.error(e);
+      };
+    } catch (err) {
+      window.capture.error(err.message);
+      console.error(err);
+    }
+  }
+
+  addIceCandidate(candidate: string) {
+    try {
+      this._peerConnection.addIceCandidate(JSON.parse(candidate));
+    } catch (err) {
+      window.capture.error(err.message);
+      console.error(err);
+    }
   }
 
   setMuted(id: number, muted: boolean): void {
@@ -196,6 +241,15 @@ export class AudioCapture {
    */
   stopBrowserViewStream(viewId: number): void {
     if (this._mediaStreams[viewId]) {
+      for (const track of this._mediaStreams[viewId].getTracks()) {
+        track.stop();
+      }
+      delete this._mediaStreams[viewId];
+    }
+  }
+
+  stopAllBrowserViewStreams(): void {
+    for (let viewId in this._mediaStreams) {
       for (const track of this._mediaStreams[viewId].getTracks()) {
         track.stop();
       }

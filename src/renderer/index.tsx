@@ -10,22 +10,25 @@ import { PersistGate } from "redux-persist/integration/react";
 import { App } from "./app/App";
 import { theme } from "./app/theme";
 import { store, persistor } from "./app/store";
+import ErrorBoundary from "./common/ErrorBoundary";
 
 render(
-  <Provider store={store}>
-    <PersistGate
-      loading={
-        <Backdrop open>
-          <CircularProgress />
-        </Backdrop>
-      }
-      persistor={persistor}
-    >
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <App />
-      </ThemeProvider>
-    </PersistGate>
-  </Provider>,
+  <ThemeProvider theme={theme}>
+    <ErrorBoundary>
+      <Provider store={store}>
+        <PersistGate
+          loading={
+            <Backdrop open>
+              <CircularProgress />
+            </Backdrop>
+          }
+          persistor={persistor}
+        >
+          <CssBaseline />
+          <App />
+        </PersistGate>
+      </Provider>
+    </ErrorBoundary>
+  </ThemeProvider>,
   document.getElementById("root")
 );

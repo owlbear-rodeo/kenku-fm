@@ -6,6 +6,7 @@ import { get as soundboardGet } from "./routes/soundboard";
 import { play as soundboardPlay } from "./routes/soundboard/play";
 import { stop as soundboardStop } from "./routes/soundboard/stop";
 import { playback as soundboardPlayback } from "./routes/soundboard/playback";
+import fastifyCors from "fastify-cors-deprecated"
 
 export type ReplyError = {
   statusCode: number;
@@ -20,6 +21,7 @@ export const VIEW_ERROR: ReplyError = {
 };
 
 export function registerRemote(manager: PlayerManager) {
+  manager.fastify.register(fastifyCors)
   manager.fastify.register(playlistGet(manager), {
     prefix: "/v1/playlist",
   });

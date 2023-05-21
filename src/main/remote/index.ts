@@ -21,7 +21,7 @@ export const VIEW_ERROR: ReplyError = {
 };
 
 export function registerRemote(manager: PlayerManager) {
-  manager.fastify.register(fastifyCors)
+  manager.fastify.register(fastifyCors, { origin: true})
   manager.fastify.register(playlistGet(manager), {
     prefix: "/v1/playlist",
   });

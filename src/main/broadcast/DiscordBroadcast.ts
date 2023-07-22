@@ -73,7 +73,7 @@ export class DiscordBroadcast {
             const voiceChannels: VoiceChannel[] = [];
             const channels = await guild.channels.fetch();
             channels.forEach((channel) => {
-              if (channel.isVoiceBased()) {
+              if (channel && channel.isVoiceBased()) {
                 voiceChannels.push({
                   id: channel.id,
                   name: channel.name,

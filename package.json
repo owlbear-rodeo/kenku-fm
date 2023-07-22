@@ -6,9 +6,9 @@
   "main": "./.webpack/main",
   "scripts": {
     "start": "electron-forge start",
-    "package": "ELECTRON_MIRROR=https://github.com/castlabs/electron-releases/releases/download/ electron-forge package",
-    "make": "ELECTRON_MIRROR=https://github.com/castlabs/electron-releases/releases/download/ electron-forge make",
-    "publish": "ELECTRON_MIRROR=https://github.com/castlabs/electron-releases/releases/download/ electron-forge publish",
+    "package": "env-cmd electron-forge package",
+    "make": "env-cmd electron-forge make",
+    "publish": "env-cmd electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },
   "keywords": [],
@@ -72,6 +72,7 @@
     "discord.js": "^14.11.0",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.1.0",
+    "env-cmd": "^10.1.0",
     "fastify": "3.29.4",
     "howler": "^2.2.3",
     "libsodium-wrappers": "^0.7.10",

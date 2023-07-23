@@ -53,7 +53,7 @@ features = ["native-vendored"]
 [dependencies.songbird]
 default-features = false
 git = "https://github.com/owlbear-rodeo/songbird.git"
-branch = "gateway"
+rev = "7317168b2e50a51e21ffe88fab4818798aee5280"
 features = ["driver", "twilight-native-vendored", "zlib-stock"]
 
 [dependencies.neon]

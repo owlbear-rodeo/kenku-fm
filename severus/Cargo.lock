@@ -2372,8 +2372,8 @@ dependencies = [
 
 [[package]]
 name = "songbird"
-version = "0.3.3"
-source = "git+https://github.com/owlbear-rodeo/songbird.git?branch=gateway#e8a176e529bee2847797646940f8282c04729f0b"
+version = "0.3.4"
+source = "git+https://github.com/owlbear-rodeo/songbird.git?rev=7317168b2e50a51e21ffe88fab4818798aee5280#7317168b2e50a51e21ffe88fab4818798aee5280"
 dependencies = [
  "async-trait",
  "async-tungstenite",

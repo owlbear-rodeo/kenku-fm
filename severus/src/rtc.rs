@@ -22,7 +22,7 @@ use webrtc::rtp_transceiver::rtp_codec::{
     RTCRtpCodecCapability, RTCRtpCodecParameters, RTPCodecType,
 };
 
-use crate::receiver::{runner, OpusEvents};
+use crate::rtc_broadcast::{runner, OpusEvents};
 
 static RUNTIME: OnceCell<Runtime> = OnceCell::new();
 
@@ -110,10 +110,10 @@ impl RTC {
         Ok(())
     }
 
-    fn on_candidate(&self, tx: flume::Sender<RTCIceCandidate>) -> () {
+    fn on_candidate(&self, tx: tokio::sync::mpsc::Sender<RTCIceCandidate>) -> () {
         self.connection.on_ice_candidate(Box::new(move |candidate| {
             if let Some(candidate) = candidate {
-                tx.send(candidate).unwrap();
+                tx.try_send(candidate).unwrap();
             }
             Box::pin(async move {})
         }));
@@ -230,11 +230,11 @@ impl RTC {
         let candidate_cb = Arc::new(cx.argument::<JsFunction>(1)?.root(&mut cx));
         let channel = cx.channel();
 
-        let (tx, rx) = flume::unbounded();
+        let (tx, mut rx) = tokio::sync::mpsc::channel(1);
 
         rt.spawn(async move {
             rtc.on_candidate(tx);
-            while let Ok(candidate) = rx.recv_async().await {
+            while let Some(candidate) = rx.recv().await {
                 let candidate_cb = Arc::clone(&candidate_cb);
                 channel.send(move |mut cx| {
                     let callback = candidate_cb.to_inner(&mut cx);

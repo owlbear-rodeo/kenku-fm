@@ -25,6 +25,7 @@ impl OpusEvents {
     }
 }
 
+/// Take incoming WebRTC packets and broadcast them to a OpusEvents bus
 pub async fn runner(
     events: Arc<Mutex<OpusEvents>>,
     track: Arc<TrackRemote>,

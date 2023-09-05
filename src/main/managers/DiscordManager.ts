@@ -1,11 +1,32 @@
 import { BrowserWindow, ipcMain } from "electron";
-import severus, { DiscordClient } from "severus";
 import { AudioCaptureManagerMain } from "./AudioCaptureManagerMain";
+import { Gateway } from "../../discord/gateway/Gateway";
+import { CDN_URL } from "../../discord/constants";
+import { VoiceConnection } from "../../discord/voice/VoiceConnection";
+import severus, { VoiceConnection as SeverusVoiceConnection } from "severus";
+
+interface VoiceChannel {
+  id: string;
+  name: string;
+}
+
+interface Guild {
+  id: string;
+  name: string;
+  icon: string;
+  voiceChannels: VoiceChannel[];
+}
+
+type DualConnection = {
+  node: VoiceConnection;
+  rust?: SeverusVoiceConnection;
+};
 
 export class DiscordManager {
   window: BrowserWindow;
-  client?: DiscordClient;
+  gateway?: Gateway;
   audio: AudioCaptureManagerMain;
+  voiceConnections: Record<string, DualConnection> = {};
 
   constructor(window: BrowserWindow, audio: AudioCaptureManagerMain) {
     this.window = window;
@@ -21,10 +42,17 @@ export class DiscordManager {
     ipcMain.off("DISCORD_DISCONNECT", this._handleDisconnect);
     ipcMain.off("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
     ipcMain.off("DISCORD_LEAVE_CHANNEL", this._handleLeaveChannel);
-    if (this.client) {
-      severus.discordDestroy(this.client);
+    if (this.gateway) {
+      this.gateway.disconnect();
     }
-    this.client = undefined;
+    this.gateway = undefined;
+    for (const connection of Object.values(this.voiceConnections)) {
+      connection.node.disconnect();
+      if (connection.rust) {
+        severus.voiceConnectionDisconnect(connection.rust);
+      }
+    }
+    this.voiceConnections = {};
     this.audio = undefined;
   }
 
@@ -35,18 +63,35 @@ export class DiscordManager {
       return;
     }
 
-    if (this.client) {
+    if (this.gateway) {
       event.reply("DISCORD_DISCONNECTED");
       event.reply("ERROR", "Error connecting to bot: Already collected");
       return;
     }
 
     try {
-      this.client = await severus.discordNew(token);
+      this.gateway = new Gateway(token);
       event.reply("DISCORD_READY");
       event.reply("MESSAGE", "Connected");
-      const guilds = await severus.discordGetInfo(this.client);
-      event.reply("DISCORD_GUILDS", guilds);
+      this.gateway.on("error", (error) => {
+        event.reply("DISCORD_DISCONNECTED");
+        event.reply("ERROR", `Discord error: ${error?.message}`);
+      });
+      this.gateway.on("guilds", (guilds) => {
+        const transformedGuilds: Guild[] = [];
+        for (const guild of guilds) {
+          transformedGuilds.push({
+            id: guild.id,
+            icon: `${CDN_URL}/icons/${guild.id}/${guild.icon}.webp`,
+            name: guild.name,
+            voiceChannels: guild.channels
+              .filter((channel) => Boolean(channel.bitrate))
+              .map((channel) => ({ id: channel.id, name: channel.name })),
+          });
+        }
+        event.reply("DISCORD_GUILDS", transformedGuilds);
+      });
+      await this.gateway.connect();
     } catch (err) {
       event.reply("DISCORD_DISCONNECTED");
       event.reply("ERROR", `Error connecting to bot: ${err?.message}`);
@@ -57,9 +102,9 @@ export class DiscordManager {
     event.reply("DISCORD_DISCONNECTED");
     event.reply("DISCORD_GUILDS", []);
     event.reply("DISCORD_CHANNEL_JOINED", "local");
-    if (this.client) {
-      severus.discordDestroy(this.client);
-      this.client = undefined;
+    if (this.gateway) {
+      this.gateway.disconnect();
+      this.gateway = undefined;
     }
   };
 
@@ -75,15 +120,76 @@ export class DiscordManager {
       if (!this.audio.streaming) {
         throw Error("Audio stream not running");
       }
-      if (!this.client) {
+      if (!this.gateway) {
         throw Error("Discord client not ready");
       }
-      await severus.discordJoin(
-        this.client,
-        this.audio.rtc,
-        guildId,
-        channelId
-      );
+
+      const connection = this.voiceConnections[guildId];
+      if (connection) {
+        delete this.voiceConnections[guildId];
+        await connection.node.disconnect();
+        if (connection.rust) {
+          await severus.voiceConnectionDisconnect(connection.rust);
+        }
+      }
+
+      const nodeConnection = new VoiceConnection(guildId, this.gateway);
+      this.voiceConnections[guildId] = { node: nodeConnection };
+      nodeConnection.on("error", (error) => {
+        event.reply("DISCORD_CHANNEL_LEFT", channelId);
+        event.reply("ERROR", `Voice channel error: ${error?.message}`);
+      });
+      nodeConnection.on("ready", async (data) => {
+        try {
+          if (!data.modes.includes("xsalsa20_poly1305")) {
+            throw Error("Invalid encryption mode");
+          }
+          nodeConnection.updateSpeaking({
+            speaking: 1 << 1,
+            delay: 0,
+            ssrc: data.ssrc,
+          });
+          const rustConnection = await severus.voiceConnectionNew(
+            data.ip,
+            data.port,
+            data.ssrc
+          );
+          this.voiceConnections[guildId].rust = rustConnection;
+          const ip = await severus.voiceConnectionDiscoverIp(rustConnection);
+          nodeConnection.selectProtocol({
+            protocol: "udp",
+            data: {
+              address: ip.address,
+              port: ip.port,
+              mode: "xsalsa20_poly1305",
+            },
+          });
+        } catch (error) {
+          event.reply("DISCORD_CHANNEL_LEFT", channelId);
+          event.reply("ERROR", `Voice channel error: ${error?.message}`);
+        }
+      });
+      nodeConnection.on("session", async (session) => {
+        try {
+          if (!this.audio.rtc) {
+            throw Error("Unable to start session: audio capture not running");
+          }
+          const rustConnection = this.voiceConnections[guildId].rust;
+          if (!rustConnection) {
+            throw Error("Unable to start session: no udp connection found");
+          }
+          await severus.voiceConnectionConnect(
+            rustConnection,
+            session.secret_key,
+            this.audio.rtc
+          );
+        } catch (error) {
+          event.reply("DISCORD_CHANNEL_LEFT", channelId);
+          event.reply("ERROR", `Voice channel error: ${error?.message}`);
+        }
+      });
+      await nodeConnection.connect(channelId);
+
       event.reply("DISCORD_CHANNEL_JOINED", channelId);
     } catch (err) {
       event.reply("DISCORD_CHANNEL_LEFT", channelId);
@@ -97,10 +203,17 @@ export class DiscordManager {
     guildId: string
   ) => {
     try {
-      if (!this.client) {
+      if (!this.gateway) {
         throw Error("Discord client not ready");
       }
-      await severus.discordLeave(this.client, guildId);
+      const connection = this.voiceConnections[guildId];
+      if (connection) {
+        delete this.voiceConnections[guildId];
+        await connection.node.disconnect();
+        if (connection.rust) {
+          await severus.voiceConnectionDisconnect(connection.rust);
+        }
+      }
     } catch (err) {
       event.reply("ERROR", `Error leaving channel: ${err?.message}`);
     }

@@ -1,27 +1,27 @@
 declare module "severus" {
-  export interface VoiceChannel {
-    id: number;
-    name: string;
+  export interface IpDiscovery {
+    address: string;
+    port: number;
   }
-  export interface Guild {
-    id: number;
-    name: string;
-    icon: string;
-    voiceChannels: VoiceChannel[];
-  }
-  export interface DiscordClient {}
+  export interface VoiceConnection {}
   export interface RTCClient {}
   export interface Severus {
-    discordNew: (token: string) => Promise<DiscordClient>;
-    discordGetInfo: (client: DiscordClient) => Promise<Guild[]>;
-    discordJoin: (
-      client: DiscordClient,
-      rtc: RTCClient,
-      guildId: string,
-      channelId: string
+    voiceConnectionNew: (
+      ip: string,
+      port: number,
+      ssrc: number
+    ) => Promise<VoiceConnection>;
+    voiceConnectionDiscoverIp: (
+      voiceConnection: VoiceConnection
+    ) => Promise<IpDiscovery>;
+    voiceConnectionConnect: (
+      voiceConnection: VoiceConnection,
+      secretKey: number[],
+      rtc: RTCClient
     ) => Promise<void>;
-    discordLeave: (client: DiscordClient, guildId: string) => Promise<void>;
-    discordDestroy: (client: DiscordClient) => void;
+    voiceConnectionDisconnect: (
+      voiceConnection: VoiceConnection
+    ) => Promise<void>;
     rtcNew: () => Promise<RTCClient>;
     rtcSignal: (rtc: RTCClient, offer: string) => Promise<string>;
     rtcAddCandidate: (rtc: RTCClient, candidate: string) => Promise<void>;

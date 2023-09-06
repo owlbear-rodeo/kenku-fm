@@ -1,4 +1,5 @@
 import EventEmitter from "events";
+import log from "electron-log/main";
 import { GatewaySocket } from "./GatewaySocket";
 import { User } from "../types/User";
 import { GatewayDescription } from "./GatewayDescription";
@@ -57,7 +58,7 @@ export class Gateway extends EventEmitter {
     if (!this.gatewayDescription) {
       const { data, error } = await getGatewayDescription(this.token);
       if (error) {
-        console.error(error);
+        log.error(error);
         throw Error(error.message);
       }
       this.gatewayDescription = data;
@@ -76,9 +77,9 @@ export class Gateway extends EventEmitter {
   /** Manually disconnect the gateway with code `GatewayCloseCode.NormalClosure` */
   disconnect() {
     if (this.socket) {
-      console.log("manual disconnect");
       this.socket.close(GatewayCloseCode.NormalClosure);
       this.socket = undefined;
+      log.debug("manual disconnect");
     }
   }
 
@@ -93,7 +94,7 @@ export class Gateway extends EventEmitter {
         },
       };
       socket.send(resume);
-      console.log("resume", resume);
+      log.debug("resume", resume);
     }
   };
 
@@ -122,7 +123,7 @@ export class Gateway extends EventEmitter {
     }
 
     if (shouldResumeAfterClose(code)) {
-      console.log("reconnecting", code);
+      log.debug("reconnecting", code);
       this.connect();
     }
   };

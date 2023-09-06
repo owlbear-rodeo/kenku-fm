@@ -1,6 +1,7 @@
 use neon::prelude::*;
 
 mod constants;
+mod electron_log;
 mod encrypt;
 mod error;
 mod rtc;
@@ -31,5 +32,8 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("rtcAddCandidate", rtc::RTC::js_add_candidate)?;
     cx.export_function("rtcOnCandidate", rtc::RTC::js_on_candidate)?;
     cx.export_function("rtcStartStream", rtc::RTC::js_start_stream)?;
+    cx.export_function("logInit", electron_log::Logger::js_init)?;
+    cx.export_function("logSetLogLevel", electron_log::Logger::js_set_log_level)?;
+    cx.export_function("logOnLog", electron_log::Logger::js_on_log)?;
     Ok(())
 }

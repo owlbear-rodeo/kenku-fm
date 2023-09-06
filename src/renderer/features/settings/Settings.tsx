@@ -243,6 +243,19 @@ export function Settings({ open, onClose }: SettingsProps) {
     setClearingCache(false);
   }
 
+  const [logLevel, setLogLevel] = useState<string>(() =>
+    window.kenku.getLogLevel()
+  );
+  function handleDebugLogToggle() {
+    if (logLevel === "debug") {
+      setLogLevel("error");
+      window.kenku.setLogLevel("error");
+    } else {
+      setLogLevel("debug");
+      window.kenku.setLogLevel("debug");
+    }
+  }
+
   const otherSettings = (
     <Stack spacing={1}>
       <FormGroup>
@@ -301,6 +314,30 @@ export function Settings({ open, onClose }: SettingsProps) {
           }
         />
       </FormGroup>
+      <FormGroup>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={logLevel === "debug"}
+              onChange={handleDebugLogToggle}
+            />
+          }
+          sx={{ marginLeft: "-8px" }}
+          label={<Typography variant="caption">Debug Logs</Typography>}
+        />
+      </FormGroup>
+      <Link
+        href=""
+        onClick={(e) => {
+          e.preventDefault();
+          window.kenku.openLogFile();
+        }}
+        variant="caption"
+        textAlign="center"
+        py={2}
+      >
+        Open Log File
+      </Link>
       <Button
         onClick={handleCacheClear}
         fullWidth

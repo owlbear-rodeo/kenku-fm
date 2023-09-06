@@ -2849,6 +2849,11 @@ electron-installer-redhat@^3.2.0:
     word-wrap "^1.2.3"
     yargs "^16.0.2"
 
+electron-log@^5.0.0-beta.28:
+  version "5.0.0-beta.28"
+  resolved "https://registry.yarnpkg.com/electron-log/-/electron-log-5.0.0-beta.28.tgz#56462ce508a3e98227c9eb4f63b4497fef914cd0"
+  integrity sha512-gVkQxxYQfV3nmx4zw4lsxWdzdaqJhK+OyBNOU3GGwjhtApbH7KQTWgr8sZcowEk0D6ksj+UbvaHOaU1HTaClzA==
+
 electron-osx-sign@0.6.0:
   version "0.6.0"
   resolved "https://registry.yarnpkg.com/electron-osx-sign/-/electron-osx-sign-0.6.0.tgz#9b69c191d471d9458ef5b1e4fdd52baa059f1bb8"

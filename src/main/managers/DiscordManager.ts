@@ -1,4 +1,5 @@
 import { BrowserWindow, ipcMain } from "electron";
+import log from "electron-log/main";
 import { AudioCaptureManagerMain } from "./AudioCaptureManagerMain";
 import { Gateway } from "../../discord/gateway/Gateway";
 import { CDN_URL } from "../../discord/constants";
@@ -73,10 +74,14 @@ export class DiscordManager {
       this.gateway = new Gateway(token);
       event.reply("DISCORD_READY");
       event.reply("MESSAGE", "Connected");
+      log.debug("discord manager ready");
+
       this.gateway.on("error", (error) => {
         event.reply("DISCORD_DISCONNECTED");
         event.reply("ERROR", `Discord error: ${error?.message}`);
+        log.error("discord manager gateway error", error?.message);
       });
+
       this.gateway.on("guilds", (guilds) => {
         const transformedGuilds: Guild[] = [];
         for (const guild of guilds) {
@@ -91,10 +96,12 @@ export class DiscordManager {
         }
         event.reply("DISCORD_GUILDS", transformedGuilds);
       });
+
       await this.gateway.connect();
     } catch (err) {
       event.reply("DISCORD_DISCONNECTED");
       event.reply("ERROR", `Error connecting to bot: ${err?.message}`);
+      log.error("discord manager connect error", err?.message);
     }
   };
 
@@ -106,6 +113,7 @@ export class DiscordManager {
       this.gateway.disconnect();
       this.gateway = undefined;
     }
+    log.debug("discord manager disconnect");
   };
 
   _handleJoinChannel = async (
@@ -113,6 +121,20 @@ export class DiscordManager {
     channelId: string,
     guildId: string
   ) => {
+    const handleError = async (error: any) => {
+      event.reply("DISCORD_CHANNEL_LEFT", channelId);
+      event.reply("ERROR", `Voice channel error: ${error?.message}`);
+      log.error("discord manager channel error", error?.message);
+      const connection = this.voiceConnections[guildId];
+      if (connection) {
+        delete this.voiceConnections[guildId];
+        await connection.node.disconnect();
+        if (connection.rust) {
+          await severus.voiceConnectionDisconnect(connection.rust);
+        }
+      }
+    };
+
     try {
       if (!this.audio.rtc) {
         throw Error("Audio capture not running");
@@ -126,6 +148,8 @@ export class DiscordManager {
 
       const connection = this.voiceConnections[guildId];
       if (connection) {
+        log.debug("leaving guild", guildId);
+
         delete this.voiceConnections[guildId];
         await connection.node.disconnect();
         if (connection.rust) {
@@ -133,12 +157,13 @@ export class DiscordManager {
         }
       }
 
+      log.debug("joining channel", channelId, "in guild", guildId);
+
       const nodeConnection = new VoiceConnection(guildId, this.gateway);
       this.voiceConnections[guildId] = { node: nodeConnection };
-      nodeConnection.on("error", (error) => {
-        event.reply("DISCORD_CHANNEL_LEFT", channelId);
-        event.reply("ERROR", `Voice channel error: ${error?.message}`);
-      });
+
+      nodeConnection.on("error", handleError);
+
       nodeConnection.on("ready", async (data) => {
         try {
           if (!data.modes.includes("xsalsa20_poly1305")) {
@@ -165,8 +190,7 @@ export class DiscordManager {
             },
           });
         } catch (error) {
-          event.reply("DISCORD_CHANNEL_LEFT", channelId);
-          event.reply("ERROR", `Voice channel error: ${error?.message}`);
+          handleError(error);
         }
       });
       nodeConnection.on("session", async (session) => {
@@ -184,16 +208,14 @@ export class DiscordManager {
             this.audio.rtc
           );
         } catch (error) {
-          event.reply("DISCORD_CHANNEL_LEFT", channelId);
-          event.reply("ERROR", `Voice channel error: ${error?.message}`);
+          handleError(error);
         }
       });
       await nodeConnection.connect(channelId);
 
       event.reply("DISCORD_CHANNEL_JOINED", channelId);
-    } catch (err) {
-      event.reply("DISCORD_CHANNEL_LEFT", channelId);
-      event.reply("ERROR", `Error joining channel: ${err?.message}`);
+    } catch (error) {
+      handleError(error);
     }
   };
 
@@ -208,6 +230,8 @@ export class DiscordManager {
       }
       const connection = this.voiceConnections[guildId];
       if (connection) {
+        log.debug("leaving channel", channelId, "in guild", guildId);
+
         delete this.voiceConnections[guildId];
         await connection.node.disconnect();
         if (connection.rust) {
@@ -216,12 +240,8 @@ export class DiscordManager {
       }
     } catch (err) {
       event.reply("ERROR", `Error leaving channel: ${err?.message}`);
+      log.error("discord manager channel leave error", err?.message);
     }
     event.reply("DISCORD_CHANNEL_LEFT", channelId);
-  };
-
-  _handleBroadcastError = (error: Error) => {
-    this.window.webContents.send("ERROR", error.message);
-    console.error(error);
   };
 }

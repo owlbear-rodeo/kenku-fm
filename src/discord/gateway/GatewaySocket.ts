@@ -1,4 +1,5 @@
 import EventEmitter from "events";
+import log from "electron-log/main";
 import { GatewayEvent, HeartbeatEvent, OpCode } from "./GatewayEvent";
 import { WebSocket } from "ws";
 import { API_VERSION } from "../constants";
@@ -75,7 +76,7 @@ export class GatewaySocket extends EventEmitter {
     this.acknowledged = false;
     this.sequence = null;
 
-    console.log("connect to", url);
+    log.debug("gateway socket connecting to", url);
     this.ws = new WebSocket(`${url}/?v=${API_VERSION}&encoding=json`);
     this.ws.on("open", this.handleSocketOpen);
     this.ws.on("error", this.handleSocketError);
@@ -101,12 +102,12 @@ export class GatewaySocket extends EventEmitter {
   };
 
   private handleSocketError = (error: Error) => {
-    console.error(error);
+    log.error("gateway socket error: ", error);
     this.emit("error", this, error);
   };
 
   private handleSocketClose = (code: number) => {
-    console.warn("close", code);
+    log.warn("gateway socket closed with code:", code);
     this.connectionState = ConnectionState.Disconnected;
     this.emit("state", this, ConnectionState.Disconnected);
     this.ws.off("open", this.handleSocketOpen);
@@ -119,7 +120,7 @@ export class GatewaySocket extends EventEmitter {
 
   private handleSocketMessage = (message: string) => {
     const event = JSON.parse(message) as GatewayEvent;
-    console.log(event);
+    log.debug("gateway socket event", event);
 
     if (isSequencedEvent(event)) {
       this.sequence = event.s;
@@ -156,8 +157,8 @@ export class GatewaySocket extends EventEmitter {
   private startHeartbeat(interval: number) {
     this.stopHeartbeat();
     const jitter = Math.random();
-    console.log(
-      `heartbeat started at interval: ${interval}ms, with jitter ${jitter}`
+    log.debug(
+      `gateway socket heartbeat started at interval: ${interval}ms, with jitter ${jitter}`
     );
     this.heartbeat = setTimeout(() => {
       // Send initial heartbeat
@@ -182,7 +183,7 @@ export class GatewaySocket extends EventEmitter {
   /** Stop the heartbeat if there is one */
   private stopHeartbeat() {
     if (this.heartbeat) {
-      console.log("heartbeat stopped");
+      log.debug("gateway socket heartbeat stopped");
       clearTimeout(this.heartbeat);
       clearInterval(this.heartbeat);
       this.heartbeat = undefined;
@@ -192,7 +193,7 @@ export class GatewaySocket extends EventEmitter {
   /** Send a heartbeat if the WebSocket is open */
   private sendHeartbeat() {
     if (this.ws.readyState === this.ws.OPEN) {
-      console.log("heartbeat", this.sequence);
+      log.debug("gateway socket heartbeat", this.sequence);
       const event: HeartbeatEvent = {
         op: OpCode.Heartbeat,
         d: this.sequence,

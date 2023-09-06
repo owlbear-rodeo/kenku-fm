@@ -1,4 +1,5 @@
 import EventEmitter from "events";
+import log from "electron-log/main";
 import {
   VoiceGatewayCloseCode,
   shouldResumeAfterClose,
@@ -63,7 +64,7 @@ export class VoiceGateway extends EventEmitter {
 
   disconnect() {
     if (this.socket) {
-      console.log("manual voice disconnect");
+      log.debug("voice gateway manual disconnect");
       this.socket.close(VoiceGatewayCloseCode.NormalClosure);
       this.socket = undefined;
     }
@@ -98,7 +99,7 @@ export class VoiceGateway extends EventEmitter {
     }
 
     if (shouldResumeAfterClose(code)) {
-      console.log("voice resuming", code);
+      log.debug("voice gateway resuming with code:", code);
       this.connect();
     }
   };

@@ -9,6 +9,7 @@ import {
   powerSaveBlocker,
 } from "electron";
 import "./menu";
+import "./log";
 import icon from "./assets/icon.png";
 import { getUserAgent } from "./main/userAgent";
 import { SessionManager } from "./main/managers/SessionManager";

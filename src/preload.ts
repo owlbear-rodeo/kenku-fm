@@ -175,6 +175,15 @@ const api = {
   },
   platform: ipcRenderer.sendSync("GET_PLATFORM") as string,
   version: ipcRenderer.sendSync("GET_VERSION") as string,
+  getLogLevel: () => {
+    return ipcRenderer.sendSync("GET_LOG_LEVEL") as string;
+  },
+  setLogLevel: (level: string) => {
+    ipcRenderer.send("SET_LOG_LEVEL", level);
+  },
+  openLogFile: () => {
+    ipcRenderer.send("OPEN_LOG_FILE");
+  },
 };
 
 declare global {

@@ -95,9 +95,9 @@ export class BrowserViewManagerMain {
     this.views[id].webContents.on("media-paused", () => {
       event.reply("BROWSER_VIEW_MEDIA_PAUSED", id);
     });
-    this.views[id].webContents.on("new-window", (event, url) => {
-      event.preventDefault();
+    this.views[id].webContents.setWindowOpenHandler(({ url }) => {
       shell.openExternal(url);
+      return { action: "deny" };
     });
     let loaded = false;
     this.views[id].webContents.on("did-finish-load", () => {
@@ -105,7 +105,7 @@ export class BrowserViewManagerMain {
         event.reply("BROWSER_VIEW_LOADED", id);
         loaded = true;
       }
-    })
+    });
     event.returnValue = id;
   };
 

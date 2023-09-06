@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import { API_URL } from "../constants";
 import { DiscordError } from "../types/DiscordError";
 import { GatewayDescription } from "./GatewayDescription";

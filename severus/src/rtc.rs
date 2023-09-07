@@ -5,12 +5,10 @@ use neon::result::{JsResult, NeonResult};
 use neon::types::{Finalize, JsBox, JsFunction, JsPromise, JsString, JsUndefined};
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
-use std::time::Duration;
 use tokio::runtime::Runtime;
 use tokio::sync::{Mutex, Notify};
 use webrtc::api::interceptor_registry::register_default_interceptors;
 use webrtc::api::media_engine::{MediaEngine, MIME_TYPE_OPUS};
-use webrtc::api::setting_engine::SettingEngine;
 use webrtc::api::APIBuilder;
 use webrtc::ice_transport::ice_candidate::{RTCIceCandidate, RTCIceCandidateInit};
 use webrtc::ice_transport::ice_connection_state::RTCIceConnectionState;
@@ -39,14 +37,6 @@ impl Finalize for RTC {}
 
 impl RTC {
     async fn new() -> Result<Arc<Self>> {
-        let mut setting_engine = SettingEngine::default();
-
-        // Increase timeouts to help on flaky networks
-        let disconnected_timeout = Some(Duration::new(30, 0));
-        let failed_timeout = Some(Duration::new(60, 0));
-        let keep_alive_interval = Some(Duration::new(15, 0));
-        setting_engine.set_ice_timeouts(disconnected_timeout, failed_timeout, keep_alive_interval);
-
         // Create a MediaEngine object to configure the supported codec
         let mut media_engine = MediaEngine::default();
         media_engine.register_codec(
@@ -69,13 +59,13 @@ impl RTC {
         let api = APIBuilder::new()
             .with_media_engine(media_engine)
             .with_interceptor_registry(registry)
-            .with_setting_engine(setting_engine)
             .build();
 
         let config = RTCConfiguration {
             ..Default::default()
         };
 
+        debug!("new rtc connection started");
         let connection = api.new_peer_connection(config).await?;
 
         connection
@@ -146,6 +136,14 @@ impl RTC {
                 debug!("RTC Connection State has changed {connection_state}");
                 if connection_state == RTCIceConnectionState::Connected {
                     debug!("RTC connected");
+                } else if connection_state == RTCIceConnectionState::Closed {
+                    debug!("RTC closed");
+                    notify_tx.notify_waiters();
+                    let _ = done_tx.try_send(());
+                } else if connection_state == RTCIceConnectionState::Disconnected {
+                    debug!("RTC disconnected");
+                    notify_tx.notify_waiters();
+                    let _ = done_tx.try_send(());
                 } else if connection_state == RTCIceConnectionState::Failed {
                     debug!("RTC failed");
                     notify_tx.notify_waiters();
@@ -156,6 +154,13 @@ impl RTC {
         ));
 
         done_rx.recv().await;
+
+        Ok(())
+    }
+
+    async fn close(&self) -> Result<()> {
+        debug!("closing RTC connection");
+        self.connection.close().await?;
 
         Ok(())
     }
@@ -264,6 +269,23 @@ impl RTC {
         rt.spawn(async move {
             let rec = rtc.start_stream().await;
             deferred.settle_with(&channel, move |mut cx| match rec {
+                Ok(_) => Ok(cx.undefined()),
+                Err(e) => cx.throw_error(e.to_string()),
+            });
+        });
+
+        Ok(promise)
+    }
+
+    pub fn js_close(mut cx: FunctionContext) -> JsResult<JsPromise> {
+        let rt = runtime(&mut cx)?;
+        let rtc = Arc::clone(&&cx.argument::<JsBox<Arc<RTC>>>(0)?);
+        let channel = cx.channel();
+        let (deferred, promise) = cx.promise();
+
+        rt.spawn(async move {
+            let c = rtc.close().await;
+            deferred.settle_with(&channel, move |mut cx| match c {
                 Ok(_) => Ok(cx.undefined()),
                 Err(e) => cx.throw_error(e.to_string()),
             });

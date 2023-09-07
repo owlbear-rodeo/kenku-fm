@@ -1,3 +1,4 @@
+import log from "electron-log/main";
 import { BrowserView, BrowserWindow, ipcMain, webContents } from "electron";
 
 declare const AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY: string;
@@ -39,8 +40,8 @@ export class AudioCaptureManagerMain {
         }
       }
     );
+    this._browserView.webContents.openDevTools();
 
-    ipcMain.on("AUDIO_CAPTURE_START", this._handleStart);
     ipcMain.on("AUDIO_CAPTURE_SET_LOOPBACK", this._handleSetLoopback);
     ipcMain.on("AUDIO_CAPTURE_SET_MUTED", this._handleSetMuted);
     ipcMain.on(
@@ -71,7 +72,6 @@ export class AudioCaptureManagerMain {
   }
 
   destroy() {
-    ipcMain.off("AUDIO_CAPTURE_START", this._handleStart);
     ipcMain.off("AUDIO_CAPTURE_SET_LOOPBACK", this._handleSetLoopback);
     ipcMain.off("AUDIO_CAPTURE_SET_MUTED", this._handleSetMuted);
     ipcMain.off(
@@ -101,11 +101,11 @@ export class AudioCaptureManagerMain {
     ipcMain.off("ERROR", this._handleError);
 
     (this._browserView.webContents as any).destroy();
-  }
 
-  _handleStart = (_: Electron.IpcMainEvent) => {
-    this._browserView.webContents.send("AUDIO_CAPTURE_START");
-  };
+    if (this.rtc) {
+      severus.rtcClose(this.rtc);
+    }
+  }
 
   _handleSetLoopback = (_: Electron.IpcMainEvent, loopback: boolean) => {
     this._browserView.webContents.send("AUDIO_CAPTURE_SET_LOOPBACK", loopback);
@@ -145,6 +145,15 @@ export class AudioCaptureManagerMain {
 
   _handleRTC = async (_: Electron.IpcMainEvent) => {
     try {
+      if (this.rtc) {
+        try {
+          await severus.rtcClose(this.rtc);
+        } catch (err) {
+          log.debug("rtc close error", err.message);
+        }
+        this.rtc = undefined;
+      }
+
       this.rtc = await severus.rtcNew();
       severus.rtcOnCandidate(this.rtc, (candidate) => {
         this._browserView.webContents.send(
@@ -153,6 +162,7 @@ export class AudioCaptureManagerMain {
         );
       });
     } catch (err) {
+      log.error("unable to start RTC", err.message);
       const windows = BrowserWindow.getAllWindows();
       for (let window of windows) {
         window.webContents.send("FATAL_ERROR", err.message);
@@ -164,6 +174,7 @@ export class AudioCaptureManagerMain {
     try {
       return await severus.rtcSignal(this.rtc, offer);
     } catch (err) {
+      log.error("unable to send RTC signal", err.message);
       const windows = BrowserWindow.getAllWindows();
       for (let window of windows) {
         window.webContents.send("FATAL_ERROR", err.message);
@@ -175,6 +186,7 @@ export class AudioCaptureManagerMain {
     try {
       return await severus.rtcAddCandidate(this.rtc, candidate);
     } catch (err) {
+      log.error("unable to send RTC candidate", err.message);
       const windows = BrowserWindow.getAllWindows();
       for (let window of windows) {
         window.webContents.send("FATAL_ERROR", err.message);
@@ -188,6 +200,7 @@ export class AudioCaptureManagerMain {
       await severus.rtcStartStream(this.rtc);
       this.streaming = false;
     } catch (err) {
+      log.error("unable to start RTC stream", err.message);
       const windows = BrowserWindow.getAllWindows();
       for (let window of windows) {
         window.webContents.send("FATAL_ERROR", err.message);

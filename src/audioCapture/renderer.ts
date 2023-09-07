@@ -7,8 +7,10 @@
  */
 
 import { AudioCapture } from "./AudioCapture";
+import { RTCStream } from "./RTCStream";
 
 const audioCapture = new AudioCapture();
+const rtcStream = new RTCStream(audioCapture.outputStream);
 
 window.capture.on("AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM", (args) => {
   const [viewId, mediaSourceId] = args;
@@ -44,11 +46,7 @@ window.capture.on("AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE", (args) => {
   audioCapture.stopExternalAudioCapture(deviceId);
 });
 
-window.capture.on("AUDIO_CAPTURE_START", () => {
-  audioCapture.start();
-});
-
 window.capture.on("AUDIO_CAPTURE_CANDIDATE", (args) => {
   const [candidate] = args;
-  audioCapture.addIceCandidate(candidate);
+  rtcStream.addIceCandidate(candidate);
 });

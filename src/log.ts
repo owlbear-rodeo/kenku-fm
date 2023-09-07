@@ -37,6 +37,28 @@ ipcMain.on("OPEN_LOG_FILE", () => {
   shell.showItemInFolder(path);
 });
 
+ipcMain.on("LOG", (_, level: string, message: string) => {
+  switch (level) {
+    case "error":
+      log.error(message);
+      break;
+    case "warn":
+      log.warn(message);
+      break;
+    case "info":
+      log.info(message);
+      break;
+    case "debug":
+      log.debug(message);
+      break;
+    case "silly":
+      log.silly(message);
+      break;
+    default:
+      log.warn("Log level not implemented", level);
+  }
+});
+
 severus.logOnLog((level, message) => {
   switch (level) {
     case "ERROR":

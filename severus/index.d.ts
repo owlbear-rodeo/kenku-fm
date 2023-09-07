@@ -30,6 +30,7 @@ declare module "severus" {
       onCandidate: (candidate: string) => void
     ) => void;
     rtcStartStream: (rtc: RTCClient) => Promise<void>;
+    rtcClose: (rtc: RTCClient) => Promise<void>;
     logInit: () => void;
     logSetLogLevel: (level: string) => void;
     logOnLog: (onLog: (level: string, message: string) => void) => void;

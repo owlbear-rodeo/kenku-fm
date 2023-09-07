@@ -35,7 +35,6 @@ export interface VoiceGatewaySocket extends EventEmitter {
   ): this;
   on(event: "open", listener: (socket: this) => void): this;
   on(event: "close", listener: (socket: this, code: number) => void): this;
-  on(event: "error", listener: (socket: this, error: Error) => void): this;
 
   off(
     event: "state",
@@ -47,7 +46,6 @@ export interface VoiceGatewaySocket extends EventEmitter {
   ): this;
   off(event: "open", listener: (socket: this) => void): this;
   off(event: "close", listener: (socket: this, code: number) => void): this;
-  off(event: "error", listener: (socket: this, error: Error) => void): this;
 
   emit(event: "state", socket: this, state: ConnectionState): boolean;
   emit(
@@ -57,7 +55,6 @@ export interface VoiceGatewaySocket extends EventEmitter {
   ): boolean;
   emit(event: "open", socket: this): boolean;
   emit(event: "close", socket: this, code: number): boolean;
-  emit(event: "error", socket: this, error: Error): boolean;
 }
 
 /**
@@ -118,8 +115,7 @@ export class VoiceGatewaySocket extends EventEmitter {
   };
 
   private handleSocketError = (error: Error) => {
-    log.error("voice gateway socket error: ", error);
-    this.emit("error", this, error);
+    log.error("voice gateway socket error:", error);
   };
 
   private handleSocketClose = (code: number) => {
@@ -136,7 +132,7 @@ export class VoiceGatewaySocket extends EventEmitter {
 
   private handleSocketMessage = (message: string) => {
     const event = JSON.parse(message) as VoiceGatewayEvent;
-    log.debug("voice gateway socket event", event);
+    log.debug("voice gateway socket event", event.op);
 
     if (event.op === VoiceOpCode.Hello) {
       this.acknowledged = true;

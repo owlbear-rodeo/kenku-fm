@@ -34,7 +34,6 @@ export interface GatewaySocket extends EventEmitter {
   ): this;
   on(event: "open", listener: (socket: this) => void): this;
   on(event: "close", listener: (socket: this, code: number) => void): this;
-  on(event: "error", listener: (socket: this, error: Error) => void): this;
 
   off(
     event: "state",
@@ -46,13 +45,11 @@ export interface GatewaySocket extends EventEmitter {
   ): this;
   off(event: "open", listener: (socket: this) => void): this;
   off(event: "close", listener: (socket: this, code: number) => void): this;
-  off(event: "error", listener: (socket: this, error: Error) => void): this;
 
   emit(event: "state", socket: this, state: ConnectionState): boolean;
   emit(event: "event", socket: this, gatewayEvent: GatewayEvent): boolean;
   emit(event: "open", socket: this): boolean;
   emit(event: "close", socket: this, code: number): boolean;
-  emit(event: "error", socket: this, error: Error): boolean;
 }
 
 /**
@@ -102,8 +99,7 @@ export class GatewaySocket extends EventEmitter {
   };
 
   private handleSocketError = (error: Error) => {
-    log.error("gateway socket error: ", error);
-    this.emit("error", this, error);
+    log.error("gateway socket error:", error);
   };
 
   private handleSocketClose = (code: number) => {
@@ -120,7 +116,7 @@ export class GatewaySocket extends EventEmitter {
 
   private handleSocketMessage = (message: string) => {
     const event = JSON.parse(message) as GatewayEvent;
-    log.debug("gateway socket event", event);
+    log.debug("gateway socket event", event.op);
 
     if (isSequencedEvent(event)) {
       this.sequence = event.s;
@@ -134,6 +130,8 @@ export class GatewaySocket extends EventEmitter {
           sessionId: event.d.session_id,
           user: event.d.user,
         };
+      } else if (event.t === "RESUMED") {
+        this.connectionState = ConnectionState.Ready;
       }
     } else if (event.op === OpCode.Hello) {
       this.acknowledged = true;

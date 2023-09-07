@@ -158,9 +158,6 @@ const api = {
   stopExternalAudioCapture: (deviceId: string) => {
     ipcRenderer.send("AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE", deviceId);
   },
-  startAudioCapture: () => {
-    ipcRenderer.send("AUDIO_CAPTURE_START");
-  },
   toggleMaximize: () => {
     ipcRenderer.send("WINDOW_TOGGLE_MAXIMIZE");
   },

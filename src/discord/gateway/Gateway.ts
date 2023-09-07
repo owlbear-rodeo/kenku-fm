@@ -13,15 +13,13 @@ import {
 } from "./GatewayEvent";
 import { INTENTS } from "../constants";
 import { FullGuild } from "../types/Guild";
+import { reconnectAfterMs } from "../../backoff";
 
 type ReconnectState = {
   resumeGatewayURL: string;
   sessionId: string;
   sequence: number | null;
 };
-
-//TODO: move to typed-emitter
-// import { TypedEmitter } from "tiny-typed-emitter";
 
 export interface Gateway extends EventEmitter {
   on(event: "error", listener: (error: Error) => void): this;
@@ -42,6 +40,7 @@ export class Gateway extends EventEmitter {
   socket?: GatewaySocket;
   private gatewayDescription?: GatewayDescription;
   private reconnectState?: ReconnectState;
+  private reconnectTries = 0;
   guilds: FullGuild[];
 
   constructor(token: string) {
@@ -55,11 +54,13 @@ export class Gateway extends EventEmitter {
       this.socket.close(GatewayCloseCode.Reconnecting);
       this.socket = undefined;
     }
+
     if (!this.gatewayDescription) {
       const { data, error } = await getGatewayDescription(this.token);
       if (error) {
-        log.error(error);
-        throw Error(error.message);
+        log.error("gateway unable to get description", error.message);
+        this.emit("error", Error(error.message));
+        return;
       }
       this.gatewayDescription = data;
     }
@@ -69,7 +70,6 @@ export class Gateway extends EventEmitter {
     }
     this.socket = new GatewaySocket(url);
     this.socket.on("open", this.handleSocketOpen);
-    this.socket.on("error", this.handleSocketError);
     this.socket.on("close", this.handleSocketClose);
     this.socket.on("event", this.handleSocketEvent);
   }
@@ -79,8 +79,9 @@ export class Gateway extends EventEmitter {
     if (this.socket) {
       this.socket.close(GatewayCloseCode.NormalClosure);
       this.socket = undefined;
-      log.debug("manual disconnect");
+      log.debug("gateway manual disconnect");
     }
+    this.reconnectTries = 0;
   }
 
   private handleSocketOpen = (socket: GatewaySocket) => {
@@ -94,17 +95,13 @@ export class Gateway extends EventEmitter {
         },
       };
       socket.send(resume);
-      log.debug("resume", resume);
+      log.debug("gateway resume", this.reconnectState);
     }
-  };
-
-  private handleSocketError = (_: GatewaySocket, error: Error) => {
-    this.emit("error", error);
+    this.reconnectTries = 0;
   };
 
   private handleSocketClose = (socket: GatewaySocket, code: number) => {
     socket.off("open", this.handleSocketOpen);
-    socket.off("error", this.handleSocketError);
     socket.off("close", this.handleSocketClose);
     socket.off("event", this.handleSocketEvent);
 
@@ -123,8 +120,23 @@ export class Gateway extends EventEmitter {
     }
 
     if (shouldResumeAfterClose(code)) {
-      log.debug("reconnecting", code);
-      this.connect();
+      this.reconnectTries += 1;
+      const after = reconnectAfterMs(this.reconnectTries);
+      log.debug("gateway reconnecting from code", code, "in", after, "ms");
+      setTimeout(() => {
+        // Check to see if we still need to reconnect
+        if (!this.socket && this.reconnectTries > 0) {
+          log.debug("gateway reconnecting from code", code);
+          this.connect();
+        } else {
+          log.debug("gateway reconnect ignored");
+        }
+      }, after);
+    } else if (
+      code !== GatewayCloseCode.Reconnecting &&
+      code !== GatewayCloseCode.NormalClosure
+    ) {
+      this.emit("error", Error(`Gateway socket closed with code: ${code}`));
     }
   };
 

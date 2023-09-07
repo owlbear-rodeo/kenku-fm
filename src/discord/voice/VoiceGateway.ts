@@ -15,6 +15,7 @@ import {
   VoiceGatewaySocket,
   VoiceSocketDescription,
 } from "./VoiceGatewaySocket";
+import { reconnectAfterMs } from "../../backoff";
 
 export interface VoiceGateway extends EventEmitter {
   on(event: "error", listener: (error: Error) => void): this;
@@ -41,6 +42,7 @@ export class VoiceGateway extends EventEmitter {
   socket?: VoiceGatewaySocket;
   /** Has this gateway connected before, if true send the resume event */
   private hasConnected: boolean;
+  private reconnectTries = 0;
   ssrc?: number;
 
   constructor(description: VoiceSocketDescription) {
@@ -55,9 +57,9 @@ export class VoiceGateway extends EventEmitter {
       this.socket.close(VoiceGatewayCloseCode.Reconnecting);
       this.socket = undefined;
     }
+
     this.socket = new VoiceGatewaySocket(this.description);
     this.socket.on("open", this.handleSocketOpen);
-    this.socket.on("error", this.handleSocketError);
     this.socket.on("close", this.handleSocketClose);
     this.socket.on("event", this.handleSocketEvent);
   }
@@ -68,6 +70,7 @@ export class VoiceGateway extends EventEmitter {
       this.socket.close(VoiceGatewayCloseCode.NormalClosure);
       this.socket = undefined;
     }
+    this.reconnectTries = 0;
   }
 
   private handleSocketOpen = (socket: VoiceGatewaySocket) => {
@@ -82,15 +85,11 @@ export class VoiceGateway extends EventEmitter {
       };
       socket.send(resume);
     }
-  };
-
-  private handleSocketError = (_: VoiceGatewaySocket, error: Error) => {
-    this.emit("error", error);
+    this.reconnectTries = 0;
   };
 
   private handleSocketClose = (socket: VoiceGatewaySocket, code: number) => {
     socket.off("open", this.handleSocketOpen);
-    socket.off("error", this.handleSocketError);
     socket.off("close", this.handleSocketClose);
     socket.off("event", this.handleSocketEvent);
 
@@ -99,8 +98,32 @@ export class VoiceGateway extends EventEmitter {
     }
 
     if (shouldResumeAfterClose(code)) {
-      log.debug("voice gateway resuming with code:", code);
-      this.connect();
+      this.reconnectTries += 1;
+      const after = reconnectAfterMs(this.reconnectTries);
+      log.debug(
+        "voice gateway reconnecting from code",
+        code,
+        "in",
+        after,
+        "ms"
+      );
+      setTimeout(() => {
+        // Check to see if we still need to reconnect
+        if (!this.socket && this.reconnectTries > 0) {
+          log.debug("voice gateway reconnecting with code:", code);
+          this.connect();
+        } else {
+          log.debug("voice gateway reconnect ignored");
+        }
+      }, after);
+    } else if (
+      code !== VoiceGatewayCloseCode.Reconnecting &&
+      code !== VoiceGatewayCloseCode.NormalClosure
+    ) {
+      this.emit(
+        "error",
+        Error(`Voice gateway socket closed with code: ${code}`)
+      );
     }
   };
 

@@ -216,10 +216,6 @@ export function Settings({ open, onClose }: SettingsProps) {
     </Stack>
   );
 
-  useEffect(() => {
-    window.kenku.startAudioCapture();
-  }, []);
-
   function handleShowControlsToggle() {
     dispatch(setURLBarEnabled(!settings.urlBarEnabled));
   }

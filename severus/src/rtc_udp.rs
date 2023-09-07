@@ -69,5 +69,5 @@ pub async fn runner(
             }
         }
     }
-    debug!("sender closed");
+    debug!("udp sender closed");
 }

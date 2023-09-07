@@ -111,6 +111,11 @@ export interface VoiceServerUpdateEvent extends DispatchEvent {
   };
 }
 
+export interface ResumedEvent extends DispatchEvent {
+  t: "RESUMED";
+  d: {};
+}
+
 /**
  * @link https://discord.com/developers/docs/topics/gateway-events#hello
  */
@@ -235,6 +240,7 @@ export interface InvalidSessionEvent extends BaseEvent {
 
 export type GatewayEvent =
   | ReadyEvent
+  | ResumedEvent
   | GuildCreateEvent
   | GuildUpdateEvent
   | GuildDeleteEvent

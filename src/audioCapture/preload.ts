@@ -8,7 +8,6 @@ type Channel =
   | "AUDIO_CAPTURE_SET_LOOPBACK"
   | "AUDIO_CAPTURE_START_EXTERNAL_AUDIO_CAPTURE"
   | "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE"
-  | "AUDIO_CAPTURE_START"
   | "AUDIO_CAPTURE_CANDIDATE";
 
 const validChannels: Channel[] = [
@@ -19,7 +18,6 @@ const validChannels: Channel[] = [
   "AUDIO_CAPTURE_SET_LOOPBACK",
   "AUDIO_CAPTURE_START_EXTERNAL_AUDIO_CAPTURE",
   "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE",
-  "AUDIO_CAPTURE_START",
   "AUDIO_CAPTURE_CANDIDATE",
 ];
 
@@ -32,6 +30,9 @@ const api = {
   },
   error: (message: string) => {
     ipcRenderer.send("ERROR", message);
+  },
+  log: (level: string, message: string) => {
+    ipcRenderer.send("LOG", level, message);
   },
   rtc: (): Promise<void> => {
     return ipcRenderer.invoke("AUDIO_CAPTURE_RTC");

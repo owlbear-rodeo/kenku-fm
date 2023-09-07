@@ -46,7 +46,15 @@ window.capture.on("AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE", (args) => {
   audioCapture.stopExternalAudioCapture(deviceId);
 });
 
-window.capture.on("AUDIO_CAPTURE_CANDIDATE", (args) => {
+window.capture.on("AUDIO_CAPTURE_RTC_CANDIDATE", (args) => {
   const [candidate] = args;
   rtcStream.addIceCandidate(candidate);
+});
+
+window.capture.on("AUDIO_CAPTURE_START_RTC", () => {
+  rtcStream.start();
+});
+
+window.capture.on("AUDIO_CAPTURE_STOP_RTC", () => {
+  rtcStream.stop();
 });

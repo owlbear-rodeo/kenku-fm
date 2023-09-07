@@ -1,6 +1,10 @@
 import { RTCConnection } from "./RTCConnection";
 import { reconnectAfterMs } from "../backoff";
 
+/**
+ * Manage a WebRTC connection to the severus backed
+ * This class handles restarting the connection if it fails or disconnects
+ */
 export class RTCStream {
   private connection?: RTCConnection;
   private stream: MediaStream;
@@ -8,24 +12,34 @@ export class RTCStream {
 
   constructor(stream: MediaStream) {
     this.stream = stream;
-    this.start();
   }
 
-  private async start() {
+  async start() {
     if (this.connection) {
+      this.connection.off("restart", this.handleRestart);
+      this.connection.off("connect", this.handleConnect);
       this.connection.close();
       this.connection = undefined;
     }
 
     this.connection = new RTCConnection();
-    this.connection.on("stop", this.handleStop);
+    this.connection.on("restart", this.handleRestart);
     this.connection.on("connect", this.handleConnect);
 
     await this.connection.start(this.stream);
   }
 
-  private handleStop = (connection: RTCConnection) => {
-    connection.off("stop", this.handleStop);
+  stop() {
+    if (this.connection) {
+      this.connection.off("restart", this.handleRestart);
+      this.connection.off("connect", this.handleConnect);
+      this.connection.close();
+      this.connection = undefined;
+    }
+  }
+
+  private handleRestart = (connection: RTCConnection) => {
+    connection.off("restart", this.handleRestart);
     connection.off("connect", this.handleConnect);
 
     if (this.connection) {

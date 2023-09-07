@@ -136,10 +136,11 @@ export class DiscordManager {
     };
 
     try {
-      if (!this.audio.rtc) {
+      const rtc = await this.audio.getRTCClient();
+      if (!rtc) {
         throw Error("Audio capture not running");
       }
-      if (!this.audio.streaming) {
+      if (!this.audio.isStreaming()) {
         throw Error("Audio stream not running");
       }
       if (!this.gateway) {
@@ -195,9 +196,6 @@ export class DiscordManager {
       });
       nodeConnection.on("session", async (session) => {
         try {
-          if (!this.audio.rtc) {
-            throw Error("Unable to start session: audio capture not running");
-          }
           const rustConnection = this.voiceConnections[guildId].rust;
           if (!rustConnection) {
             throw Error("Unable to start session: no udp connection found");
@@ -205,7 +203,7 @@ export class DiscordManager {
           await severus.voiceConnectionConnect(
             rustConnection,
             session.secret_key,
-            this.audio.rtc
+            rtc
           );
         } catch (error) {
           handleError(error);
@@ -237,6 +235,9 @@ export class DiscordManager {
         if (connection.rust) {
           await severus.voiceConnectionDisconnect(connection.rust);
         }
+      }
+      if (Object.keys(this.voiceConnections).length === 0) {
+        this.audio.stopAndRemoveRTCClient();
       }
     } catch (err) {
       event.reply("ERROR", `Error leaving channel: ${err?.message}`);

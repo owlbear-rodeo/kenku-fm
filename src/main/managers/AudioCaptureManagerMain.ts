@@ -1,28 +1,27 @@
-import log from "electron-log/main";
 import { BrowserView, BrowserWindow, ipcMain, webContents } from "electron";
 
 declare const AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY: string;
 declare const AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
-import severus, { RTCClient } from "severus";
+import { RTCClient } from "severus";
+import { RTCManager } from "./RTCManager";
 
 /**
  * Manager to capture audio from browser views and external audio devices
  * This class is to be run on the main thread
  */
 export class AudioCaptureManagerMain {
-  _browserView: BrowserView;
-  rtc?: RTCClient;
-  streaming = false;
+  private browserView: BrowserView;
+  private rtcManager: RTCManager;
 
   constructor() {
-    this._browserView = new BrowserView({
+    this.browserView = new BrowserView({
       webPreferences: {
         preload: AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY,
       },
     });
-    this._browserView.webContents.loadURL(AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY);
-    this._browserView.webContents.session.webRequest.onHeadersReceived(
+    this.browserView.webContents.loadURL(AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY);
+    this.browserView.webContents.session.webRequest.onHeadersReceived(
       (details, callback) => {
         if (
           details.url.endsWith("audio_capture_window") ||
@@ -40,203 +39,152 @@ export class AudioCaptureManagerMain {
         }
       }
     );
-    this._browserView.webContents.openDevTools();
 
-    ipcMain.on("AUDIO_CAPTURE_SET_LOOPBACK", this._handleSetLoopback);
-    ipcMain.on("AUDIO_CAPTURE_SET_MUTED", this._handleSetMuted);
+    this.rtcManager = new RTCManager(this.browserView);
+
+    ipcMain.on("AUDIO_CAPTURE_SET_LOOPBACK", this.handleSetLoopback);
+    ipcMain.on("AUDIO_CAPTURE_SET_MUTED", this.handleSetMuted);
     ipcMain.on(
       "AUDIO_CAPTURE_START_EXTERNAL_AUDIO_CAPTURE",
-      this._handleStartExternalAudioCapture
+      this.handleStartExternalAudioCapture
     );
     ipcMain.on(
       "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE",
-      this._handleStopExternalAudioCapture
+      this.handleStopExternalAudioCapture
     );
-    ipcMain.handle("AUDIO_CAPTURE_RTC", this._handleRTC);
-    ipcMain.handle("AUDIO_CAPTURE_SIGNAL", this._handleSignal);
-    ipcMain.handle("AUDIO_CAPTURE_ADD_CANDIDATE", this._handleAddCandidate);
-    ipcMain.handle("AUDIO_CAPTURE_STREAM", this._handleStream);
     ipcMain.on(
       "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
-      this._handleStartBrowserViewStream
+      this.handleStartBrowserViewStream
     );
     ipcMain.on(
       "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
-      this._handleStopBrowserViewStream
+      this.handleStopBrowserViewStream
     );
     ipcMain.on(
       "AUDIO_CAPTURE_STOP_ALL_BROWSER_VIEW_STREAMS",
-      this._handleStopAllBrowserViewStreams
+      this.handleStopAllBrowserViewStreams
     );
-    ipcMain.on("ERROR", this._handleError);
+    ipcMain.on("ERROR", this.handleError);
   }
 
   destroy() {
-    ipcMain.off("AUDIO_CAPTURE_SET_LOOPBACK", this._handleSetLoopback);
-    ipcMain.off("AUDIO_CAPTURE_SET_MUTED", this._handleSetMuted);
+    ipcMain.off("AUDIO_CAPTURE_SET_LOOPBACK", this.handleSetLoopback);
+    ipcMain.off("AUDIO_CAPTURE_SET_MUTED", this.handleSetMuted);
     ipcMain.off(
       "AUDIO_CAPTURE_START_EXTERNAL_AUDIO_CAPTURE",
-      this._handleStartExternalAudioCapture
+      this.handleStartExternalAudioCapture
     );
     ipcMain.off(
       "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE",
-      this._handleStopExternalAudioCapture
+      this.handleStopExternalAudioCapture
     );
-    ipcMain.removeHandler("AUDIO_CAPTURE_RTC");
-    ipcMain.removeHandler("AUDIO_CAPTURE_SIGNAL");
-    ipcMain.removeHandler("AUDIO_CAPTURE_ADD_CANDIDATE");
-    ipcMain.removeHandler("AUDIO_CAPTURE_STREAM");
+
     ipcMain.off(
       "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
-      this._handleStartBrowserViewStream
+      this.handleStartBrowserViewStream
     );
     ipcMain.off(
       "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
-      this._handleStopBrowserViewStream
+      this.handleStopBrowserViewStream
     );
     ipcMain.off(
       "AUDIO_CAPTURE_STOP_ALL_BROWSER_VIEW_STREAMS",
-      this._handleStopAllBrowserViewStreams
+      this.handleStopAllBrowserViewStreams
     );
-    ipcMain.off("ERROR", this._handleError);
+    ipcMain.off("ERROR", this.handleError);
 
-    (this._browserView.webContents as any).destroy();
+    this.rtcManager.destroy();
 
-    if (this.rtc) {
-      severus.rtcClose(this.rtc);
-    }
+    (this.browserView.webContents as any).destroy();
   }
 
-  _handleSetLoopback = (_: Electron.IpcMainEvent, loopback: boolean) => {
-    this._browserView.webContents.send("AUDIO_CAPTURE_SET_LOOPBACK", loopback);
+  private handleSetLoopback = (_: Electron.IpcMainEvent, loopback: boolean) => {
+    this.browserView.webContents.send("AUDIO_CAPTURE_SET_LOOPBACK", loopback);
   };
 
-  _handleSetMuted = (
+  private handleSetMuted = (
     _: Electron.IpcMainEvent,
     viewId: number,
     muted: boolean
   ) => {
-    this._browserView.webContents.send(
+    this.browserView.webContents.send(
       "AUDIO_CAPTURE_BROWSER_VIEW_MUTED",
       viewId,
       muted
     );
   };
 
-  _handleStartExternalAudioCapture = (
+  private handleStartExternalAudioCapture = (
     _: Electron.IpcMainEvent,
     deviceId: string
   ) => {
-    this._browserView.webContents.send(
+    this.browserView.webContents.send(
       "AUDIO_CAPTURE_START_EXTERNAL_AUDIO_CAPTURE",
       deviceId
     );
   };
 
-  _handleStopExternalAudioCapture = (
+  private handleStopExternalAudioCapture = (
     _: Electron.IpcMainEvent,
     deviceId: string
   ) => {
-    this._browserView.webContents.send(
+    this.browserView.webContents.send(
       "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE",
       deviceId
     );
   };
 
-  _handleRTC = async (_: Electron.IpcMainEvent) => {
-    try {
-      if (this.rtc) {
-        try {
-          await severus.rtcClose(this.rtc);
-        } catch (err) {
-          log.debug("rtc close error", err.message);
-        }
-        this.rtc = undefined;
-      }
-
-      this.rtc = await severus.rtcNew();
-      severus.rtcOnCandidate(this.rtc, (candidate) => {
-        this._browserView.webContents.send(
-          "AUDIO_CAPTURE_CANDIDATE",
-          candidate
-        );
+  getRTCClient = async (): Promise<RTCClient | undefined> => {
+    if (!this.rtcManager.rtc) {
+      this.rtcManager.createClientIfNeeded();
+      return new Promise((resolve) => {
+        this.rtcManager.once("start", resolve);
       });
-    } catch (err) {
-      log.error("unable to start RTC", err.message);
-      const windows = BrowserWindow.getAllWindows();
-      for (let window of windows) {
-        window.webContents.send("FATAL_ERROR", err.message);
-      }
     }
+
+    return this.rtcManager.rtc;
   };
 
-  _handleSignal = async (_: Electron.IpcMainEvent, offer: string) => {
-    try {
-      return await severus.rtcSignal(this.rtc, offer);
-    } catch (err) {
-      log.error("unable to send RTC signal", err.message);
-      const windows = BrowserWindow.getAllWindows();
-      for (let window of windows) {
-        window.webContents.send("FATAL_ERROR", err.message);
-      }
-    }
+  stopAndRemoveRTCClient = () => {
+    this.rtcManager.stopAndRemoveClient();
   };
 
-  _handleAddCandidate = async (_: Electron.IpcMainEvent, candidate: string) => {
-    try {
-      return await severus.rtcAddCandidate(this.rtc, candidate);
-    } catch (err) {
-      log.error("unable to send RTC candidate", err.message);
-      const windows = BrowserWindow.getAllWindows();
-      for (let window of windows) {
-        window.webContents.send("FATAL_ERROR", err.message);
-      }
-    }
+  isStreaming = () => {
+    return this.rtcManager.streaming;
   };
 
-  _handleStream = async (_: Electron.IpcMainEvent) => {
-    try {
-      this.streaming = true;
-      await severus.rtcStartStream(this.rtc);
-      this.streaming = false;
-    } catch (err) {
-      log.error("unable to start RTC stream", err.message);
-      const windows = BrowserWindow.getAllWindows();
-      for (let window of windows) {
-        window.webContents.send("FATAL_ERROR", err.message);
-      }
-    }
-  };
-
-  _handleStartBrowserViewStream = (
+  private handleStartBrowserViewStream = (
     _: Electron.IpcMainEvent,
     viewId: number
   ) => {
     const contents = webContents.fromId(viewId);
     const mediaSourceId = contents.getMediaSourceId(
-      this._browserView.webContents
+      this.browserView.webContents
     );
-    this._browserView.webContents.send(
+    this.browserView.webContents.send(
       "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
       viewId,
       mediaSourceId
     );
   };
 
-  _handleStopBrowserViewStream = (_: Electron.IpcMainEvent, viewId: number) => {
-    this._browserView.webContents.send(
+  private handleStopBrowserViewStream = (
+    _: Electron.IpcMainEvent,
+    viewId: number
+  ) => {
+    this.browserView.webContents.send(
       "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
       viewId
     );
   };
 
-  _handleStopAllBrowserViewStreams = (_: Electron.IpcMainEvent) => {
-    this._browserView.webContents.send(
+  private handleStopAllBrowserViewStreams = (_: Electron.IpcMainEvent) => {
+    this.browserView.webContents.send(
       "AUDIO_CAPTURE_STOP_ALL_BROWSER_VIEW_STREAMS"
     );
   };
 
-  _handleError = (_: Electron.IpcMainEvent, message: string) => {
+  private handleError = (_: Electron.IpcMainEvent, message: string) => {
     const windows = BrowserWindow.getAllWindows();
     for (let window of windows) {
       window.webContents.send("ERROR", message);

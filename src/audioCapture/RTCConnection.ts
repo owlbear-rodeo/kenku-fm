@@ -1,16 +1,21 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 
 export interface RTCConnectionEvents {
-  stop: (connection: RTCConnection) => void;
+  restart: (connection: RTCConnection) => void;
   connect: (connection: RTCConnection) => void;
 }
 
+/**
+ * A single WebRTC connection to the severus backed
+ */
 export class RTCConnection extends TypedEmitter<RTCConnectionEvents> {
   private peerConnection: RTCPeerConnection;
+  /** Has this connection been manually closed. Used to determine whether it should be restarted */
+  private closed = false;
 
   async start(stream: MediaStream): Promise<void> {
     try {
-      await window.capture.rtc();
+      await window.capture.rtcCreateConnection();
 
       const config = {
         iceServers: [
@@ -38,7 +43,7 @@ export class RTCConnection extends TypedEmitter<RTCConnectionEvents> {
             "minptime=10; useinbandfec=1; maxaveragebitrate=64000; stereo=1; sprop-stereo=1"
           );
           await this.peerConnection.setLocalDescription(offer);
-          const answer = await window.capture.signal(
+          const answer = await window.capture.rtcSignal(
             JSON.stringify(this.peerConnection.localDescription)
           );
           await this.peerConnection.setRemoteDescription(
@@ -46,12 +51,14 @@ export class RTCConnection extends TypedEmitter<RTCConnectionEvents> {
           );
           makingOffer = false;
           for (const candidate of bufferedCandidates) {
-            await window.capture.addCandidate(JSON.stringify(candidate));
+            await window.capture.rtcAddCandidate(JSON.stringify(candidate));
           }
 
           await window.capture.stream();
           window.capture.log("debug", "renderer rtc stream ended");
-          this.emit("stop", this);
+          if (!this.closed) {
+            this.emit("restart", this);
+          }
         } catch (err) {
           window.capture.log("error", err.message);
         }
@@ -62,7 +69,7 @@ export class RTCConnection extends TypedEmitter<RTCConnectionEvents> {
           if (makingOffer) {
             bufferedCandidates.push(candidate);
           } else {
-            await window.capture.addCandidate(JSON.stringify(candidate));
+            await window.capture.rtcAddCandidate(JSON.stringify(candidate));
           }
         }
       };
@@ -98,6 +105,7 @@ export class RTCConnection extends TypedEmitter<RTCConnectionEvents> {
   }
 
   close() {
+    this.closed = true;
     this.peerConnection.close();
   }
 

@@ -8,7 +8,9 @@ type Channel =
   | "AUDIO_CAPTURE_SET_LOOPBACK"
   | "AUDIO_CAPTURE_START_EXTERNAL_AUDIO_CAPTURE"
   | "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE"
-  | "AUDIO_CAPTURE_CANDIDATE";
+  | "AUDIO_CAPTURE_START_RTC"
+  | "AUDIO_CAPTURE_STOP_RTC"
+  | "AUDIO_CAPTURE_RTC_CANDIDATE";
 
 const validChannels: Channel[] = [
   "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
@@ -18,7 +20,9 @@ const validChannels: Channel[] = [
   "AUDIO_CAPTURE_SET_LOOPBACK",
   "AUDIO_CAPTURE_START_EXTERNAL_AUDIO_CAPTURE",
   "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE",
-  "AUDIO_CAPTURE_CANDIDATE",
+  "AUDIO_CAPTURE_START_RTC",
+  "AUDIO_CAPTURE_STOP_RTC",
+  "AUDIO_CAPTURE_RTC_CANDIDATE",
 ];
 
 const api = {
@@ -34,17 +38,17 @@ const api = {
   log: (level: string, message: string) => {
     ipcRenderer.send("LOG", level, message);
   },
-  rtc: (): Promise<void> => {
-    return ipcRenderer.invoke("AUDIO_CAPTURE_RTC");
+  rtcCreateConnection: (): Promise<void> => {
+    return ipcRenderer.invoke("AUDIO_CAPTURE_RTC_CREATE_CONNECTION");
   },
-  signal: (offer: string): Promise<string> => {
-    return ipcRenderer.invoke("AUDIO_CAPTURE_SIGNAL", offer);
+  rtcSignal: (offer: string): Promise<string> => {
+    return ipcRenderer.invoke("AUDIO_CAPTURE_RTC_SIGNAL", offer);
   },
-  addCandidate: (candidate: string): Promise<void> => {
-    return ipcRenderer.invoke("AUDIO_CAPTURE_ADD_CANDIDATE", candidate);
+  rtcAddCandidate: (candidate: string): Promise<void> => {
+    return ipcRenderer.invoke("AUDIO_CAPTURE_RTC_ADD_CANDIDATE", candidate);
   },
   stream: (): Promise<void> => {
-    return ipcRenderer.invoke("AUDIO_CAPTURE_STREAM");
+    return ipcRenderer.invoke("AUDIO_CAPTURE_RTC_START_STREAM");
   },
 };
 

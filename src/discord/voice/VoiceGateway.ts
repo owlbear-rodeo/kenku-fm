@@ -1,5 +1,5 @@
-import EventEmitter from "events";
 import log from "electron-log/main";
+import { TypedEmitter } from "tiny-typed-emitter";
 import {
   VoiceGatewayCloseCode,
   shouldResumeAfterClose,
@@ -17,27 +17,13 @@ import {
 } from "./VoiceGatewaySocket";
 import { reconnectAfterMs } from "../../backoff";
 
-export interface VoiceGateway extends EventEmitter {
-  on(event: "error", listener: (error: Error) => void): this;
-  on(event: "ready", listener: (data: ReadyEvent["d"]) => void): this;
-  on(
-    event: "session",
-    listener: (data: SessionDescriptionEvent["d"]) => void
-  ): this;
-
-  off(event: "error", listener: (error: Error) => void): this;
-  off(event: "ready", listener: (data: ReadyEvent["d"]) => void): this;
-  off(
-    event: "session",
-    listener: (data: SessionDescriptionEvent["d"]) => void
-  ): this;
-
-  emit(event: "error", error: Error): boolean;
-  emit(event: "ready", data: ReadyEvent["d"]): boolean;
-  emit(event: "session", data: SessionDescriptionEvent["d"]): boolean;
+export interface VoiceGatewayEvents {
+  error: (error: Error) => void;
+  ready: (data: ReadyEvent["d"]) => void;
+  session: (data: SessionDescriptionEvent["d"]) => void;
 }
 
-export class VoiceGateway extends EventEmitter {
+export class VoiceGateway extends TypedEmitter<VoiceGatewayEvents> {
   private description: VoiceSocketDescription;
   socket?: VoiceGatewaySocket;
   /** Has this gateway connected before, if true send the resume event */

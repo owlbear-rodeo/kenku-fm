@@ -1,5 +1,5 @@
-import EventEmitter from "events";
 import log from "electron-log/main";
+import { TypedEmitter } from "tiny-typed-emitter";
 import {
   VoiceGatewayEvent,
   HeartbeatEvent,
@@ -24,44 +24,18 @@ export interface VoiceSocketDescription {
   userId: string;
 }
 
-export interface VoiceGatewaySocket extends EventEmitter {
-  on(
-    event: "state",
-    listener: (socket: this, state: ConnectionState) => void
-  ): this;
-  on(
-    event: "event",
-    listener: (socket: this, event: VoiceGatewayEvent) => void
-  ): this;
-  on(event: "open", listener: (socket: this) => void): this;
-  on(event: "close", listener: (socket: this, code: number) => void): this;
-
-  off(
-    event: "state",
-    listener: (socket: this, state: ConnectionState) => void
-  ): this;
-  off(
-    event: "event",
-    listener: (socket: this, event: VoiceGatewayEvent) => void
-  ): this;
-  off(event: "open", listener: (socket: this) => void): this;
-  off(event: "close", listener: (socket: this, code: number) => void): this;
-
-  emit(event: "state", socket: this, state: ConnectionState): boolean;
-  emit(
-    event: "event",
-    socket: this,
-    voiceGatewayEvent: VoiceGatewayEvent
-  ): boolean;
-  emit(event: "open", socket: this): boolean;
-  emit(event: "close", socket: this, code: number): boolean;
+export interface VoiceGatewaySocketEvents {
+  state: (socket: VoiceGatewaySocket, state: ConnectionState) => void;
+  event: (socket: VoiceGatewaySocket, event: VoiceGatewayEvent) => void;
+  open: (socket: VoiceGatewaySocket) => void;
+  close: (socket: VoiceGatewaySocket, code: number) => void;
 }
 
 /**
  * The GatewaySocket holds a single connection to the Discord endpoint
  * It will handle the initial ready event and sending heartbeats
  */
-export class VoiceGatewaySocket extends EventEmitter {
+export class VoiceGatewaySocket extends TypedEmitter<VoiceGatewaySocketEvents> {
   private ws: WebSocket;
   connectionState: ConnectionState;
   description?: VoiceSocketDescription;
@@ -109,7 +83,7 @@ export class VoiceGatewaySocket extends EventEmitter {
         user_id: this.description.userId,
       },
     };
-    log.debug("voice gateway socket identify", identify);
+    log.debug("voice gateway socket identify");
     this.send(identify);
     this.emit("open", this);
   };

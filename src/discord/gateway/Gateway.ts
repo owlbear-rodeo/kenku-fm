@@ -1,4 +1,4 @@
-import EventEmitter from "events";
+import { TypedEmitter } from "tiny-typed-emitter";
 import log from "electron-log/main";
 import { GatewaySocket } from "./GatewaySocket";
 import { User } from "../types/User";
@@ -21,21 +21,15 @@ type ReconnectState = {
   sequence: number | null;
 };
 
-export interface Gateway extends EventEmitter {
-  on(event: "error", listener: (error: Error) => void): this;
-  on(event: "guilds", listener: (guilds: FullGuild[]) => void): this;
-
-  off(event: "error", listener: (error: Error) => void): this;
-  off(event: "guilds", listener: (guilds: FullGuild[]) => void): this;
-
-  emit(event: "error", error: Error): boolean;
-  emit(event: "guilds", guilds: FullGuild[]): boolean;
+export interface GatewayEvents {
+  error: (error: Error) => void;
+  guilds: (guilds: FullGuild[]) => void;
 }
 
 /**
  * The gateway handles connecting/reconnecting to the discord WebSocket endpoint
  */
-export class Gateway extends EventEmitter {
+export class Gateway extends TypedEmitter<GatewayEvents> {
   private token: string;
   socket?: GatewaySocket;
   private gatewayDescription?: GatewayDescription;

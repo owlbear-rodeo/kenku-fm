@@ -1,4 +1,4 @@
-import EventEmitter from "events";
+import { TypedEmitter } from "tiny-typed-emitter";
 import log from "electron-log/main";
 import { GatewayEvent, HeartbeatEvent, OpCode } from "./GatewayEvent";
 import { WebSocket } from "ws";
@@ -23,40 +23,18 @@ function isSequencedEvent(event: any): event is { s: number } {
   return event.s !== null && typeof event.s === "number";
 }
 
-export interface GatewaySocket extends EventEmitter {
-  on(
-    event: "state",
-    listener: (socket: this, state: ConnectionState) => void
-  ): this;
-  on(
-    event: "event",
-    listener: (socket: this, event: GatewayEvent) => void
-  ): this;
-  on(event: "open", listener: (socket: this) => void): this;
-  on(event: "close", listener: (socket: this, code: number) => void): this;
-
-  off(
-    event: "state",
-    listener: (socket: this, state: ConnectionState) => void
-  ): this;
-  off(
-    event: "event",
-    listener: (socket: this, event: GatewayEvent) => void
-  ): this;
-  off(event: "open", listener: (socket: this) => void): this;
-  off(event: "close", listener: (socket: this, code: number) => void): this;
-
-  emit(event: "state", socket: this, state: ConnectionState): boolean;
-  emit(event: "event", socket: this, gatewayEvent: GatewayEvent): boolean;
-  emit(event: "open", socket: this): boolean;
-  emit(event: "close", socket: this, code: number): boolean;
+export interface GatewaySocketEvents {
+  state: (socket: GatewaySocket, state: ConnectionState) => void;
+  event: (socket: GatewaySocket, event: GatewayEvent) => void;
+  open: (socket: GatewaySocket) => void;
+  close: (socket: GatewaySocket, code: number) => void;
 }
 
 /**
  * The GatewaySocket holds a single connection to the Discord endpoint
  * It will handle the initial ready event and sending heartbeats
  */
-export class GatewaySocket extends EventEmitter {
+export class GatewaySocket extends TypedEmitter<GatewaySocketEvents> {
   private ws: WebSocket;
   connectionState: ConnectionState;
   readyState?: ReadyState;

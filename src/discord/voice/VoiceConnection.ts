@@ -12,7 +12,7 @@ import {
   ConnectionState as VoiceConnectionState,
 } from "./VoiceGatewaySocket";
 import { ConnectionState, GatewaySocket } from "../gateway/GatewaySocket";
-import EventEmitter from "events";
+import { TypedEmitter } from "tiny-typed-emitter";
 import {
   ReadyEvent,
   SelectProtocolEvent,
@@ -21,27 +21,13 @@ import {
   VoiceOpCode,
 } from "./VoiceGatewayEvent";
 
-export interface VoiceConnection extends EventEmitter {
-  on(event: "error", listener: (error: Error) => void): this;
-  on(event: "ready", listener: (data: ReadyEvent["d"]) => void): this;
-  on(
-    event: "session",
-    listener: (data: SessionDescriptionEvent["d"]) => void
-  ): this;
-
-  off(event: "error", listener: (error: Error) => void): this;
-  off(event: "ready", listener: (data: ReadyEvent["d"]) => void): this;
-  off(
-    event: "session",
-    listener: (data: SessionDescriptionEvent["d"]) => void
-  ): this;
-
-  emit(event: "error", error: Error): boolean;
-  emit(event: "ready", data: ReadyEvent["d"]): boolean;
-  emit(event: "session", data: SessionDescriptionEvent["d"]): boolean;
+export interface VoiceConnectionEvents {
+  error: (error: Error) => void;
+  ready: (data: ReadyEvent["d"]) => void;
+  session: (data: SessionDescriptionEvent["d"]) => void;
 }
 
-export class VoiceConnection extends EventEmitter {
+export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
   private gateway: Gateway;
   private connectionTimeout: number;
   private voiceGateway?: VoiceGateway;

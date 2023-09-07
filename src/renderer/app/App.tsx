@@ -16,13 +16,13 @@ import "./App.css";
 import Typography from "@mui/material/Typography";
 
 const WallPaper = styled("div")({
-  position: "absolute",
+  position: "fixed",
   width: "100%",
   height: "100%",
   top: 0,
   left: 0,
   overflow: "hidden",
-  background: "linear-gradient(#2D3143 0%, #1e2231 100%)",
+  background: "linear-gradient(#1e2231 0%, #181a25 100%)",
   zIndex: -1,
 });
 

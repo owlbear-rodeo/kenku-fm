@@ -29,7 +29,7 @@ const WallPaper = styled("div")({
   top: 0,
   left: 0,
   overflow: "hidden",
-  background: "#1e2231",
+  background: "linear-gradient(#1e2231 0%, #181a25 100%)",
   zIndex: -1,
 });
 

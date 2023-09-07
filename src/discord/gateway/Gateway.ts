@@ -75,8 +75,19 @@ export class Gateway extends TypedEmitter<GatewayEvents> {
     if (!this.gatewayDescription) {
       const { data, error } = await getGatewayDescription(this.token);
       if (error) {
-        log.error("gateway unable to get description", error.message);
-        this.emit("error", Error(error.message));
+        log.error(
+          "gateway unable to get description",
+          error.message,
+          error.code
+        );
+        if (error.message === "401: Unauthorized") {
+          this.emit(
+            "error",
+            Error("Unauthorized. Token might be incorrect or invalid")
+          );
+        } else {
+          this.emit("error", Error(error.message));
+        }
         return;
       }
       this.gatewayDescription = data;

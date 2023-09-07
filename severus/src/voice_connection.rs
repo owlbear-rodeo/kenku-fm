@@ -4,11 +4,9 @@ use neon::context::Context;
 use neon::prelude::FunctionContext;
 use neon::prelude::*;
 use neon::result::JsResult;
-use neon::result::NeonResult;
 use neon::types::Finalize;
 use neon::types::JsPromise;
 use neon::types::JsString;
-use once_cell::sync::OnceCell;
 use std::{net::IpAddr, str::FromStr, sync::Arc};
 use tokio::net::UdpSocket;
 use tokio::runtime::Runtime;
@@ -16,15 +14,10 @@ use tokio::sync::RwLock;
 use xsalsa20poly1305::KeyInit;
 use xsalsa20poly1305::XSalsa20Poly1305 as Cipher;
 
-use crate::rtc::RTC;
+use crate::broadcast::Broadcast;
+use crate::constants::runtime;
 use crate::rtc_udp;
 use crate::{error::Error, error::Result};
-
-static RUNTIME: OnceCell<Runtime> = OnceCell::new();
-
-fn runtime<'a, C: Context<'a>>(cx: &mut C) -> NeonResult<&'static Runtime> {
-    RUNTIME.get_or_try_init(|| Runtime::new().or_else(|err| cx.throw_error(err.to_string())))
-}
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct IpDiscovery {
@@ -106,7 +99,12 @@ impl VoiceConnection {
 
     /// Add the session secret key for encryption and connect the WebRTC stream
     /// https://discord.com/developers/docs/topics/voice-connections#establishing-a-voice-udp-connection-example-session-description-payload
-    pub async fn connect(&self, secret_key: Vec<u8>, rtc: Arc<RTC>, rt: &Runtime) -> Result<()> {
+    pub async fn connect(
+        &self,
+        secret_key: Vec<u8>,
+        broadcast: Arc<Broadcast>,
+        rt: &Runtime,
+    ) -> Result<()> {
         let cipher = match Cipher::new_from_slice(&secret_key) {
             Ok(v) => Ok(v),
             Err(_) => Err(Error::Crypto(xsalsa20poly1305::Error)),
@@ -115,7 +113,7 @@ impl VoiceConnection {
         let mut connected_lock = self.connected.write().await;
         *connected_lock = true;
 
-        let mut events_lock = rtc.events.lock().await;
+        let mut events_lock = broadcast.events.lock().await;
         let events_rx = events_lock.get_receiver();
 
         let udp_tx = Arc::clone(&self.udp_socket);
@@ -189,7 +187,7 @@ impl VoiceConnection {
         let rt = runtime(&mut cx)?;
         let voice_connection = Arc::clone(&&cx.argument::<JsBox<Arc<VoiceConnection>>>(0)?);
         let secret_key_arr = cx.argument::<JsArray>(1)?.to_vec(&mut cx)?;
-        let rtc = Arc::clone(&&cx.argument::<JsBox<Arc<RTC>>>(2)?);
+        let broadcast = Arc::clone(&&cx.argument::<JsBox<Arc<Broadcast>>>(2)?);
 
         let mut secret_key = Vec::new();
 
@@ -205,7 +203,7 @@ impl VoiceConnection {
         let (deferred, promise) = cx.promise();
 
         rt.spawn(async move {
-            let connected = voice_connection.connect(secret_key, rtc, rt).await;
+            let connected = voice_connection.connect(secret_key, broadcast, rt).await;
 
             deferred.settle_with(&channel, move |mut cx| match connected {
                 Ok(_) => Ok(cx.undefined()),

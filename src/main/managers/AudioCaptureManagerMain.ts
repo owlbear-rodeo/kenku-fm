@@ -3,7 +3,7 @@ import { BrowserView, BrowserWindow, ipcMain, webContents } from "electron";
 declare const AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY: string;
 declare const AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
-import { RTCClient } from "severus";
+import severus, { RTCClient, Broadcast } from "severus";
 import { RTCManager } from "./RTCManager";
 
 /**
@@ -13,6 +13,7 @@ import { RTCManager } from "./RTCManager";
 export class AudioCaptureManagerMain {
   private browserView: BrowserView;
   private rtcManager: RTCManager;
+  broadcast: Broadcast;
 
   constructor() {
     this.browserView = new BrowserView({
@@ -40,7 +41,8 @@ export class AudioCaptureManagerMain {
       }
     );
 
-    this.rtcManager = new RTCManager(this.browserView);
+    this.broadcast = severus.broadcastNew();
+    this.rtcManager = new RTCManager(this.browserView, this.broadcast);
 
     ipcMain.on("AUDIO_CAPTURE_SET_LOOPBACK", this.handleSetLoopback);
     ipcMain.on("AUDIO_CAPTURE_SET_MUTED", this.handleSetMuted);
@@ -94,6 +96,7 @@ export class AudioCaptureManagerMain {
     ipcMain.off("ERROR", this.handleError);
 
     this.rtcManager.destroy();
+    this.broadcast = undefined;
 
     (this.browserView.webContents as any).destroy();
   }

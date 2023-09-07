@@ -203,7 +203,7 @@ export class DiscordManager {
           await severus.voiceConnectionConnect(
             rustConnection,
             session.secret_key,
-            rtc
+            this.audio.broadcast
           );
         } catch (error) {
           handleError(error);

@@ -1,5 +1,6 @@
 use neon::prelude::*;
 
+mod broadcast;
 mod constants;
 mod electron_log;
 mod encrypt;
@@ -36,5 +37,6 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("logInit", electron_log::Logger::js_init)?;
     cx.export_function("logSetLogLevel", electron_log::Logger::js_set_log_level)?;
     cx.export_function("logOnLog", electron_log::Logger::js_on_log)?;
+    cx.export_function("broadcastNew", broadcast::Broadcast::js_new)?;
     Ok(())
 }

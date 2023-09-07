@@ -1,33 +1,15 @@
 use anyhow::Result;
-use bus::{Bus, BusReader};
 use log::debug;
 use rand::random;
-use rtp::packet::Packet;
 use std::sync::Arc;
-use tokio::sync::{Mutex, Notify};
+use tokio::sync::Notify;
 use webrtc::track::track_remote::TrackRemote;
 
-pub struct OpusEvents {
-    bus: Bus<Packet>,
-}
-
-impl OpusEvents {
-    pub fn new() -> Self {
-        OpusEvents { bus: Bus::new(10) }
-    }
-
-    pub fn notify(&mut self, packet: Packet) -> () {
-        self.bus.broadcast(packet);
-    }
-
-    pub fn get_receiver(&mut self) -> BusReader<Packet> {
-        self.bus.add_rx()
-    }
-}
+use crate::broadcast::Broadcast;
 
 /// Take incoming WebRTC packets and broadcast them to a OpusEvents bus
 pub async fn runner(
-    events: Arc<Mutex<OpusEvents>>,
+    broadcast: Arc<Broadcast>,
     track: Arc<TrackRemote>,
     notify: Arc<Notify>,
 ) -> Result<()> {
@@ -39,7 +21,7 @@ pub async fn runner(
                     if !rtp_packet.payload.is_empty() {
                         // Re-sequence the packets to remove empty payloads
                         rtp_packet.header.sequence_number = sequence_number;
-                        let mut events_lock = events.lock().await;
+                        let mut events_lock = broadcast.events.lock().await;
                         events_lock.notify(rtp_packet);
                         sequence_number = sequence_number.wrapping_add(1);
                     }

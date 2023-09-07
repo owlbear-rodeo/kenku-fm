@@ -1,12 +1,10 @@
 use anyhow::Result;
 use log::debug;
 use neon::prelude::{Context, FunctionContext, Object};
-use neon::result::{JsResult, NeonResult};
+use neon::result::JsResult;
 use neon::types::{Finalize, JsBox, JsFunction, JsPromise, JsString, JsUndefined};
-use once_cell::sync::OnceCell;
 use std::sync::Arc;
-use tokio::runtime::Runtime;
-use tokio::sync::{Mutex, Notify};
+use tokio::sync::Notify;
 use webrtc::api::interceptor_registry::register_default_interceptors;
 use webrtc::api::media_engine::{MediaEngine, MIME_TYPE_OPUS};
 use webrtc::api::APIBuilder;
@@ -20,17 +18,12 @@ use webrtc::rtp_transceiver::rtp_codec::{
     RTCRtpCodecCapability, RTCRtpCodecParameters, RTPCodecType,
 };
 
-use crate::rtc_broadcast::{runner, OpusEvents};
-
-static RUNTIME: OnceCell<Runtime> = OnceCell::new();
-
-fn runtime<'a, C: Context<'a>>(cx: &mut C) -> NeonResult<&'static Runtime> {
-    RUNTIME.get_or_try_init(|| Runtime::new().or_else(|err| cx.throw_error(err.to_string())))
-}
+use crate::broadcast::Broadcast;
+use crate::constants::runtime;
+use crate::rtc_broadcast::runner;
 
 pub struct RTC {
     connection: RTCPeerConnection,
-    pub events: Arc<Mutex<OpusEvents>>,
 }
 
 impl Finalize for RTC {}
@@ -72,9 +65,7 @@ impl RTC {
             .add_transceiver_from_kind(RTPCodecType::Audio, None)
             .await?;
 
-        let events = Arc::new(Mutex::new(OpusEvents::new()));
-
-        Ok(Arc::new(Self { connection, events }))
+        Ok(Arc::new(Self { connection }))
     }
 
     async fn signal(&self, offer: RTCSessionDescription) -> Result<RTCSessionDescription> {
@@ -109,20 +100,18 @@ impl RTC {
         }));
     }
 
-    async fn start_stream(&self) -> Result<()> {
+    async fn start_stream(&self, broadcast: Arc<Broadcast>) -> Result<()> {
         let notify_tx = Arc::new(Notify::new());
         let notify_rx = notify_tx.clone();
 
-        let events = Arc::clone(&self.events);
-
         self.connection.on_track(Box::new(move |track, _, _| {
             let notify_rx2 = Arc::clone(&notify_rx);
-            let events2 = Arc::clone(&events);
+            let broadcast2 = Arc::clone(&broadcast);
             Box::pin(async move {
                 let codec = track.codec();
                 let mime_type = codec.capability.mime_type.to_lowercase();
                 if mime_type == MIME_TYPE_OPUS.to_lowercase() {
-                    let _ = runner(events2, track, notify_rx2).await;
+                    let _ = runner(broadcast2, track, notify_rx2).await;
                 }
             })
         }));
@@ -263,11 +252,12 @@ impl RTC {
     pub fn js_start_stream(mut cx: FunctionContext) -> JsResult<JsPromise> {
         let rt = runtime(&mut cx)?;
         let rtc = Arc::clone(&&cx.argument::<JsBox<Arc<RTC>>>(0)?);
+        let broadcast = Arc::clone(&&cx.argument::<JsBox<Arc<Broadcast>>>(1)?);
         let channel = cx.channel();
         let (deferred, promise) = cx.promise();
 
         rt.spawn(async move {
-            let rec = rtc.start_stream().await;
+            let rec = rtc.start_stream(broadcast).await;
             deferred.settle_with(&channel, move |mut cx| match rec {
                 Ok(_) => Ok(cx.undefined()),
                 Err(e) => cx.throw_error(e.to_string()),

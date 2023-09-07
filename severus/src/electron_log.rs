@@ -2,18 +2,13 @@ use std::sync::Arc;
 
 use log::{Log, Metadata, Record};
 use neon::prelude::{Context, FunctionContext, Object};
-use neon::result::{JsResult, NeonResult};
+use neon::result::JsResult;
 use neon::types::{Finalize, JsFunction, JsString, JsUndefined};
-use tokio::runtime::Runtime;
 
 use once_cell::sync::OnceCell;
 use tokio::sync::watch::{self, Receiver, Sender};
 
-static RUNTIME: OnceCell<Runtime> = OnceCell::new();
-
-fn runtime<'a, C: Context<'a>>(cx: &mut C) -> NeonResult<&'static Runtime> {
-    RUNTIME.get_or_try_init(|| Runtime::new().or_else(|err| cx.throw_error(err.to_string())))
-}
+use crate::constants::runtime;
 
 #[derive(Debug, Clone)]
 struct Message {
@@ -50,7 +45,6 @@ impl Log for Logger {
             level: record.level().to_string(),
             value: record.args().to_string(),
         };
-        // println!("{}", record.args());
         messages().tx.send(message).unwrap()
     }
 

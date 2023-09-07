@@ -1,6 +1,6 @@
 import log from "electron-log/main";
 import { TypedEmitter } from "tiny-typed-emitter";
-import severus, { RTCClient } from "severus";
+import severus, { Broadcast, RTCClient } from "severus";
 import { BrowserView, BrowserWindow, ipcMain } from "electron";
 
 export interface RTCManagerEvents {
@@ -9,12 +9,14 @@ export interface RTCManagerEvents {
 
 export class RTCManager extends TypedEmitter<RTCManagerEvents> {
   private browserView: BrowserView;
+  private broadcast: Broadcast;
   rtc?: RTCClient;
   streaming = false;
 
-  constructor(browserView: BrowserView) {
+  constructor(browserView: BrowserView, broadcast: Broadcast) {
     super();
     this.browserView = browserView;
+    this.broadcast = broadcast;
     ipcMain.handle(
       "AUDIO_CAPTURE_RTC_CREATE_CONNECTION",
       this.handleRTCCreateConnection
@@ -37,6 +39,7 @@ export class RTCManager extends TypedEmitter<RTCManagerEvents> {
         log.debug("rtc close error", err.message);
       });
     }
+    this.broadcast = undefined;
   }
 
   createClientIfNeeded() {
@@ -113,7 +116,7 @@ export class RTCManager extends TypedEmitter<RTCManagerEvents> {
     try {
       this.streaming = true;
       this.emit("start", this.rtc);
-      await severus.rtcStartStream(this.rtc);
+      await severus.rtcStartStream(this.rtc, this.broadcast);
       this.streaming = false;
     } catch (err) {
       log.error("unable to start RTC stream", err.message);

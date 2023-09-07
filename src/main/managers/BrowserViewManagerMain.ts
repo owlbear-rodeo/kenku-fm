@@ -16,56 +16,56 @@ export class BrowserViewManagerMain {
 
     ipcMain.on(
       "BROWSER_VIEW_CREATE_BROWSER_VIEW",
-      this._handleCreateBrowserView
+      this.handleCreateBrowserView
     );
     ipcMain.on(
       "BROWSER_VIEW_REMOVE_BROWSER_VIEW",
-      this._handleRemoveBrowserView
+      this.handleRemoveBrowserView
     );
     ipcMain.on(
       "BROWSER_VIEW_REMOVE_ALL_BROWSER_VIEWS",
-      this._handleRemoveAllBrowserViews
+      this.handleRemoveAllBrowserViews
     );
-    ipcMain.on("BROWSER_VIEW_HIDE_BROWSER_VIEW", this._handleHideBrowserView);
-    ipcMain.on("BROWSER_VIEW_SHOW_BROWSER_VIEW", this._handleShowBrowserView);
+    ipcMain.on("BROWSER_VIEW_HIDE_BROWSER_VIEW", this.handleHideBrowserView);
+    ipcMain.on("BROWSER_VIEW_SHOW_BROWSER_VIEW", this.handleShowBrowserView);
     ipcMain.on(
       "BROWSER_VIEW_SET_BROWSER_VIEW_BOUNDS",
-      this._handleSetBrowserViewBounds
+      this.handleSetBrowserViewBounds
     );
-    ipcMain.on("BROWSER_VIEW_LOAD_URL", this._handleLoadURL);
-    ipcMain.on("BROWSER_VIEW_GO_FORWARD", this._handleGoForward);
-    ipcMain.on("BROWSER_VIEW_GO_BACK", this._handleGoBack);
-    ipcMain.on("BROWSER_VIEW_RELOAD", this._handleReload);
+    ipcMain.on("BROWSER_VIEW_LOAD_URL", this.handleLoadURL);
+    ipcMain.on("BROWSER_VIEW_GO_FORWARD", this.handleGoForward);
+    ipcMain.on("BROWSER_VIEW_GO_BACK", this.handleGoBack);
+    ipcMain.on("BROWSER_VIEW_RELOAD", this.handleReload);
   }
 
   destroy() {
     ipcMain.off(
       "BROWSER_VIEW_CREATE_BROWSER_VIEW",
-      this._handleCreateBrowserView
+      this.handleCreateBrowserView
     );
     ipcMain.off(
       "BROWSER_VIEW_REMOVE_BROWSER_VIEW",
-      this._handleRemoveBrowserView
+      this.handleRemoveBrowserView
     );
     ipcMain.off(
       "BROWSER_VIEW_REMOVE_ALL_BROWSER_VIEWS",
-      this._handleRemoveAllBrowserViews
+      this.handleRemoveAllBrowserViews
     );
-    ipcMain.off("BROWSER_VIEW_HIDE_BROWSER_VIEW", this._handleHideBrowserView);
-    ipcMain.off("BROWSER_VIEW_SHOW_BROWSER_VIEW", this._handleShowBrowserView);
+    ipcMain.off("BROWSER_VIEW_HIDE_BROWSER_VIEW", this.handleHideBrowserView);
+    ipcMain.off("BROWSER_VIEW_SHOW_BROWSER_VIEW", this.handleShowBrowserView);
     ipcMain.off(
       "BROWSER_VIEW_SET_BROWSER_VIEW_BOUNDS",
-      this._handleSetBrowserViewBounds
+      this.handleSetBrowserViewBounds
     );
-    ipcMain.off("BROWSER_VIEW_LOAD_URL", this._handleLoadURL);
-    ipcMain.off("BROWSER_VIEW_GO_FORWARD", this._handleGoForward);
-    ipcMain.off("BROWSER_VIEW_GO_BACK", this._handleGoBack);
-    ipcMain.off("BROWSER_VIEW_RELOAD", this._handleReload);
+    ipcMain.off("BROWSER_VIEW_LOAD_URL", this.handleLoadURL);
+    ipcMain.off("BROWSER_VIEW_GO_FORWARD", this.handleGoForward);
+    ipcMain.off("BROWSER_VIEW_GO_BACK", this.handleGoBack);
+    ipcMain.off("BROWSER_VIEW_RELOAD", this.handleReload);
 
     this.removeAllBrowserViews();
   }
 
-  _handleCreateBrowserView = (
+  private handleCreateBrowserView = (
     event: Electron.IpcMainEvent,
     url: string,
     x: number,
@@ -109,18 +109,18 @@ export class BrowserViewManagerMain {
     event.returnValue = id;
   };
 
-  _handleRemoveBrowserView = (_: Electron.IpcMainEvent, id: number) =>
+  private handleRemoveBrowserView = (_: Electron.IpcMainEvent, id: number) =>
     this.removeBrowserView(id);
 
-  _handleRemoveAllBrowserViews = () => this.removeAllBrowserViews();
+  private handleRemoveAllBrowserViews = () => this.removeAllBrowserViews();
 
-  _handleHideBrowserView = (_: Electron.IpcMainEvent, id: number) =>
+  private handleHideBrowserView = (_: Electron.IpcMainEvent, id: number) =>
     this.hideBrowserView(id);
 
-  _handleShowBrowserView = (_: Electron.IpcMainEvent, id: number) =>
+  private handleShowBrowserView = (_: Electron.IpcMainEvent, id: number) =>
     this.showBrowserView(id);
 
-  _handleSetBrowserViewBounds = (
+  private handleSetBrowserViewBounds = (
     _: Electron.IpcMainEvent,
     id: number,
     x: number,
@@ -129,15 +129,17 @@ export class BrowserViewManagerMain {
     height: number
   ) => this.setBrowserViewBounds(id, x, y, width, height);
 
-  _handleLoadURL = (_: Electron.IpcMainEvent, id: number, url: string) =>
+  private handleLoadURL = (_: Electron.IpcMainEvent, id: number, url: string) =>
     this.loadURL(id, url);
 
-  _handleGoForward = (_: Electron.IpcMainEvent, id: number) =>
+  private handleGoForward = (_: Electron.IpcMainEvent, id: number) =>
     this.goForward(id);
 
-  _handleGoBack = (_: Electron.IpcMainEvent, id: number) => this.goBack(id);
+  private handleGoBack = (_: Electron.IpcMainEvent, id: number) =>
+    this.goBack(id);
 
-  _handleReload = (_: Electron.IpcMainEvent, id: number) => this.reload(id);
+  private handleReload = (_: Electron.IpcMainEvent, id: number) =>
+    this.reload(id);
 
   /**
    * Create a new browser view and attach it to the current window

@@ -1,4 +1,4 @@
-import { BrowserWindow, ipcMain } from "electron";
+import { ipcMain } from "electron";
 import log from "electron-log/main";
 import { AudioCaptureManagerMain } from "./AudioCaptureManagerMain";
 import { Gateway } from "../../discord/gateway/Gateway";
@@ -24,25 +24,23 @@ type DualConnection = {
 };
 
 export class DiscordManager {
-  window: BrowserWindow;
-  gateway?: Gateway;
-  audio: AudioCaptureManagerMain;
-  voiceConnections: Record<string, DualConnection> = {};
+  private gateway?: Gateway;
+  private audio: AudioCaptureManagerMain;
+  private voiceConnections: Record<string, DualConnection> = {};
 
-  constructor(window: BrowserWindow, audio: AudioCaptureManagerMain) {
-    this.window = window;
+  constructor(audio: AudioCaptureManagerMain) {
     this.audio = audio;
-    ipcMain.on("DISCORD_CONNECT", this._handleConnect);
-    ipcMain.on("DISCORD_DISCONNECT", this._handleDisconnect);
-    ipcMain.on("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
-    ipcMain.on("DISCORD_LEAVE_CHANNEL", this._handleLeaveChannel);
+    ipcMain.on("DISCORD_CONNECT", this.handleConnect);
+    ipcMain.on("DISCORD_DISCONNECT", this.handleDisconnect);
+    ipcMain.on("DISCORD_JOIN_CHANNEL", this.handleJoinChannel);
+    ipcMain.on("DISCORD_LEAVE_CHANNEL", this.handleLeaveChannel);
   }
 
   destroy() {
-    ipcMain.off("DISCORD_CONNECT", this._handleConnect);
-    ipcMain.off("DISCORD_DISCONNECT", this._handleDisconnect);
-    ipcMain.off("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
-    ipcMain.off("DISCORD_LEAVE_CHANNEL", this._handleLeaveChannel);
+    ipcMain.off("DISCORD_CONNECT", this.handleConnect);
+    ipcMain.off("DISCORD_DISCONNECT", this.handleDisconnect);
+    ipcMain.off("DISCORD_JOIN_CHANNEL", this.handleJoinChannel);
+    ipcMain.off("DISCORD_LEAVE_CHANNEL", this.handleLeaveChannel);
     if (this.gateway) {
       this.gateway.disconnect();
     }
@@ -57,7 +55,10 @@ export class DiscordManager {
     this.audio = undefined;
   }
 
-  _handleConnect = async (event: Electron.IpcMainEvent, token: string) => {
+  private handleConnect = async (
+    event: Electron.IpcMainEvent,
+    token: string
+  ) => {
     if (!token) {
       event.reply("DISCORD_DISCONNECTED");
       event.reply("ERROR", "Error connecting to bot: Invalid token");
@@ -105,7 +106,7 @@ export class DiscordManager {
     }
   };
 
-  _handleDisconnect = async (event: Electron.IpcMainEvent) => {
+  private handleDisconnect = async (event: Electron.IpcMainEvent) => {
     event.reply("DISCORD_DISCONNECTED");
     event.reply("DISCORD_GUILDS", []);
     event.reply("DISCORD_CHANNEL_JOINED", "local");
@@ -116,7 +117,7 @@ export class DiscordManager {
     log.debug("discord manager disconnect");
   };
 
-  _handleJoinChannel = async (
+  private handleJoinChannel = async (
     event: Electron.IpcMainEvent,
     channelId: string,
     guildId: string
@@ -217,7 +218,7 @@ export class DiscordManager {
     }
   };
 
-  _handleLeaveChannel = async (
+  private handleLeaveChannel = async (
     event: Electron.IpcMainEvent,
     channelId: string,
     guildId: string

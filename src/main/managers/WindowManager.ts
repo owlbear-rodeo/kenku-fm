@@ -1,25 +1,26 @@
 import { BrowserWindow, ipcMain } from "electron";
 
 export class WindowManager {
-  window: BrowserWindow;
+  private window: BrowserWindow;
   constructor(window: BrowserWindow) {
     this.window = window;
-    ipcMain.on("WINDOW_TOGGLE_MAXIMIZE", this._handleToggleMaximize);
-    ipcMain.on("WINDOW_MINIMIZE", this._handleMinimize);
-    ipcMain.on("WINDOW_CLOSE", this._handleClose);
+    ipcMain.on("WINDOW_TOGGLE_MAXIMIZE", this.handleToggleMaximize);
+    ipcMain.on("WINDOW_MINIMIZE", this.handleMinimize);
+    ipcMain.on("WINDOW_CLOSE", this.handleClose);
   }
 
   destroy() {
-    ipcMain.off("WINDOW_TOGGLE_MAXIMIZE", this._handleToggleMaximize);
-    ipcMain.off("WINDOW_MINIMIZE", this._handleMinimize);
-    ipcMain.off("WINDOW_CLOSE", this._handleClose);
+    ipcMain.off("WINDOW_TOGGLE_MAXIMIZE", this.handleToggleMaximize);
+    ipcMain.off("WINDOW_MINIMIZE", this.handleMinimize);
+    ipcMain.off("WINDOW_CLOSE", this.handleClose);
   }
 
-  _handleToggleMaximize = (_: Electron.IpcMainEvent) => this.toggleMaximize();
+  private handleToggleMaximize = (_: Electron.IpcMainEvent) =>
+    this.toggleMaximize();
 
-  _handleMinimize = (_: Electron.IpcMainEvent) => this.minimize();
+  private handleMinimize = (_: Electron.IpcMainEvent) => this.minimize();
 
-  _handleClose = (_: Electron.IpcMainEvent) => this.close();
+  private handleClose = (_: Electron.IpcMainEvent) => this.close();
 
   toggleMaximize() {
     if (this.window.isMaximized()) {

@@ -3,14 +3,14 @@ import pageIcon from "@owlbear-rodeo/page-icon";
 
 export class FaviconManager {
   constructor() {
-    ipcMain.handle("APP_ICON_REQUEST", this._handleGetIcon);
+    ipcMain.handle("APP_ICON_REQUEST", this.handleGetIcon);
   }
 
   destroy() {
     ipcMain.removeHandler("APP_ICON_REQUEST");
   }
 
-  _handleGetIcon = async (
+  private handleGetIcon = async (
     _: Electron.IpcMainEvent,
     appURL: string
   ): Promise<string> => {

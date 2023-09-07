@@ -24,9 +24,9 @@ type SoundOptions = {
 export class Sound extends TypedEmitter<SoundEvents> {
   options: SoundOptions;
   /** Timeout that controls the cross-fade */
-  _timeout: NodeJS.Timeout;
+  private timeout: NodeJS.Timeout;
   /** Current howl audio playabck for this loop */
-  _howl: Howl;
+  private howl: Howl;
 
   constructor(options: SoundOptions) {
     super();
@@ -48,7 +48,7 @@ export class Sound extends TypedEmitter<SoundEvents> {
           // Fade in
           howl.fade(0, this.options.volume, options.fadeIn);
           // Fade out
-          this._timeout = setTimeout(() => {
+          this.timeout = setTimeout(() => {
             if (this.options.loop) {
               // Cross fade on loop
               howl.once("fade", () => {
@@ -90,7 +90,7 @@ export class Sound extends TypedEmitter<SoundEvents> {
           handleError();
         }
 
-        this._howl = howl;
+        this.howl = howl;
       };
       createHowlerInstance();
     } catch {
@@ -100,42 +100,42 @@ export class Sound extends TypedEmitter<SoundEvents> {
 
   async stop(fadeOut: boolean): Promise<void> {
     return new Promise((resolve) => {
-      clearTimeout(this._timeout);
+      clearTimeout(this.timeout);
       if (fadeOut) {
-        this._howl.once("fade", () => {
-          this._howl.unload();
+        this.howl.once("fade", () => {
+          this.howl.unload();
           resolve();
         });
-        this._howl.fade(this._howl.volume(), 0, this.options.fadeOut);
+        this.howl.fade(this.howl.volume(), 0, this.options.fadeOut);
       } else {
-        this._howl.unload();
+        this.howl.unload();
         resolve();
       }
     });
   }
 
   playing() {
-    return this._howl.playing();
+    return this.howl.playing();
   }
 
   progress() {
-    return this._howl.seek();
+    return this.howl.seek();
   }
 
   seek(to: number) {
-    this._howl.seek(to);
+    this.howl.seek(to);
   }
 
   volume(volume: number) {
     this.options.volume = volume;
-    this._howl.volume(volume);
+    this.howl.volume(volume);
   }
 
   loop(loop: boolean) {
     this.options.loop = loop;
     // Toggle howl loop if cross fade is disabled
     if (this.options.fadeIn === 0 && this.options.fadeOut === 0) {
-      this._howl.loop(loop);
+      this.howl.loop(loop);
     }
   }
 }

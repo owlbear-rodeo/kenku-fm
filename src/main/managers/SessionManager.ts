@@ -6,14 +6,14 @@ import { PlayerManager } from "./PlayerManager";
 import { WindowManager } from "./WindowManager";
 
 export class SessionManager {
-  playbackManager: PlaybackManager;
-  faviconManager: FaviconManager;
-  playerManager: PlayerManager;
-  viewManager: BrowserViewManagerMain;
-  windowManager: WindowManager;
+  private playbackManager: PlaybackManager;
+  private faviconManager: FaviconManager;
+  private playerManager: PlayerManager;
+  private viewManager: BrowserViewManagerMain;
+  private windowManager: WindowManager;
 
   constructor(window: BrowserWindow) {
-    this.playbackManager = new PlaybackManager(window);
+    this.playbackManager = new PlaybackManager();
     this.viewManager = new BrowserViewManagerMain(window);
     this.windowManager = new WindowManager(window);
     this.faviconManager = new FaviconManager();

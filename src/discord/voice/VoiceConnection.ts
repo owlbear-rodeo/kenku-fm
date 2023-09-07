@@ -1,17 +1,17 @@
+import log from "electron-log/main";
 import {
   GatewayEvent,
   OpCode,
   UpdateVoiceStateEvent,
   VoiceServerUpdateEvent,
 } from "../gateway/GatewayEvent";
-import { Gateway } from "../gateway/Gateway";
+import { Gateway, GatewayConnectionState } from "../gateway/Gateway";
 import { VoiceState } from "./VoiceState";
-import { VoiceGateway } from "./VoiceGateway";
 import {
-  VoiceSocketDescription,
-  ConnectionState as VoiceConnectionState,
-} from "./VoiceGatewaySocket";
-import { ConnectionState, GatewaySocket } from "../gateway/GatewaySocket";
+  VoiceGateway,
+  VoiceGatewayConnectionState,
+  VoiceGatewayDescription,
+} from "./VoiceGateway";
 import { TypedEmitter } from "tiny-typed-emitter";
 import {
   ReadyEvent,
@@ -42,7 +42,7 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
   }
 
   async connect(channelId: string | null) {
-    if (this.gateway.socket?.connectionState !== ConnectionState.Ready) {
+    if (this.gateway.connectionState !== GatewayConnectionState.Ready) {
       throw Error("Unable to join voice channel: gateway not ready");
     }
 
@@ -65,18 +65,16 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
           self_mute: false,
         },
       };
-      this.gateway.socket.send(voiceUpdate);
+      log.debug("gateway voice update join channel");
+      this.gateway.send(voiceUpdate);
 
       // Wait for both the VoiceStateUpdate and VoiceServerUpdate events
       let serverUpdate: VoiceServerUpdateEvent["d"] | undefined = undefined;
       let voiceState: VoiceState | undefined = undefined;
-      const handleSocketEvent = (
-        socket: GatewaySocket,
-        event: GatewayEvent
-      ) => {
+      const handleGatewayEvent = (event: GatewayEvent) => {
         if (event.op === OpCode.Dispatch) {
           if (event.t === "VOICE_STATE_UPDATE") {
-            if (event.d.user_id === this.gateway.getUser()?.id) {
+            if (event.d.user_id === this.gateway.user?.id) {
               voiceState = event.d;
             }
           } else if (event.t === "VOICE_SERVER_UPDATE") {
@@ -84,25 +82,25 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
           }
           // Create the VoiceGateway once we have both states
           if (serverUpdate && voiceState) {
-            socket?.off("event", handleSocketEvent);
+            this.gateway?.off("event", handleGatewayEvent);
             clearTimeout(timeout);
             this.openGateway({
               endpoint: serverUpdate.endpoint,
               guildId: serverUpdate.guild_id,
               token: serverUpdate.token,
               sessionId: voiceState.session_id,
-              userId: this.gateway.getUser()?.id,
+              userId: this.gateway.user?.id,
             });
             resolve(undefined);
           }
         }
       };
 
-      this.gateway.socket?.on("event", handleSocketEvent);
+      this.gateway.on("event", handleGatewayEvent);
 
       // Timeout the connection request if it takes too long
       const timeout = setTimeout(() => {
-        this.gateway.socket?.off("event", handleSocketEvent);
+        this.gateway.off("event", handleGatewayEvent);
         reject(
           new Error(
             `Unable to join voice channel: took longer than ${this.connectionTimeout}ms to get a result`
@@ -129,7 +127,7 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
 
     this.closeGateway();
 
-    if (this.gateway.socket?.connectionState === ConnectionState.Ready) {
+    if (this.gateway.connectionState === GatewayConnectionState.Ready) {
       const state: UpdateVoiceStateEvent = {
         op: OpCode.UpdateVoiceState,
         d: {
@@ -139,15 +137,15 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
           self_mute: false,
         },
       };
-      this.gateway.socket.send(state);
+      this.gateway.send(state);
     }
   }
 
-  private openGateway(description: VoiceSocketDescription) {
+  private openGateway(description: VoiceGatewayDescription) {
     if (this.voiceGateway) {
       this.closeGateway();
     }
-    this.voiceGateway = new VoiceGateway(description);
+    this.voiceGateway = new VoiceGateway(this.gateway, description);
     this.voiceGateway.on("error", this.handleVoiceError);
     this.voiceGateway.on("ready", this.handleVoiceReady);
     this.voiceGateway.on("session", this.handleVoiceSession);
@@ -155,10 +153,10 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
 
   private closeGateway() {
     if (this.voiceGateway) {
-      this.voiceGateway.disconnect();
       this.voiceGateway.off("error", this.handleVoiceError);
       this.voiceGateway.off("ready", this.handleVoiceReady);
       this.voiceGateway.off("session", this.handleVoiceSession);
+      this.voiceGateway.disconnect();
       this.voiceGateway = undefined;
     }
   }
@@ -185,15 +183,23 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
       throw Error("Unable to select voice protocol: no gateway found");
     }
     if (
-      this.voiceGateway.socket?.connectionState !== VoiceConnectionState.Ready
+      this.voiceGateway.connectionState !== VoiceGatewayConnectionState.Ready
     ) {
       throw Error("Unable to select voice protocol: voice gateway not ready");
     }
+
+    log.debug(
+      "voice connection selecting protocol",
+      data.protocol,
+      "with mode",
+      data.data.mode
+    );
+
     const selectProtocol: SelectProtocolEvent = {
       op: VoiceOpCode.SelectProtocol,
       d: data,
     };
-    this.voiceGateway.socket.send(selectProtocol);
+    this.voiceGateway.send(selectProtocol);
   }
 
   /**
@@ -206,15 +212,18 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
       throw Error("Unable to update speaking: no gateway found");
     }
     if (
-      this.voiceGateway.socket?.connectionState !== VoiceConnectionState.Ready
+      this.voiceGateway.connectionState !== VoiceGatewayConnectionState.Ready
     ) {
       throw Error("Unable to update speaking: voice gateway not ready");
     }
+
+    log.debug("voice connection update speaking", data.speaking);
+
     const updateSpeaking: SpeakingEvent = {
       op: VoiceOpCode.Speaking,
       d: data,
     };
-    this.voiceGateway.socket.send(updateSpeaking);
+    this.voiceGateway.send(updateSpeaking);
   }
 
   getSSRC(): number | undefined {

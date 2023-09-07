@@ -49,7 +49,8 @@ export function shouldResumeAfterClose(code?: number): boolean {
     code === VoiceGatewayCloseCode.ServerNotFound ||
     code === VoiceGatewayCloseCode.UnknownProtocol ||
     code === VoiceGatewayCloseCode.Disconnected ||
-    code === VoiceGatewayCloseCode.UnknownEncryptionMode
+    code === VoiceGatewayCloseCode.UnknownEncryptionMode ||
+    code === VoiceGatewayCloseCode.SessionNoLongerValid
   ) {
     return false;
   }

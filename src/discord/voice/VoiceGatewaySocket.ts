@@ -4,28 +4,12 @@ import {
   VoiceGatewayEvent,
   HeartbeatEvent,
   VoiceOpCode,
-  IdentifyEvent,
 } from "./VoiceGatewayEvent";
 import { WebSocket } from "ws";
 import { VOICE_API_VERSION } from "../constants";
 import { VoiceGatewayCloseCode } from "./VoiceGatewayCloseCode";
 
-export enum ConnectionState {
-  Disconnected,
-  Connecting,
-  Ready,
-}
-
-export interface VoiceSocketDescription {
-  token: string;
-  guildId: string;
-  endpoint: string;
-  sessionId: string;
-  userId: string;
-}
-
 export interface VoiceGatewaySocketEvents {
-  state: (socket: VoiceGatewaySocket, state: ConnectionState) => void;
   event: (socket: VoiceGatewaySocket, event: VoiceGatewayEvent) => void;
   open: (socket: VoiceGatewaySocket) => void;
   close: (socket: VoiceGatewaySocket, code: number) => void;
@@ -37,23 +21,17 @@ export interface VoiceGatewaySocketEvents {
  */
 export class VoiceGatewaySocket extends TypedEmitter<VoiceGatewaySocketEvents> {
   private ws: WebSocket;
-  connectionState: ConnectionState;
-  description?: VoiceSocketDescription;
   /** The current heartbeat timer */
   private heartbeat?: NodeJS.Timer;
   /** Has the last heartbeat been acknowledged */
   private acknowledged: boolean;
 
-  constructor(description: VoiceSocketDescription) {
+  constructor(endpoint: string) {
     super();
-    this.description = description;
-    this.connectionState = ConnectionState.Connecting;
     this.acknowledged = false;
 
-    log.debug("voice gateway socket connecting to", description.endpoint);
-    this.ws = new WebSocket(
-      `wss://${description.endpoint}/?v=${VOICE_API_VERSION}`
-    );
+    log.debug("voice gateway socket connecting to", endpoint);
+    this.ws = new WebSocket(`wss://${endpoint}/?v=${VOICE_API_VERSION}`);
     this.ws.on("open", this.handleSocketOpen);
     this.ws.on("error", this.handleSocketError);
     this.ws.on("close", this.handleSocketClose);
@@ -74,17 +52,6 @@ export class VoiceGatewaySocket extends TypedEmitter<VoiceGatewaySocketEvents> {
   }
 
   private handleSocketOpen = () => {
-    const identify: IdentifyEvent = {
-      op: VoiceOpCode.Identify,
-      d: {
-        server_id: this.description.guildId,
-        session_id: this.description.sessionId,
-        token: this.description.token,
-        user_id: this.description.userId,
-      },
-    };
-    log.debug("voice gateway socket identify");
-    this.send(identify);
     this.emit("open", this);
   };
 
@@ -94,8 +61,6 @@ export class VoiceGatewaySocket extends TypedEmitter<VoiceGatewaySocketEvents> {
 
   private handleSocketClose = (code: number) => {
     log.warn("voice gateway socket closed with code:", code);
-    this.connectionState = ConnectionState.Disconnected;
-    this.emit("state", this, ConnectionState.Disconnected);
     this.ws.off("open", this.handleSocketOpen);
     this.ws.off("error", this.handleSocketError);
     this.ws.off("close", this.handleSocketClose);
@@ -115,9 +80,6 @@ export class VoiceGatewaySocket extends TypedEmitter<VoiceGatewaySocketEvents> {
       this.acknowledged = true;
     } else if (event.op === VoiceOpCode.Heartbeat) {
       this.sendHeartbeat();
-    } else if (event.op === VoiceOpCode.Ready) {
-      this.connectionState = ConnectionState.Ready;
-      this.emit("state", this, ConnectionState.Ready);
     }
 
     this.emit("event", this, event);

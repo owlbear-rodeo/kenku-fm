@@ -15,15 +15,17 @@ import { INTENTS } from "../constants";
 import { FullGuild } from "../types/Guild";
 import { reconnectAfterMs } from "../../backoff";
 
-type ReconnectState = {
-  resumeGatewayURL: string;
-  sessionId: string;
-  sequence: number | null;
-};
+export enum GatewayConnectionState {
+  Disconnected,
+  Connecting,
+  Ready,
+}
 
 export interface GatewayEvents {
   error: (error: Error) => void;
   guilds: (guilds: FullGuild[]) => void;
+  state: (state: GatewayConnectionState) => void;
+  event: (event: GatewayEvent) => void;
 }
 
 /**
@@ -31,16 +33,35 @@ export interface GatewayEvents {
  */
 export class Gateway extends TypedEmitter<GatewayEvents> {
   private token: string;
-  socket?: GatewaySocket;
+  private socket?: GatewaySocket;
   private gatewayDescription?: GatewayDescription;
-  private reconnectState?: ReconnectState;
   private reconnectTries = 0;
+  /** The last sequence number from a OpCode 0 Dispatch event */
+  private sequence: number | null;
+  private sessionId?: string;
+  private resumeGatewayURL?: string;
+  private _connectionState: GatewayConnectionState;
+  get connectionState() {
+    return this._connectionState;
+  }
+  private set connectionState(state) {
+    // Don't trigger the change event if the state is the same
+    if (this._connectionState === state) {
+      return;
+    } else {
+      this._connectionState = state;
+      this.emit("state", state);
+    }
+  }
   guilds: FullGuild[];
+  user?: User;
 
   constructor(token: string) {
     super();
     this.token = token;
     this.guilds = [];
+    this.sequence = null;
+    this._connectionState = GatewayConnectionState.Disconnected;
   }
 
   async connect() {
@@ -48,6 +69,8 @@ export class Gateway extends TypedEmitter<GatewayEvents> {
       this.socket.close(GatewayCloseCode.Reconnecting);
       this.socket = undefined;
     }
+
+    this.connectionState = GatewayConnectionState.Connecting;
 
     if (!this.gatewayDescription) {
       const { data, error } = await getGatewayDescription(this.token);
@@ -59,8 +82,8 @@ export class Gateway extends TypedEmitter<GatewayEvents> {
       this.gatewayDescription = data;
     }
     let url = this.gatewayDescription.url;
-    if (this.reconnectState) {
-      url = this.reconnectState.resumeGatewayURL;
+    if (this.resumeGatewayURL) {
+      url = this.resumeGatewayURL;
     }
     this.socket = new GatewaySocket(url);
     this.socket.on("open", this.handleSocketOpen);
@@ -76,41 +99,33 @@ export class Gateway extends TypedEmitter<GatewayEvents> {
       log.debug("gateway manual disconnect");
     }
     this.reconnectTries = 0;
+    this.connectionState = GatewayConnectionState.Disconnected;
   }
 
   private handleSocketOpen = (socket: GatewaySocket) => {
-    if (this.reconnectState) {
+    if (this.sessionId && this.sequence) {
+      log.debug("gateway resume");
       const resume: ResumeEvent = {
         op: OpCode.Resume,
         d: {
           token: this.token,
-          session_id: this.reconnectState.sessionId,
-          seq: this.reconnectState.sequence,
+          session_id: this.sessionId,
+          seq: this.sequence,
         },
       };
       socket.send(resume);
-      log.debug("gateway resume", this.reconnectState);
     }
-    this.reconnectTries = 0;
   };
 
   private handleSocketClose = (socket: GatewaySocket, code: number) => {
+    this.connectionState = GatewayConnectionState.Disconnected;
+
     socket.off("open", this.handleSocketOpen);
     socket.off("close", this.handleSocketClose);
     socket.off("event", this.handleSocketEvent);
 
     if (socket === this.socket) {
       this.socket = undefined;
-    }
-
-    if (socket.readyState) {
-      this.reconnectState = {
-        resumeGatewayURL: socket.readyState.resumeGatewayURL,
-        sessionId: socket.readyState.sessionId,
-        sequence: socket.sequence,
-      };
-    } else {
-      this.reconnectState = undefined;
     }
 
     if (shouldResumeAfterClose(code)) {
@@ -135,8 +150,13 @@ export class Gateway extends TypedEmitter<GatewayEvents> {
   };
 
   private handleSocketEvent = (socket: GatewaySocket, event: GatewayEvent) => {
+    if (event.s !== null && typeof event.s === "number") {
+      this.sequence = event.s;
+    }
+
     if (event.op === OpCode.Hello) {
-      if (!this.reconnectState) {
+      if (!this.resumeGatewayURL) {
+        log.debug("gateway identify");
         const identify: IdentifyEvent = {
           op: OpCode.Identify,
           d: {
@@ -151,9 +171,16 @@ export class Gateway extends TypedEmitter<GatewayEvents> {
         };
         socket.send(identify);
       }
+      this.reconnectTries = 0;
     } else if (event.op === OpCode.Dispatch) {
-      // Manage the guilds array
-      if (event.t === "GUILD_CREATE") {
+      if (event.t === "READY") {
+        this.user = event.d.user;
+        this.resumeGatewayURL = event.d.resume_gateway_url;
+        this.sessionId = event.d.session_id;
+        this.connectionState = GatewayConnectionState.Ready;
+      } else if (event.t === "RESUMED") {
+        this.connectionState = GatewayConnectionState.Ready;
+      } else if (event.t === "GUILD_CREATE") {
         const index = this.guilds.findIndex((v) => v.id === event.d.id);
         if (index >= 0) {
           this.guilds[index] = event.d;
@@ -183,15 +210,17 @@ export class Gateway extends TypedEmitter<GatewayEvents> {
       if (event.d) {
         this.connect();
       } else {
-        this.reconnectState = undefined;
+        this.resumeGatewayURL = undefined;
+        this.sessionId = undefined;
+        this.sequence = null;
         this.connect();
       }
     }
+
+    this.emit("event", event);
   };
 
-  getUser(): User | undefined {
-    if (this.socket && this.socket.readyState) {
-      return this.socket.readyState.user;
-    }
+  send(event: GatewayEvent) {
+    this.socket?.send(event);
   }
 }

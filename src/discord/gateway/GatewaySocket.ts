@@ -3,28 +3,9 @@ import log from "electron-log/main";
 import { GatewayEvent, HeartbeatEvent, OpCode } from "./GatewayEvent";
 import { WebSocket } from "ws";
 import { API_VERSION } from "../constants";
-import { User } from "../types/User";
 import { GatewayCloseCode } from "./GatewayCloseCode";
 
-export enum ConnectionState {
-  Disconnected,
-  Connecting,
-  Ready,
-}
-
-export type ReadyState = {
-  user: User;
-  resumeGatewayURL: string;
-  sessionId: string;
-};
-
-/** Does this GatewayEvent have a valid sequence number */
-function isSequencedEvent(event: any): event is { s: number } {
-  return event.s !== null && typeof event.s === "number";
-}
-
 export interface GatewaySocketEvents {
-  state: (socket: GatewaySocket, state: ConnectionState) => void;
   event: (socket: GatewaySocket, event: GatewayEvent) => void;
   open: (socket: GatewaySocket) => void;
   close: (socket: GatewaySocket, code: number) => void;
@@ -36,10 +17,8 @@ export interface GatewaySocketEvents {
  */
 export class GatewaySocket extends TypedEmitter<GatewaySocketEvents> {
   private ws: WebSocket;
-  connectionState: ConnectionState;
-  readyState?: ReadyState;
   /** The last sequence number from a OpCode 0 Dispatch event */
-  sequence: number | null;
+  private sequence: number | null;
   /** The current heartbeat timer */
   private heartbeat?: NodeJS.Timeout | NodeJS.Timer;
   /** Has the last heartbeat been acknowledged */
@@ -47,9 +26,7 @@ export class GatewaySocket extends TypedEmitter<GatewaySocketEvents> {
 
   constructor(url: string) {
     super();
-    this.connectionState = ConnectionState.Connecting;
     this.acknowledged = false;
-    this.sequence = null;
 
     log.debug("gateway socket connecting to", url);
     this.ws = new WebSocket(`${url}/?v=${API_VERSION}&encoding=json`);
@@ -82,8 +59,6 @@ export class GatewaySocket extends TypedEmitter<GatewaySocketEvents> {
 
   private handleSocketClose = (code: number) => {
     log.warn("gateway socket closed with code:", code);
-    this.connectionState = ConnectionState.Disconnected;
-    this.emit("state", this, ConnectionState.Disconnected);
     this.ws.off("open", this.handleSocketOpen);
     this.ws.off("error", this.handleSocketError);
     this.ws.off("close", this.handleSocketClose);
@@ -94,24 +69,13 @@ export class GatewaySocket extends TypedEmitter<GatewaySocketEvents> {
 
   private handleSocketMessage = (message: string) => {
     const event = JSON.parse(message) as GatewayEvent;
-    log.debug("gateway socket event", event.op);
+    log.debug("gateway socket event", event.op, event.t);
 
-    if (isSequencedEvent(event)) {
+    if (event.s !== null && typeof event.s === "number") {
       this.sequence = event.s;
     }
 
-    if (event.op === OpCode.Dispatch) {
-      if (event.t === "READY") {
-        this.connectionState = ConnectionState.Ready;
-        this.readyState = {
-          resumeGatewayURL: event.d.resume_gateway_url,
-          sessionId: event.d.session_id,
-          user: event.d.user,
-        };
-      } else if (event.t === "RESUMED") {
-        this.connectionState = ConnectionState.Ready;
-      }
-    } else if (event.op === OpCode.Hello) {
+    if (event.op === OpCode.Hello) {
       this.acknowledged = true;
       this.startHeartbeat(event.d.heartbeat_interval);
     } else if (event.op === OpCode.HeartbeatAck) {

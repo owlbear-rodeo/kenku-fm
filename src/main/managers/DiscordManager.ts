@@ -1,7 +1,7 @@
 import { ipcMain } from "electron";
 import log from "electron-log/main";
 import { AudioCaptureManagerMain } from "./AudioCaptureManagerMain";
-import { Gateway } from "../../discord/gateway/Gateway";
+import { Gateway, GatewayConnectionState } from "../../discord/gateway/Gateway";
 import { CDN_URL } from "../../discord/constants";
 import { VoiceConnection } from "../../discord/voice/VoiceConnection";
 import severus, { VoiceConnection as SeverusVoiceConnection } from "severus";
@@ -65,23 +65,27 @@ export class DiscordManager {
       return;
     }
 
-    if (this.gateway) {
+    const handleError = (error: Error) => {
+      log.error("discord manager error", error?.message);
       event.reply("DISCORD_DISCONNECTED");
-      event.reply("ERROR", "Error connecting to bot: Already collected");
+      event.reply("ERROR", `Discord error: ${error?.message}`);
+      event.reply("DISCORD_GUILDS", []);
+      event.reply("DISCORD_CHANNEL_JOINED", "local");
+      if (this.gateway) {
+        this.gateway.disconnect();
+        this.gateway = undefined;
+      }
+    };
+
+    if (this.gateway) {
+      handleError(Error("Already connected. Closing previous connection"));
       return;
     }
 
     try {
       this.gateway = new Gateway(token);
-      event.reply("DISCORD_READY");
-      event.reply("MESSAGE", "Connected");
-      log.debug("discord manager ready");
 
-      this.gateway.on("error", (error) => {
-        event.reply("DISCORD_DISCONNECTED");
-        event.reply("ERROR", `Discord error: ${error?.message}`);
-        log.error("discord manager gateway error", error?.message);
-      });
+      this.gateway.on("error", handleError);
 
       this.gateway.on("guilds", (guilds) => {
         const transformedGuilds: Guild[] = [];
@@ -98,11 +102,28 @@ export class DiscordManager {
         event.reply("DISCORD_GUILDS", transformedGuilds);
       });
 
+      let connected = false;
+      this.gateway.on("state", (state) => {
+        if (state === GatewayConnectionState.Ready) {
+          log.debug("discord manager ready");
+          event.reply("DISCORD_READY");
+          if (!connected) {
+            event.reply("MESSAGE", "Connected");
+          }
+          connected = true;
+        } else if (state === GatewayConnectionState.Disconnected) {
+          // Check connected state to avoid sending multiple disconnected messages
+          if (connected) {
+            event.reply("MESSAGE", "Disconnected");
+          }
+          connected = false;
+        }
+      });
+
+      log.debug("discord manager connecting");
       await this.gateway.connect();
-    } catch (err) {
-      event.reply("DISCORD_DISCONNECTED");
-      event.reply("ERROR", `Error connecting to bot: ${err?.message}`);
-      log.error("discord manager connect error", err?.message);
+    } catch (error) {
+      handleError(error);
     }
   };
 

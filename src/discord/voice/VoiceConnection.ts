@@ -20,11 +20,14 @@ import {
   SpeakingEvent,
   VoiceOpCode,
 } from "./VoiceGatewayEvent";
+import severus, {
+  Broadcast,
+  VoiceConnection as SeverusVoiceConnection,
+} from "severus";
 
 export interface VoiceConnectionEvents {
   error: (error: Error) => void;
-  ready: (data: ReadyEvent["d"]) => void;
-  session: (data: SessionDescriptionEvent["d"]) => void;
+  close: (code: number) => void;
 }
 
 export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
@@ -33,12 +36,20 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
   private voiceGateway?: VoiceGateway;
   private connectionPromise: Promise<void> | undefined;
   private guildId: string;
+  private severusConnection?: SeverusVoiceConnection;
+  private broadcast: Broadcast;
 
-  constructor(guildId: string, gateway: Gateway, connectionTimeout = 5000) {
+  constructor(
+    guildId: string,
+    gateway: Gateway,
+    broadcast: Broadcast,
+    connectionTimeout = 5000
+  ) {
     super();
     this.gateway = gateway;
     this.connectionTimeout = connectionTimeout;
     this.guildId = guildId;
+    this.broadcast = broadcast;
   }
 
   async connect(channelId: string | null) {
@@ -139,6 +150,11 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
       };
       this.gateway.send(state);
     }
+
+    if (this.severusConnection) {
+      await severus.voiceConnectionDisconnect(this.severusConnection);
+      this.severusConnection = undefined;
+    }
   }
 
   private openGateway(description: VoiceGatewayDescription) {
@@ -146,14 +162,14 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
       this.closeGateway();
     }
     this.voiceGateway = new VoiceGateway(this.gateway, description);
-    this.voiceGateway.on("error", this.handleVoiceError);
+    this.voiceGateway.on("close", this.handleVoiceClose);
     this.voiceGateway.on("ready", this.handleVoiceReady);
     this.voiceGateway.on("session", this.handleVoiceSession);
   }
 
   private closeGateway() {
     if (this.voiceGateway) {
-      this.voiceGateway.off("error", this.handleVoiceError);
+      this.voiceGateway.off("close", this.handleVoiceClose);
       this.voiceGateway.off("ready", this.handleVoiceReady);
       this.voiceGateway.off("session", this.handleVoiceSession);
       this.voiceGateway.disconnect();
@@ -161,16 +177,56 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
     }
   }
 
-  private handleVoiceError = (error: Error) => {
-    this.emit("error", error);
+  private handleVoiceClose = (code: number) => {
+    this.emit("close", code);
   };
 
-  private handleVoiceReady = (data: ReadyEvent["d"]) => {
-    this.emit("ready", data);
+  private handleVoiceReady = async (data: ReadyEvent["d"]) => {
+    try {
+      if (!data.modes.includes("xsalsa20_poly1305")) {
+        throw Error("Invalid encryption mode");
+      }
+      this.updateSpeaking({
+        speaking: 1 << 1,
+        delay: 0,
+        ssrc: data.ssrc,
+      });
+      this.severusConnection = await severus.voiceConnectionNew(
+        data.ip,
+        data.port,
+        data.ssrc
+      );
+      const ip = await severus.voiceConnectionDiscoverIp(
+        this.severusConnection
+      );
+      this.selectProtocol({
+        protocol: "udp",
+        data: {
+          address: ip.address,
+          port: ip.port,
+          mode: "xsalsa20_poly1305",
+        },
+      });
+    } catch (error) {
+      this.emit("error", error);
+    }
   };
 
-  private handleVoiceSession = (data: SessionDescriptionEvent["d"]) => {
-    this.emit("session", data);
+  private handleVoiceSession = async (
+    session: SessionDescriptionEvent["d"]
+  ) => {
+    try {
+      if (!this.severusConnection) {
+        throw Error("Unable to start session: no udp connection found");
+      }
+      await severus.voiceConnectionConnect(
+        this.severusConnection,
+        session.secret_key,
+        this.broadcast
+      );
+    } catch (error) {
+      this.emit("error", error);
+    }
   };
 
   /**
@@ -178,7 +234,7 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
    * This should be done after UDP IP Discovery
    * @link https://discord.com/developers/docs/topics/voice-connections#establishing-a-voice-udp-connection
    */
-  selectProtocol(data: SelectProtocolEvent["d"]) {
+  private selectProtocol(data: SelectProtocolEvent["d"]) {
     if (!this.voiceGateway) {
       throw Error("Unable to select voice protocol: no gateway found");
     }
@@ -207,7 +263,7 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
    * Muse be done once before sending voice data
    * @link https://discord.com/developers/docs/topics/voice-connections#speaking
    */
-  updateSpeaking(data: SpeakingEvent["d"]) {
+  private updateSpeaking(data: SpeakingEvent["d"]) {
     if (!this.voiceGateway) {
       throw Error("Unable to update speaking: no gateway found");
     }
@@ -224,9 +280,5 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
       d: data,
     };
     this.voiceGateway.send(updateSpeaking);
-  }
-
-  getSSRC(): number | undefined {
-    return this.voiceGateway?.ssrc;
   }
 }

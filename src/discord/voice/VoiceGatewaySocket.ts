@@ -25,12 +25,14 @@ export class VoiceGatewaySocket extends TypedEmitter<VoiceGatewaySocketEvents> {
   private heartbeat?: NodeJS.Timer;
   /** Has the last heartbeat been acknowledged */
   private acknowledged: boolean;
+  private sessionId: string;
 
-  constructor(endpoint: string) {
+  constructor(endpoint: string, sessionId: string) {
     super();
     this.acknowledged = false;
+    this.sessionId = sessionId;
 
-    log.debug("voice gateway socket connecting to", endpoint);
+    log.debug(`voice gateway socket ${sessionId} connecting to`, endpoint);
     this.ws = new WebSocket(`wss://${endpoint}/?v=${VOICE_API_VERSION}`);
     this.ws.on("open", this.handleSocketOpen);
     this.ws.on("error", this.handleSocketError);
@@ -56,11 +58,11 @@ export class VoiceGatewaySocket extends TypedEmitter<VoiceGatewaySocketEvents> {
   };
 
   private handleSocketError = (error: Error) => {
-    log.error("voice gateway socket error:", error);
+    log.error(`voice gateway ${this.sessionId} socket error:`, error);
   };
 
   private handleSocketClose = (code: number) => {
-    log.warn("voice gateway socket closed with code:", code);
+    log.warn(`voice gateway socket ${this.sessionId} closed with code:`, code);
     this.ws.off("open", this.handleSocketOpen);
     this.ws.off("error", this.handleSocketError);
     this.ws.off("close", this.handleSocketClose);
@@ -71,7 +73,7 @@ export class VoiceGatewaySocket extends TypedEmitter<VoiceGatewaySocketEvents> {
 
   private handleSocketMessage = (message: string) => {
     const event = JSON.parse(message) as VoiceGatewayEvent;
-    log.debug("voice gateway socket event", event.op);
+    log.debug(`voice gateway socket ${this.sessionId} event`, event.op);
 
     if (event.op === VoiceOpCode.Hello) {
       this.acknowledged = true;
@@ -96,7 +98,7 @@ export class VoiceGatewaySocket extends TypedEmitter<VoiceGatewaySocketEvents> {
     this.stopHeartbeat();
     const jitter = Math.random();
     log.debug(
-      `voice gateway socket heartbeat started at interval: ${interval}ms, with jitter ${jitter}`
+      `voice gateway socket ${this.sessionId} heartbeat started at interval: ${interval}ms, with jitter ${jitter}`
     );
     // Send initial heartbeat
     this.sendHeartbeat();
@@ -119,7 +121,7 @@ export class VoiceGatewaySocket extends TypedEmitter<VoiceGatewaySocketEvents> {
   /** Stop the heartbeat if there is one */
   private stopHeartbeat() {
     if (this.heartbeat) {
-      log.debug("voice gateway socket heartbeat stopped");
+      log.debug(`voice gateway socket ${this.sessionId} heartbeat stopped`);
       clearInterval(this.heartbeat);
       this.heartbeat = undefined;
     }
@@ -129,7 +131,7 @@ export class VoiceGatewaySocket extends TypedEmitter<VoiceGatewaySocketEvents> {
   private sendHeartbeat() {
     if (this.ws.readyState === this.ws.OPEN) {
       const nonce = Date.now();
-      log.debug("voice gateway socket heartbeat", nonce);
+      log.debug(`voice gateway socket ${this.sessionId} heartbeat`, nonce);
       const event: HeartbeatEvent = {
         op: VoiceOpCode.Heartbeat,
         d: nonce,

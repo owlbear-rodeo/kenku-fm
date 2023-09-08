@@ -2,20 +2,13 @@ import { ipcMain } from "electron";
 import log from "electron-log/main";
 import { AudioCaptureManagerMain } from "./AudioCaptureManagerMain";
 import { Gateway, GatewayConnectionState } from "../../discord/gateway/Gateway";
-import { CDN_URL } from "../../discord/constants";
 import { VoiceConnection } from "../../discord/voice/VoiceConnection";
-import severus, { VoiceConnection as SeverusVoiceConnection } from "severus";
 import { getGuildsAndVoiceChannels } from "../../discord/http/getGuildsAndVoiceChannels";
-
-type DualConnection = {
-  node: VoiceConnection;
-  rust?: SeverusVoiceConnection;
-};
 
 export class DiscordManager {
   private gateway?: Gateway;
   private audio: AudioCaptureManagerMain;
-  private voiceConnections: Record<string, DualConnection> = {};
+  private voiceConnections: Record<string, VoiceConnection> = {};
 
   constructor(audio: AudioCaptureManagerMain) {
     this.audio = audio;
@@ -35,10 +28,7 @@ export class DiscordManager {
     }
     this.gateway = undefined;
     for (const connection of Object.values(this.voiceConnections)) {
-      connection.node.disconnect();
-      if (connection.rust) {
-        severus.voiceConnectionDisconnect(connection.rust);
-      }
+      connection.disconnect();
     }
     this.voiceConnections = {};
     this.audio = undefined;
@@ -131,20 +121,6 @@ export class DiscordManager {
     channelId: string,
     guildId: string
   ) => {
-    const handleError = async (error: any) => {
-      event.reply("DISCORD_CHANNEL_LEFT", channelId);
-      event.reply("ERROR", `Voice channel error: ${error?.message}`);
-      log.error("discord manager channel error", error?.message);
-      const connection = this.voiceConnections[guildId];
-      if (connection) {
-        delete this.voiceConnections[guildId];
-        await connection.node.disconnect();
-        if (connection.rust) {
-          await severus.voiceConnectionDisconnect(connection.rust);
-        }
-      }
-    };
-
     try {
       const rtc = await this.audio.getRTCClient();
       if (!rtc) {
@@ -157,73 +133,53 @@ export class DiscordManager {
         throw Error("Discord client not ready");
       }
 
-      const connection = this.voiceConnections[guildId];
-      if (connection) {
+      const oldConnection = this.voiceConnections[guildId];
+      if (oldConnection) {
         log.debug("leaving guild", guildId);
-
         delete this.voiceConnections[guildId];
-        await connection.node.disconnect();
-        if (connection.rust) {
-          await severus.voiceConnectionDisconnect(connection.rust);
-        }
+        await oldConnection.disconnect();
       }
 
       log.debug("joining channel", channelId, "in guild", guildId);
 
-      const nodeConnection = new VoiceConnection(guildId, this.gateway);
-      this.voiceConnections[guildId] = { node: nodeConnection };
+      const connection = new VoiceConnection(
+        guildId,
+        this.gateway,
+        this.audio.broadcast
+      );
+      this.voiceConnections[guildId] = connection;
 
-      nodeConnection.on("error", handleError);
-
-      nodeConnection.on("ready", async (data) => {
-        try {
-          if (!data.modes.includes("xsalsa20_poly1305")) {
-            throw Error("Invalid encryption mode");
-          }
-          nodeConnection.updateSpeaking({
-            speaking: 1 << 1,
-            delay: 0,
-            ssrc: data.ssrc,
-          });
-          const rustConnection = await severus.voiceConnectionNew(
-            data.ip,
-            data.port,
-            data.ssrc
-          );
-          this.voiceConnections[guildId].rust = rustConnection;
-          const ip = await severus.voiceConnectionDiscoverIp(rustConnection);
-          nodeConnection.selectProtocol({
-            protocol: "udp",
-            data: {
-              address: ip.address,
-              port: ip.port,
-              mode: "xsalsa20_poly1305",
-            },
-          });
-        } catch (error) {
-          handleError(error);
+      connection.on("error", async (error) => {
+        log.error("discord manager channel error", error?.message);
+        if (connection === this.voiceConnections[guildId]) {
+          event.reply("DISCORD_CHANNEL_LEFT", channelId);
+          event.reply("ERROR", `Voice channel error: ${error?.message}`);
+          delete this.voiceConnections[guildId];
         }
+        await connection.disconnect();
       });
-      nodeConnection.on("session", async (session) => {
-        try {
-          const rustConnection = this.voiceConnections[guildId].rust;
-          if (!rustConnection) {
-            throw Error("Unable to start session: no udp connection found");
-          }
-          await severus.voiceConnectionConnect(
-            rustConnection,
-            session.secret_key,
-            this.audio.broadcast
-          );
-        } catch (error) {
-          handleError(error);
-        }
-      });
-      await nodeConnection.connect(channelId);
 
+      connection.on("close", async (code) => {
+        log.error("discord manager channel closed", code);
+        if (connection === this.voiceConnections[guildId]) {
+          event.reply("DISCORD_CHANNEL_LEFT", channelId);
+          event.reply("ERROR", `Voice channel closed with code: ${code}`);
+          delete this.voiceConnections[guildId];
+        }
+        await connection.disconnect();
+      });
+
+      await connection.connect(channelId);
       event.reply("DISCORD_CHANNEL_JOINED", channelId);
     } catch (error) {
-      handleError(error);
+      event.reply("DISCORD_CHANNEL_LEFT", channelId);
+      event.reply("ERROR", `Voice channel error: ${error?.message}`);
+      log.error("discord manager join error", error?.message);
+      const connection = this.voiceConnections[guildId];
+      if (connection) {
+        delete this.voiceConnections[guildId];
+        await connection.disconnect();
+      }
     }
   };
 
@@ -241,10 +197,7 @@ export class DiscordManager {
         log.debug("leaving channel", channelId, "in guild", guildId);
 
         delete this.voiceConnections[guildId];
-        await connection.node.disconnect();
-        if (connection.rust) {
-          await severus.voiceConnectionDisconnect(connection.rust);
-        }
+        await connection.disconnect();
       }
       if (Object.keys(this.voiceConnections).length === 0) {
         this.audio.stopAndRemoveRTCClient();

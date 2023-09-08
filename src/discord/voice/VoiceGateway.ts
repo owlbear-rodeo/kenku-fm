@@ -31,7 +31,7 @@ export interface VoiceGatewayDescription {
 }
 
 export interface VoiceGatewayEvents {
-  error: (error: Error) => void;
+  close: (code: number) => void;
   ready: (data: ReadyEvent["d"]) => void;
   session: (data: SessionDescriptionEvent["d"]) => void;
   state: (state: VoiceGatewayConnectionState) => void;
@@ -76,7 +76,10 @@ export class VoiceGateway extends TypedEmitter<VoiceGatewayEvents> {
 
     this.connectionState = VoiceGatewayConnectionState.Connecting;
 
-    this.socket = new VoiceGatewaySocket(this.description.endpoint);
+    this.socket = new VoiceGatewaySocket(
+      this.description.endpoint,
+      this.description.sessionId
+    );
     this.socket.on("open", this.handleSocketOpen);
     this.socket.on("close", this.handleSocketClose);
     this.socket.on("event", this.handleSocketEvent);
@@ -84,7 +87,9 @@ export class VoiceGateway extends TypedEmitter<VoiceGatewayEvents> {
 
   disconnect() {
     if (this.socket) {
-      log.debug("voice gateway manual disconnect");
+      log.debug(
+        `voice gateway ${this.description.sessionId} manual disconnect`
+      );
       this.socket.close(VoiceGatewayCloseCode.NormalClosure);
       this.socket = undefined;
     }
@@ -94,7 +99,7 @@ export class VoiceGateway extends TypedEmitter<VoiceGatewayEvents> {
 
   private handleSocketOpen = (socket: VoiceGatewaySocket) => {
     if (this.hasConnected) {
-      log.debug("voice gateway resume");
+      log.debug(`voice gateway ${this.description.sessionId} resume`);
       const resume: ResumeEvent = {
         op: VoiceOpCode.Resume,
         d: {
@@ -105,7 +110,7 @@ export class VoiceGateway extends TypedEmitter<VoiceGatewayEvents> {
       };
       socket.send(resume);
     } else {
-      log.debug("voice gateway identify");
+      log.debug(`voice gateway ${this.description.sessionId} identify`);
       const identify: IdentifyEvent = {
         op: VoiceOpCode.Identify,
         d: {
@@ -130,13 +135,15 @@ export class VoiceGateway extends TypedEmitter<VoiceGatewayEvents> {
 
     if (shouldResumeAfterClose(code)) {
       if (this.gateway.connectionState !== GatewayConnectionState.Ready) {
-        log.debug("voice gateway reconnecting once gateway is ready");
+        log.debug(
+          `voice gateway ${this.description.sessionId} reconnecting once gateway is ready`
+        );
         const tryReconnect = (state: GatewayConnectionState) => {
           if (state === GatewayConnectionState.Ready) {
             this.gateway.off("state", tryReconnect);
             if (!this.socket) {
               log.debug(
-                "gateway ready: voice gateway reconnecting with code:",
+                `gateway ready: voice gateway ${this.description.sessionId} reconnecting with code:`,
                 code
               );
               this.connect();
@@ -148,7 +155,7 @@ export class VoiceGateway extends TypedEmitter<VoiceGatewayEvents> {
         this.reconnectTries += 1;
         const after = reconnectAfterMs(this.reconnectTries);
         log.debug(
-          "voice gateway reconnecting from code",
+          `voice gateway ${this.description.sessionId} reconnecting from code`,
           code,
           "in",
           after,
@@ -157,10 +164,15 @@ export class VoiceGateway extends TypedEmitter<VoiceGatewayEvents> {
         setTimeout(() => {
           // Check to see if we still need to reconnect
           if (!this.socket && this.reconnectTries > 0) {
-            log.debug("voice gateway reconnecting with code:", code);
+            log.debug(
+              `voice gateway ${this.description.sessionId} reconnecting with code:`,
+              code
+            );
             this.connect();
           } else {
-            log.debug("voice gateway reconnect ignored");
+            log.debug(
+              `voice gateway ${this.description.sessionId} reconnect ignored`
+            );
           }
         }, after);
       }
@@ -168,10 +180,7 @@ export class VoiceGateway extends TypedEmitter<VoiceGatewayEvents> {
       code !== VoiceGatewayCloseCode.Reconnecting &&
       code !== VoiceGatewayCloseCode.NormalClosure
     ) {
-      this.emit(
-        "error",
-        Error(`Voice gateway socket closed with code: ${code}`)
-      );
+      this.emit("close", code);
     }
   };
 

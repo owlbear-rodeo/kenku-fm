@@ -1,4 +1,5 @@
 version: 2.1
+
 orbs:
   node: circleci/node@5.0.0
   win: circleci/windows@2.4.1
@@ -10,8 +11,13 @@ executors:
 
   mac-amd:
     macos:
-      xcode: 13.2.1
-    resource_class: medium
+      xcode: 13.4.1
+    resource_class: macos.x86.medium.gen2
+
+  mac-arm:
+    macos:
+      xcode: 13.4.1
+    resource_class: macos.m1.large.gen1
 
 commands:
   install-npm:
@@ -156,12 +162,17 @@ jobs:
             ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-full.nupkg $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-full.nupkg
             ./publish/script-win.sh ./out/windows/RELEASES $GITHUB_TOKEN $RELEASE_ID RELEASES
 
-  publish-electron-app-mac-amd:
-    executor: mac-amd
+  publish-electron-app-mac:
+    parameters:
+        mac-executor:
+          type: string
+        arch:
+          type: string
+    executor: << parameters.mac-executor >>
     working_directory: ~/repo
     environment:
-      KENKU_FM_MAC_X64_PATH: "./out/Kenku\ FM-darwin-x64"
-      KENKU_FM_MAC_X64_ZIP_PATH: "./out/mac"
+      KENKU_FM_MAC_PATH: "./out/Kenku\ FM-darwin-<< parameters.arch >>"
+      KENKU_FM_MAC_ZIP_PATH: "./out/mac"
     steps:
       - install-npm
       - run:
@@ -182,7 +193,7 @@ jobs:
           name: Widevine Signature
           command: |
             python3 -m castlabs_evs.account -n reauth -A "$CASTLABS_ACCOUNT_NAME" -P "$CASTLABS_ACCOUNT_PASSWORD"
-            python3 -m castlabs_evs.vmp sign-pkg "$KENKU_FM_MAC_X64_PATH"
+            python3 -m castlabs_evs.vmp sign-pkg "$KENKU_FM_MAC_PATH"
       - run:
           name: Import Apple Security Keychain
           command: |
@@ -197,30 +208,30 @@ jobs:
       - run:
           name: OSX Signature
           command: |
-            npx electron-osx-sign "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app --gatekeeper-assess=false --identity="Developer ID Application: Mitchell McCaffrey (${APPLE_DEVELOPER_TEAM_ID})" --hardened-runtime=true --entitlements="entitlements.plist" --entitlements-inherit="entitlements.plist"
+            npx electron-osx-sign "$KENKU_FM_MAC_PATH"/Kenku\ FM.app --gatekeeper-assess=false --identity="Developer ID Application: Mitchell McCaffrey (${APPLE_DEVELOPER_TEAM_ID})" --hardened-runtime=true --entitlements="entitlements.plist" --entitlements-inherit="entitlements.plist"
       - run:
           name: Zip App
-          command: ditto -c -k --sequesterRsrc --keepParent "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.zip
+          command: ditto -c -k --sequesterRsrc --keepParent "$KENKU_FM_MAC_PATH"/Kenku\ FM.app "$KENKU_FM_MAC_PATH"/Kenku\ FM.zip
       - run:
           name: Notarize Zip file
-          command: xcrun notarytool submit "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.zip --apple-id "$APPLE_DEVELOPER_EMAIL" --password "$APPLE_DEVELOPER_PASSWORD" --team-id "$APPLE_DEVELOPER_TEAM_ID" --wait --output-format json
+          command: xcrun notarytool submit "$KENKU_FM_MAC_PATH"/Kenku\ FM.zip --apple-id "$APPLE_DEVELOPER_EMAIL" --password "$APPLE_DEVELOPER_PASSWORD" --team-id "$APPLE_DEVELOPER_TEAM_ID" --wait --output-format json
       - run:
           name: Staple
-          command: xcrun stapler staple -v "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app
+          command: xcrun stapler staple -v "$KENKU_FM_MAC_PATH"/Kenku\ FM.app
       - run:
           name: Zip App - Release Version
-          command: ditto -c -k --sequesterRsrc --keepParent "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app "$KENKU_FM_MAC_X64_ZIP_PATH"/Kenku\ FM.zip
+          command: ditto -c -k --sequesterRsrc --keepParent "$KENKU_FM_MAC_PATH"/Kenku\ FM.app "$KENKU_FM_MAC_ZIP_PATH"/Kenku\ FM.zip
       - run:
           name: Create DMG
           command: |
-            npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out="$KENKU_FM_MAC_X64_PATH"/ "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.app Kenku\ FM
+            npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out="$KENKU_FM_MAC_PATH"/ "$KENKU_FM_MAC_PATH"/Kenku\ FM.app Kenku\ FM
       - run:
           name: Publish DMG
           command: |
             VERSION=${CIRCLE_TAG//v}
             RELEASE_ID=$(./publish/script-get-github-release.sh $CIRCLE_TAG $GITHUB_TOKEN)
-            ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-x64-$VERSION.dmg
-            ./publish/script-macos.sh "$KENKU_FM_MAC_X64_PATH"/Kenku\ FM.zip $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-x64-$VERSION.zip
+            ./publish/script-macos.sh "$KENKU_FM_MAC_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-<< parameters.arch >>-$VERSION.dmg
+            ./publish/script-macos.sh "$KENKU_FM_MAC_PATH"/Kenku\ FM.zip $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-<< parameters.arch >>-$VERSION.zip
 
 workflows:
   version: 2
@@ -242,6 +253,15 @@ workflows:
             <<: *tag
   deploy-mac-amd:
     jobs:
-      - publish-electron-app-mac-amd:
+      - publish-electron-app-mac:
+          mac-executor: "mac-amd"
+          arch: "x64"
+          filters: 
+            <<: *tag
+  deploy-mac-arm:
+    jobs:
+      - publish-electron-app-mac:
+          mac-executor: "mac-arm"
+          arch: "arm64"
           filters: 
             <<: *tag

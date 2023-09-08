@@ -20,6 +20,8 @@ export interface BaseGuild {
   name: string;
   /** icon hash */
   icon: string | null;
+  /** total permissions for the user in the guild (excludes overwrites and implicit permissions) */
+  permissions?: string;
 }
 
 /**

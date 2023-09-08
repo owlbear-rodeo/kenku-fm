@@ -5,18 +5,7 @@ import { Gateway, GatewayConnectionState } from "../../discord/gateway/Gateway";
 import { CDN_URL } from "../../discord/constants";
 import { VoiceConnection } from "../../discord/voice/VoiceConnection";
 import severus, { VoiceConnection as SeverusVoiceConnection } from "severus";
-
-interface VoiceChannel {
-  id: string;
-  name: string;
-}
-
-interface Guild {
-  id: string;
-  name: string;
-  icon: string;
-  voiceChannels: VoiceChannel[];
-}
+import { getGuildsAndVoiceChannels } from "../../discord/http/getGuildsAndVoiceChannels";
 
 type DualConnection = {
   node: VoiceConnection;
@@ -87,32 +76,31 @@ export class DiscordManager {
 
       this.gateway.on("error", handleError);
 
-      this.gateway.on("guilds", (guilds) => {
-        const transformedGuilds: Guild[] = [];
-        for (const guild of guilds) {
-          transformedGuilds.push({
-            id: guild.id,
-            icon: `${CDN_URL}/icons/${guild.id}/${guild.icon}.webp`,
-            name: guild.name,
-            voiceChannels: guild.channels
-              .filter((channel) => Boolean(channel.bitrate))
-              .map((channel) => ({ id: channel.id, name: channel.name })),
-          });
-        }
-        event.reply("DISCORD_GUILDS", transformedGuilds);
-      });
-
+      // Keep track of ready state to avoid fetching guilds multiple times
+      let ready = false;
+      // Keep track of connected state to avoid sending multiple disconnected messages
       let connected = false;
-      this.gateway.on("state", (state) => {
+      this.gateway.on("state", async (state) => {
         if (state === GatewayConnectionState.Ready) {
-          log.debug("discord manager ready");
-          event.reply("DISCORD_READY");
-          if (!connected) {
-            event.reply("MESSAGE", "Connected");
+          try {
+            if (!ready) {
+              log.debug("discord manager ready");
+              const guilds = await getGuildsAndVoiceChannels(
+                token,
+                this.gateway?.user?.id
+              );
+              event.reply("DISCORD_READY");
+              event.reply("DISCORD_GUILDS", guilds);
+            }
+            if (!connected) {
+              event.reply("MESSAGE", "Connected");
+            }
+            connected = true;
+            ready = true;
+          } catch (error) {
+            handleError(error);
           }
-          connected = true;
         } else if (state === GatewayConnectionState.Disconnected) {
-          // Check connected state to avoid sending multiple disconnected messages
           if (connected) {
             event.reply("MESSAGE", "Disconnected");
           }

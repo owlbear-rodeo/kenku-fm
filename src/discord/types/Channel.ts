@@ -30,6 +30,25 @@ export enum ChannelType {
   GuildForum = 15,
 }
 
+export enum OverwriteType {
+  Role = 0,
+  Member = 1,
+}
+
+/**
+ * @link https://discord.com/developers/docs/resources/channel#overwrite-object
+ */
+export interface Overwrite {
+  /** role or user id */
+  id: Snowflake;
+  /** either 0 (role) or 1 (member) */
+  type: OverwriteType;
+  /** permission bit set */
+  allow: string;
+  /** permission bit set */
+  deny: string;
+}
+
 /**
  * Subset of the Discord Channel object
  * @link https://discord.com/developers/docs/resources/channel#channel-object
@@ -48,5 +67,5 @@ export interface Channel {
   /** the bitrate (in bits) of the voice channel */
   bitrate?: number;
   /** computed permissions for the invoking user in the channel, including overwrites, only included when part of the resolved data received on a slash command interaction */
-  permissions?: string;
+  permission_overwrites?: Overwrite[];
 }

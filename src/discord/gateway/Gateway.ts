@@ -3,7 +3,7 @@ import log from "electron-log/main";
 import { GatewaySocket } from "./GatewaySocket";
 import { User } from "../types/User";
 import { GatewayDescription } from "./GatewayDescription";
-import { getGatewayDescription } from "./getGatewayDescription";
+import { getGatewayDescription } from "../http/getGatewayDescription";
 import { GatewayCloseCode, shouldResumeAfterClose } from "./GatewayCloseCode";
 import {
   GatewayEvent,
@@ -12,7 +12,6 @@ import {
   ResumeEvent,
 } from "./GatewayEvent";
 import { INTENTS } from "../constants";
-import { FullGuild } from "../types/Guild";
 import { reconnectAfterMs } from "../../backoff";
 
 export enum GatewayConnectionState {
@@ -23,7 +22,6 @@ export enum GatewayConnectionState {
 
 export interface GatewayEvents {
   error: (error: Error) => void;
-  guilds: (guilds: FullGuild[]) => void;
   state: (state: GatewayConnectionState) => void;
   event: (event: GatewayEvent) => void;
 }
@@ -53,13 +51,11 @@ export class Gateway extends TypedEmitter<GatewayEvents> {
       this.emit("state", state);
     }
   }
-  guilds: FullGuild[];
   user?: User;
 
   constructor(token: string) {
     super();
     this.token = token;
-    this.guilds = [];
     this.sequence = null;
     this._connectionState = GatewayConnectionState.Disconnected;
   }
@@ -191,29 +187,6 @@ export class Gateway extends TypedEmitter<GatewayEvents> {
         this.connectionState = GatewayConnectionState.Ready;
       } else if (event.t === "RESUMED") {
         this.connectionState = GatewayConnectionState.Ready;
-      } else if (event.t === "GUILD_CREATE") {
-        const index = this.guilds.findIndex((v) => v.id === event.d.id);
-        if (index >= 0) {
-          this.guilds[index] = event.d;
-        } else {
-          this.guilds.push(event.d);
-        }
-        this.emit("guilds", this.guilds);
-      } else if (event.t === "GUILD_DELETE") {
-        const index = this.guilds.findIndex((v) => v.id === event.d.id);
-        if (index >= 0) {
-          this.guilds.splice(index, 1);
-        }
-        this.emit("guilds", this.guilds);
-      } else if (event.t === "GUILD_UPDATE") {
-        const index = this.guilds.findIndex((v) => v.id === event.d.id);
-        if (index >= 0) {
-          this.guilds[index] = {
-            ...this.guilds[index],
-            ...event.d,
-          };
-        }
-        this.emit("guilds", this.guilds);
       }
     } else if (event.op === OpCode.Reconnect) {
       this.connect();

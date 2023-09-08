@@ -94,7 +94,7 @@ impl RTC {
     fn on_candidate(&self, tx: tokio::sync::mpsc::Sender<RTCIceCandidate>) -> () {
         self.connection.on_ice_candidate(Box::new(move |candidate| {
             if let Some(candidate) = candidate {
-                tx.try_send(candidate).unwrap();
+                let _ = tx.try_send(candidate);
             }
             Box::pin(async move {})
         }));

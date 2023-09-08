@@ -181,12 +181,12 @@ export class VoiceGateway extends TypedEmitter<VoiceGatewayEvents> {
   ) => {
     if (event.op === VoiceOpCode.Ready) {
       this.ssrc = event.d.ssrc;
-      this.hasConnected = true;
       this.reconnectTries = 0;
       this.connectionState = VoiceGatewayConnectionState.Ready;
       if (!this.hasConnected) {
         this.emit("ready", event.d);
       }
+      this.hasConnected = true;
     } else if (event.op === VoiceOpCode.SessionDescription) {
       this.emit("session", event.d);
     }

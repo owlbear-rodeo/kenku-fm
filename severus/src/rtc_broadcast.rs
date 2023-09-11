@@ -21,8 +21,7 @@ pub async fn runner(
                     if !rtp_packet.payload.is_empty() {
                         // Re-sequence the packets to remove empty payloads
                         rtp_packet.header.sequence_number = sequence_number;
-                        let mut events_lock = broadcast.events.lock().await;
-                        events_lock.notify(rtp_packet);
+                        broadcast.send(rtp_packet);
                         sequence_number = sequence_number.wrapping_add(1);
                     }
                 } else {

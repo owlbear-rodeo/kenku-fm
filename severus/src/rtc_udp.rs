@@ -1,13 +1,14 @@
-use bus::BusReader;
 use discortp::{
     rtp::{MutableRtpPacket, RtpPacket},
     wrap::{Wrap16, Wrap32},
     MutablePacket,
 };
+use flume::Receiver;
 use log::{debug, error};
 use rtp::packet::Packet;
 use std::{io::Write, sync::Arc};
-use tokio::{net::UdpSocket, sync::RwLock};
+use tokio::net::UdpSocket;
+use tokio::sync::Notify;
 use xsalsa20poly1305::XSalsa20Poly1305 as Cipher;
 use xsalsa20poly1305::TAG_SIZE;
 
@@ -39,11 +40,11 @@ fn apply_rtc_packet(rtc_packet: Packet, packet: &mut [u8], cipher: &Cipher) -> u
 
 /// Take a WebRTC broadcast and re-broadcast it to a Discord UDP transmitter
 pub async fn runner(
-    mut rtc_rx: BusReader<Packet>,
+    rtc_rx: Receiver<Packet>,
     udp_tx: Arc<UdpSocket>,
     cipher: Cipher,
     ssrc: u32,
-    connected: Arc<RwLock<bool>>,
+    notify: Arc<Notify>,
 ) -> () {
     let mut packet = [0u8; VOICE_PACKET_MAX];
     let mut rtp = MutableRtpPacket::new(&mut packet[..]).expect(
@@ -55,16 +56,18 @@ pub async fn runner(
     rtp.set_ssrc(ssrc);
 
     loop {
-        if !*connected.read().await {
-            break;
-        }
-
-        if let Ok(rtc_packet) = rtc_rx.recv() {
-            let final_payload_size = apply_rtc_packet(rtc_packet, &mut packet, &cipher);
-            let index = RtpPacket::minimum_packet_size() + final_payload_size;
-
-            if let Err(e) = udp_tx.send(&packet[..index]).await {
-                error!("Fatal UDP packet send error: {:?}.", e);
+        tokio::select! {
+            result = rtc_rx.recv_async() => {
+                if let Ok(rtc_packet) = result {
+                    let final_payload_size = apply_rtc_packet(rtc_packet, &mut packet, &cipher);
+                        let index = RtpPacket::minimum_packet_size() + final_payload_size;
+                        if let Err(e) = udp_tx.send(&packet[..index]).await {
+                            error!("Fatal UDP packet send error: {:?}.", e);
+                            break;
+                        }
+                }
+            }
+            _ = notify.notified() => {
                 break;
             }
         }

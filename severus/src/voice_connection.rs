@@ -10,7 +10,7 @@ use neon::types::JsString;
 use std::{net::IpAddr, str::FromStr, sync::Arc};
 use tokio::net::UdpSocket;
 use tokio::runtime::Runtime;
-use tokio::sync::RwLock;
+use tokio::sync::Notify;
 use xsalsa20poly1305::KeyInit;
 use xsalsa20poly1305::XSalsa20Poly1305 as Cipher;
 
@@ -29,7 +29,7 @@ pub struct VoiceConnection {
     pub udp_socket: Arc<UdpSocket>,
     pub ssrc: u32,
     /// A thread safe message used to disconnect the rtc_udp runner
-    connected: Arc<RwLock<bool>>,
+    notify: Arc<Notify>,
 }
 
 impl Finalize for VoiceConnection {}
@@ -44,12 +44,12 @@ impl VoiceConnection {
 
         let udp_arc = Arc::new(udp);
 
-        let connected = Arc::new(RwLock::new(false));
+        let notify = Arc::new(Notify::new());
 
         Ok(Arc::new(Self {
             udp_socket: udp_arc,
             ssrc,
-            connected,
+            notify,
         }))
     }
 
@@ -110,24 +110,24 @@ impl VoiceConnection {
             Err(_) => Err(Error::Crypto(xsalsa20poly1305::Error)),
         }?;
 
-        let mut connected_lock = self.connected.write().await;
-        *connected_lock = true;
-
-        let mut events_lock = broadcast.events.lock().await;
-        let events_rx = events_lock.get_receiver();
-
-        let udp_tx = Arc::clone(&self.udp_socket);
+        let udp = Arc::clone(&self.udp_socket);
         let ssrc = self.ssrc;
-        let connected = Arc::clone(&self.connected);
+        let notify = self.notify.clone();
 
-        rt.spawn(rtc_udp::runner(events_rx, udp_tx, cipher, ssrc, connected));
+        rt.spawn(async move {
+            let (rtc_tx, rtc_rx) = flume::unbounded();
+            let key = broadcast.register(rtc_tx);
+
+            rtc_udp::runner(rtc_rx, udp, cipher, ssrc, notify).await;
+
+            broadcast.unregister(key);
+        });
 
         Ok(())
     }
 
     pub async fn disconnect(&self) -> Result<()> {
-        let mut connected_lock = self.connected.write().await;
-        *connected_lock = false;
+        self.notify.notify_waiters();
 
         Ok(())
     }

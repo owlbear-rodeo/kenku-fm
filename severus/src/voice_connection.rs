@@ -16,7 +16,7 @@ use xsalsa20poly1305::XSalsa20Poly1305 as Cipher;
 
 use crate::broadcast::Broadcast;
 use crate::constants::runtime;
-use crate::rtc_udp;
+use crate::udp_discord;
 use crate::{error::Error, error::Result};
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -32,7 +32,11 @@ pub struct VoiceConnection {
     notify: Arc<Notify>,
 }
 
-impl Finalize for VoiceConnection {}
+impl Finalize for VoiceConnection {
+    fn finalize<'a, C: Context<'a>>(self, _: &mut C) {
+        self.notify.notify_waiters();
+    }
+}
 
 /// The UDP connection for a Discord Voice call
 ///
@@ -118,7 +122,7 @@ impl VoiceConnection {
             let (rtc_tx, rtc_rx) = flume::unbounded();
             let key = broadcast.register(rtc_tx);
 
-            rtc_udp::runner(rtc_rx, udp, cipher, ssrc, notify).await;
+            udp_discord::runner(rtc_rx, udp, cipher, ssrc, notify).await;
 
             broadcast.unregister(key);
         });

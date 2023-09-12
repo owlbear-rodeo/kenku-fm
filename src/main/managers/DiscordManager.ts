@@ -122,12 +122,9 @@ export class DiscordManager {
     guildId: string
   ) => {
     try {
-      const rtc = await this.audio.getRTCClient();
-      if (!rtc) {
+      const stream = await this.audio.getStream();
+      if (!stream) {
         throw Error("Audio capture not running");
-      }
-      if (!this.audio.isStreaming()) {
-        throw Error("Audio stream not running");
       }
       if (!this.gateway) {
         throw Error("Discord client not ready");
@@ -200,7 +197,7 @@ export class DiscordManager {
         await connection.disconnect();
       }
       if (Object.keys(this.voiceConnections).length === 0) {
-        this.audio.stopAndRemoveRTCClient();
+        this.audio.stopStream();
       }
     } catch (err) {
       event.reply("ERROR", `Error leaving channel: ${err?.message}`);

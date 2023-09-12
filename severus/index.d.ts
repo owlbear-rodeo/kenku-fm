@@ -4,7 +4,7 @@ declare module "severus" {
     port: number;
   }
   export interface VoiceConnection {}
-  export interface RTCClient {}
+  export interface Stream {}
   export interface Broadcast {}
   export interface Severus {
     voiceConnectionNew: (
@@ -23,15 +23,9 @@ declare module "severus" {
     voiceConnectionDisconnect: (
       voiceConnection: VoiceConnection
     ) => Promise<void>;
-    rtcNew: () => Promise<RTCClient>;
-    rtcSignal: (rtc: RTCClient, offer: string) => Promise<string>;
-    rtcAddCandidate: (rtc: RTCClient, candidate: string) => Promise<void>;
-    rtcOnCandidate: (
-      rtc: RTCClient,
-      onCandidate: (candidate: string) => void
-    ) => void;
-    rtcStartStream: (rtc: RTCClient, broadcast: Broadcast) => Promise<void>;
-    rtcClose: (rtc: RTCClient) => Promise<void>;
+    streamNew: (broadcast: Broadcast) => Promise<Stream>;
+    streamGetPort: (stream: Stream) => number;
+    streamStop: (stream: Stream) => void;
     logInit: () => void;
     logSetLogLevel: (level: string) => void;
     logOnLog: (onLog: (level: string, message: string) => void) => void;

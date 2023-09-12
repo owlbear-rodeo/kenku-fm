@@ -1,5 +1,34 @@
+import { ipcRenderer } from "electron";
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import SharedBuffer from "./SharedBuffer.worklet";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import Sync from "./StreamSync.worker";
+
 /** Sample rate of the audio context */
 const SAMPLE_RATE = 48000;
+/** Number of channels for the audio context */
+const NUM_CHANNELS = 2;
+/* Number of audio frames/packets to be sent per second. */
+const AUDIO_FRAME_RATE = 50;
+/** Number of samples in one complete frame of audio per channel. */
+const MONO_FRAME_SIZE = SAMPLE_RATE / AUDIO_FRAME_RATE;
+/** Number of individual samples in one complete frame of stereo audio. */
+const FRAME_SIZE = NUM_CHANNELS * MONO_FRAME_SIZE;
+
+/** Worklet uses Float32 samples */
+const WORKLET_STATE_BUFFER_LENGTH = 16;
+
+const STATE = {
+  REQUEST_SEND: 0,
+  FRAMES_AVAILABLE: 1,
+  READ_INDEX: 2,
+  WRITE_INDEX: 3,
+  BUFFER_LENGTH: 4,
+  KERNEL_LENGTH: 5,
+};
 
 /**
  * Capture audio from browser views and external audio devices
@@ -20,7 +49,7 @@ export class AudioCapture {
   private externalAudioStreams: Record<string, MediaStream> = {};
   private externalAudioStreamOutputs: Record<string, GainNode> = {};
 
-  outputStream: MediaStream;
+  streamSync: Worker;
 
   /**
    * Create the Audio Context, setup the communication socket and start the RTC stream for communicating with the Rust process
@@ -36,14 +65,47 @@ export class AudioCapture {
     const mediaDestination = this.audioContext.createMediaStreamDestination();
     this.audioOutputNode.connect(mediaDestination);
 
-    this.outputStream = mediaDestination.stream;
-
     // Setup loopback element for local playback
     this.audioOutputElement = document.createElement("audio");
     this.audioOutputElement.srcObject = mediaDestination.stream;
     this.audioOutputElement.onloadedmetadata = () => {
       this.audioOutputElement.play();
     };
+
+    this.setupCapture();
+  }
+
+  private async setupCapture(): Promise<void> {
+    const kernelLength = MONO_FRAME_SIZE;
+    const bufferLength = kernelLength * 8;
+
+    const buffers = Array.from(Array(NUM_CHANNELS)).map(
+      () => new SharedArrayBuffer(bufferLength * Float32Array.BYTES_PER_ELEMENT)
+    );
+    const states = new SharedArrayBuffer(
+      WORKLET_STATE_BUFFER_LENGTH * Int32Array.BYTES_PER_ELEMENT
+    );
+
+    // Create an audio sync thread
+    this.streamSync = new Sync();
+    this.streamSync.postMessage({
+      states,
+      buffers,
+    });
+
+    const States = new Int32Array(states);
+    Atomics.store(States, STATE.BUFFER_LENGTH, bufferLength);
+    Atomics.store(States, STATE.KERNEL_LENGTH, kernelLength);
+
+    await this.audioContext.audioWorklet.addModule(SharedBuffer);
+    const sharedBufferNode = new AudioWorkletNode(
+      this.audioContext,
+      "shared-buffer"
+    );
+    sharedBufferNode.port.postMessage({ states, buffers });
+
+    // Pipe the audio output into the stream
+    this.audioOutputNode.connect(sharedBufferNode);
   }
 
   setMuted(id: number, muted: boolean): void {
@@ -86,11 +148,13 @@ export class AudioCapture {
 
       output.connect(this.audioOutputNode);
     } catch (error) {
-      window.capture.log(
+      ipcRenderer.send(
+        "LOG",
         "error",
         `Unable to start stream for external audio device ${deviceId}: ${error.message}`
       );
-      window.capture.error(
+      ipcRenderer.send(
+        "ERROR",
         `Unable to start stream for external audio device ${deviceId}`
       );
     }
@@ -105,18 +169,6 @@ export class AudioCapture {
       delete this.externalAudioStreams[deviceId];
       delete this.externalAudioStreamOutputs[deviceId];
     }
-  }
-
-  async _setupLoopback(): Promise<void> {
-    // Create loopback media element
-    const mediaDestination = this.audioContext.createMediaStreamDestination();
-    this.audioOutputNode.connect(mediaDestination);
-
-    this.audioOutputElement = document.createElement("audio");
-    this.audioOutputElement.srcObject = mediaDestination.stream;
-    this.audioOutputElement.onloadedmetadata = () => {
-      this.audioOutputElement.play();
-    };
   }
 
   /**
@@ -154,11 +206,15 @@ export class AudioCapture {
 
       output.connect(this.audioOutputNode);
     } catch (error) {
-      window.capture.log(
+      ipcRenderer.send(
+        "LOG",
         "error",
         `Unable to start stream for web view ${viewId}: ${error.message}`
       );
-      window.capture.error(`Unable to start stream for web view ${viewId}`);
+      ipcRenderer.send(
+        "ERROR",
+        `Unable to start stream for web view ${viewId}`
+      );
     }
   }
 

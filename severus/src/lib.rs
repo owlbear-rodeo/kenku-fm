@@ -5,9 +5,9 @@ mod constants;
 mod electron_log;
 mod encrypt;
 mod error;
-mod rtc;
-mod rtc_broadcast;
-mod rtc_udp;
+mod stream;
+mod udp_broadcast;
+mod udp_discord;
 mod voice_connection;
 
 #[neon::main]
@@ -28,12 +28,9 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
         "voiceConnectionDisconnect",
         voice_connection::VoiceConnection::js_disconnect,
     )?;
-    cx.export_function("rtcNew", rtc::RTC::js_new)?;
-    cx.export_function("rtcSignal", rtc::RTC::js_signal)?;
-    cx.export_function("rtcAddCandidate", rtc::RTC::js_add_candidate)?;
-    cx.export_function("rtcOnCandidate", rtc::RTC::js_on_candidate)?;
-    cx.export_function("rtcStartStream", rtc::RTC::js_start_stream)?;
-    cx.export_function("rtcClose", rtc::RTC::js_close)?;
+    cx.export_function("streamNew", stream::Stream::js_new)?;
+    cx.export_function("streamGetPort", stream::Stream::js_get_port)?;
+    cx.export_function("streamStop", stream::Stream::js_stop)?;
     cx.export_function("logInit", electron_log::Logger::js_init)?;
     cx.export_function("logSetLogLevel", electron_log::Logger::js_set_log_level)?;
     cx.export_function("logOnLog", electron_log::Logger::js_on_log)?;

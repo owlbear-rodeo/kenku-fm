@@ -32,7 +32,7 @@ export class RTCConnection extends TypedEmitter<RTCConnectionEvents> {
           offer.sdp = offer.sdp.replace(
             "minptime=10;useinbandfec=1",
             // Increase bitrate and enable stereo
-            "minptime=10; useinbandfec=1; maxaveragebitrate=64000; stereo=1; sprop-stereo=1"
+            "minptime=10; useinbandfec=1; maxaveragebitrate=128000; stereo=1; sprop-stereo=1"
           );
           await this.peerConnection.setLocalDescription(offer);
           const answer = await window.capture.rtcSignal(

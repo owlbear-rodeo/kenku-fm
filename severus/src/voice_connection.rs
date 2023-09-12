@@ -1,3 +1,4 @@
+use crypto_secretbox::{Error as CryptoError, KeyInit, XSalsa20Poly1305 as Cipher};
 use discortp::discord::{IpDiscoveryPacket, IpDiscoveryType, MutableIpDiscoveryPacket};
 use log::error;
 use neon::context::Context;
@@ -11,8 +12,6 @@ use std::{net::IpAddr, str::FromStr, sync::Arc};
 use tokio::net::UdpSocket;
 use tokio::runtime::Runtime;
 use tokio::sync::Notify;
-use xsalsa20poly1305::KeyInit;
-use xsalsa20poly1305::XSalsa20Poly1305 as Cipher;
 
 use crate::broadcast::Broadcast;
 use crate::constants::runtime;
@@ -107,7 +106,7 @@ impl VoiceConnection {
     ) -> Result<()> {
         let cipher = match Cipher::new_from_slice(&secret_key) {
             Ok(v) => Ok(v),
-            Err(_) => Err(Error::Crypto(xsalsa20poly1305::Error)),
+            Err(_) => Err(Error::Crypto(CryptoError)),
         }?;
 
         let udp = Arc::clone(&self.udp_socket);

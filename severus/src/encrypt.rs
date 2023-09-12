@@ -1,8 +1,10 @@
-use discortp::{rtp::RtpPacket, MutablePacket};
-use xsalsa20poly1305::{
-    aead::{AeadInPlace, Error as CryptoError},
-    Nonce, XSalsa20Poly1305 as Cipher, NONCE_SIZE, TAG_SIZE,
+use crypto_secretbox::{
+    AeadInPlace, Error as CryptoError, Nonce, SecretBox, XSalsa20Poly1305 as Cipher,
 };
+use discortp::{rtp::RtpPacket, MutablePacket};
+
+pub const NONCE_SIZE: usize = SecretBox::<()>::NONCE_SIZE;
+pub const TAG_SIZE: usize = SecretBox::<()>::TAG_SIZE;
 
 /// Encrypts a Discord RT(C)P packet using the given key.
 ///

@@ -37,6 +37,6 @@ features = ["macros", "rt-multi-thread"]
 features = ["discord-full"]
 version = "0.4"
 
-[dependencies.xsalsa20poly1305]
-version = "0.9"
+[dependencies.crypto_secretbox]
+version = "0.1.1"
 features = ["std"]

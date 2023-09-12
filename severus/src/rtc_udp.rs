@@ -1,3 +1,4 @@
+use crypto_secretbox::XSalsa20Poly1305 as Cipher;
 use discortp::{
     rtp::{MutableRtpPacket, RtpPacket},
     wrap::{Wrap16, Wrap32},
@@ -9,12 +10,10 @@ use rtp::packet::Packet;
 use std::{io::Write, sync::Arc};
 use tokio::net::UdpSocket;
 use tokio::sync::Notify;
-use xsalsa20poly1305::XSalsa20Poly1305 as Cipher;
-use xsalsa20poly1305::TAG_SIZE;
 
 use crate::{
     constants::{RTP_PROFILE_TYPE, RTP_VERSION, VOICE_PACKET_MAX},
-    encrypt::encrypt_in_place,
+    encrypt::{encrypt_in_place, TAG_SIZE},
 };
 
 /// Convert and encrypt a WebRTC packet to a Discord packet

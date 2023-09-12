@@ -1,6 +1,6 @@
+use crypto_secretbox::aead::Error as CryptoError;
 use std::{error::Error as StdError, fmt, io::Error as IoError};
 use tokio::time::error::Elapsed;
-use xsalsa20poly1305::aead::Error as CryptoError;
 
 /// Errors encountered while connecting to a Discord voice server over the driver.
 #[derive(Debug)]

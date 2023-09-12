@@ -17,15 +17,7 @@ export class RTCConnection extends TypedEmitter<RTCConnectionEvents> {
     try {
       await window.capture.rtcCreateConnection();
 
-      const config = {
-        iceServers: [
-          {
-            urls: "stun:stun.l.google.com:19302",
-          },
-        ],
-      };
-
-      this.peerConnection = new RTCPeerConnection(config);
+      this.peerConnection = new RTCPeerConnection();
 
       stream
         .getTracks()

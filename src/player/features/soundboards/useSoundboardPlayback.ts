@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useDispatch } from "react-redux";
 import {
@@ -11,13 +11,19 @@ import { Sound } from "./Sound";
 
 export function useSoundboardPlayback(onError: (message: string) => void) {
   const soundsRef = useRef<Record<string, Sound>>({});
+  const [playing, setPlaying] = useState(false);
   const dispatch = useDispatch();
+
+  const updatePlaying = useCallback(() => {
+    setPlaying(Object.keys(soundsRef.current).length > 0);
+  }, []);
 
   const play = useCallback(
     (sound: SoundType) => {
       if (soundsRef.current[sound.id]) {
         soundsRef.current[sound.id].stop(false);
         delete soundsRef.current[sound.id];
+        updatePlaying();
       }
 
       const playback = new Sound({
@@ -41,20 +47,26 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
         dispatch(stopSound(sound.id));
         soundsRef.current[sound.id]?.stop(false);
         delete soundsRef.current[sound.id];
+        updatePlaying();
       });
 
       playback.on("error", () => {
         delete soundsRef.current[sound.id];
         dispatch(stopSound(sound.id));
         onError(`Unable to play sound: ${sound.title}`);
+        updatePlaying();
       });
 
       soundsRef.current[sound.id] = playback;
+      updatePlaying();
     },
     [onError]
   );
 
   useEffect(() => {
+    if (!playing) {
+      return;
+    }
     // Update playback
     let handler = requestAnimationFrame(animatePlayback);
     let prevTime = performance.now();
@@ -79,7 +91,7 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
     return () => {
       cancelAnimationFrame(handler);
     };
-  }, []);
+  }, [playing]);
 
   const seek = useCallback((id: string, to: number) => {
     dispatch(updatePlayback([{ id, progress: to }]));
@@ -92,6 +104,7 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
     if (loop) {
       await loop.stop(true);
       delete soundsRef.current[id];
+      updatePlaying();
     }
   }, []);
 

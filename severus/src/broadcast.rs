@@ -7,11 +7,10 @@ use neon::{
     types::{Finalize, JsBox},
 };
 use rand::Rng;
-use rtp::packet::Packet;
 use std::sync::Arc;
 
 pub struct Broadcast {
-    senders: DashMap<u32, Sender<Packet>>,
+    senders: DashMap<u32, Sender<Vec<u8>>>,
 }
 
 impl Finalize for Broadcast {}
@@ -25,7 +24,7 @@ impl Broadcast {
         })
     }
 
-    pub fn send(&self, packet: Packet) -> () {
+    pub fn send(&self, packet: Vec<u8>) -> () {
         for item in self.senders.iter() {
             if let Err(e) = item.value().send(packet.clone()) {
                 error!("broadcast packet send error: {:?}.", e);
@@ -33,7 +32,7 @@ impl Broadcast {
         }
     }
 
-    pub fn register(&self, tx: Sender<Packet>) -> u32 {
+    pub fn register(&self, tx: Sender<Vec<u8>>) -> u32 {
         let mut rng = rand::thread_rng();
         let key = rng.gen::<u32>();
         self.senders.insert(key, tx);

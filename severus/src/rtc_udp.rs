@@ -1,45 +1,22 @@
 use crypto_secretbox::XSalsa20Poly1305 as Cipher;
 use discortp::{
     rtp::{MutableRtpPacket, RtpPacket},
-    wrap::{Wrap16, Wrap32},
     MutablePacket,
 };
 use flume::Receiver;
 use log::{debug, error};
-use rtp::packet::Packet;
 use std::{io::Write, sync::Arc};
 use tokio::net::UdpSocket;
 use tokio::sync::Notify;
 
 use crate::{
-    constants::{RTP_PROFILE_TYPE, RTP_VERSION, VOICE_PACKET_MAX},
+    constants::{FRAME_SIZE, RTP_PROFILE_TYPE, RTP_VERSION, VOICE_PACKET_MAX},
     encrypt::{encrypt_in_place, TAG_SIZE},
 };
 
-/// Convert and encrypt a WebRTC packet to a Discord packet
-fn apply_rtc_packet(rtc_packet: Packet, packet: &mut [u8], cipher: &Cipher) -> usize {
-    let mut rtp = MutableRtpPacket::new(&mut packet[..]).expect(
-        "FATAL: Too few bytes in self.packet for RTP header.\
-      (Blame: VOICE_PACKET_MAX?)",
-    );
-    rtp.set_timestamp(Wrap32::new(rtc_packet.header.timestamp));
-    rtp.set_sequence(Wrap16::new(rtc_packet.header.sequence_number));
-    let payload_len = rtc_packet.payload.len();
-
-    let rtp_payload = rtp.payload_mut();
-    rtp_payload[TAG_SIZE..]
-        .as_mut()
-        .write_all(&rtc_packet.payload)
-        .unwrap();
-
-    let final_payload_size = TAG_SIZE + payload_len;
-    encrypt_in_place(&mut rtp, &cipher, final_payload_size).unwrap();
-    final_payload_size
-}
-
 /// Take a WebRTC broadcast and re-broadcast it to a Discord UDP transmitter
 pub async fn runner(
-    rtc_rx: Receiver<Packet>,
+    rtc_rx: Receiver<Vec<u8>>,
     udp_tx: Arc<UdpSocket>,
     cipher: Cipher,
     ssrc: u32,
@@ -57,13 +34,32 @@ pub async fn runner(
     loop {
         tokio::select! {
             result = rtc_rx.recv_async() => {
-                if let Ok(rtc_packet) = result {
-                    let final_payload_size = apply_rtc_packet(rtc_packet, &mut packet, &cipher);
-                        let index = RtpPacket::minimum_packet_size() + final_payload_size;
-                        if let Err(e) = udp_tx.send(&packet[..index]).await {
-                            error!("Fatal UDP packet send error: {:?}.", e);
-                            break;
-                        }
+                if let Ok(data) = result {
+                    let mut rtp = MutableRtpPacket::new(&mut packet[..]).expect(
+                        "FATAL: Too few bytes in self.packet for RTP header.\
+                      (Blame: VOICE_PACKET_MAX?)",
+                    );
+                    let payload_len = data.len();
+
+                    let rtp_payload = rtp.payload_mut();
+                    rtp_payload[TAG_SIZE..].as_mut().write_all(&data).unwrap();
+
+                    let final_payload_size = TAG_SIZE + payload_len;
+                    encrypt_in_place(&mut rtp, &cipher, final_payload_size).unwrap();
+
+                    let index = RtpPacket::minimum_packet_size() + final_payload_size;
+                    if let Err(e) = udp_tx.send(&packet[..index]).await {
+                        error!("Fatal UDP packet send error: {:?}.", e);
+                        break;
+                    }
+
+                    // Increment sequence and timestamp
+                    let mut rtp = MutableRtpPacket::new(&mut packet[..]).expect(
+                        "FATAL: Too few bytes in self.packet for RTP header.\
+                            (Blame: VOICE_PACKET_MAX?)",
+                    );
+                    rtp.set_sequence(rtp.get_sequence() + 1);
+                    rtp.set_timestamp(rtp.get_timestamp() + FRAME_SIZE as u32);
                 }
             }
             _ = notify.notified() => {

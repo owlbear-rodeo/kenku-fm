@@ -19,27 +19,12 @@ export class AudioCaptureManagerMain {
     this.browserView = new BrowserView({
       webPreferences: {
         preload: AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY,
+        backgroundThrottling: false,
       },
     });
     this.browserView.webContents.loadURL(AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY);
-    this.browserView.webContents.session.webRequest.onHeadersReceived(
-      (details, callback) => {
-        if (
-          details.url.endsWith("audio_capture_window") ||
-          details.url.endsWith("audio_capture_window/index.html")
-        ) {
-          details.responseHeaders["Cross-Origin-Opener-Policy"] = [
-            "same-origin",
-          ];
-          details.responseHeaders["Cross-Origin-Embedder-Policy"] = [
-            "require-corp",
-          ];
-          callback({ responseHeaders: details.responseHeaders });
-        } else {
-          callback(details.responseHeaders);
-        }
-      }
-    );
+
+    this.browserView.webContents.openDevTools();
 
     this.broadcast = severus.broadcastNew();
     this.rtcManager = new RTCManager(this.browserView, this.broadcast);

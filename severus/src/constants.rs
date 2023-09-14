@@ -1,3 +1,4 @@
+use audiopus::{Bitrate, SampleRate};
 use discortp::rtp::RtpType;
 use neon::prelude::Context;
 use neon::result::NeonResult;
@@ -9,12 +10,28 @@ use tokio::runtime::Runtime;
 /// Set a safe amount below the Ethernet MTU to avoid fragmentation/rejection.
 pub const VOICE_PACKET_MAX: usize = 1460;
 
+/// Sample rate of audio to be sent to Discord.
+pub const SAMPLE_RATE: SampleRate = SampleRate::Hz48000;
+
+/// Sample rate of audio to be sent to Discord.
+pub const SAMPLE_RATE_RAW: usize = 48_000;
+
+/// Number of audio frames/packets to be sent per second.
+pub const AUDIO_FRAME_RATE: usize = 100;
+
+/// Default bitrate for audio.
+pub const BITRATE: Bitrate = Bitrate::BitsPerSecond(128_000);
+
+/// Number of samples in one complete frame of audio per channel.
+pub const FRAME_SIZE: usize = SAMPLE_RATE_RAW / AUDIO_FRAME_RATE;
+
 /// The one (and only) RTP version.
 pub const RTP_VERSION: u8 = 2;
 
 /// Profile type used by Discord's Opus audio traffic.
 pub const RTP_PROFILE_TYPE: RtpType = RtpType::Dynamic(120);
 
+/// A shared runtime for all Neon async operations
 pub static RUNTIME: OnceCell<Runtime> = OnceCell::new();
 
 pub fn runtime<'a, C: Context<'a>>(cx: &mut C) -> NeonResult<&'static Runtime> {

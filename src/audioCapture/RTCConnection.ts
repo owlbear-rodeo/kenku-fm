@@ -17,7 +17,15 @@ export class RTCConnection extends TypedEmitter<RTCConnectionEvents> {
     try {
       await window.capture.rtcCreateConnection();
 
-      this.peerConnection = new RTCPeerConnection();
+      const config = {
+        iceServers: [
+          {
+            urls: "stun:stun.l.google.com:19302",
+          },
+        ],
+      };
+
+      this.peerConnection = new RTCPeerConnection(config);
 
       stream
         .getTracks()
@@ -29,15 +37,17 @@ export class RTCConnection extends TypedEmitter<RTCConnectionEvents> {
         try {
           window.capture.log("debug", "renderer rtc stream negotiating");
           const offer = await this.peerConnection.createOffer();
+          console.log(offer);
           offer.sdp = offer.sdp.replace(
             "minptime=10;useinbandfec=1",
             // Increase bitrate and enable stereo
-            "minptime=10; useinbandfec=1; maxaveragebitrate=128000; stereo=1; sprop-stereo=1"
+            "minptime=10;useinbandfec=1;maxaveragebitrate=128000;stereo=1;sprop-stereo=1"
           );
           await this.peerConnection.setLocalDescription(offer);
           const answer = await window.capture.rtcSignal(
             JSON.stringify(this.peerConnection.localDescription)
           );
+          console.log(answer);
           await this.peerConnection.setRemoteDescription(
             new RTCSessionDescription(JSON.parse(answer))
           );
@@ -103,6 +113,7 @@ export class RTCConnection extends TypedEmitter<RTCConnectionEvents> {
 
   addIceCandidate(candidate: RTCIceCandidateInit) {
     try {
+      console.log(candidate);
       this.peerConnection.addIceCandidate(candidate);
     } catch (err) {
       window.capture.log("error", err.message);

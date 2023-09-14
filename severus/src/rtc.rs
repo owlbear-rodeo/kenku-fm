@@ -1,83 +1,106 @@
+use std::sync::Arc;
+
 use anyhow::Result;
+use livekit_webrtc::{
+    prelude::{
+        AnswerOptions, ContinualGatheringPolicy, IceCandidate, IceServer, IceTransportsType,
+        MediaStreamTrack, PeerConnection, PeerConnectionFactory, PeerConnectionState,
+        RtcConfiguration,
+    },
+    session_description::{SdpType, SessionDescription},
+};
 use log::debug;
 use neon::prelude::{Context, FunctionContext, Object};
 use neon::result::JsResult;
 use neon::types::{Finalize, JsBox, JsFunction, JsPromise, JsString, JsUndefined};
-use std::sync::Arc;
-use tokio::sync::Notify;
-use webrtc::api::interceptor_registry::register_default_interceptors;
-use webrtc::api::media_engine::{MediaEngine, MIME_TYPE_OPUS};
-use webrtc::api::APIBuilder;
-use webrtc::ice_transport::ice_candidate::{RTCIceCandidate, RTCIceCandidateInit};
-use webrtc::ice_transport::ice_connection_state::RTCIceConnectionState;
-use webrtc::interceptor::registry::Registry;
-use webrtc::peer_connection::configuration::RTCConfiguration;
-use webrtc::peer_connection::sdp::session_description::RTCSessionDescription;
-use webrtc::peer_connection::RTCPeerConnection;
-use webrtc::rtp_transceiver::rtp_codec::{
-    RTCRtpCodecCapability, RTCRtpCodecParameters, RTPCodecType,
+use serde::{Deserialize, Serialize};
+use tokio::{
+    runtime::Runtime,
+    sync::{mpsc::Sender, Notify},
 };
 
-use crate::broadcast::Broadcast;
-use crate::constants::runtime;
-use crate::rtc_broadcast::runner;
+use crate::{broadcast::Broadcast, constants::runtime, rtc_broadcast::runner};
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct IceCandidateJson {
+    pub sdp_mid: String,
+    pub sdp_m_line_index: i32,
+    pub candidate: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct SessionDescriptionJson {
+    #[serde(rename = "type")]
+    pub t: String,
+    pub sdp: String,
+}
 
 pub struct RTC {
-    connection: RTCPeerConnection,
+    connection: Arc<PeerConnection>,
+    notify: Arc<Notify>,
 }
 
 impl Finalize for RTC {}
 
 impl RTC {
-    async fn new() -> Result<Arc<Self>> {
-        // Create a MediaEngine object to configure the supported codec
-        let mut media_engine = MediaEngine::default();
-        media_engine.register_codec(
-            RTCRtpCodecParameters {
-                capability: RTCRtpCodecCapability {
-                    mime_type: MIME_TYPE_OPUS.to_owned(),
-                    clock_rate: 48000,
-                    channels: 2,
-                    sdp_fmtp_line: "".to_owned(),
-                    rtcp_feedback: vec![],
-                },
-                payload_type: 111,
-                ..Default::default()
-            },
-            RTPCodecType::Audio,
-        )?;
+    fn new(broadcast: Arc<Broadcast>, rt: &Runtime) -> Result<Arc<Self>> {
+        let factory = PeerConnectionFactory::default();
 
-        let mut registry = Registry::new();
-        registry = register_default_interceptors(registry, &mut media_engine)?;
-        let api = APIBuilder::new()
-            .with_media_engine(media_engine)
-            .with_interceptor_registry(registry)
-            .build();
-
-        let config = RTCConfiguration {
-            ..Default::default()
+        let config = RtcConfiguration {
+            ice_servers: vec![IceServer {
+                urls: vec!["stun:stun.l.google.com:19302".to_string()],
+                username: "".into(),
+                password: "".into(),
+            }],
+            continual_gathering_policy: ContinualGatheringPolicy::GatherOnce,
+            ice_transport_type: IceTransportsType::All,
         };
 
-        debug!("new rtc connection started");
-        let connection = api.new_peer_connection(config).await?;
+        let connection = factory.create_peer_connection(config)?;
 
-        connection
-            .add_transceiver_from_kind(RTPCodecType::Audio, None)
-            .await?;
+        let notify_rx = Arc::new(Notify::new());
+        let notify_tx = Arc::clone(&notify_rx);
 
-        Ok(Arc::new(Self { connection }))
+        let arc_connection = Arc::new(connection);
+
+        let conn = Arc::clone(&arc_connection);
+        let (track_tx, track_rx) = flume::unbounded();
+
+        conn.on_track(Some(Box::new(move |event| {
+            debug!("new track added");
+            if let MediaStreamTrack::Audio(audio_track) = event.track {
+                let _ = track_tx.try_send(audio_track);
+            }
+        })));
+
+        rt.spawn(runner(Arc::clone(&broadcast), track_rx, notify_rx));
+
+        Ok(Arc::new(Self {
+            connection: arc_connection,
+            notify: notify_tx,
+        }))
     }
 
-    async fn signal(&self, offer: RTCSessionDescription) -> Result<RTCSessionDescription> {
+    async fn signal(&self, offer: SessionDescription) -> Result<SessionDescription> {
         self.connection.set_remote_description(offer).await?;
 
-        // Create an answer
-        let answer = self.connection.create_answer(None).await?;
+        let answer = self
+            .connection
+            .create_answer(AnswerOptions::default())
+            .await?;
 
-        // Sets the LocalDescription, and starts our UDP listeners
-        self.connection.set_local_description(answer).await?;
+        let sdp = answer.to_string().replace(
+            "minptime=10;useinbandfec=1",
+            // Increase bitrate and enable stereo
+            "minptime=10;useinbandfec=1;maxaveragebitrate=128000;stereo=1;sprop-stereo=1",
+        );
 
-        let local_desc = self.connection.local_description().await;
+        let stereo_answer = SessionDescription::parse(&sdp, answer.sdp_type())?;
+
+        self.connection.set_local_description(stereo_answer).await?;
+
+        let local_desc = self.connection.current_local_description();
 
         match local_desc {
             Some(d) => Ok(d),
@@ -85,84 +108,55 @@ impl RTC {
         }
     }
 
-    async fn add_candidate(&self, candidate: RTCIceCandidateInit) -> Result<()> {
+    async fn add_candidate(&self, candidate: IceCandidate) -> Result<()> {
         self.connection.add_ice_candidate(candidate).await?;
-
         Ok(())
     }
 
-    fn on_candidate(&self, tx: tokio::sync::mpsc::Sender<RTCIceCandidate>) -> () {
-        self.connection.on_ice_candidate(Box::new(move |candidate| {
-            if let Some(candidate) = candidate {
+    fn on_candidate(&self, tx: Sender<IceCandidate>) -> () {
+        self.connection
+            .on_ice_candidate(Some(Box::new(move |candidate| {
                 let _ = tx.try_send(candidate);
-            }
-            Box::pin(async move {})
-        }));
+            })))
     }
 
-    async fn start_stream(&self, broadcast: Arc<Broadcast>) -> Result<()> {
-        let notify_tx = Arc::new(Notify::new());
-        let notify_rx = notify_tx.clone();
-
-        self.connection.on_track(Box::new(move |track, _, _| {
-            let notify_rx2 = Arc::clone(&notify_rx);
-            let broadcast2 = Arc::clone(&broadcast);
-            Box::pin(async move {
-                let codec = track.codec();
-                let mime_type = codec.capability.mime_type.to_lowercase();
-                if mime_type == MIME_TYPE_OPUS.to_lowercase() {
-                    let _ = runner(broadcast2, track, notify_rx2).await;
-                }
-            })
-        }));
-
+    async fn wait(&self) -> Result<()> {
+        let notify = self.notify.clone();
         let (done_tx, mut done_rx) = tokio::sync::mpsc::channel::<()>(1);
 
-        // Set the handler for ICE connection state
-        // This will notify you when the peer has connected/disconnected
-        self.connection.on_ice_connection_state_change(Box::new(
-            move |connection_state: RTCIceConnectionState| {
-                debug!("RTC Connection State has changed {connection_state}");
-                if connection_state == RTCIceConnectionState::Connected {
-                    debug!("RTC connected");
-                } else if connection_state == RTCIceConnectionState::Closed {
-                    debug!("RTC closed");
-                    notify_tx.notify_waiters();
-                    let _ = done_tx.try_send(());
-                } else if connection_state == RTCIceConnectionState::Disconnected {
-                    debug!("RTC disconnected");
-                    notify_tx.notify_waiters();
-                    let _ = done_tx.try_send(());
-                } else if connection_state == RTCIceConnectionState::Failed {
-                    debug!("RTC failed");
-                    notify_tx.notify_waiters();
+        self.connection
+            .on_connection_state_change(Some(Box::new(move |connection_state| {
+                debug!("rtc connection state changed {:?}", connection_state);
+                if connection_state == PeerConnectionState::Closed
+                    || connection_state == PeerConnectionState::Disconnected
+                    || connection_state == PeerConnectionState::Failed
+                {
+                    notify.notify_waiters();
                     let _ = done_tx.try_send(());
                 }
-                Box::pin(async {})
-            },
-        ));
+            })));
 
         done_rx.recv().await;
 
         Ok(())
     }
 
-    async fn close(&self) -> Result<()> {
-        debug!("closing RTC connection");
-        self.connection.close().await?;
-
-        Ok(())
+    fn close(&self) -> () {
+        debug!("closing rtc connection");
+        self.notify.notify_waiters();
+        self.connection.close();
     }
 }
 
 impl RTC {
     pub fn js_new(mut cx: FunctionContext) -> JsResult<JsPromise> {
         let rt = runtime(&mut cx)?;
+        let broadcast = Arc::clone(&&cx.argument::<JsBox<Arc<Broadcast>>>(0)?);
         let channel = cx.channel();
         let (deferred, promise) = cx.promise();
 
         rt.spawn(async move {
-            let rtc = RTC::new().await;
+            let rtc = RTC::new(broadcast, rt);
             deferred.settle_with(&channel, move |mut cx| match rtc {
                 Ok(r) => Ok(cx.boxed(r)),
                 Err(e) => cx.throw_error(e.to_string()),
@@ -175,21 +169,25 @@ impl RTC {
     pub fn js_signal(mut cx: FunctionContext) -> JsResult<JsPromise> {
         let rt = runtime(&mut cx)?;
         let rtc = Arc::clone(&&cx.argument::<JsBox<Arc<RTC>>>(0)?);
-        let offer_str = cx.argument::<JsString>(1)?.value(&mut cx);
+        let signal = cx.argument::<JsString>(1)?.value(&mut cx);
         let channel = cx.channel();
         let (deferred, promise) = cx.promise();
 
         rt.spawn(async move {
-            let offer = serde_json::from_str::<RTCSessionDescription>(&offer_str)
+            let json = serde_json::from_str::<SessionDescriptionJson>(&signal)
                 .expect("Unable to convert signal from JSON");
+            let offer = SessionDescription::parse(&json.sdp, SdpType::Offer)
+                .expect("Unable to parse signal");
             let answer = rtc.signal(offer).await;
 
             deferred.settle_with(&channel, move |mut cx| match answer {
-                Ok(a) => {
-                    let json_str =
-                        serde_json::to_string(&a).expect("Unable to convert signal to JSON");
-                    Ok(cx.string(json_str))
-                }
+                Ok(a) => Ok(cx.string(
+                    serde_json::to_string(&SessionDescriptionJson {
+                        t: a.sdp_type().to_string(),
+                        sdp: a.to_string(),
+                    })
+                    .expect("Unable to convert answer to JSON"),
+                )),
                 Err(e) => cx.throw_error(e.to_string()),
             });
         });
@@ -205,8 +203,11 @@ impl RTC {
         let (deferred, promise) = cx.promise();
 
         rt.spawn(async move {
-            let candidate = serde_json::from_str::<RTCIceCandidateInit>(&candidate_str)
+            let json = serde_json::from_str::<IceCandidateJson>(&candidate_str)
                 .expect("Unable to convert candidate from JSON");
+            let candidate =
+                IceCandidate::parse(&json.sdp_mid, json.sdp_m_line_index, &json.candidate)
+                    .expect("Unable to parse ice candidate");
             let result = rtc.add_candidate(candidate).await;
 
             deferred.settle_with(&channel, move |mut cx| match result {
@@ -233,12 +234,14 @@ impl RTC {
                 channel.send(move |mut cx| {
                     let callback = candidate_cb.to_inner(&mut cx);
                     let this = cx.undefined();
-                    let json = candidate
-                        .to_json()
-                        .expect("Unable to convert ice candidate to json");
-                    let json_str =
-                        serde_json::to_string(&json).expect("Unable to convert candidate to JSON");
-                    let args = vec![cx.string(json_str).upcast()];
+                    let json = serde_json::to_string(&IceCandidateJson {
+                        sdp_mid: candidate.sdp_mid(),
+                        sdp_m_line_index: candidate.sdp_mline_index(),
+                        candidate: candidate.candidate(),
+                    })
+                    .expect("Unable to convert ice candidate to json");
+
+                    let args = vec![cx.string(json).upcast()];
                     callback.call(&mut cx, this, args)?;
 
                     Ok(())
@@ -249,15 +252,14 @@ impl RTC {
         Ok(cx.undefined())
     }
 
-    pub fn js_start_stream(mut cx: FunctionContext) -> JsResult<JsPromise> {
+    pub fn js_wait(mut cx: FunctionContext) -> JsResult<JsPromise> {
         let rt = runtime(&mut cx)?;
         let rtc = Arc::clone(&&cx.argument::<JsBox<Arc<RTC>>>(0)?);
-        let broadcast = Arc::clone(&&cx.argument::<JsBox<Arc<Broadcast>>>(1)?);
         let channel = cx.channel();
         let (deferred, promise) = cx.promise();
 
         rt.spawn(async move {
-            let rec = rtc.start_stream(broadcast).await;
+            let rec = rtc.wait().await;
             deferred.settle_with(&channel, move |mut cx| match rec {
                 Ok(_) => Ok(cx.undefined()),
                 Err(e) => cx.throw_error(e.to_string()),
@@ -267,20 +269,9 @@ impl RTC {
         Ok(promise)
     }
 
-    pub fn js_close(mut cx: FunctionContext) -> JsResult<JsPromise> {
-        let rt = runtime(&mut cx)?;
+    pub fn js_close(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         let rtc = Arc::clone(&&cx.argument::<JsBox<Arc<RTC>>>(0)?);
-        let channel = cx.channel();
-        let (deferred, promise) = cx.promise();
-
-        rt.spawn(async move {
-            let c = rtc.close().await;
-            deferred.settle_with(&channel, move |mut cx| match c {
-                Ok(_) => Ok(cx.undefined()),
-                Err(e) => cx.throw_error(e.to_string()),
-            });
-        });
-
-        Ok(promise)
+        rtc.close();
+        Ok(cx.undefined())
     }
 }

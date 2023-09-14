@@ -35,9 +35,7 @@ export class RTCManager extends TypedEmitter<RTCManagerEvents> {
     ipcMain.removeHandler("AUDIO_CAPTURE_RTC_ADD_CANDIDATE");
     ipcMain.removeHandler("AUDIO_CAPTURE_RTC_START_STREAM");
     if (this.rtc) {
-      severus.rtcClose(this.rtc).catch((err) => {
-        log.debug("rtc close error", err.message);
-      });
+      severus.rtcClose(this.rtc);
     }
     this.broadcast = undefined;
   }
@@ -51,9 +49,7 @@ export class RTCManager extends TypedEmitter<RTCManagerEvents> {
   stopAndRemoveClient() {
     if (this.rtc) {
       this.browserView.webContents.send("AUDIO_CAPTURE_STOP_RTC");
-      severus.rtcClose(this.rtc).catch((err) => {
-        log.debug("rtc close error", err.message);
-      });
+      severus.rtcClose(this.rtc);
       this.rtc = undefined;
     }
   }
@@ -62,14 +58,14 @@ export class RTCManager extends TypedEmitter<RTCManagerEvents> {
     try {
       if (this.rtc) {
         try {
-          await severus.rtcClose(this.rtc);
+          severus.rtcClose(this.rtc);
         } catch (err) {
           log.debug("rtc close error", err.message);
         }
         this.rtc = undefined;
       }
 
-      this.rtc = await severus.rtcNew();
+      this.rtc = await severus.rtcNew(this.broadcast);
       severus.rtcOnCandidate(this.rtc, (candidate) => {
         this.browserView.webContents.send(
           "AUDIO_CAPTURE_RTC_CANDIDATE",
@@ -116,7 +112,7 @@ export class RTCManager extends TypedEmitter<RTCManagerEvents> {
     try {
       this.streaming = true;
       this.emit("start", this.rtc);
-      await severus.rtcStartStream(this.rtc, this.broadcast);
+      await severus.rtcWait(this.rtc);
       this.streaming = false;
     } catch (err) {
       log.error("unable to start RTC stream", err.message);

@@ -1,38 +1,73 @@
 use anyhow::Result;
+use audiopus::{coder::Encoder, Application, Channels};
+use flume::Receiver;
+use futures::StreamExt;
+use livekit_webrtc::{audio_stream::native::NativeAudioStream, prelude::RtcAudioTrack};
 use log::debug;
-use rand::random;
 use std::sync::Arc;
 use tokio::sync::Notify;
-use webrtc::track::track_remote::TrackRemote;
 
-use crate::broadcast::Broadcast;
+use crate::{
+    broadcast::Broadcast,
+    constants::{BITRATE, FRAME_SIZE, SAMPLE_RATE, SAMPLE_RATE_RAW, VOICE_PACKET_MAX},
+};
 
 /// Take incoming WebRTC packets and broadcast them to a OpusEvents bus
 pub async fn runner(
     broadcast: Arc<Broadcast>,
-    track: Arc<TrackRemote>,
+    track_rx: Receiver<RtcAudioTrack>,
     notify: Arc<Notify>,
 ) -> Result<()> {
-    let mut sequence_number: u16 = random::<u16>();
-    loop {
-        tokio::select! {
-            result = track.read_rtp() => {
-                if let Ok((mut rtp_packet, _)) = result {
-                    if !rtp_packet.payload.is_empty() {
-                        // Re-sequence the packets to remove empty payloads
-                        rtp_packet.header.sequence_number = sequence_number;
-                        broadcast.send(rtp_packet);
-                        sequence_number = sequence_number.wrapping_add(1);
+    tokio::select! {
+        result = track_rx.recv_async() => {
+            if let Ok(track) = result {
+                let mut encoder = Encoder::new(SAMPLE_RATE, Channels::Stereo, Application::Audio)?;
+                encoder.set_bitrate(BITRATE)?;
+
+                let mut encoded = [0u8; VOICE_PACKET_MAX];
+                let mut stream = NativeAudioStream::new(track);
+
+                loop {
+                    tokio::select! {
+                        result = stream.next() => {
+                            if let Some(frame) = result {
+                                let valid_frame =
+                                    frame.num_channels == 2 &&
+                                    frame.sample_rate == SAMPLE_RATE_RAW as u32 &&
+                                    frame.samples_per_channel == FRAME_SIZE as u32;
+
+                                if valid_frame {
+                                    match encoder.encode(&frame.data, &mut encoded) {
+                                            Ok(len) => {
+                                                let data = encoded[..len].to_vec();
+                                                broadcast.send(data);
+                                            }
+                                            Err(e) => {
+                                                debug!("err {:?}", e.to_string());
+                                            }
+                                        }
+                                } else {
+                                    debug!("invalid frame with {} channels, {}hz sample rate and {} samples per channel", frame.num_channels, frame.sample_rate, frame.samples_per_channel);
+                                }
+                            } else {
+                                debug!("stream closing after read_rtp error");
+                                return Ok(());
+                            }
+                        }
+                        _ = notify.notified() => {
+                            debug!("stream closing after notified");
+                            return Ok(());
+                        }
                     }
-                } else {
-                    debug!("stream closing after read_rtp error");
-                    return Ok(());
                 }
-            }
-            _ = notify.notified() => {
-                debug!("stream closing after notified");
+            } else {
+                debug!("stream closing after track read error");
                 return Ok(());
             }
+        }
+        _ = notify.notified() => {
+            debug!("stream closing after notified");
+            return Ok(());
         }
     }
 }

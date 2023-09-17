@@ -51,6 +51,11 @@ window.capture.on("AUDIO_CAPTURE_RTC_CANDIDATE", (args) => {
   rtcStream.addIceCandidate(candidate);
 });
 
+window.capture.on("AUDIO_CAPTURE_RTC_CLOSE", () => {
+  window.capture.log("debug", "renderer rtc closed");
+  rtcStream.reconnectIfNeeded();
+});
+
 window.capture.on("AUDIO_CAPTURE_START_RTC", () => {
   rtcStream.start();
 });

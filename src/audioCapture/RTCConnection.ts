@@ -1,7 +1,6 @@
 import { TypedEmitter } from "tiny-typed-emitter";
 
 export interface RTCConnectionEvents {
-  restart: (connection: RTCConnection) => void;
   connect: (connection: RTCConnection) => void;
 }
 
@@ -11,7 +10,7 @@ export interface RTCConnectionEvents {
 export class RTCConnection extends TypedEmitter<RTCConnectionEvents> {
   private peerConnection: RTCPeerConnection;
   /** Has this connection been manually closed. Used to determine whether it should be restarted */
-  private closed = false;
+  closed = false;
 
   async start(stream: MediaStream): Promise<void> {
     try {
@@ -44,12 +43,6 @@ export class RTCConnection extends TypedEmitter<RTCConnectionEvents> {
           makingOffer = false;
           for (const candidate of bufferedCandidates) {
             await window.capture.rtcAddCandidate(JSON.stringify(candidate));
-          }
-
-          await window.capture.stream();
-          window.capture.log("debug", "renderer rtc stream ended");
-          if (!this.closed) {
-            this.emit("restart", this);
           }
         } catch (err) {
           window.capture.log("error", err.message);
@@ -99,6 +92,7 @@ export class RTCConnection extends TypedEmitter<RTCConnectionEvents> {
   close() {
     this.closed = true;
     this.peerConnection.close();
+    window.capture.log("debug", `renderer peer connection closed`);
   }
 
   addIceCandidate(candidate: RTCIceCandidateInit) {

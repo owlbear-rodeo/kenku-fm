@@ -141,7 +141,7 @@ export class AudioCaptureManagerMain {
     if (!this.rtcManager.rtc) {
       this.rtcManager.createClientIfNeeded();
       return new Promise((resolve) => {
-        this.rtcManager.once("start", resolve);
+        this.rtcManager.once("create", resolve);
       });
     }
 
@@ -150,10 +150,6 @@ export class AudioCaptureManagerMain {
 
   stopAndRemoveRTCClient = () => {
     this.rtcManager.stopAndRemoveClient();
-  };
-
-  isStreaming = () => {
-    return this.rtcManager.streaming;
   };
 
   private handleStartBrowserViewStream = (

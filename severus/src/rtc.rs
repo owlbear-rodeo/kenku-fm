@@ -4,6 +4,7 @@ use neon::prelude::{Context, FunctionContext, Object};
 use neon::result::JsResult;
 use neon::types::{Finalize, JsBox, JsFunction, JsPromise, JsString, JsUndefined};
 use std::sync::Arc;
+use tokio::runtime::Runtime;
 use tokio::sync::Notify;
 use webrtc::api::interceptor_registry::register_default_interceptors;
 use webrtc::api::media_engine::{MediaEngine, MIME_TYPE_OPUS};
@@ -24,12 +25,13 @@ use crate::rtc_broadcast::runner;
 
 pub struct RTC {
     connection: RTCPeerConnection,
+    notify: Arc<Notify>,
 }
 
 impl Finalize for RTC {}
 
 impl RTC {
-    async fn new() -> Result<Arc<Self>> {
+    async fn new(broadcast: Arc<Broadcast>, rt: &Runtime) -> Result<Arc<Self>> {
         // Create a MediaEngine object to configure the supported codec
         let mut media_engine = MediaEngine::default();
         media_engine.register_codec(
@@ -65,7 +67,52 @@ impl RTC {
             .add_transceiver_from_kind(RTPCodecType::Audio, None)
             .await?;
 
-        Ok(Arc::new(Self { connection }))
+        let (track_tx, track_rx) = flume::unbounded();
+        connection.on_track(Box::new(move |track, _, _| {
+            let track_tx2 = track_tx.clone();
+            Box::pin(async move {
+                let codec = track.codec();
+                let mime_type = codec.capability.mime_type.to_lowercase();
+                if mime_type == MIME_TYPE_OPUS.to_lowercase() {
+                    let _ = track_tx2.send_async(track).await;
+                }
+            })
+        }));
+
+        let notify_tx = Arc::new(Notify::new());
+        let notify_rx = Arc::clone(&notify_tx);
+        rt.spawn(async move {
+            if let Ok(track) = track_rx.recv_async().await {
+                let _ = runner(broadcast, track, notify_rx).await;
+            }
+        });
+
+        let notify_tx2 = Arc::clone(&notify_tx);
+        // Set the handler for ICE connection state
+        // This will notify you when the peer has connected/disconnected
+        connection.on_ice_connection_state_change(Box::new(
+            move |connection_state: RTCIceConnectionState| {
+                debug!("RTC Connection State has changed {connection_state}");
+                if connection_state == RTCIceConnectionState::Connected {
+                    debug!("RTC connected");
+                } else if connection_state == RTCIceConnectionState::Closed {
+                    debug!("RTC closed");
+                    notify_tx2.notify_waiters();
+                } else if connection_state == RTCIceConnectionState::Disconnected {
+                    debug!("RTC disconnected");
+                    notify_tx2.notify_waiters();
+                } else if connection_state == RTCIceConnectionState::Failed {
+                    debug!("RTC failed");
+                    notify_tx2.notify_waiters();
+                }
+                Box::pin(async {})
+            },
+        ));
+
+        Ok(Arc::new(Self {
+            connection,
+            notify: Arc::clone(&notify_tx),
+        }))
     }
 
     async fn signal(&self, offer: RTCSessionDescription) -> Result<RTCSessionDescription> {
@@ -100,55 +147,23 @@ impl RTC {
         }));
     }
 
-    async fn start_stream(&self, broadcast: Arc<Broadcast>) -> Result<()> {
-        let notify_tx = Arc::new(Notify::new());
-        let notify_rx = notify_tx.clone();
-
-        self.connection.on_track(Box::new(move |track, _, _| {
-            let notify_rx2 = Arc::clone(&notify_rx);
-            let broadcast2 = Arc::clone(&broadcast);
-            Box::pin(async move {
-                let codec = track.codec();
-                let mime_type = codec.capability.mime_type.to_lowercase();
-                if mime_type == MIME_TYPE_OPUS.to_lowercase() {
-                    let _ = runner(broadcast2, track, notify_rx2).await;
-                }
-            })
-        }));
-
-        let (done_tx, mut done_rx) = tokio::sync::mpsc::channel::<()>(1);
-
-        // Set the handler for ICE connection state
-        // This will notify you when the peer has connected/disconnected
+    fn on_closed(&self, tx: tokio::sync::mpsc::Sender<()>) -> () {
         self.connection.on_ice_connection_state_change(Box::new(
             move |connection_state: RTCIceConnectionState| {
-                debug!("RTC Connection State has changed {connection_state}");
-                if connection_state == RTCIceConnectionState::Connected {
-                    debug!("RTC connected");
-                } else if connection_state == RTCIceConnectionState::Closed {
-                    debug!("RTC closed");
-                    notify_tx.notify_waiters();
-                    let _ = done_tx.try_send(());
-                } else if connection_state == RTCIceConnectionState::Disconnected {
-                    debug!("RTC disconnected");
-                    notify_tx.notify_waiters();
-                    let _ = done_tx.try_send(());
-                } else if connection_state == RTCIceConnectionState::Failed {
-                    debug!("RTC failed");
-                    notify_tx.notify_waiters();
-                    let _ = done_tx.try_send(());
+                if connection_state == RTCIceConnectionState::Closed
+                    || connection_state == RTCIceConnectionState::Disconnected
+                    || connection_state == RTCIceConnectionState::Failed
+                {
+                    let _ = tx.try_send(());
                 }
                 Box::pin(async {})
             },
         ));
-
-        done_rx.recv().await;
-
-        Ok(())
     }
 
     async fn close(&self) -> Result<()> {
         debug!("closing RTC connection");
+        self.notify.notify_waiters();
         self.connection.close().await?;
 
         Ok(())
@@ -158,11 +173,12 @@ impl RTC {
 impl RTC {
     pub fn js_new(mut cx: FunctionContext) -> JsResult<JsPromise> {
         let rt = runtime(&mut cx)?;
+        let broadcast = Arc::clone(&&cx.argument::<JsBox<Arc<Broadcast>>>(0)?);
         let channel = cx.channel();
         let (deferred, promise) = cx.promise();
 
         rt.spawn(async move {
-            let rtc = RTC::new().await;
+            let rtc = RTC::new(broadcast, rt).await;
             deferred.settle_with(&channel, move |mut cx| match rtc {
                 Ok(r) => Ok(cx.boxed(r)),
                 Err(e) => cx.throw_error(e.to_string()),
@@ -249,22 +265,30 @@ impl RTC {
         Ok(cx.undefined())
     }
 
-    pub fn js_start_stream(mut cx: FunctionContext) -> JsResult<JsPromise> {
+    pub fn js_on_close(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         let rt = runtime(&mut cx)?;
         let rtc = Arc::clone(&&cx.argument::<JsBox<Arc<RTC>>>(0)?);
-        let broadcast = Arc::clone(&&cx.argument::<JsBox<Arc<Broadcast>>>(1)?);
+        let close_cb = Arc::new(cx.argument::<JsFunction>(1)?.root(&mut cx));
         let channel = cx.channel();
-        let (deferred, promise) = cx.promise();
+
+        let (tx, mut rx) = tokio::sync::mpsc::channel(1);
 
         rt.spawn(async move {
-            let rec = rtc.start_stream(broadcast).await;
-            deferred.settle_with(&channel, move |mut cx| match rec {
-                Ok(_) => Ok(cx.undefined()),
-                Err(e) => cx.throw_error(e.to_string()),
-            });
+            rtc.on_closed(tx);
+            while let Some(_) = rx.recv().await {
+                let close_cb = Arc::clone(&close_cb);
+                channel.send(move |mut cx| {
+                    let callback = close_cb.to_inner(&mut cx);
+                    let this = cx.undefined();
+                    let args = vec![];
+                    callback.call(&mut cx, this, args)?;
+
+                    Ok(())
+                });
+            }
         });
 
-        Ok(promise)
+        Ok(cx.undefined())
     }
 
     pub fn js_close(mut cx: FunctionContext) -> JsResult<JsPromise> {

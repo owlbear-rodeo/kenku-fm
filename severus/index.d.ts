@@ -23,14 +23,14 @@ declare module "severus" {
     voiceConnectionDisconnect: (
       voiceConnection: VoiceConnection
     ) => Promise<void>;
-    rtcNew: () => Promise<RTCClient>;
+    rtcNew: (broadcast: Broadcast) => Promise<RTCClient>;
     rtcSignal: (rtc: RTCClient, offer: string) => Promise<string>;
     rtcAddCandidate: (rtc: RTCClient, candidate: string) => Promise<void>;
     rtcOnCandidate: (
       rtc: RTCClient,
       onCandidate: (candidate: string) => void
     ) => void;
-    rtcStartStream: (rtc: RTCClient, broadcast: Broadcast) => Promise<void>;
+    rtcOnClose: (rtc: RTCClient, onClose: () => void) => void;
     rtcClose: (rtc: RTCClient) => Promise<void>;
     logInit: () => void;
     logSetLogLevel: (level: string) => void;

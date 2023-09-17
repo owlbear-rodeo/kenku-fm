@@ -4,14 +4,13 @@ import severus, { Broadcast, RTCClient } from "severus";
 import { BrowserView, BrowserWindow, ipcMain } from "electron";
 
 export interface RTCManagerEvents {
-  start: (rtc: RTCClient) => void;
+  create: (rtc: RTCClient) => void;
 }
 
 export class RTCManager extends TypedEmitter<RTCManagerEvents> {
   private browserView: BrowserView;
   private broadcast: Broadcast;
   rtc?: RTCClient;
-  streaming = false;
 
   constructor(browserView: BrowserView, broadcast: Broadcast) {
     super();
@@ -26,7 +25,6 @@ export class RTCManager extends TypedEmitter<RTCManagerEvents> {
       "AUDIO_CAPTURE_RTC_ADD_CANDIDATE",
       this.handleRTCAddCandidate
     );
-    ipcMain.handle("AUDIO_CAPTURE_RTC_START_STREAM", this.handleRTCStartStream);
   }
 
   destroy() {
@@ -69,13 +67,23 @@ export class RTCManager extends TypedEmitter<RTCManagerEvents> {
         this.rtc = undefined;
       }
 
-      this.rtc = await severus.rtcNew();
-      severus.rtcOnCandidate(this.rtc, (candidate) => {
-        this.browserView.webContents.send(
-          "AUDIO_CAPTURE_RTC_CANDIDATE",
-          candidate
-        );
+      const rtc = await severus.rtcNew(this.broadcast);
+      this.rtc = rtc;
+      severus.rtcOnCandidate(rtc, (candidate) => {
+        if (this.rtc === rtc) {
+          this.browserView.webContents.send(
+            "AUDIO_CAPTURE_RTC_CANDIDATE",
+            candidate
+          );
+        }
       });
+      severus.rtcOnClose(rtc, () => {
+        if (this.rtc === rtc) {
+          this.browserView.webContents.send("AUDIO_CAPTURE_RTC_CLOSE");
+        }
+      });
+
+      this.emit("create", rtc);
     } catch (err) {
       log.error("unable to start RTC", err.message);
       const windows = BrowserWindow.getAllWindows();
@@ -105,21 +113,6 @@ export class RTCManager extends TypedEmitter<RTCManagerEvents> {
       return await severus.rtcAddCandidate(this.rtc, candidate);
     } catch (err) {
       log.error("unable to send RTC candidate", err.message);
-      const windows = BrowserWindow.getAllWindows();
-      for (let window of windows) {
-        window.webContents.send("ERROR", err.message);
-      }
-    }
-  };
-
-  private handleRTCStartStream = async (_: Electron.IpcMainEvent) => {
-    try {
-      this.streaming = true;
-      this.emit("start", this.rtc);
-      await severus.rtcStartStream(this.rtc, this.broadcast);
-      this.streaming = false;
-    } catch (err) {
-      log.error("unable to start RTC stream", err.message);
       const windows = BrowserWindow.getAllWindows();
       for (let window of windows) {
         window.webContents.send("ERROR", err.message);

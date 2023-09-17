@@ -10,7 +10,8 @@ type Channel =
   | "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE"
   | "AUDIO_CAPTURE_START_RTC"
   | "AUDIO_CAPTURE_STOP_RTC"
-  | "AUDIO_CAPTURE_RTC_CANDIDATE";
+  | "AUDIO_CAPTURE_RTC_CANDIDATE"
+  | "AUDIO_CAPTURE_RTC_CLOSE";
 
 const validChannels: Channel[] = [
   "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
@@ -23,6 +24,7 @@ const validChannels: Channel[] = [
   "AUDIO_CAPTURE_START_RTC",
   "AUDIO_CAPTURE_STOP_RTC",
   "AUDIO_CAPTURE_RTC_CANDIDATE",
+  "AUDIO_CAPTURE_RTC_CLOSE",
 ];
 
 const api = {
@@ -46,9 +48,6 @@ const api = {
   },
   rtcAddCandidate: (candidate: string): Promise<void> => {
     return ipcRenderer.invoke("AUDIO_CAPTURE_RTC_ADD_CANDIDATE", candidate);
-  },
-  stream: (): Promise<void> => {
-    return ipcRenderer.invoke("AUDIO_CAPTURE_RTC_START_STREAM");
   },
 };
 

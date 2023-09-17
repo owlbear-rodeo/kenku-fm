@@ -16,14 +16,12 @@ export class RTCStream {
 
   async start() {
     if (this.connection) {
-      this.connection.off("restart", this.handleRestart);
       this.connection.off("connect", this.handleConnect);
       this.connection.close();
       this.connection = undefined;
     }
 
     this.connection = new RTCConnection();
-    this.connection.on("restart", this.handleRestart);
     this.connection.on("connect", this.handleConnect);
 
     await this.connection.start(this.stream);
@@ -31,18 +29,20 @@ export class RTCStream {
 
   stop() {
     if (this.connection) {
-      this.connection.off("restart", this.handleRestart);
       this.connection.off("connect", this.handleConnect);
       this.connection.close();
       this.connection = undefined;
     }
   }
 
-  private handleRestart = (connection: RTCConnection) => {
-    connection.off("restart", this.handleRestart);
-    connection.off("connect", this.handleConnect);
-
+  reconnectIfNeeded = () => {
     if (this.connection) {
+      this.connection.off("connect", this.handleConnect);
+      if (this.connection.closed) {
+        window.capture.log("debug", `rtc capture not restarting`);
+        this.connection = undefined;
+        return;
+      }
       this.connection.close();
       this.connection = undefined;
     }

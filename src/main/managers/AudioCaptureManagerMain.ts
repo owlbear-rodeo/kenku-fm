@@ -24,8 +24,6 @@ export class AudioCaptureManagerMain {
     });
     this.browserView.webContents.loadURL(AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY);
 
-    this.browserView.webContents.openDevTools();
-
     this.broadcast = severus.broadcastNew();
     this.rtcManager = new RTCManager(this.browserView, this.broadcast);
 

@@ -37,7 +37,6 @@ export class RTCConnection extends TypedEmitter<RTCConnectionEvents> {
         try {
           window.capture.log("debug", "renderer rtc stream negotiating");
           const offer = await this.peerConnection.createOffer();
-          console.log(offer);
           offer.sdp = offer.sdp.replace(
             "minptime=10;useinbandfec=1",
             // Increase bitrate and enable stereo
@@ -47,7 +46,6 @@ export class RTCConnection extends TypedEmitter<RTCConnectionEvents> {
           const answer = await window.capture.rtcSignal(
             JSON.stringify(this.peerConnection.localDescription)
           );
-          console.log(answer);
           await this.peerConnection.setRemoteDescription(
             new RTCSessionDescription(JSON.parse(answer))
           );
@@ -113,7 +111,6 @@ export class RTCConnection extends TypedEmitter<RTCConnectionEvents> {
 
   addIceCandidate(candidate: RTCIceCandidateInit) {
     try {
-      console.log(candidate);
       this.peerConnection.addIceCandidate(candidate);
     } catch (err) {
       window.capture.log("error", err.message);

@@ -892,6 +892,7 @@ checksum = "ef53942eb7bf7ff43a617b3e2c1c4a5ecf5944a7c1bc12d7ee39bbb15e5c1519"
 [[package]]
 name = "livekit-protocol"
 version = "0.2.0"
+source = "git+https://github.com/mitchemmc/livekit-rust.git?branch=fix/macos-decode-encode#30534e50379c0a387ade95ab830bde7ccdf6124e"
 dependencies = [
  "futures-util",
  "parking_lot",
@@ -907,6 +908,7 @@ dependencies = [
 [[package]]
 name = "livekit-webrtc"
 version = "0.2.0"
+source = "git+https://github.com/mitchemmc/livekit-rust.git?branch=fix/macos-decode-encode#30534e50379c0a387ade95ab830bde7ccdf6124e"
 dependencies = [
  "cxx",
  "jni",
@@ -2142,6 +2144,7 @@ dependencies = [
 [[package]]
 name = "webrtc-sys"
 version = "0.2.0"
+source = "git+https://github.com/mitchemmc/livekit-rust.git?branch=fix/macos-decode-encode#30534e50379c0a387ade95ab830bde7ccdf6124e"
 dependencies = [
  "cc",
  "cxx",
@@ -2154,6 +2157,7 @@ dependencies = [
 [[package]]
 name = "webrtc-sys-build"
 version = "0.2.0"
+source = "git+https://github.com/mitchemmc/livekit-rust.git?branch=fix/macos-decode-encode#30534e50379c0a387ade95ab830bde7ccdf6124e"
 dependencies = [
  "fs2",
  "regex",

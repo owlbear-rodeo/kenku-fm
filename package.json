@@ -87,6 +87,6 @@
     "redux-persist": "^6.0.0",
     "tiny-typed-emitter": "^2.1.0",
     "uuid": "^9.0.0",
-    "ws": "^8.13.0"
+    "ws": "^8.16.0"
   }
 }

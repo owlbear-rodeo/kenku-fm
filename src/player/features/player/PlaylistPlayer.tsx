@@ -219,8 +219,11 @@ function Volume() {
 
   function handleVolumeChange(_: Event, value: number | number[]) {
     dispatch(adjustVolume(value as number));
-    if (muted && value > 0) {
-      dispatch(mute(false));
+    // TODO: handle value isArray
+    if (muted) {
+      if (!Array.isArray(value) && value > 0) {
+        dispatch(mute(false));
+      }
     }
   }
 

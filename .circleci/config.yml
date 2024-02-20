@@ -11,12 +11,12 @@ executors:
 
   mac-amd:
     macos:
-      xcode: 13.4.1
+      xcode: 14.3.1
     resource_class: macos.x86.medium.gen2
 
   mac-arm:
     macos:
-      xcode: 13.4.1
+      xcode: 14.3.1
     resource_class: macos.m1.large.gen1
 
 commands:

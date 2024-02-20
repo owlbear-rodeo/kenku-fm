@@ -45,12 +45,12 @@ export class PlayerManager {
     this.fastify.listen(this.port, this.address, (err) => {
       const windows = BrowserWindow.getAllWindows();
       if (err) {
-        for (let window of windows) {
+        for (const window of windows) {
           window.webContents.send("ERROR", err.message);
         }
         this.stopRemote();
       } else {
-        for (let window of windows) {
+        for (const window of windows) {
           window.webContents.send("PLAYER_REMOTE_ENABLED", true);
         }
       }
@@ -63,7 +63,7 @@ export class PlayerManager {
       this.fastify = null;
 
       const windows = BrowserWindow.getAllWindows();
-      for (let window of windows) {
+      for (const window of windows) {
         window.webContents.send("PLAYER_REMOTE_ENABLED", false);
       }
     }

@@ -95,17 +95,24 @@ export class BrowserViewManagerMain {
     this.views[id].webContents.on("media-paused", () => {
       event.reply("BROWSER_VIEW_MEDIA_PAUSED", id);
     });
-    this.views[id].webContents.on("new-window", (event, url) => {
-      event.preventDefault();
-      shell.openExternal(url);
-    });
+    this.views[id].webContents.on(
+      "did-attach-webview",
+      (event, webContents) => {
+        event.preventDefault();
+        webContents.setWindowOpenHandler((details: Electron.HandlerDetails) => {
+          shell.openExternal(details.url);
+          return { action: "deny" };
+        });
+      }
+    );
+
     let loaded = false;
     this.views[id].webContents.on("did-finish-load", () => {
       if (!loaded) {
         event.reply("BROWSER_VIEW_LOADED", id);
         loaded = true;
       }
-    })
+    });
     event.returnValue = id;
   };
 

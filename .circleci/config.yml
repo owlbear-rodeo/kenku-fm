@@ -24,7 +24,7 @@ commands:
     steps:
       - node/install:
           install-yarn: true
-          node-version: "16.13.2"
+          node-version: "18.19.0"
   
   install-dependencies:
     steps:

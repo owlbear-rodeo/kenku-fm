@@ -102,9 +102,9 @@ jobs:
       - run:
           name: Install Node
           command: |
-            nvm install 16.13.2
-            nvm use 16.13.2
-            nvm alias default 16.13.2
+            nvm install 18.19.0
+            nvm use 18.19.0
+            nvm alias default 18.19.0
             echo 'nvm use default &>/dev/null' >> $BASH_ENV
       - run:
           name: Install Yarn

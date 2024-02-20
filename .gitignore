@@ -93,3 +93,5 @@ out/
 dist/
 
 native_modules/
+
+severus/

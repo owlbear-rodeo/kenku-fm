@@ -18,13 +18,15 @@ import { getSavedBounds, saveWindowBounds } from "./bounds";
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
+const hasSingleInstanceLock = app.requestSingleInstanceLock();
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
   // eslint-disable-line global-require
   app.quit();
 }
 
-const createWindow = (): void => {
+const createWindow = (): BrowserWindow => {
   // Create the browser window.
   const { bounds, maximized } = getSavedBounds();
 
@@ -78,6 +80,8 @@ const createWindow = (): void => {
   if (app.isPackaged) {
     runAutoUpdate(mainWindow);
   }
+
+  return mainWindow;
 };
 
 const spoofUserAgent = () => {
@@ -88,50 +92,65 @@ const spoofUserAgent = () => {
   });
 };
 
-// Workaround to allow for webpack support with widevine
-// https://github.com/castlabs/electron-releases/issues/116
-const widevine = components;
+if (!hasSingleInstanceLock) {
+  app.quit();
+} else {
+  // Workaround to allow for webpack support with widevine
+  // https://github.com/castlabs/electron-releases/issues/116
+  const widevine = components;
+  let window: BrowserWindow | null = null;
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.whenReady().then(async () => {
-  // Wait for widevine to load
-  await widevine.whenReady();
-  console.log("components ready:", components.status());
+  // This method will be called when Electron has finished
+  // initialization and is ready to create browser windows.
+  // Some APIs can only be used after this event occurs.
+  app.whenReady().then(async () => {
+    // Wait for widevine to load
+    await widevine.whenReady();
+    console.log("components ready:", components.status());
 
-  createWindow();
-  spoofUserAgent();
-});
-
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
-});
-
-app.on("activate", () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
-});
-
-ipcMain.on("GET_VERSION", (event) => {
-  event.returnValue = app.getVersion();
-});
-
-ipcMain.on("GET_PLATFORM", (event) => {
-  event.returnValue = os.platform();
-});
-
-ipcMain.handle("CLEAR_CACHE", async () => {
-  await session.defaultSession.clearCache();
-  await session.defaultSession.clearStorageData({
-    storages: ["cookies", "shadercache", "cachestorage"],
+    window = createWindow();
+    spoofUserAgent();
   });
-});
+
+  app.on("second-instance", () => {
+    // Someone tried to run a second instance, we should focus our window.
+    if (window) {
+      if (window.isMinimized()) {
+        window.restore();
+      }
+      window.focus();
+    }
+  });
+
+  // Quit when all windows are closed, except on macOS. There, it's common
+  // for applications and their menu bar to stay active until the user quits
+  // explicitly with Cmd + Q.
+  app.on("window-all-closed", () => {
+    if (process.platform !== "darwin") {
+      app.quit();
+    }
+  });
+
+  app.on("activate", () => {
+    // On OS X it's common to re-create a window in the app when the
+    // dock icon is clicked and there are no other windows open.
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
+
+  ipcMain.on("GET_VERSION", (event) => {
+    event.returnValue = app.getVersion();
+  });
+
+  ipcMain.on("GET_PLATFORM", (event) => {
+    event.returnValue = os.platform();
+  });
+
+  ipcMain.handle("CLEAR_CACHE", async () => {
+    await session.defaultSession.clearCache();
+    await session.defaultSession.clearStorageData({
+      storages: ["cookies", "shadercache", "cachestorage"],
+    });
+  });
+}

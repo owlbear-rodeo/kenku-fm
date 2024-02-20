@@ -921,13 +921,6 @@
   dependencies:
     "@octokit/openapi-types" "^11.2.0"
 
-"@owlbear-rodeo/forge-externals-plugin@^0.1.3":
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/@owlbear-rodeo/forge-externals-plugin/-/forge-externals-plugin-0.1.3.tgz#15a6b0c37bbfae52f26a09c553a475a61e203201"
-  integrity sha512-hinbIy1kRDEtmegLkKp+DwHUqplKagILSoEOLNtE3hg8doL1wdTAv2fYBFklkH5E8OsBA/F7HUPV3ddm9BWctQ==
-  dependencies:
-    flora-colossus "1.0.1"
-
 "@owlbear-rodeo/page-icon@^0.6.0":
   version "0.6.0"
   resolved "https://registry.yarnpkg.com/@owlbear-rodeo/page-icon/-/page-icon-0.6.0.tgz#a5ed42f15ea5fbc7599a61131a0b514cd1a21db1"
@@ -986,6 +979,13 @@
   integrity sha512-4BAffykYOgO+5nzBWYwE3W90sBgLJoUPRWWcL8wlyiM8IB8ipJz3UMJ9KXQd1RKQXpKp8Tutn80HZtWsu2u76w==
   dependencies:
     defer-to-connect "^2.0.0"
+
+"@timfish/forge-externals-plugin@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@timfish/forge-externals-plugin/-/forge-externals-plugin-0.2.1.tgz#ed5d2521440e307080ba7e49257171481813cdb1"
+  integrity sha512-80TVZM4n/8x2zxT+SowyHJEzzQR0KLfmZpHg5UX2JnwR1WRa1h03Y7TUvV7PYD4P9/h3r+LcBZy6a7EsDwMtPg==
+  dependencies:
+    flora-colossus "1.0.1"
 
 "@tokenizer/token@^0.3.0":
   version "0.3.0"

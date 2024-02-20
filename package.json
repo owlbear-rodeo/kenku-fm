@@ -28,7 +28,7 @@
     "@electron-forge/maker-zip": "6.4.2",
     "@electron-forge/plugin-webpack": "6.4.2",
     "@electron-forge/publisher-github": "6.4.2",
-    "@owlbear-rodeo/forge-externals-plugin": "^0.1.3",
+    "@timfish/forge-externals-plugin": "^0.2.1",
     "@types/audioworklet": "^0.0.23",
     "@types/dom-mediacapture-record": "^1.0.11",
     "@types/howler": "^2.2.11",

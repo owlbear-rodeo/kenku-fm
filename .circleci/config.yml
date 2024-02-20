@@ -193,7 +193,7 @@ jobs:
           name: Widevine Signature
           command: |
             python3 -m castlabs_evs.account -n reauth -A "$CASTLABS_ACCOUNT_NAME" -P "$CASTLABS_ACCOUNT_PASSWORD"
-            python3 -m castlabs_evs.vmp sign-pkg "$KENKU_FM_MAC_PATH"
+            python3 -m castlabs_evs.vmp sign-pkg "$KENKU_FM_MAC_PATH" -f
       - run:
           name: Import Apple Security Keychain
           command: |

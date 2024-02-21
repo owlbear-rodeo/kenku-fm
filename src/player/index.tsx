@@ -1,5 +1,5 @@
 import React from "react";
-import { render } from "react-dom";
+import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import CssBaseline from "@mui/material/CssBaseline";
 import ThemeProvider from "@mui/material/styles/ThemeProvider";
@@ -15,7 +15,10 @@ import { MemoryRouter } from "react-router-dom";
 
 import "./index.css";
 
-render(
+const container = document.getElementById("root");
+const root = createRoot(container);
+
+root.render(
   <Provider store={store}>
     <PersistGate
       loading={
@@ -32,6 +35,5 @@ render(
         </MemoryRouter>
       </ThemeProvider>
     </PersistGate>
-  </Provider>,
-  document.getElementById("root")
+  </Provider>
 );

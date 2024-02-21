@@ -1,5 +1,5 @@
 import React from "react";
-import { render } from "react-dom";
+import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";
 import CssBaseline from "@mui/material/CssBaseline";
 import ThemeProvider from "@mui/material/styles/ThemeProvider";
@@ -12,7 +12,10 @@ import { theme } from "./app/theme";
 import { store, persistor } from "./app/store";
 import ErrorBoundary from "./common/ErrorBoundary";
 
-render(
+const container = document.getElementById("root");
+const root = createRoot(container);
+
+root.render(
   <ThemeProvider theme={theme}>
     <ErrorBoundary>
       <Provider store={store}>
@@ -29,6 +32,5 @@ render(
         </PersistGate>
       </Provider>
     </ErrorBoundary>
-  </ThemeProvider>,
-  document.getElementById("root")
+  </ThemeProvider>
 );

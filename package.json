@@ -42,7 +42,7 @@
     "@typescript-eslint/parser": "^4.0.1",
     "@vercel/webpack-asset-relocator-loader": "1.7.0",
     "css-loader": "^6.6.0",
-    "electron": "https://github.com/castlabs/electron-releases#v26.1.0+wvcus",
+    "electron": "https://github.com/castlabs/electron-releases#v28.2.3+wvcus",
     "electron-installer-dmg": "^4.0.0",
     "electron-osx-sign": "0.6.0",
     "eslint": "^7.6.0",

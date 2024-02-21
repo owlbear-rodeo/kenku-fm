@@ -47,7 +47,7 @@
     "electron-osx-sign": "0.6.0",
     "eslint": "^7.6.0",
     "eslint-plugin-import": "^2.25.4",
-    "fork-ts-checker-webpack-plugin": "^7.2.1",
+    "fork-ts-checker-webpack-plugin": "^9.0.2",
     "node-loader": "^2.0.0",
     "style-loader": "^3.3.4",
     "ts-loader": "^9.5.1",

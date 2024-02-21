@@ -70,13 +70,7 @@ jobs:
             sudo apt-get update -y
             sudo apt-get install -y dpkg fakeroot rpm
       - checkout
-      - restore_cache:
-          key: dependency-cache-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
       - install-dependencies
-      - save_cache:
-          key: dependency-cache-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
       - get-images
       - move-images
       - publish-electron-app
@@ -109,13 +103,7 @@ jobs:
       - run:
           name: Install Yarn
           command: npm install -g yarn
-      - restore_cache:
-          key: dependency-cache-win-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
       - install-dependencies
-      - save_cache:
-          key: dependency-cache-win-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
       - run:
           name: Get Images
           shell: bash.exe
@@ -179,13 +167,7 @@ jobs:
           name: Install Widevine Python Module
           command: python3 -m pip install --upgrade castlabs-evs
       - checkout
-      - restore_cache:
-          key: dependency-cache-macos-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
       - install-dependencies
-      - save_cache:
-          key: dependency-cache-macos-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
       - get-images
       - move-images
       - yarn-make

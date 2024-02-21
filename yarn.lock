@@ -966,10 +966,10 @@
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-2.0.0.tgz#f544a148d3ab35801c1f633a7441fd87c2e484bf"
   integrity sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==
 
-"@types/audioworklet@^0.0.23":
-  version "0.0.23"
-  resolved "https://registry.yarnpkg.com/@types/audioworklet/-/audioworklet-0.0.23.tgz#d0b2e3316ae40591f24cba4daf7eecb6b9e4792f"
-  integrity sha512-Qpt9M3s3wUiHHKO7pJeQScsNEPV8gjf07c0RdYtH3ghPe465Zhh1fXbeYdiWf0EhOd2VxM/2bkp69na6bJoYFQ==
+"@types/audioworklet@^0.0.54":
+  version "0.0.54"
+  resolved "https://registry.yarnpkg.com/@types/audioworklet/-/audioworklet-0.0.54.tgz#235da3a96026f1aae375b410ace98db6678765e3"
+  integrity sha512-WR1XcwT2LhCaUiKDDgHdTjrVjoBZnTz6FhszeIKgY9i2UYfIRKtnNvqToUDnbCPXBpVuu4Qo5+mMJt+wDphRew==
 
 "@types/body-parser@*":
   version "1.19.2"
@@ -1011,10 +1011,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/dom-mediacapture-record@^1.0.11":
-  version "1.0.11"
-  resolved "https://registry.yarnpkg.com/@types/dom-mediacapture-record/-/dom-mediacapture-record-1.0.11.tgz#f61b17e6131d76629d4039b02634c7e786b82c3a"
-  integrity sha512-ODVOH95x08arZhbQOjH3no7Iye64akdO+55nM+IGtTzpu2ACKr9CQTrI//CCVieIjlI/eL+rK1hQjMycxIgylQ==
+"@types/dom-mediacapture-record@^1.0.19":
+  version "1.0.19"
+  resolved "https://registry.yarnpkg.com/@types/dom-mediacapture-record/-/dom-mediacapture-record-1.0.19.tgz#27ade00734877fc83323b9b0550f259b08903841"
+  integrity sha512-Cz/85z3YTuUPnXrOp5MvSZZSgDkWTWvj1HgE7MWc5C8d/w/soJBXjnAoYDl4P5gmenDNNZkhXzNylGqxS1FzOw==
 
 "@types/eslint-scope@^3.7.3":
   version "3.7.3"
@@ -1115,10 +1115,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/lodash.throttle@^4.1.7":
-  version "4.1.7"
-  resolved "https://registry.yarnpkg.com/@types/lodash.throttle/-/lodash.throttle-4.1.7.tgz#4ef379eb4f778068022310ef166625f420b6ba58"
-  integrity sha512-znwGDpjCHQ4FpLLx19w4OXDqq8+OvREa05H89obtSyXyOFKL3dDjCslsmfBz0T2FU8dmf5Wx1QvogbINiGIu9g==
+"@types/lodash.throttle@^4.1.9":
+  version "4.1.9"
+  resolved "https://registry.yarnpkg.com/@types/lodash.throttle/-/lodash.throttle-4.1.9.tgz#f17a6ae084f7c0117bd7df145b379537bc9615c5"
+  integrity sha512-PCPVfpfueguWZQB7pJQK890F2scYKoDUL3iM522AptHWn7d5NQmeS/LTEHIcLr5PaTzl3dK2Z0xSUHHTHwaL5g==
   dependencies:
     "@types/lodash" "*"
 
@@ -1137,10 +1137,12 @@
   resolved "https://registry.yarnpkg.com/@types/minimatch/-/minimatch-3.0.5.tgz#1001cc5e6a3704b83c236027e77f2f58ea010f40"
   integrity sha512-Klz949h02Gz2uZCMGwDUSDS1YBlTdDDgbWHi+81l29tQALUtvz4rAYi5uoVhE5Lagoq6DeqAUlbrHvW/mXDgdQ==
 
-"@types/node-osc@^6.0.0":
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/@types/node-osc/-/node-osc-6.0.0.tgz#6d22d0b94bf632c13fc6c4886de3518079b825e7"
-  integrity sha512-25DwJOFe1KueUZz2oIURT3qCMQ28Jdvy9JqGz8d0mKM1Mlx0agHD9N3S0hMKajVCjw7TGtf3gGjbl5gDCFfIWQ==
+"@types/node-osc@^6.0.3":
+  version "6.0.3"
+  resolved "https://registry.yarnpkg.com/@types/node-osc/-/node-osc-6.0.3.tgz#236718a39d5a4fd0cb9c8268f33fb139a805c2ce"
+  integrity sha512-f0JUTDVAlk/mV9RH6jE6g/8Y7l+Mvi3f1x7xv0RG3VI1PktaXEd60mR+4plpMS9VbRovFoPsS7qaaIDhFXdaEw==
+  dependencies:
+    "@types/node" "*"
 
 "@types/node@*":
   version "17.0.19"

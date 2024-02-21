@@ -63,7 +63,7 @@
     "@mui/material": "^5.15.10",
     "@owlbear-rodeo/page-icon": "^0.6.0",
     "@reduxjs/toolkit": "^2.2.1",
-    "@sinclair/typebox": "^0.23.4",
+    "@sinclair/typebox": "^0.32.14",
     "case": "^1.6.3",
     "electron-log": "^5.1.1",
     "electron-squirrel-startup": "^1.0.0",

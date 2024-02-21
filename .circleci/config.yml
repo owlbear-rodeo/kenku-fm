@@ -12,7 +12,7 @@ commands:
   install-npm:
     steps:
       - node/install:
-          node-version: "16.13.2"
+          node-version: "18.19.0"
       - node/install-yarn:
           version: "1.22.5"
   
@@ -61,8 +61,6 @@ jobs:
             sudo apt-get update -y
             sudo apt-get install -y dpkg fakeroot rpm
       - checkout
-      - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
       - install-dependencies
       - get-images
       - move-images

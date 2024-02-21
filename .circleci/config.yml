@@ -1,8 +1,8 @@
 version: 2.1
 
 orbs:
-  node: circleci/node@5.0.0
-  win: circleci/windows@2.4.1
+  node: circleci/node@5.2.0
+  win: circleci/windows@4.1.1
 
 executors:
   linux-amd:
@@ -11,12 +11,12 @@ executors:
 
   mac-amd:
     macos:
-      xcode: 13.4.1
+      xcode: 14.3.1
     resource_class: macos.x86.medium.gen2
 
   mac-arm:
     macos:
-      xcode: 13.4.1
+      xcode: 14.3.1
     resource_class: macos.m1.large.gen1
 
 commands:
@@ -24,7 +24,7 @@ commands:
     steps:
       - node/install:
           install-yarn: true
-          node-version: "16.13.2"
+          node-version: "18.19.0"
   
   install-dependencies:
     steps:
@@ -70,13 +70,7 @@ jobs:
             sudo apt-get update -y
             sudo apt-get install -y dpkg fakeroot rpm
       - checkout
-      - restore_cache:
-          key: dependency-cache-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
       - install-dependencies
-      - save_cache:
-          key: dependency-cache-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
       - get-images
       - move-images
       - publish-electron-app
@@ -91,7 +85,7 @@ jobs:
       - run:
           name: Install Python
           command: |
-            choco install python --version=3.7.9
+            choco install python --version=3.11.8
             python -m pip install --upgrade pip
       - run:
           name: Install Widevine Python Module
@@ -102,20 +96,14 @@ jobs:
       - run:
           name: Install Node
           command: |
-            nvm install 16.13.2
-            nvm use 16.13.2
-            nvm alias default 16.13.2
+            nvm install 18.19.0
+            nvm use 18.19.0
+            nvm alias default 18.19.0
             echo 'nvm use default &>/dev/null' >> $BASH_ENV
       - run:
           name: Install Yarn
           command: npm install -g yarn
-      - restore_cache:
-          key: dependency-cache-win-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
       - install-dependencies
-      - save_cache:
-          key: dependency-cache-win-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
       - run:
           name: Get Images
           shell: bash.exe
@@ -136,8 +124,8 @@ jobs:
             $CERT = "${DIR}\certificate.pfx"
             $CERT_PASSWORD = $(echo $env:WINDOWS_CERT_PWD | openssl base64 -A -d)
 
-            C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\kenku-fm.exe"
-            C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\Squirrel.exe"
+            C:\"Program Files (x86)"\"Windows Kits"\10\"App Certification Kit"\signtool.exe sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\kenku-fm.exe"
+            C:\"Program Files (x86)"\"Windows Kits"\10\"App Certification Kit"\signtool.exe sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\Squirrel.exe"
       - run:
           name: Widevine Signature
           command: |
@@ -179,13 +167,7 @@ jobs:
           name: Install Widevine Python Module
           command: python3 -m pip install --upgrade castlabs-evs
       - checkout
-      - restore_cache:
-          key: dependency-cache-macos-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
       - install-dependencies
-      - save_cache:
-          key: dependency-cache-macos-{{ .Environment.CACHE_VERSION }}-{{ checksum "package.json" }}
-          paths:
-            - ./node_modules
       - get-images
       - move-images
       - yarn-make
@@ -193,7 +175,7 @@ jobs:
           name: Widevine Signature
           command: |
             python3 -m castlabs_evs.account -n reauth -A "$CASTLABS_ACCOUNT_NAME" -P "$CASTLABS_ACCOUNT_PASSWORD"
-            python3 -m castlabs_evs.vmp sign-pkg "$KENKU_FM_MAC_PATH"
+            python3 -m castlabs_evs.vmp sign-pkg "$KENKU_FM_MAC_PATH" -f
       - run:
           name: Import Apple Security Keychain
           command: |

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { Howl } from "howler";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, useStore } from "react-redux";
 import { RootState } from "../../app/store";
 import {
   playPause,
@@ -11,14 +11,13 @@ import {
   stopTrack,
 } from "./playlistPlaybackSlice";
 import { Track } from "./playlistsSlice";
-import { useStore } from "react-redux";
 
 export function usePlaylistPlayback(onError: (message: string) => void) {
   const trackRef = useRef<Howl | null>(null);
   const animationRef = useRef<number | null>(null);
 
   const playlists = useSelector((state: RootState) => state.playlists);
-  const store = useStore();
+  const store = useStore<RootState>();
   const muted = useSelector((state: RootState) => state.playlistPlayback.muted);
   const repeat = useSelector(
     (state: RootState) => state.playlistPlayback.repeat

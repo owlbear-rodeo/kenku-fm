@@ -25,13 +25,15 @@ import { Sound } from "../soundboards/soundboardsSlice";
 import { PlaylistAdd } from "../playlists/PlaylistAdd";
 import { SoundboardAdd } from "../soundboards/SoundboardAdd";
 
-const PlaylistsLink = React.forwardRef<any, Omit<RouterLinkProps, "to">>(
-  (props, ref) => <RouterLink ref={ref} to="/playlists" {...props} />
-);
+const PlaylistsLink = React.forwardRef<
+  HTMLAnchorElement,
+  Omit<RouterLinkProps, "to">
+>((props, ref) => <RouterLink ref={ref} to="/playlists" {...props} />);
 
-const SoundboardsLink = React.forwardRef<any, Omit<RouterLinkProps, "to">>(
-  (props, ref) => <RouterLink ref={ref} to="/soundboards" {...props} />
-);
+const SoundboardsLink = React.forwardRef<
+  HTMLAnchorElement,
+  Omit<RouterLinkProps, "to">
+>((props, ref) => <RouterLink ref={ref} to="/soundboards" {...props} />);
 
 type HomeProps = {
   onPlayTrack: (track: Track) => void;
@@ -117,12 +119,7 @@ export function Home({ onPlayTrack, onPlaySound }: HomeProps) {
               </IconButton>
             </Tooltip>
             <Box sx={{ flexGrow: 1 }} />
-            <Link
-              href="#"
-              color="inherit"
-              underline="hover"
-              component={SoundboardsLink}
-            >
+            <Link color="inherit" underline="hover" component={SoundboardsLink}>
               See All
             </Link>
           </Stack>

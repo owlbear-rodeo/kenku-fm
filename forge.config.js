@@ -90,7 +90,7 @@ const config = {
       },
     },
     {
-      name: "@owlbear-rodeo/forge-externals-plugin",
+      name: "@timfish/forge-externals-plugin",
       config: {
         externals: [
           "opusscript",

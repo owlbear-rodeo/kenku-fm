@@ -62,7 +62,7 @@
     "@mui/icons-material": "^5.4.2",
     "@mui/material": "^5.4.3",
     "@owlbear-rodeo/page-icon": "^0.6.0",
-    "@reduxjs/toolkit": "^1.7.2",
+    "@reduxjs/toolkit": "^2.2.1",
     "@sinclair/typebox": "^0.23.4",
     "case": "^1.6.3",
     "electron-log": "^5.1.1",

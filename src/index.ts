@@ -19,6 +19,7 @@ declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
+let window: BrowserWindow | null = null;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -72,6 +73,7 @@ const createWindow = (): BrowserWindow => {
 
   mainWindow.on("close", () => {
     session.destroy();
+    window = null;
     powerSaveBlocker.stop(powerSaveBlockerId);
   });
 
@@ -98,7 +100,6 @@ if (!hasSingleInstanceLock) {
   // Workaround to allow for webpack support with widevine
   // https://github.com/castlabs/electron-releases/issues/116
   const widevine = components;
-  let window: BrowserWindow | null = null;
 
   // This method will be called when Electron has finished
   // initialization and is ready to create browser windows.
@@ -135,7 +136,7 @@ if (!hasSingleInstanceLock) {
     // On OS X it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+      window = createWindow();
     }
   });
 

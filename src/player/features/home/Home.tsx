@@ -117,12 +117,7 @@ export function Home({ onPlayTrack, onPlaySound }: HomeProps) {
               </IconButton>
             </Tooltip>
             <Box sx={{ flexGrow: 1 }} />
-            <Link
-              href="#"
-              color="inherit"
-              underline="hover"
-              component={SoundboardsLink}
-            >
+            <Link color="inherit" underline="hover" component={SoundboardsLink}>
               See All
             </Link>
           </Stack>

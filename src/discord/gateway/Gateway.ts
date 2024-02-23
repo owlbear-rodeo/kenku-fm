@@ -106,18 +106,22 @@ export class Gateway extends TypedEmitter<GatewayEvents> {
     this.socket.on("event", this.handleSocketEvent);
   }
 
-  debounceGetGuildsAndVoiceChannels = debounce(() => {
-    getGuildsAndVoiceChannels(this.token, this.user.id)
-      .then((guilds) => {
-        guilds.map((guild) => {
-          this.guilds.set(guild.id, guild);
+  debounceGetGuildsAndVoiceChannels = debounce(
+    () => {
+      getGuildsAndVoiceChannels(this.token, this.user.id)
+        .then((guilds) => {
+          guilds.map((guild) => {
+            this.guilds.set(guild.id, guild);
+          });
+          this.emit("guilds", [...this.guilds.values()]);
+        })
+        .catch((e) => {
+          this.emit("error", e);
         });
-        this.emit("guilds", [...this.guilds.values()]);
-      })
-      .catch((e) => {
-        this.emit("error", e);
-      });
-  }, 1200);
+    },
+    1200,
+    { leading: true, trailing: true }
+  );
 
   /** Manually disconnect the gateway with code `GatewayCloseCode.NormalClosure` */
   disconnect() {

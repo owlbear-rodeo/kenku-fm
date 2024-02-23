@@ -13,6 +13,11 @@ import {
 } from "./GatewayEvent";
 import { INTENTS } from "../constants";
 import { reconnectAfterMs } from "../../backoff";
+import {
+  VoiceGuild,
+  getGuildsAndVoiceChannels,
+} from "../http/getGuildsAndVoiceChannels";
+import debounce from "lodash.debounce";
 
 export enum GatewayConnectionState {
   Disconnected,
@@ -24,6 +29,7 @@ export interface GatewayEvents {
   error: (error: Error) => void;
   state: (state: GatewayConnectionState) => void;
   event: (event: GatewayEvent) => void;
+  guilds: (guilds: VoiceGuild[]) => void;
 }
 
 /**
@@ -38,7 +44,9 @@ export class Gateway extends TypedEmitter<GatewayEvents> {
   private sequence: number | null;
   private sessionId?: string;
   private resumeGatewayURL?: string;
+  private guilds: Map<string, VoiceGuild> = new Map();
   private _connectionState: GatewayConnectionState;
+
   get connectionState() {
     return this._connectionState;
   }
@@ -97,6 +105,19 @@ export class Gateway extends TypedEmitter<GatewayEvents> {
     this.socket.on("close", this.handleSocketClose);
     this.socket.on("event", this.handleSocketEvent);
   }
+
+  debounceGetGuildsAndVoiceChannels = debounce(() => {
+    getGuildsAndVoiceChannels(this.token, this.user.id)
+      .then((guilds) => {
+        guilds.map((guild) => {
+          this.guilds.set(guild.id, guild);
+        });
+        this.emit("guilds", [...this.guilds.values()]);
+      })
+      .catch((e) => {
+        this.emit("error", e);
+      });
+  }, 1200);
 
   /** Manually disconnect the gateway with code `GatewayCloseCode.NormalClosure` */
   disconnect() {
@@ -187,6 +208,11 @@ export class Gateway extends TypedEmitter<GatewayEvents> {
         this.connectionState = GatewayConnectionState.Ready;
       } else if (event.t === "RESUMED") {
         this.connectionState = GatewayConnectionState.Ready;
+      } else if (event.t === "GUILD_CREATE") {
+        this.debounceGetGuildsAndVoiceChannels();
+      } else if (event.t === "GUILD_DELETE") {
+        this.guilds.delete(event.d.id);
+        this.emit("guilds", [...this.guilds.values()]);
       }
     } else if (event.op === OpCode.Reconnect) {
       this.connect();

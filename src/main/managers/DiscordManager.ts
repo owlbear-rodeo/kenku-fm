@@ -3,7 +3,6 @@ import log from "electron-log/main";
 import { AudioCaptureManagerMain } from "./AudioCaptureManagerMain";
 import { Gateway, GatewayConnectionState } from "../../discord/gateway/Gateway";
 import { VoiceConnection } from "../../discord/voice/VoiceConnection";
-import { getGuildsAndVoiceChannels } from "../../discord/http/getGuildsAndVoiceChannels";
 
 export class DiscordManager {
   private gateway?: Gateway;
@@ -63,7 +62,6 @@ export class DiscordManager {
 
     try {
       this.gateway = new Gateway(token);
-
       this.gateway.on("error", handleError);
 
       // Keep track of ready state to avoid fetching guilds multiple times
@@ -75,12 +73,7 @@ export class DiscordManager {
           try {
             if (!ready) {
               log.debug("discord manager ready");
-              const guilds = await getGuildsAndVoiceChannels(
-                token,
-                this.gateway?.user?.id
-              );
               event.reply("DISCORD_READY");
-              event.reply("DISCORD_GUILDS", guilds);
             }
             if (!connected) {
               event.reply("MESSAGE", "Connected");
@@ -96,6 +89,11 @@ export class DiscordManager {
           }
           connected = false;
         }
+      });
+
+      this.gateway.on("guilds", (guilds) => {
+        log.debug("setting discord guilds", guilds);
+        event.reply("DISCORD_GUILDS", guilds);
       });
 
       log.debug("discord manager connecting");

@@ -14,7 +14,7 @@ interface VoiceChannel {
 }
 
 /** Simplified guild to just the data Kenku needs */
-interface VoiceGuild {
+export interface VoiceGuild {
   id: string;
   name: string;
   icon: string;

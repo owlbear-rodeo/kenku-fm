@@ -6,7 +6,7 @@ orbs:
 executors:
   linux-arm:
     machine:
-      image: ubuntu-2204:current
+      image: ubuntu-2004:202101-01
 
 commands:
   install-npm:

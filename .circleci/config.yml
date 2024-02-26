@@ -24,7 +24,7 @@ commands:
     steps:
       - node/install:
           install-yarn: true
-          node-version: "18.19.0"
+          node-version: "20.9.0"
   
   install-dependencies:
     steps:
@@ -96,9 +96,9 @@ jobs:
       - run:
           name: Install Node
           command: |
-            nvm install 18.19.0
-            nvm use 18.19.0
-            nvm alias default 18.19.0
+            nvm install 20.9.0
+            nvm use 20.9.0
+            nvm alias default 20.9.0
             echo 'nvm use default &>/dev/null' >> $BASH_ENV
       - run:
           name: Install Yarn

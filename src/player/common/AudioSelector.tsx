@@ -50,6 +50,7 @@ export function AudioSelector({
       "audio/*": [],
     },
     multiple: false,
+    useFsAccessApi: false,
   });
 
   const warning =

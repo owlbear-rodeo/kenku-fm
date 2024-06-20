@@ -1,7 +1,7 @@
 {
   "name": "kenku-fm",
   "productName": "Kenku FM",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Online tabletop audio sharing for Discord",
   "main": "./.webpack/main",
   "scripts": {
@@ -43,7 +43,7 @@
     "@typescript-eslint/parser": "^7.0.2",
     "@vercel/webpack-asset-relocator-loader": "^1.7.3",
     "css-loader": "^6.6.0",
-    "electron": "https://github.com/castlabs/electron-releases#v28.2.3+wvcus",
+    "electron": "https://github.com/castlabs/electron-releases#v29.0.1+wvcus",
     "electron-installer-dmg": "^4.0.0",
     "electron-osx-sign": "0.6.0",
     "eslint": "^7.6.0",

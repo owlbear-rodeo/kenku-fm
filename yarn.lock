@@ -1268,6 +1268,13 @@
   dependencies:
     undici-types "~5.26.4"
 
+"@types/node@^20.9.0":
+  version "20.11.20"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.11.20.tgz#f0a2aee575215149a62784210ad88b3a34843659"
+  integrity sha512-7/rR21OS+fq8IyHTgtLkDK949uzsa6n8BkziAKtPVpugIkO6D+/ooXMvzXxDnZrmtXVfjb1bKQafYpb8s89LOg==
+  dependencies:
+    undici-types "~5.26.4"
+
 "@types/parse-json@^4.0.0":
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@types/parse-json/-/parse-json-4.0.0.tgz#2f8bb441434d163b35fb8ffdccd7138927ffb8c0"
@@ -3117,6 +3124,14 @@ electron-winstaller@^5.0.0:
   dependencies:
     "@electron/get" "^2.0.0"
     "@types/node" "^18.11.18"
+    extract-zip "^2.0.1"
+
+"electron@https://github.com/castlabs/electron-releases#v29.0.1+wvcus":
+  version "29.0.1"
+  resolved "https://github.com/castlabs/electron-releases#2ac0b0e47c98b763b5760a6d15eb60bb74db4ef2"
+  dependencies:
+    "@electron/get" "^2.0.0"
+    "@types/node" "^20.9.0"
     extract-zip "^2.0.1"
 
 emoji-regex@^8.0.0:

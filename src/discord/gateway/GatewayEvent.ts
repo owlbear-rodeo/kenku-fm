@@ -2,6 +2,7 @@ import { VoiceState } from "../voice/VoiceState";
 import { BaseGuild, FullGuild, UnavailableGuild } from "../types/Guild";
 import { Snowflake } from "../types/Snowflake";
 import { User } from "../types/User";
+import { Channel } from "../types/Channel";
 
 /**
  * @link https://discord.com/developers/docs/topics/opcodes-and-status-codes#gateway-gateway-opcodes
@@ -86,6 +87,22 @@ export interface GuildUpdateEvent extends DispatchEvent {
 export interface GuildDeleteEvent extends DispatchEvent {
   t: "GUILD_DELETE";
   d: UnavailableGuild;
+}
+
+/**
+ * @link https://discord.com/developers/docs/topics/gateway-events#guild-update
+ */
+export interface ChannelCreateEvent extends DispatchEvent {
+  t: "CHANNEL_CREATE";
+  d: Channel;
+}
+
+/**
+ * @link https://discord.com/developers/docs/topics/gateway-events#guild-update
+ */
+export interface ChannelDeleteEvent extends DispatchEvent {
+  t: "CHANNEL_DELETE";
+  d: Channel;
 }
 
 /**
@@ -254,4 +271,6 @@ export type GatewayEvent =
   | HeartbeatAckEvent
   | ReconnectEvent
   | ResumeEvent
-  | InvalidSessionEvent;
+  | InvalidSessionEvent
+  | ChannelCreateEvent
+  | ChannelDeleteEvent;

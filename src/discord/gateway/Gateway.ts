@@ -212,11 +212,38 @@ export class Gateway extends TypedEmitter<GatewayEvents> {
         this.connectionState = GatewayConnectionState.Ready;
       } else if (event.t === "RESUMED") {
         this.connectionState = GatewayConnectionState.Ready;
+        this.debounceGetGuildsAndVoiceChannels();
       } else if (event.t === "GUILD_CREATE") {
+        log.debug("guild create event", event);
         this.debounceGetGuildsAndVoiceChannels();
       } else if (event.t === "GUILD_DELETE") {
         this.guilds.delete(event.d.id);
         this.emit("guilds", [...this.guilds.values()]);
+      } else if (event.t === "CHANNEL_CREATE") {
+        log.debug("channel create event", event);
+        if (event.d.bitrate) {
+          this.debounceGetGuildsAndVoiceChannels();
+        }
+      } else if (event.t === "CHANNEL_DELETE") {
+        log.debug("channel delete event", event);
+        if (event.d.bitrate) {
+          this.guilds.delete(event.d.id);
+          this.debounceGetGuildsAndVoiceChannels();
+        }
+      } else if (event.t === "VOICE_STATE_UPDATE") {
+        // this event is triggered when a user joins or leaves the voice channel
+        log.debug("voice state update", JSON.stringify(event, null, 2));
+        if (event.d.user_id === this.user.id) {
+          log.info("kenku fm bot has joined the channel");
+        }
+      } else if (event.t === "GUILD_UPDATE") {
+        // this event is triggered when server settings are changed
+        log.debug("guild update", event);
+      } else if (event.t === "VOICE_SERVER_UPDATE") {
+        // this event is triggered when the first user joins the channel
+        log.debug("voice server update", event);
+      } else {
+        log.debug("unhandled event", JSON.stringify(event, null, 2));
       }
     } else if (event.op === OpCode.Reconnect) {
       this.connect();

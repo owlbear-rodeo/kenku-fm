@@ -39,7 +39,7 @@ export class DiscordManager {
   ) => {
     if (!token) {
       event.reply("DISCORD_DISCONNECTED");
-      event.reply("ERROR", "Error connecting to bot: Invalid token");
+      event.reply("ERROR", "Error connecting to bot: Token not found");
       return;
     }
 
@@ -61,7 +61,8 @@ export class DiscordManager {
     }
 
     try {
-      this.gateway = new Gateway(token);
+      const sanitisedToken = token.trim();
+      this.gateway = new Gateway(sanitisedToken);
       this.gateway.on("error", handleError);
 
       // Keep track of ready state to avoid fetching guilds multiple times

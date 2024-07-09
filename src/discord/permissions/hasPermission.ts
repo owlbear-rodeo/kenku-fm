@@ -12,6 +12,22 @@ enum Value {
   Deny,
 }
 
+export function checkChannelPermission(
+  member: GuildMember,
+  channel: Channel,
+  incoming: string,
+  permission: Permission
+) {
+  const guildPermission = checkPermission(incoming, permission);
+  const channelPermission = hasChannelPermission(member, channel, permission);
+
+  if (channelPermission === Value.Unset) {
+    return guildPermission;
+  } else {
+    return channelPermission === Value.Allow;
+  }
+}
+
 /**
  * Check a guild members permission taking into account
  * base permissions and channel overwrites

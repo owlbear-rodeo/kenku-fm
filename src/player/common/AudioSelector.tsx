@@ -48,6 +48,7 @@ export function AudioSelector({
     onDrop,
     accept: { "audio/*": [] },
     multiple: false,
+    useFsAccessApi: false,
   });
 
   const warning =

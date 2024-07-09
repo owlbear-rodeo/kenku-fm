@@ -47,6 +47,7 @@ export function ImageSelector({ value, onChange }: ImageSelectorProps) {
     onDrop,
     accept: { "image/*": [] },
     multiple: false,
+    useFsAccessApi: false,
   });
 
   function handleURLChange(event: React.ChangeEvent<HTMLInputElement>) {

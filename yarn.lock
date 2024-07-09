@@ -2944,9 +2944,9 @@ electron-winstaller@^5.0.0:
     lodash.template "^4.2.2"
     temp "^0.9.0"
 
-"electron@https://github.com/castlabs/electron-releases#v28.2.3+wvcus":
-  version "28.2.3"
-  resolved "https://github.com/castlabs/electron-releases#be8353e75c7c2e8908a5a3746469a7e79f570c97"
+"electron@https://github.com/castlabs/electron-releases#v28.3.3+wvcu":
+  version "28.3.3"
+  resolved "https://github.com/castlabs/electron-releases#b317825cfcc3a046d150496a06cf5c8ee6dbb678"
   dependencies:
     "@electron/get" "^2.0.0"
     "@types/node" "^18.11.18"

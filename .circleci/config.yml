@@ -77,7 +77,7 @@ jobs:
       - run: 
           name: Install Rust Version
           command: |
-            rustup install 1.68.0
+            rustup install 1.79.0
       - run: 
           name: Install CMake
           command: sudo apt-get install cmake -y

@@ -1,16 +1,16 @@
-import React, { useEffect, useRef, useState } from "react";
 import List from "@mui/material/List";
+import React, { useEffect, useRef, useState } from "react";
 
 import {
-  DndContext,
   closestCenter,
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
-  DragStartEvent,
-  DragOverlay,
 } from "@dnd-kit/core";
 import {
   horizontalListSortingStrategy,
@@ -18,15 +18,15 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
 import { moveTab, Tab } from "./tabsSlice";
 
-import { TabItem } from "./TabItem";
-import { PlayerTab } from "../player/PlayerTab";
-import { AddTabButton } from "./AddTabButton";
 import { SortableItem } from "../../common/SortableItem";
 import { WindowControls } from "../../common/WindowControls";
+import { PlayerTab } from "../player/PlayerTab";
+import { AddTabButton } from "./AddTabButton";
+import { TabItem } from "./TabItem";
 
 export function TabBar() {
   const dispatch = useDispatch();

@@ -1,22 +1,23 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
-import connectionReducer from "../features/connection/connectionSlice";
-import outputReducer from "../features/output/outputSlice";
-import settingsReducer from "../features/settings/settingsSlice";
 import bookmarksReducer from "../features/bookmarks/bookmarksSlice";
-import tabsReducer from "../features/tabs/tabsSlice";
-import playerReducer from "../features/player/playerSlice";
+import connectionReducer from "../features/connection/connectionSlice";
 import inputReducer from "../features/input/inputSlice";
+import menuReducer from "../features/menu/menuSlice";
+import outputReducer from "../features/output/outputSlice";
+import playerReducer from "../features/player/playerSlice";
+import settingsReducer from "../features/settings/settingsSlice";
+import tabsReducer from "../features/tabs/tabsSlice";
 
 import {
-  persistStore,
-  persistReducer,
   createMigrate,
   FLUSH,
-  REHYDRATE,
   PAUSE,
   PERSIST,
+  persistReducer,
+  persistStore,
   PURGE,
   REGISTER,
+  REHYDRATE,
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 
@@ -28,6 +29,7 @@ const rootReducer = combineReducers({
   tabs: tabsReducer,
   player: playerReducer,
   input: inputReducer,
+  menu: menuReducer,
 });
 
 const migrations: any = {

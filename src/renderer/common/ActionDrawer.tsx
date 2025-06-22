@@ -1,34 +1,40 @@
-import React, { useRef, useState } from "react";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import SettingsIcon from "@mui/icons-material/SettingsRounded";
+import { Link, Stack, Toolbar, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
-import SettingsIcon from "@mui/icons-material/SettingsRounded";
-import { Toolbar, Stack, Typography, Link } from "@mui/material";
-import { OutputListItems } from "../features/output/OutputListItems";
-import { InputListItems } from "../features/input/InputListItems";
+import React, { useRef, useState } from "react";
 import { BookmarkListItems } from "../features/bookmarks/BookmarkListItems";
+import { InputListItems } from "../features/input/InputListItems";
+import { OutputListItems } from "../features/output/OutputListItems";
 import { Settings } from "../features/settings/Settings";
 
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../app/store";
-import { useSelector } from "react-redux";
 
-import icon from "../../assets/icon.svg";
+import { setMenuState } from "../features/menu/menuSlice";
 import { useHideScrollbar } from "./useHideScrollbar";
 
 export const drawerWidth = 240;
 
 export function ActionDrawer() {
+  const dispatch = useDispatch();
   const settings = useSelector((state: RootState) => state.settings);
   const connection = useSelector((state: RootState) => state.connection);
+  const menu = useSelector((state: RootState) => state.menu);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const hideScrollbar = useHideScrollbar(scrollRef);
 
   return (
-    <Box component="nav" sx={{ width: drawerWidth, flexShrink: 0 }}>
+    <Box
+      component="nav"
+      sx={{ width: menu.menuOpen ? drawerWidth : 0, flexShrink: 0 }}
+    >
       <Drawer
-        variant="permanent"
+        variant="persistent"
         sx={{
           "& .MuiDrawer-paper": {
             boxSizing: "border-box",
@@ -38,7 +44,7 @@ export function ActionDrawer() {
             overflowY: "initial",
           },
         }}
-        open
+        open={menu.menuOpen}
       >
         <Toolbar
           sx={{
@@ -56,9 +62,12 @@ export function ActionDrawer() {
           }
         >
           {window.kenku.platform === "win32" && (
-            <Box sx={{ width: "36px", height: "36px", m: 1 }}>
-              <img src={icon} />
-            </Box>
+            <IconButton
+              onClick={() => dispatch(setMenuState("closed"))}
+              sx={{ WebkitAppRegion: "no-drag" }}
+            >
+              <ChevronLeftIcon />
+            </IconButton>
           )}
           <IconButton
             onClick={() => setSettingsOpen(true)}

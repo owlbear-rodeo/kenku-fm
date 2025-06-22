@@ -44,7 +44,7 @@ const config = {
       name: "@electron-forge/publisher-github",
       config: {
         repository: {
-          owner: "owlbear-rodeo",
+          owner: "fronix",
           name: "kenku-fm",
         },
         prerelease: false,

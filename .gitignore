@@ -95,3 +95,6 @@ dist/
 native_modules/
 
 severus/
+
+.yarnrc.yml
+.yarn/

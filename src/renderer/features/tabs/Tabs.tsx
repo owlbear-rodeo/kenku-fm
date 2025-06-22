@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo } from "react";
 import Stack from "@mui/material/Stack";
+import React, { useEffect, useMemo } from "react";
 
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import { useSelector, useDispatch } from "react-redux";
 import {
   addTab,
   decreaseTabPlayingMedia,
@@ -12,19 +12,23 @@ import {
   selectTab,
 } from "./tabsSlice";
 
-import { URLBar } from "./URLBar";
-import { TabBar } from "./TabBar";
-import { getBounds } from "./getBounds";
+import { IconButton } from "@mui/material";
+import icon from "../../../assets/icon.svg";
+import { setMenuState } from "../menu/menuSlice";
 import {
   decreasePlayingMedia,
   increasePlayingMedia,
 } from "../player/playerSlice";
+import { TabBar } from "./TabBar";
+import { URLBar } from "./URLBar";
+import { getBounds } from "./getBounds";
 
 export function Tabs() {
   const dispatch = useDispatch();
   const player = useSelector((state: RootState) => state.player);
   const tabs = useSelector((state: RootState) => state.tabs);
   const settings = useSelector((state: RootState) => state.settings);
+  const menu = useSelector((state: RootState) => state.menu);
 
   const selectedTab = useMemo(() => tabs.tabs.byId[tabs.selectedTab], [tabs]);
 
@@ -130,23 +134,38 @@ export function Tabs() {
         bounds.height
       );
     }
-  }, [settings.urlBarEnabled, isPlayer, tabs.selectedTab]);
+  }, [settings.urlBarEnabled, isPlayer, tabs.selectedTab, menu.menuOpen]);
 
   function handleURLChange(url: string) {
     dispatch(editTab({ id: tabs.selectedTab, url }));
   }
 
   return (
-    <Stack sx={{ flexGrow: 1, minWidth: 0 }} id="controls">
-      <TabBar />
-      {settings.urlBarEnabled && !isPlayer && (
-        <URLBar
-          viewId={selectedTab?.id || -1}
-          url={selectedTab?.url || ""}
-          onURLChange={handleURLChange}
-          disabled={!Boolean(selectedTab)}
-        />
+    <Stack direction="row" sx={{ width: "100%" }}>
+      {!menu.menuOpen && (
+        <IconButton
+          onClick={() => dispatch(setMenuState("open"))}
+          sx={{
+            width: "36px",
+            height: "36px",
+            m: 1,
+            WebkitAppRegion: "no-drag",
+          }}
+        >
+          <img src={icon} />
+        </IconButton>
       )}
+      <Stack sx={{ flexGrow: 1, width: "100%" }} id="controls">
+        <TabBar />
+        {settings.urlBarEnabled && !isPlayer && (
+          <URLBar
+            viewId={selectedTab?.id || -1}
+            url={selectedTab?.url || ""}
+            onURLChange={handleURLChange}
+            disabled={!Boolean(selectedTab)}
+          />
+        )}
+      </Stack>
     </Stack>
   );
 }

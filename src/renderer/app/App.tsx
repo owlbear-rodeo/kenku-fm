@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 
+import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import Stack from "@mui/material/Stack";
 import styled from "@mui/material/styles/styled";
-import Alert from "@mui/material/Alert";
 
 import { ActionDrawer } from "../common/ActionDrawer";
 
@@ -11,8 +11,11 @@ import { Tabs } from "../features/tabs/Tabs";
 
 import icon from "../../assets/icon.svg";
 
-import "./App.css";
+import { Box } from "@mui/material";
 import Typography from "@mui/material/Typography";
+import { useSelector } from "react-redux";
+import "./App.css";
+import { RootState } from "./store";
 
 const WallPaper = styled("div")({
   position: "absolute",
@@ -29,6 +32,7 @@ export function App() {
   const [message, setMessage] = useState<string>();
   const [error, setError] = useState<string>();
   const [fatalError, setFatalError] = useState<string>();
+  const menu = useSelector((state: RootState) => state.menu);
 
   useEffect(() => {
     window.kenku.on("MESSAGE", (args) => {
@@ -81,6 +85,7 @@ export function App() {
 
   return (
     <Stack direction="row">
+      <Box id="menustate" aria-hidden={menu.menuOpen} />
       <WallPaper />
       <ActionDrawer />
       <Tabs />

@@ -1,19 +1,19 @@
-import os from "os";
 import {
   app,
   BrowserWindow,
   components,
-  session,
-  shell,
   ipcMain,
   powerSaveBlocker,
+  session,
+  shell,
 } from "electron";
-import "./menu";
+import os from "os";
 import icon from "./assets/icon.png";
-import { getUserAgent } from "./main/userAgent";
-import { SessionManager } from "./main/managers/SessionManager";
 import { runAutoUpdate } from "./autoUpdate";
 import { getSavedBounds, saveWindowBounds } from "./bounds";
+import { SessionManager } from "./main/managers/SessionManager";
+import { getUserAgent } from "./main/userAgent";
+import "./menu";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -110,6 +110,7 @@ if (!hasSingleInstanceLock) {
     console.log("components ready:", components.status());
 
     window = createWindow();
+    // window.webContents.openDevTools();
     spoofUserAgent();
   });
 

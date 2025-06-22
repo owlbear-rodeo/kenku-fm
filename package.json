@@ -1,7 +1,7 @@
 {
   "name": "kenku-fm",
   "productName": "Kenku FM",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "Online tabletop audio sharing for Discord",
   "main": "./.webpack/main",
   "scripts": {
@@ -88,5 +88,6 @@
     "tiny-typed-emitter": "^2.1.0",
     "uuid": "^9.0.0",
     "ws": "^8.16.0"
-  }
+  },
+  "packageManager": "yarn@4.9.2"
 }

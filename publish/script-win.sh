@@ -11,4 +11,4 @@ curl -X POST \
     -T "$FILE" \
     -H "Authorization: token $TOKEN" \
     -H "Accept: application/vnd.github.v3+json" \
-    https://uploads.github.com/repos/owlbear-rodeo/kenku-fm/releases/"${RELEASE_ID}"/assets?name="${ASSET_NAME}"
+    https://uploads.github.com/repos/fronix/kenku-fm/releases/"${RELEASE_ID}"/assets?name="${ASSET_NAME}"

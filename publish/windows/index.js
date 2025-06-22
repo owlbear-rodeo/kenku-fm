@@ -13,10 +13,10 @@ async function createApp(dir, version, certPassword) {
       noMsi: true,
       exe: "kenku-fm.exe",
       setupExe: `kenku-fm-${version}-win32-${process.arch}.exe`,
-      signWithParams: `/a /f "${path.join(
-        dir,
-        "certificate.pfx"
-      )}" /p "${certPassword}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256"`,
+      // signWithParams: `/a /f "${path.join(
+      //   dir,
+      //   "certificate.pfx"
+      // )}" /p "${certPassword}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256"`,
     });
   } catch (e) {
     console.log(`Error occured: ${e.message}`);

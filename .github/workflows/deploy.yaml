@@ -4,13 +4,18 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
+    name: Build & Validate Electron App
     runs-on: windows-latest
 
     env:
-      NODE_VERSION: 20.9.0
+      NODE_VERSION: 22
+      PYTHON_VERSION: 3.9.13
       CASTLABS_ACCOUNT_NAME: ${{ secrets.CASTLABS_ACCOUNT_NAME }}
       CASTLABS_ACCOUNT_PASSWORD: ${{ secrets.CASTLABS_ACCOUNT_PASSWORD }}
 
@@ -22,43 +27,79 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "yarn"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Get pip cache dir
+        id: pip-cache-dir
+        run: |
+          echo "dir=$(python -m pip cache dir)" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+      - name: Restore pip cache
+        uses: actions/cache/restore@v4
+        id: pip-cache
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Save pip cache
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ steps.pip-cache-dir.outputs.dir }}
+          key: ${{ steps.pip-cache.outputs.cache-primary-key }}
+
+      - name: Setup Latest Yarn
+        uses: threeal/setup-yarn-action@v2.0.0
+        with:
+          version: latest
+          cache: false
+
+      - name: Restore Yarn cache
+        uses: actions/cache/restore@v4
+        id: yarn-cache
+        with:
+          path: |
+            .yarn/cache
+            .yarn/install-state.gz
+            node_modules
+          key: yarn4-windows-${{ runner.os }}-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}
+          restore-keys: |
+            yarn4-windows-${{ runner.os }}-
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
-      - name: Publish package
-        run: yarn run publish
+      - name: Save Yarn cache
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .yarn/cache
+            .yarn/install-state.gz
+            node_modules
+          key: ${{ steps.yarn-cache.outputs.cache-primary-key }}
 
       - name: Build package
         run: yarn run make
 
-      - name: Install Python and Widevine
-        shell: pwsh
-        run: |
-          choco install python --version=3.11.8
-          python -m pip install --upgrade pip
-          python -m pip install castlabs-evs
-
       - name: Sign Electron App
+        if: github.event_name == 'release'
         shell: pwsh
         run: |
           $arch = "x64"
           python -m castlabs_evs.account -n reauth -A $env:CASTLABS_ACCOUNT_NAME -P $env:CASTLABS_ACCOUNT_PASSWORD
           python -m castlabs_evs.vmp sign-pkg "out\Kenku FM-win32-$arch"
 
-      - name: Package and Publish
-        shell: pwsh
+      - name: Publish release assets to GitHub
+        if: github.event_name == 'release'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          $arch = "x64"
-          $version = "${{ github.ref_name }}"
-
-          yarn --cwd ./publish/windows install --frozen-lockfile
-          node ./publish/windows/index.js ./ $version not_used
-
-          $releaseId = ./publish/script-get-github-release.sh $version $env:GITHUB_TOKEN
-          ./publish/script-win.sh "./out/windows/kenku-fm-$version-win32-$arch.exe" $env:GITHUB_TOKEN $releaseId "kenku-fm-$version-win32-$arch.exe"
-          ./publish/script-win.sh "./out/windows/kenku-fm-$version-full.nupkg" $env:GITHUB_TOKEN $releaseId "kenku-fm-$version-full.nupkg"
-          ./publish/script-win.sh "./out/windows/RELEASES" $env:GITHUB_TOKEN $releaseId "RELEASES"
+        run: yarn run publish

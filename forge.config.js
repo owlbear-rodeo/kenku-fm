@@ -47,6 +47,7 @@ const config = {
           owner: "fronix",
           name: "kenku-fm",
         },
+        generateReleaseNotes: true,
         prerelease: false,
         draft: false,
       },

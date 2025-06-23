@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: Build & Validate Electron App
+    name: Build Kenku FM
     runs-on: windows-latest
 
     env:
@@ -88,15 +88,8 @@ jobs:
           key: ${{ steps.yarn-cache.outputs.cache-primary-key }}
 
       - name: Build package
+        if: github.event_name != 'release'
         run: yarn run make
-
-      - name: Sign Electron App
-        if: github.event_name == 'release'
-        shell: pwsh
-        run: |
-          $arch = "x64"
-          python -m castlabs_evs.account -n reauth -A $env:CASTLABS_ACCOUNT_NAME -P $env:CASTLABS_ACCOUNT_PASSWORD
-          python -m castlabs_evs.vmp sign-pkg "out\Kenku FM-win32-$arch"
 
       - name: Publish release assets to GitHub
         if: github.event_name == 'release'

@@ -116,6 +116,9 @@ const api = {
   reload: (id: number) => {
     viewManager.reload(id);
   },
+  openDevToolsForBrowserView: (id: number) => {
+    viewManager.openDevTools(id);
+  },
   on: (channel: Channel, callback: (...args: any[]) => any) => {
     if (validChannels.includes(channel)) {
       const newCallback = (_: any, ...args: any[]) => callback(args);
@@ -173,6 +176,10 @@ const api = {
   clearCache: () => {
     return ipcRenderer.invoke("CLEAR_CACHE");
   },
+  openDevTools: () => { // TODO BL: This is not implemented in the renderer
+    return ipcRenderer.invoke("OPEN_DEVTOOLS");
+  },
+
   platform: ipcRenderer.sendSync("GET_PLATFORM") as string,
   version: ipcRenderer.sendSync("GET_VERSION") as string,
 };

@@ -36,6 +36,7 @@ export class BrowserViewManagerMain {
     ipcMain.on("BROWSER_VIEW_GO_FORWARD", this._handleGoForward);
     ipcMain.on("BROWSER_VIEW_GO_BACK", this._handleGoBack);
     ipcMain.on("BROWSER_VIEW_RELOAD", this._handleReload);
+    ipcMain.on("BROWSER_VIEW_OPEN_DEVTOOLS", this._handleOpenDevTools);
   }
 
   destroy() {
@@ -61,6 +62,7 @@ export class BrowserViewManagerMain {
     ipcMain.off("BROWSER_VIEW_GO_FORWARD", this._handleGoForward);
     ipcMain.off("BROWSER_VIEW_GO_BACK", this._handleGoBack);
     ipcMain.off("BROWSER_VIEW_RELOAD", this._handleReload);
+    ipcMain.off("BROWSER_VIEW_OPEN_DEVTOOLS", this._handleOpenDevTools);
 
     this.removeAllBrowserViews();
   }
@@ -139,6 +141,8 @@ export class BrowserViewManagerMain {
   _handleGoBack = (_: Electron.IpcMainEvent, id: number) => this.goBack(id);
 
   _handleReload = (_: Electron.IpcMainEvent, id: number) => this.reload(id);
+
+  _handleOpenDevTools = (_: Electron.IpcMainEvent, id: number) => this.openDevTools(id);
 
   /**
    * Create a new browser view and attach it to the current window
@@ -260,6 +264,14 @@ export class BrowserViewManagerMain {
   reload(id: number) {
     try {
       this.views[id]?.webContents.reload();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  openDevTools(id: number) {
+    try {
+      this.views[id]?.webContents.openDevTools({mode: "detach"})
     } catch (err) {
       console.error(err);
     }

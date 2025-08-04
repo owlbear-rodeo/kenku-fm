@@ -74,4 +74,8 @@ export class BrowserViewManagerPreload {
   reload(id: number) {
     ipcRenderer.send("BROWSER_VIEW_RELOAD", id);
   }
+
+  openDevTools(id: number) {
+    ipcRenderer.send("BROWSER_VIEW_OPEN_DEVTOOLS", id);
+  }
 }

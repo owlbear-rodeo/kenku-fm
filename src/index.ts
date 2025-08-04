@@ -154,4 +154,8 @@ if (!hasSingleInstanceLock) {
       storages: ["cookies", "shadercache", "cachestorage"],
     });
   });
+
+  ipcMain.handle("OPEN_DEVTOOLS", async () => {
+    window.webContents.openDevTools({ mode: 'detach' });
+  })
 }

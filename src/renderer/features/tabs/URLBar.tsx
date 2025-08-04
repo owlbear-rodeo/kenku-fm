@@ -6,6 +6,7 @@ import InputBase from "@mui/material/InputBase";
 import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
 import ArrowForwardRounded from "@mui/icons-material/ArrowForwardRounded";
 import RefreshRounded from "@mui/icons-material/RefreshRounded";
+import Settings from "@mui/icons-material/Settings";
 
 import { getDropURL } from "../../common/drop";
 
@@ -44,6 +45,10 @@ export function URLBar({ viewId, url, onURLChange, disabled }: URLBarProps) {
 
   function handleReload() {
     window.kenku.reload(viewId);
+  }
+
+  function handleOpenDevTools() {
+    window.kenku.openDevToolsForBrowserView(viewId);
   }
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -91,6 +96,9 @@ export function URLBar({ viewId, url, onURLChange, disabled }: URLBarProps) {
         </form>
         <IconButton onClick={handleReload} disabled={disabled} size="small">
           <RefreshRounded />
+        </IconButton>
+        <IconButton onClick={handleOpenDevTools} disabled={disabled} size="small">
+          <Settings />
         </IconButton>
       </Stack>
     </Stack>

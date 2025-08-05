@@ -1261,13 +1261,6 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.19.tgz#726171367f404bfbe8512ba608a09ebad810c7e6"
   integrity sha512-PfeQhvcMR4cPFVuYfBN4ifG7p9c+Dlh3yUZR6k+5yQK7wX3gDgVxBly4/WkBRs9x4dmcy1TVl08SY67wwtEvmA==
 
-"@types/node@^18.11.18":
-  version "18.19.17"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.19.17.tgz#a581a9fb4b2cfdbc61f008804f4436b2d5c40354"
-  integrity sha512-SzyGKgwPzuWp2SHhlpXKzCX0pIOfcI4V2eF37nNBJOhwlegQ83omtVQ1XxZpDE06V/d6AQvfQdPfnw0tRC//Ng==
-  dependencies:
-    undici-types "~5.26.4"
-
 "@types/node@^20.9.0":
   version "20.11.20"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-20.11.20.tgz#f0a2aee575215149a62784210ad88b3a34843659"
@@ -3117,14 +3110,6 @@ electron-winstaller@^5.0.0:
     fs-extra "^7.0.1"
     lodash.template "^4.2.2"
     temp "^0.9.0"
-
-"electron@https://github.com/castlabs/electron-releases#v28.2.3+wvcus":
-  version "28.2.3"
-  resolved "https://github.com/castlabs/electron-releases#be8353e75c7c2e8908a5a3746469a7e79f570c97"
-  dependencies:
-    "@electron/get" "^2.0.0"
-    "@types/node" "^18.11.18"
-    extract-zip "^2.0.1"
 
 "electron@https://github.com/castlabs/electron-releases#v29.0.1+wvcus":
   version "29.0.1"

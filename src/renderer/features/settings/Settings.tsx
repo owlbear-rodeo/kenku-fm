@@ -277,6 +277,10 @@ export function Settings({ open, onClose }: SettingsProps) {
     setClearingCache(false);
   }
 
+  async function handleOpenDevTools() {
+    await window.kenku.openDevTools();
+  }
+
   const otherSettings = (
     <Stack spacing={1}>
       <FormGroup>
@@ -342,6 +346,14 @@ export function Settings({ open, onClose }: SettingsProps) {
         size="small"
       >
         {clearingCache ? <CircularProgress size={24} /> : "Clear Cache"}
+      </Button>
+      <Button
+        onClick={handleOpenDevTools}
+        fullWidth
+        variant="outlined"
+        size="small"
+      >
+        Open Dev Tools
       </Button>
     </Stack>
   );

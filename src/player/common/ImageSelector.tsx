@@ -1,22 +1,22 @@
 import React, { useCallback, useState } from "react";
 
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import InputLabel from "@mui/material/InputLabel";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import FormGroup from "@mui/material/FormGroup";
+import IconButton from "@mui/material/IconButton";
 import ImageList from "@mui/material/ImageList";
 import ImageListItem from "@mui/material/ImageListItem";
-import styled from "@mui/material/styles/styled";
-import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-
-import { useDropzone } from "react-dropzone";
-
-import { backgrounds } from "../backgrounds";
-import { encodeFilePath, getDropURL } from "../../renderer/common/drop";
 import Input from "@mui/material/Input";
-import Button from "@mui/material/Button";
+import InputLabel from "@mui/material/InputLabel";
+import styled from "@mui/material/styles/styled";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
+
+
+import { encodeFilePath, getDropURL } from "../../renderer/common/drop";
+import { backgrounds } from "../backgrounds";
+import useFileDrop, { FileInfo } from "./useFileDrop";
 
 const ImageListButton = styled("img")({
   userSelect: "none",
@@ -37,17 +37,17 @@ export function ImageSelector({ value, onChange }: ImageSelectorProps) {
     hasCustomImage ? "custom" : "default"
   );
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback((acceptedFiles: FileInfo[]) => {
     const file = acceptedFiles[0];
     if (file) {
       onChange(encodeFilePath(file.path));
     }
   }, []);
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+
+  const { rootProps, inputProps, isDragging } = useFileDrop({
     onDrop,
-    accept: { "image/*": [] },
+    accept: "image/*",
     multiple: false,
-    useFsAccessApi: false,
   });
 
   function handleURLChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -109,10 +109,10 @@ export function ImageSelector({ value, onChange }: ImageSelectorProps) {
         }}
         variant="outlined"
         fullWidth
-        {...getRootProps()}
+        {...rootProps}
       >
-        <input {...getInputProps()} />
-        {isDragActive ? (
+        <input {...inputProps} />
+        {isDragging ? (
           <Typography variant="caption">Drop the image here...</Typography>
         ) : (
           <Typography variant="caption">

@@ -7,10 +7,10 @@ export function encodeFilePath(path: string) {
 }
 
 export function getDropURL(dataTransfer: DataTransfer): string | undefined {
-  const files = Array.from(dataTransfer.files);
+  const files: FileList = dataTransfer.files;
   if (files.length > 0) {
     const file = files[0];
-    const path = (file as any).path;
+    const path = window.player.getPathForFile(file);
     if (path) {
       return encodeFilePath(path);
     }
@@ -19,7 +19,7 @@ export function getDropURL(dataTransfer: DataTransfer): string | undefined {
 
 export function cleanFileName(name: string): string {
   // Remove file extension
-  let clean = name.substr(0, name.lastIndexOf(".")) || name;
+  let clean = name.substring(0, name.lastIndexOf(".")) || name;
   // Clean string
   clean = clean.replace(/ +/g, " ");
   clean = clean.trim();

@@ -21,7 +21,7 @@ import { PlaylistTracks } from "./PlaylistTracks";
 
 import { isBackground, backgrounds } from "../../backgrounds";
 import { startQueue } from "./playlistPlaybackSlice";
-import { useDrop } from "../../common/useDrop";
+import { useFolderDrop } from "../../common/useFolderDrop";
 import { useNavigate, useParams } from "react-router-dom";
 
 type PlaylistProps = {
@@ -78,7 +78,7 @@ export function Playlist({ onPlay }: PlaylistProps) {
     }
   }
 
-  const { dragging, containerListeners, overlayListeners } = useDrop(
+  const { dragging, containerListeners, overlayListeners } = useFolderDrop(
     (directories) => {
       const tracks: Track[] = [];
       for (let directory of Object.values(directories)) {

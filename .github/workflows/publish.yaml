@@ -1,5 +1,8 @@
 name: Publish Kenku FM
 on:
+  push:
+    branches: 
+      - experimental/*
   workflow_dispatch:
   release:
     types:

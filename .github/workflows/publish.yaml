@@ -24,9 +24,8 @@ jobs:
           elif [[ ${{ runner.arch }} == 'X64' ]]; then
               echo "ARCH=x64" >> "$GITHUB_ENV"
           fi
-      - run: |
-          echo "KENKU_FM_MAC_PATH=./out/Kenku\ FM-darwin-$ARCH" >> $GITHUB_ENV
-          echo $KENKU_FM_MAC_PATH
+      - run: echo "KENKU_FM_MAC_PATH=./out/Kenku\ FM-darwin-$ARCH" >> $GITHUB_ENV
+      - run: echo $KENKU_FM_MAC_PATH
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -43,7 +42,9 @@ jobs:
       - name: Install Dependencies
         run: yarn install --non-interactive --frozen-lockfile
       - name: Get Images
-        run: git clone https://$GITHUB_TOKEN@github.com/owlbear-rodeo/kenku-fm-assets.git
+        run: git clone https://$KENKU_ASSET_REPO_TOKEN@github.com/owlbear-rodeo/kenku-fm-assets.git
+        env:
+          KENKU_ASSET_REPO_TOKEN: ${{ secrets.KENKU_ASSET_REPO_TOKEN }}
       - name: Move Images to Directory
         run: |
           mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds

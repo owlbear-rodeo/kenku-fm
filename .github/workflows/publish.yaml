@@ -43,7 +43,7 @@ jobs:
       - name: Get Images
         uses: actions/checkout@v4
         with: 
-          name: owlbear-rodeo/kenku-fm-assets
+          repository: owlbear-rodeo/kenku-fm-assets
           token: ${{ secrets.KENKU_ASSET_REPO_TOKEN }}
           sparse-checkout: |
             backgrounds

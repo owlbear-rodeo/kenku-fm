@@ -47,6 +47,7 @@ jobs:
           token: ${{ secrets.KENKU_ASSET_REPO_TOKEN }}
           sparse-checkout: |
             backgrounds
+          path: kenku-fm-assets
       - name: Move Images to Directory
         run: |
           mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds

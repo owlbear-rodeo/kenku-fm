@@ -1,7 +1,7 @@
 version: 2.1
 orbs:
-  node: circleci/node@5.2.0
-  win: circleci/windows@4.1.1
+  node: circleci/node@7.1.1
+  win: circleci/windows@5.1.0
 
 executors:
   linux-amd:
@@ -23,7 +23,7 @@ commands:
     steps:
       - node/install:
           install-yarn: true
-          node-version: "18.19.0"
+          node-version: "22.17.1"
   
   install-dependencies:
     steps:
@@ -265,7 +265,6 @@ jobs:
             ./publish/script-macos.sh "$KENKU_FM_MAC_PATH"/Kenku\ FM.zip $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-<< parameters.arch >>-$VERSION.zip
 
 workflows:
-  version: 2
   deploy-linux-amd:
     jobs:
       - publish-electron-app-linux-amd:

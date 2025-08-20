@@ -1,20 +1,20 @@
 import log from "electron-log/main";
 import { TypedEmitter } from "tiny-typed-emitter";
 import severus, { Broadcast, RTCClient } from "severus";
-import { BrowserView, BrowserWindow, ipcMain } from "electron";
+import { BrowserWindow, ipcMain } from "electron";
 
 export interface RTCManagerEvents {
   create: (rtc: RTCClient) => void;
 }
 
 export class RTCManager extends TypedEmitter<RTCManagerEvents> {
-  private browserView: BrowserView;
+  private browserWindow: BrowserWindow;
   private broadcast: Broadcast;
   rtc?: RTCClient;
 
-  constructor(browserView: BrowserView, broadcast: Broadcast) {
+  constructor(browserView: BrowserWindow, broadcast: Broadcast) {
     super();
-    this.browserView = browserView;
+    this.browserWindow = browserView;
     this.broadcast = broadcast;
     ipcMain.handle(
       "AUDIO_CAPTURE_RTC_CREATE_CONNECTION",
@@ -42,13 +42,13 @@ export class RTCManager extends TypedEmitter<RTCManagerEvents> {
 
   createClientIfNeeded() {
     if (!this.rtc) {
-      this.browserView.webContents.send("AUDIO_CAPTURE_START_RTC");
+      this.browserWindow.webContents.send("AUDIO_CAPTURE_START_RTC");
     }
   }
 
   stopAndRemoveClient() {
     if (this.rtc) {
-      this.browserView.webContents.send("AUDIO_CAPTURE_STOP_RTC");
+      this.browserWindow.webContents.send("AUDIO_CAPTURE_STOP_RTC");
       severus.rtcClose(this.rtc).catch((err) => {
         log.debug("rtc close error", err.message);
       });
@@ -71,7 +71,7 @@ export class RTCManager extends TypedEmitter<RTCManagerEvents> {
       this.rtc = rtc;
       severus.rtcOnCandidate(rtc, (candidate) => {
         if (this.rtc === rtc) {
-          this.browserView.webContents.send(
+          this.browserWindow.webContents.send(
             "AUDIO_CAPTURE_RTC_CANDIDATE",
             candidate
           );
@@ -79,7 +79,7 @@ export class RTCManager extends TypedEmitter<RTCManagerEvents> {
       });
       severus.rtcOnClose(rtc, () => {
         if (this.rtc === rtc) {
-          this.browserView.webContents.send("AUDIO_CAPTURE_RTC_CLOSE");
+          this.browserWindow.webContents.send("AUDIO_CAPTURE_RTC_CLOSE");
         }
       });
 

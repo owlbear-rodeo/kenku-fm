@@ -1,4 +1,4 @@
-import { BrowserView, BrowserWindow, ipcMain, webContents } from "electron";
+import { BrowserWindow, ipcMain, webContents } from "electron";
 
 declare const AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY: string;
 declare const AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -11,18 +11,21 @@ import { RTCManager } from "./RTCManager";
  * This class is to be run on the main thread
  */
 export class AudioCaptureManagerMain {
-  private browserView: BrowserView;
+  private browserWindow: BrowserWindow;
   private rtcManager: RTCManager;
   broadcast: Broadcast;
 
   constructor() {
-    this.browserView = new BrowserView({
+    this.browserWindow = new BrowserWindow({
       webPreferences: {
         preload: AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY,
       },
+      minimizable: false,
+      frame: false,
+      show: false
     });
-    this.browserView.webContents.loadURL(AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY);
-    this.browserView.webContents.session.webRequest.onHeadersReceived(
+    this.browserWindow.webContents.loadURL(AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY);
+    this.browserWindow.webContents.session.webRequest.onHeadersReceived(
       (details, callback) => {
         if (
           details.url.endsWith("audio_capture_window") ||
@@ -42,7 +45,7 @@ export class AudioCaptureManagerMain {
     );
 
     this.broadcast = severus.broadcastNew();
-    this.rtcManager = new RTCManager(this.browserView, this.broadcast);
+    this.rtcManager = new RTCManager(this.browserWindow, this.broadcast);
 
     ipcMain.on("AUDIO_CAPTURE_SET_LOOPBACK", this.handleSetLoopback);
     ipcMain.on("AUDIO_CAPTURE_SET_MUTED", this.handleSetMuted);
@@ -97,12 +100,13 @@ export class AudioCaptureManagerMain {
 
     this.rtcManager.destroy();
     this.broadcast = undefined;
-
-    (this.browserView.webContents as any).destroy();
+    this.browserWindow.webContents.close();
+    this.browserWindow.close();
+    (this.browserWindow.webContents as any).destroy();
   }
 
   private handleSetLoopback = (_: Electron.IpcMainEvent, loopback: boolean) => {
-    this.browserView.webContents.send("AUDIO_CAPTURE_SET_LOOPBACK", loopback);
+    this.browserWindow.webContents.send("AUDIO_CAPTURE_SET_LOOPBACK", loopback);
   };
 
   private handleSetMuted = (
@@ -110,7 +114,7 @@ export class AudioCaptureManagerMain {
     viewId: number,
     muted: boolean
   ) => {
-    this.browserView.webContents.send(
+    this.browserWindow.webContents.send(
       "AUDIO_CAPTURE_BROWSER_VIEW_MUTED",
       viewId,
       muted
@@ -121,7 +125,7 @@ export class AudioCaptureManagerMain {
     _: Electron.IpcMainEvent,
     deviceId: string
   ) => {
-    this.browserView.webContents.send(
+    this.browserWindow.webContents.send(
       "AUDIO_CAPTURE_START_EXTERNAL_AUDIO_CAPTURE",
       deviceId
     );
@@ -131,7 +135,7 @@ export class AudioCaptureManagerMain {
     _: Electron.IpcMainEvent,
     deviceId: string
   ) => {
-    this.browserView.webContents.send(
+    this.browserWindow.webContents.send(
       "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE",
       deviceId
     );
@@ -158,9 +162,9 @@ export class AudioCaptureManagerMain {
   ) => {
     const contents = webContents.fromId(viewId);
     const mediaSourceId = contents.getMediaSourceId(
-      this.browserView.webContents
+      this.browserWindow.webContents
     );
-    this.browserView.webContents.send(
+    this.browserWindow.webContents.send(
       "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
       viewId,
       mediaSourceId
@@ -171,14 +175,14 @@ export class AudioCaptureManagerMain {
     _: Electron.IpcMainEvent,
     viewId: number
   ) => {
-    this.browserView.webContents.send(
+    this.browserWindow.webContents.send(
       "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
       viewId
     );
   };
 
   private handleStopAllBrowserViewStreams = (_: Electron.IpcMainEvent) => {
-    this.browserView.webContents.send(
+    this.browserWindow.webContents.send(
       "AUDIO_CAPTURE_STOP_ALL_BROWSER_VIEW_STREAMS"
     );
   };

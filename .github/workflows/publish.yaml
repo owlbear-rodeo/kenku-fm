@@ -25,7 +25,7 @@ jobs:
               echo "ARCH=x64" >> "$GITHUB_ENV"
           fi
       - run: |
-          echo "KENKU_FM_MAC_PATH="./out/Kenku\ FM-darwin-$ARCH" >> $GITHUB_ENV
+          echo "KENKU_FM_MAC_PATH=./out/Kenku\ FM-darwin-$ARCH" >> $GITHUB_ENV
           echo $KENKU_FM_MAC_PATH
       - name: Setup Python
         uses: actions/setup-python@v5

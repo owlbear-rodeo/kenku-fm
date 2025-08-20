@@ -1,0 +1,117 @@
+name: Publish Kenku FM
+on:
+  release:
+    types:
+      - prereleased
+
+jobs:
+  mac-release:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-13-large, macos-13-xlarge]
+
+    steps:
+      - name: Set env ARCH
+        run: |
+          if [[ ${{ runner.arch }} == 'ARM64' ]]; then
+              echo "ARCH=arm64" >> "$GITHUB_ENV"
+          elif [[ ${{ runner.arch }} == 'X64' ]]; then
+              echo "ARCH=x64" >> "$GITHUB_ENV"
+          fi
+      - run: echo $KENKU_FM_MAC_PATH
+        env:
+          KENKU_FM_MAC_PATH: "./out/Kenku\ FM-darwin-${ARCH}"
+      - name: Node Config
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "yarn"
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install Widevine Python Module
+        run: python3 -m pip install --upgrade castlabs-evs
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Dependencies
+        run: yarn install --non-interactive --frozen-lockfile
+      - name: Get Images
+        run: git clone https://$GITHUB_TOKEN@github.com/owlbear-rodeo/kenku-fm-assets.git
+      - name: Move Images to Directory
+        run: |
+          mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
+          rm -rf ./kenku-fm-assets
+      - run: rustup update stable && rustup default stable
+      - name: Install Cargo CP Artifcact
+        run: npm install -g cargo-cp-artifact
+      - name: Make Package
+        run: yarn run make
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+      - name: Widevine Signature
+        run: |
+          python3 -m castlabs_evs.account -n reauth -A "$CASTLABS_ACCOUNT_NAME" -P "$CASTLABS_ACCOUNT_PASSWORD"
+          python3 -m castlabs_evs.vmp sign-pkg "$KENKU_FM_MAC_PATH"
+        env:
+          CASTLABS_ACCOUNT_NAME: ${{ secrets.CASTLABS_ACCOUNT_NAME }}
+          CASTLABS_ACCOUNT_PASSWORD: ${{ secrets.CASTLABS_ACCOUNT_PASSWORD }}
+          KENKU_FM_MAC_PATH: "./out/Kenku\ FM-darwin-${ARCH}"
+      - name: Import Apple Security Keychain
+        run: |
+          export CERTIFICATE_P12=certificate.p12;
+          echo "${CERT_OSX_P12}"| base64 --decode -o $CERTIFICATE_P12;
+          export KEYCHAIN=kenku-fm.keychain;
+          security create-keychain -p "${APPLE_KEYCHAIN_PASSWORD}" "$KEYCHAIN";
+          security default-keychain -s "$KEYCHAIN";
+          security unlock-keychain -p "${APPLE_KEYCHAIN_PASSWORD}" "$KEYCHAIN";
+          security import "$CERTIFICATE_P12" -k "$KEYCHAIN" -P "${CERT_PASSWORD}" -A
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          rm -fr *.p12
+        env: 
+          CERT_OSX_P12: ${{ secrets.CERT_OSX_P12 }}
+          APPLE_KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
+          CERT_PASSWORD: ${{ secrets.CERT_PASSWORD }}
+      - name: OSX Signature
+        run: |
+          npx electron-osx-sign "$KENKU_FM_MAC_PATH"/Kenku\ FM.app --gatekeeper-assess=false --identity="Developer ID Application: Mitchell McCaffrey (${APPLE_DEVELOPER_TEAM_ID})" --hardened-runtime=true --entitlements="entitlements.plist" --entitlements-inherit="entitlements.plist"
+        env:
+          APPLE_DEVELOPER_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_TEAM_ID }}
+          KENKU_FM_MAC_PATH: "./out/Kenku\ FM-darwin-${ARCH}"
+          KENKU_FM_MAC_ZIP_PATH: "./out/mac"
+      - name: Zip App
+        run: ditto -c -k --sequesterRsrc --keepParent "$KENKU_FM_MAC_PATH"/Kenku\ FM.app "$KENKU_FM_MAC_PATH"/Kenku\ FM.zip
+      - name: Notarize Zip file
+        run: xcrun notarytool submit "$KENKU_FM_MAC_PATH"/Kenku\ FM.zip --apple-id "$APPLE_DEVELOPER_EMAIL" --password "$APPLE_DEVELOPER_PASSWORD" --team-id "$APPLE_DEVELOPER_TEAM_ID" --wait --output-format json
+        env:
+          APPLE_DEVELOPER_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_TEAM_ID }}
+          APPLE_DEVELOPER_EMAIL: ${{ secrets.APPLE_DEVELOPER_EMAIL }}
+          APPLE_DEVELOPER_PASSWORD: ${{ secrets.APPLE_DEVELOPER_PASSWORD }}
+          KENKU_FM_MAC_PATH: "./out/Kenku\ FM-darwin-${ARCH}"
+          KENKU_FM_MAC_ZIP_PATH: "./out/mac"
+      - name: Staple
+        run: xcrun stapler staple -v "$KENKU_FM_MAC_PATH"/Kenku\ FM.app
+        env:
+          KENKU_FM_MAC_PATH: "./out/Kenku\ FM-darwin-${ARCH}"
+          KENKU_FM_MAC_ZIP_PATH: "./out/mac"
+      - name: Zip App - Release Version
+        run: ditto -c -k --sequesterRsrc --keepParent "$KENKU_FM_MAC_PATH"/Kenku\ FM.app "$KENKU_FM_MAC_ZIP_PATH"/Kenku\ FM.zip
+        env:
+          KENKU_FM_MAC_PATH: "./out/Kenku\ FM-darwin-${ARCH}"
+          KENKU_FM_MAC_ZIP_PATH: "./out/mac"
+      - name: Create DMG
+        run: |
+          npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out="$KENKU_FM_MAC_PATH"/ "$KENKU_FM_MAC_PATH"/Kenku\ FM.app Kenku\ FM
+        env:
+          KENKU_FM_MAC_PATH: "./out/Kenku\ FM-darwin-${ARCH}"
+          KENKU_FM_MAC_ZIP_PATH: "./out/mac"
+      - name: Publish DMG
+        run: |
+          VERSION=${TAG//v}
+          RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
+          ./publish/script-macos.sh "$KENKU_FM_MAC_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-$ARCH-$VERSION.dmg
+          ./publish/script-macos.sh "$KENKU_FM_MAC_PATH"/Kenku\ FM.zip $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-$ARCH-$VERSION.zip
+        env:
+          TAG: ${{ github.ref_name}}

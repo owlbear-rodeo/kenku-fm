@@ -63,7 +63,7 @@ jobs:
       - name: Widevine Signature
         run: |
           python3 -m castlabs_evs.account -n reauth -A $CASTLABS_ACCOUNT_NAME -P $CASTLABS_ACCOUNT_PASSWORD
-          python3 -m castlabs_evs.vmp sign-pkg $KENKU_FM_MAC_PATH
+          python3 -m castlabs_evs.vmp sign-pkg "$KENKU_FM_MAC_PATH"
         env:
           CASTLABS_ACCOUNT_NAME: ${{ secrets.CASTLABS_ACCOUNT_NAME }}
           CASTLABS_ACCOUNT_PASSWORD: ${{ secrets.CASTLABS_ACCOUNT_PASSWORD }}

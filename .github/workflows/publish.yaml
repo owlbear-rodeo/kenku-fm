@@ -181,7 +181,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-          architecture: $ARCH
       - name: Install Widevine Python Module
         run: |
           python -m pip install --upgrade castlabs-evs

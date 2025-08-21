@@ -26,6 +26,8 @@ jobs:
           fi
       - name: Select Xcode version
         run: sudo xcode-select -s '/Applications/Xcode_14.3.1.app/Contents/Developer'
+      - name: Check Xcode version
+        run: xcodebuild -version
       - name: Set Kenku FM Path
         run: echo "KENKU_FM_MAC_PATH=./out/Kenku FM-darwin-$ARCH" >> $GITHUB_ENV
       - name: Setup Python
@@ -86,12 +88,12 @@ jobs:
           CERT_PASSWORD: ${{ secrets.CERT_PASSWORD }}
       - name: OSX Signature
         run: |
-          npx electron-osx-sign "$KENKU_FM_MAC_PATH"/Kenku\ FM.app --gatekeeper-assess=false --identity="Developer ID Application: Mitchell McCaffrey (${APPLE_DEVELOPER_TEAM_ID})" --hardened-runtime=true --entitlements="entitlements.plist" --entitlements-inherit="entitlements.plist"
+          npx electron-osx-sign "${KENKU_FM_MAC_PATH}/Kenku FM.app" --gatekeeper-assess=false --identity="Developer ID Application: Mitchell McCaffrey (${APPLE_DEVELOPER_TEAM_ID})" --hardened-runtime=true --entitlements="entitlements.plist" --entitlements-inherit="entitlements.plist"
         env:
           APPLE_DEVELOPER_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_TEAM_ID }}
           KENKU_FM_MAC_ZIP_PATH: "./out/mac"
       - name: Zip App
-        run: ditto -c -k --sequesterRsrc --keepParent "$KENKU_FM_MAC_PATH"/Kenku\ FM.app "$KENKU_FM_MAC_PATH"/Kenku\ FM.zip
+        run: ditto -c -k --sequesterRsrc --keepParent "${KENKU_FM_MAC_PATH}/Kenku FM.app" "${KENKU_FM_MAC_PATH}/Kenku FM.zip"
       - name: Notarize Zip file
         run: xcrun notarytool submit "$KENKU_FM_MAC_PATH"/Kenku\ FM.zip --apple-id "$APPLE_DEVELOPER_EMAIL" --password "$APPLE_DEVELOPER_PASSWORD" --team-id "$APPLE_DEVELOPER_TEAM_ID" --wait --output-format json
         env:
@@ -100,23 +102,21 @@ jobs:
           APPLE_DEVELOPER_PASSWORD: ${{ secrets.APPLE_DEVELOPER_PASSWORD }}
           KENKU_FM_MAC_ZIP_PATH: "./out/mac"
       - name: Staple
-        run: xcrun stapler staple "$KENKU_FM_MAC_PATH"/Kenku\ FM.app
+        run: xcrun stapler staple "${KENKU_FM_MAC_PATH}/Kenku FM.app"
         env:
           KENKU_FM_MAC_ZIP_PATH: "./out/mac"
       - name: Zip App - Release Version
-        run: ditto -c -k --sequesterRsrc --keepParent "$KENKU_FM_MAC_PATH"/Kenku\ FM.app "$KENKU_FM_MAC_ZIP_PATH"/Kenku\ FM.zip
+        run: ditto -c -k --sequesterRsrc --keepParent "${KENKU_FM_MAC_PATH}/Kenku FM.app" "${KENKU_FM_MAC_ZIP_PATH}/Kenku FM.zip"
         env:
           KENKU_FM_MAC_ZIP_PATH: "./out/mac"
       - name: Create DMG
         run: |
-          npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out="$KENKU_FM_MAC_PATH"/ "$KENKU_FM_MAC_PATH"/Kenku\ FM.app Kenku\ FM
-        env:
-          KENKU_FM_MAC_ZIP_PATH: "./out/mac"
+          npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out="${KENKU_FM_MAC_PATH}/" "${KENKU_FM_MAC_PATH}/Kenku FM.app" "Kenku FM"
       - name: Publish DMG
         run: |
           VERSION=${TAG//v}
           RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
-          ./publish/script-macos.sh "$KENKU_FM_MAC_PATH"/Kenku\ FM.dmg $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-$ARCH-$VERSION.dmg
-          ./publish/script-macos.sh "$KENKU_FM_MAC_PATH"/Kenku\ FM.zip $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-$ARCH-$VERSION.zip
+          ./publish/script-macos.sh "${KENKU_FM_MAC_PATH}/Kenku FM.dmg" $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-$ARCH-$VERSION.dmg
+          ./publish/script-macos.sh "${KENKU_FM_MAC_PATH}/Kenku FM.zip" $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-$ARCH-$VERSION.zip
         env:
           TAG: ${{ github.ref_name}}

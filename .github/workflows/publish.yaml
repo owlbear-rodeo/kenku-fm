@@ -177,7 +177,6 @@ jobs:
           elif [[ ${{ runner.arch }} == 'X64' ]]; then
               echo "ARCH=x64" >> "$GITHUB_ENV"
           fi
-      - run: rustup update stable && rustup default stable
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -208,6 +207,7 @@ jobs:
         run: |
           mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
           rm -rf ./kenku-fm-assets
+      - run: rustup update stable && rustup default stable
       - name: Install Cargo CP Artifcact
         run: npm install -g cargo-cp-artifact
       - name: Make Package

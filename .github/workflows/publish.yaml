@@ -3,15 +3,18 @@ on:
   push:
     branches:
       - experimental/*
+    tags:
+      - 'v*.*.*-experimental'
   workflow_dispatch:
-  release:
-    types:
-      - prereleased
 
 jobs:
   linux-release:
     if: false
-    runs-on: warp-ubuntu-2204-x64-4x
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [warp-ubuntu-2204-x64-4x]
 
     steps:
       - name: Checkout
@@ -50,7 +53,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [warp-macos-13-arm64-6x]
+        os: [warp-macos-13-arm64-6x, macos-13]
 
     steps:
       - name: Set env ARCH
@@ -163,9 +166,16 @@ jobs:
 
     strategy:
       matrix:
-        os: [warp-windows-latest-x64-4x]
+        os: [windows-11-arm]
 
     steps:
+      - name: Set env ARCH
+        run: |
+          if [[ ${{ runner.arch }} == 'ARM64' ]]; then
+              echo "ARCH=arm64" >> "$GITHUB_ENV"
+          elif [[ ${{ runner.arch }} == 'X64' ]]; then
+              echo "ARCH=x64" >> "$GITHUB_ENV"
+          fi
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -210,15 +220,15 @@ jobs:
           $CERT = "${DIR}\certificate.pfx"
           $CERT_PASSWORD = $(echo $env:WINDOWS_CERT_PWD | openssl base64 -A -d)
 
-          & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe" sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\kenku-fm.exe"
-          & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe" sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\Squirrel.exe"
+          & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\${ARCH}\signtool.exe" sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-${ARCH}\kenku-fm.exe"
+          & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\${ARCH}\signtool.exe" sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-${ARCH}\Squirrel.exe"
         env:
           WINDOWS_CERT: ${{ secrets.WINDOWS_CERT }}
           WINDOWS_CERT_PWD: ${{ secrets.WINDOWS_CERT_PWD }}
       - name: Widevine Signature
         run: |
           python -m castlabs_evs.account -n reauth -A $env:CASTLABS_ACCOUNT_NAME -P $env:CASTLABS_ACCOUNT_PASSWORD
-          python -m castlabs_evs.vmp sign-pkg ".\out\Kenku FM-win32-x64"
+          python -m castlabs_evs.vmp sign-pkg ".\out\Kenku FM-win32-${ARCH}"
         env:
           CASTLABS_ACCOUNT_NAME: ${{ secrets.CASTLABS_ACCOUNT_NAME }}
           CASTLABS_ACCOUNT_PASSWORD: ${{ secrets.CASTLABS_ACCOUNT_PASSWORD }}
@@ -238,7 +248,7 @@ jobs:
       #   run: |
       #     VERSION=${TAG//v}
       #     RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
-      #     ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-win32-x64.exe $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-win32-x64.exe
+      #     ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-win32-${ARCH}.exe $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-win32-${ARCH}.exe
       #     ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-full.nupkg $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-full.nupkg
       #     ./publish/script-win.sh ./out/windows/RELEASES $GITHUB_TOKEN $RELEASE_ID RELEASES
       #   env:

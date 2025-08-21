@@ -24,6 +24,8 @@ jobs:
           elif [[ ${{ runner.arch }} == 'X64' ]]; then
               echo "ARCH=x64" >> "$GITHUB_ENV"
           fi
+      - name: Select Xcode version
+        run: sudo xcode-select -s '/Applications/Xcode_14.3.1.app/Contents/Developer'
       - name: Set Kenku FM Path
         run: echo "KENKU_FM_MAC_PATH=./out/Kenku FM-darwin-$ARCH" >> $GITHUB_ENV
       - name: Setup Python
@@ -98,7 +100,7 @@ jobs:
           APPLE_DEVELOPER_PASSWORD: ${{ secrets.APPLE_DEVELOPER_PASSWORD }}
           KENKU_FM_MAC_ZIP_PATH: "./out/mac"
       - name: Staple
-        run: xcrun stapler staple -v "$KENKU_FM_MAC_PATH"/Kenku\ FM.app
+        run: xcrun stapler staple "$KENKU_FM_MAC_PATH"/Kenku\ FM.app
         env:
           KENKU_FM_MAC_ZIP_PATH: "./out/mac"
       - name: Zip App - Release Version

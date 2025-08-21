@@ -191,6 +191,7 @@ jobs:
             backgrounds
           path: kenku-fm-assets
       - name: Move Images to Directory
+        shell: bash
         run: |
           mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
           rm -rf ./kenku-fm-assets
@@ -222,7 +223,7 @@ jobs:
           CASTLABS_ACCOUNT_NAME: ${{ secrets.CASTLABS_ACCOUNT_NAME }}
           CASTLABS_ACCOUNT_PASSWORD: ${{ secrets.CASTLABS_ACCOUNT_PASSWORD }}
       - name: Create App
-        shell: bash.exe
+        shell: bash
         run: |
           CERT_PASSWORD=$(echo "${WINDOWS_CERT_PWD}" | openssl base64 -A -d)
           yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows
@@ -233,7 +234,7 @@ jobs:
           WINDOWS_CERT_PWD: ${{ secrets.WINDOWS_CERT_PWD }}
           TAG: ${{ github.ref_name}}
       # - name: Publish
-      #   shell: bash.exe
+      #   shell: bash
       #   run: |
       #     VERSION=${TAG//v}
       #     RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)

@@ -41,7 +41,7 @@ jobs:
       - name: Node Config
         uses: actions/setup-node@v4
         with:
-          node-version: "22.x"
+          node-version: "18.x"
           cache: "yarn"
       - name: Install Dependencies
         run: yarn install --non-interactive --frozen-lockfile

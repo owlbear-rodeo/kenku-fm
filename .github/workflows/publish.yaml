@@ -9,6 +9,43 @@ on:
       - prereleased
 
 jobs:
+  linux-release:
+    runs-on: $${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [warp-ubuntu-2204-x64-2x]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node Config
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18.x"
+          cache: "yarn"
+      - run: rustup update stable && rustup default stable
+      - name: Install Dependencies
+        run: yarn install --non-interactive --frozen-lockfile
+      - name: Get Images
+        uses: actions/checkout@v4
+        with:
+          repository: owlbear-rodeo/kenku-fm-assets
+          token: ${{ secrets.KENKU_ASSET_REPO_TOKEN }}
+          sparse-checkout: |
+            backgrounds
+          path: kenku-fm-assets
+      - name: Move Images to Directory
+        run: |
+          mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
+          rm -rf ./kenku-fm-assets
+      - name: Install Cargo CP Artifcact
+        run: npm install -g cargo-cp-artifact
+      - name: Publish App
+        run: yarn run publish
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+
   mac-release:
     runs-on: ${{ matrix.os }}
 

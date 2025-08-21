@@ -210,8 +210,8 @@ jobs:
           $CERT = "${DIR}\certificate.pfx"
           $CERT_PASSWORD = $(echo $env:WINDOWS_CERT_PWD | openssl base64 -A -d)
 
-          C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\kenku-fm.exe"
-          C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\Squirrel.exe"
+          "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe" sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\kenku-fm.exe"
+          "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe" sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\Squirrel.exe"
         env:
           WINDOWS_CERT: ${{ secrets.WINDOWS_CERT }}
           WINDOWS_CERT_PWD: ${{ secrets.WINDOWS_CERT_PWD }}

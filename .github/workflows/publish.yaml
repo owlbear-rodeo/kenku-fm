@@ -170,6 +170,7 @@ jobs:
 
     steps:
       - name: Set env ARCH
+        shell: bash
         run: |
           if [[ ${{ runner.arch }} == 'ARM64' ]]; then
               echo "ARCH=arm64" >> "$GITHUB_ENV"

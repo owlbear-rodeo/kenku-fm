@@ -156,3 +156,90 @@ jobs:
           ./publish/script-macos.sh "${KENKU_FM_MAC_PATH}/Kenku FM.zip" $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-$ARCH-$VERSION.zip
         env:
           TAG: ${{ github.ref_name}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  win-release:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [warp-windows-latest-x64-4x]
+
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install Widevine Python Module
+        run: |
+          python -m pip install --upgrade castlabs-evs
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node Config
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18.x"
+          cache: "yarn"
+      - name: Install Dependencies
+        run: yarn install --non-interactive --frozen-lockfile
+      - name: Get Images
+        uses: actions/checkout@v4
+        with:
+          repository: owlbear-rodeo/kenku-fm-assets
+          token: ${{ secrets.KENKU_ASSET_REPO_TOKEN }}
+          sparse-checkout: |
+            backgrounds
+          path: kenku-fm-assets
+      - name: Move Images to Directory
+        run: |
+          mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
+          rm -rf ./kenku-fm-assets
+      - run: rustup update stable && rustup default stable
+      - name: Install Cargo CP Artifcact
+        run: npm install -g cargo-cp-artifact
+      - name: Make Package
+        run: yarn run make
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+      - name: Signtool
+        run: |
+          echo $env:WINDOWS_CERT | openssl base64 -A -d -out certificate.pfx
+          
+          $DIR = $(pwd)
+          $CERT = "${DIR}\certificate.pfx"
+          $CERT_PASSWORD = $(echo $env:WINDOWS_CERT_PWD | openssl base64 -A -d)
+
+          C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\kenku-fm.exe"
+          C:\"Program Files (x86)"\"Windows Kits"\10\bin\x64\signtool.exe sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-x64\Squirrel.exe"
+        env:
+          WINDOWS_CERT: ${{ secrets.WINDOWS_CERT }}
+          WINDOWS_CERT_PWD: ${{ secrets.WINDOWS_CERT_PWD }}
+      - name: Widevine Signature
+        run: |
+          python -m castlabs_evs.account -n reauth -A $env:CASTLABS_ACCOUNT_NAME -P $env:CASTLABS_ACCOUNT_PASSWORD
+          python -m castlabs_evs.vmp sign-pkg ".\out\Kenku FM-win32-x64"
+        env:
+          CASTLABS_ACCOUNT_NAME: ${{ secrets.CASTLABS_ACCOUNT_NAME }}
+          CASTLABS_ACCOUNT_PASSWORD: ${{ secrets.CASTLABS_ACCOUNT_PASSWORD }}
+      - name: Create App
+        shell: bash.exe
+        run: |
+          CERT_PASSWORD=$(echo "${WINDOWS_CERT_PWD}" | openssl base64 -A -d)
+          yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows
+          
+          VERSION=${TAG//v}
+          node ./publish/windows/index.js ./ $VERSION  $CERT_PASSWORD
+        env:
+          WINDOWS_CERT_PWD: ${{ secrets.WINDOWS_CERT_PWD }}
+          TAG: ${{ github.ref_name}}
+      # - name: Publish
+      #   shell: bash.exe
+      #   run: |
+      #     VERSION=${TAG//v}
+      #     RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
+      #     ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-win32-x64.exe $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-win32-x64.exe
+      #     ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-full.nupkg $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-full.nupkg
+      #     ./publish/script-win.sh ./out/windows/RELEASES $GITHUB_TOKEN $RELEASE_ID RELEASES
+      #   env:
+      #     TAG: ${{ github.ref_name}}
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

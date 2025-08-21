@@ -10,7 +10,7 @@ on:
 
 jobs:
   linux-release:
-    runs-on: warp-ubuntu-2204-x64-2x
+    runs-on: warp-ubuntu-2204-x64-4x
 
     steps:
       - name: Checkout
@@ -41,6 +41,7 @@ jobs:
         run: yarn run publish
         env:
           CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   mac-release:
     if: false

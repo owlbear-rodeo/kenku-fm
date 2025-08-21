@@ -1,7 +1,7 @@
 name: Publish Kenku FM
 on:
   push:
-    branches: 
+    branches:
       - experimental/*
   workflow_dispatch:
   release:
@@ -14,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-13-xlarge]
+        os: [warp-macos-13-arm64-6x]
 
     steps:
       - name: Set env ARCH
@@ -43,7 +43,7 @@ jobs:
         run: yarn install --non-interactive --frozen-lockfile
       - name: Get Images
         uses: actions/checkout@v4
-        with: 
+        with:
           repository: owlbear-rodeo/kenku-fm-assets
           token: ${{ secrets.KENKU_ASSET_REPO_TOKEN }}
           sparse-checkout: |
@@ -78,7 +78,7 @@ jobs:
           security import "$CERTIFICATE_P12" -k "$KEYCHAIN" -P "${CERT_PASSWORD}" -A
           security set-key-partition-list -S apple-tool:,apple: -s -k "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN"
           rm -fr *.p12
-        env: 
+        env:
           CERT_OSX_P12: ${{ secrets.CERT_OSX_P12 }}
           APPLE_KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
           CERT_PASSWORD: ${{ secrets.CERT_PASSWORD }}

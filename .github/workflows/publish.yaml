@@ -10,6 +10,7 @@ on:
 
 jobs:
   linux-release:
+    if: false
     runs-on: warp-ubuntu-2204-x64-4x
 
     steps:

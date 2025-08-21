@@ -10,11 +10,7 @@ on:
 
 jobs:
   linux-release:
-    runs-on: $${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [warp-ubuntu-2204-x64-2x]
+    runs-on: warp-ubuntu-2204-x64-2x
 
     steps:
       - name: Checkout

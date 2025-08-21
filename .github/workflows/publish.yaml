@@ -47,6 +47,7 @@ jobs:
           CARGO_NET_GIT_FETCH_WITH_CLI: "true"
 
   mac-release:
+    if: false
     runs-on: ${{ matrix.os }}
 
     strategy:

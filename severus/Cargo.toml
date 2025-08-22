@@ -28,12 +28,12 @@ webrtc = "0.11.0"
 version = "1.0.0"
 
 [dependencies.tokio]
-version = "1.38"
-features = ["macros", "rt-multi-thread"]
+version = "1.47.1"
+features = ["full"]
 
 [dependencies.discortp]
-features = ["discord-full"]
 version = "0.5"
+features = ["discord-full"]
 
 [dependencies.crypto_secretbox]
 version = "0.1.1"

@@ -22,7 +22,7 @@ export interface VoiceGatewaySocketEvents {
 export class VoiceGatewaySocket extends TypedEmitter<VoiceGatewaySocketEvents> {
   private ws: WebSocket;
   /** The current heartbeat timer */
-  private heartbeat?: NodeJS.Timer;
+  private heartbeat?: NodeJS.Timeout;
   /** Has the last heartbeat been acknowledged */
   private acknowledged: boolean;
   private sessionId: string;

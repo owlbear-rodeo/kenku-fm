@@ -20,7 +20,7 @@ export class GatewaySocket extends TypedEmitter<GatewaySocketEvents> {
   /** The last sequence number from a OpCode 0 Dispatch event */
   private sequence: number | null;
   /** The current heartbeat timer */
-  private heartbeat?: NodeJS.Timeout | NodeJS.Timer;
+  private heartbeat?: NodeJS.Timeout;
   /** Has the last heartbeat been acknowledged */
   private acknowledged: boolean;
 

@@ -127,7 +127,9 @@ jobs:
           CERT_PASSWORD: ${{ secrets.CERT_PASSWORD }}
       - name: OSX Signature
         run: |
-          npx electron-osx-sign "${KENKU_FM_MAC_PATH}/Kenku FM.app" --gatekeeper-assess=false --identity="Developer ID Application: Mitchell McCaffrey (${APPLE_DEVELOPER_TEAM_ID})" --hardened-runtime=true --entitlements="entitlements.plist" --entitlements-inherit="entitlements.plist"
+          yarn install --non-interactive --frozen-lockfile --cwd ./publish/mac
+
+          node ./publish/mac/package.js ./ "Mitchell McCaffrey" "${APPLE_DEVELOPER_TEAM_ID}" ./entitlements.plist
         env:
           APPLE_DEVELOPER_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_TEAM_ID }}
           KENKU_FM_MAC_ZIP_PATH: "./out/mac"
@@ -150,7 +152,9 @@ jobs:
           KENKU_FM_MAC_ZIP_PATH: "./out/mac"
       - name: Create DMG
         run: |
-          npx electron-installer-dmg --background=./src/assets/dmg-background.png --icon=./src/assets/setup.icns --out="${KENKU_FM_MAC_PATH}/" "${KENKU_FM_MAC_PATH}/Kenku FM.app" "Kenku FM"
+          yarn install --non-interactive --frozen-lockfile --cwd ./publish/mac
+
+          node ./publish/mac/package.js "${KENKU_FM_MAC_PATH}/" "${KENKU_FM_MAC_PATH}/" "Kenku FM" ./src/assets/dmg-background.png ./src/assets/setup.icns
       - name: Publish DMG
         run: |
           VERSION=${TAG//v}
@@ -189,7 +193,7 @@ jobs:
       - name: Node Config
         uses: actions/setup-node@v4
         with:
-          node-version: "18.x"
+          node-version: "22.x"
           cache: "yarn"
       - name: Install Dependencies
         run: yarn install --non-interactive --frozen-lockfile

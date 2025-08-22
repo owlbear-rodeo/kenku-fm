@@ -32,7 +32,7 @@ import { movePlaylist, Track, addPlaylist, addTracks } from "./playlistsSlice";
 import { PlaylistAdd } from "./PlaylistAdd";
 import { SortableItem } from "../../common/SortableItem";
 import { startQueue } from "./playlistPlaybackSlice";
-import { useDrop } from "../../common/useDrop";
+import { useFolderDrop } from "../../common/useFolderDrop";
 import { getRandomBackground } from "../../backgrounds";
 import { useHideScrollbar } from "../../../renderer/common/useHideScrollbar";
 import { useNavigate } from "react-router-dom";
@@ -85,7 +85,7 @@ export function Playlists({ onPlay }: PlaylistsProps) {
 
   const [addOpen, setAddOpen] = useState(false);
 
-  const { dragging, containerListeners, overlayListeners } = useDrop(
+  const { dragging, containerListeners, overlayListeners } = useFolderDrop(
     (directories) => {
       for (let directory of Object.values(directories)) {
         const files = directory.audioFiles;

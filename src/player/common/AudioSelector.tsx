@@ -1,5 +1,4 @@
 import React, { useCallback } from "react";
-import { useDropzone } from "react-dropzone";
 
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
@@ -11,6 +10,7 @@ import {
   encodeFilePath,
   cleanFileName,
 } from "../../renderer/common/drop";
+import useFileDrop, { FileInfo } from "./useFileDrop";
 
 type AudioSelectorProps = {
   value: string;
@@ -37,20 +37,18 @@ export function AudioSelector({
     }
   }
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback((acceptedFiles: FileInfo[]) => {
     const file = acceptedFiles[0];
     if (file) {
       onChange(encodeFilePath(file.path));
       onFileName(cleanFileName(file.name));
     }
   }, []);
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+
+  const { rootProps, inputProps, isDragging } = useFileDrop({
     onDrop,
-    accept: {
-      "audio/*": [],
-    },
+    accept: "audio/*",
     multiple: false,
-    useFsAccessApi: false,
   });
 
   const warning =
@@ -98,10 +96,10 @@ export function AudioSelector({
         }}
         variant="outlined"
         fullWidth
-        {...getRootProps()}
+        {...rootProps}
       >
-        <input {...getInputProps()} />
-        {isDragActive ? (
+        <input {...inputProps} />
+        {isDragging ? (
           <Typography variant="caption">Drop the track here...</Typography>
         ) : (
           <Typography variant="caption">

@@ -1,0 +1,11 @@
+{
+  "name": "mac",
+  "version": "1.0.0",
+  "description": "file for signing mac app",
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@electron/osx-sign": "^2.0.0"
+  }
+}

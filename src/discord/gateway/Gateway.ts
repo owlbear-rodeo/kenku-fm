@@ -206,6 +206,7 @@ export class Gateway extends TypedEmitter<GatewayEvents> {
       this.reconnectTries = 0;
     } else if (event.op === OpCode.Dispatch) {
       if (event.t === "READY") {
+        log.debug("connection ready event", event);
         this.user = event.d.user;
         this.resumeGatewayURL = event.d.resume_gateway_url;
         this.sessionId = event.d.session_id;

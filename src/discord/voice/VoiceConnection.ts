@@ -182,6 +182,7 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
   };
 
   private handleVoiceReady = async (data: ReadyEvent["d"]) => {
+    log.debug("voice ready event", data);
     try {
       if (!data.modes.includes("xsalsa20_poly1305")) {
         throw Error("Invalid encryption mode");

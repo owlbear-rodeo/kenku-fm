@@ -4,7 +4,7 @@ import { exit } from "node:process";
 
 function signApp(appDir, identityName, identityId, entitlementsFile) {
   sign({
-    app: path.join(
+    app: path.resolve(
       appDir,
       "out",
       `Kenku FM-darwin-${process.arch}`,
@@ -15,7 +15,7 @@ function signApp(appDir, identityName, identityId, entitlementsFile) {
     "gatekeeper-assess": false,
     optionsForFile: {
       hardenedRuntime: true,
-      entitlements: path.join(entitlementsFile),
+      entitlements: path.resolve(entitlementsFile),
     },
   })
     .then(() => {

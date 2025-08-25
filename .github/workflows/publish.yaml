@@ -162,7 +162,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   win-release:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os.runner }}
 
     strategy:
       matrix:

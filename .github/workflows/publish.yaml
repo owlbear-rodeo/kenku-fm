@@ -47,26 +47,23 @@ jobs:
 
   mac-release:
     if: false
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os.runner }}
 
     strategy:
       matrix:
-        os: [warp-macos-13-arm64-6x, macos-13]
+        os:
+          - runner: warp-macos-13-arm64-6x
+            arch: arm64
+          - runner: macos-13
+            arch: x64
 
     steps:
-      - name: Set env ARCH
-        run: |
-          if [[ ${{ runner.arch }} == 'ARM64' ]]; then
-              echo "ARCH=arm64" >> "$GITHUB_ENV"
-          elif [[ ${{ runner.arch }} == 'X64' ]]; then
-              echo "ARCH=x64" >> "$GITHUB_ENV"
-          fi
       - name: Select Xcode version
         run: sudo xcode-select -s '/Applications/Xcode_14.3.1.app/Contents/Developer'
       - name: Check Xcode version
         run: xcodebuild -version
       - name: Set Kenku FM Path
-        run: echo "KENKU_FM_MAC_PATH=./out/Kenku FM-darwin-$ARCH" >> $GITHUB_ENV
+        run: echo "KENKU_FM_MAC_PATH=./out/Kenku FM-darwin-${{ matrix.os.arch }}" >> $GITHUB_ENV
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -125,7 +122,7 @@ jobs:
         run: |
           yarn install --non-interactive --frozen-lockfile --cwd ./publish/mac
 
-          node ./publish/mac/package.js ./ "Mitchell McCaffrey" "${APPLE_DEVELOPER_TEAM_ID}" ./entitlements.plist
+          node ./publish/mac/sign.js ./ "Mitchell McCaffrey" "${APPLE_DEVELOPER_TEAM_ID}" ./entitlements.plist
         env:
           APPLE_DEVELOPER_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_TEAM_ID }}
           KENKU_FM_MAC_ZIP_PATH: "./out/mac"
@@ -155,8 +152,8 @@ jobs:
         run: |
           VERSION=${TAG//v}
           RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
-          ./publish/script-macos.sh "${KENKU_FM_MAC_PATH}/Kenku FM.dmg" $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-$ARCH-$VERSION.dmg
-          ./publish/script-macos.sh "${KENKU_FM_MAC_PATH}/Kenku FM.zip" $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-$ARCH-$VERSION.zip
+          ./publish/script-macos.sh "${KENKU_FM_MAC_PATH}/Kenku FM.dmg" $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-${{ matrix.os.arch }}-$VERSION.dmg
+          ./publish/script-macos.sh "${KENKU_FM_MAC_PATH}/Kenku FM.zip" $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-${{ matrix.os.arch }}-$VERSION.zip
         env:
           TAG: ${{ github.ref_name}}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -167,16 +164,12 @@ jobs:
     strategy:
       matrix:
         os:
-          # - runner: warp-windows-latest-x64-4x
-          #   arch: x64
+          - runner: warp-windows-latest-x64-4x
+            arch: x64
           - runner: windows-11-arm
             arch: "arm64"
 
     steps:
-      - name: Set env ARCH
-        shell: bash
-        run: |
-          echo "ARCH=${{ matrix.os.arch }}" >> "$GITHUB_ENV"
       - name: Setup Python
         uses: actions/setup-python@v5
         with:

@@ -188,13 +188,13 @@ jobs:
         with:
           repository: "khmyznikov/PyEnv-WoA-State"
           tag: "cryptography-46.0.0-py3.11-arm64"
-          fileName: "cryptography-46.0.0.whl"
+          fileName: "*.whl"
           out-file-path: "wheels"
 
       - if: ${{ matrix.os.arch == 'arm64' }}
         name: Install from wheel
         run: |
-          python -m pip install --find-links=wheels cryptography
+          python -m pip install --no-index --find-links=wheels cryptography
           # Verify installation
           python -c "import cryptography; print(f'Installed cryptography version: {cryptography.__version__}')"
 

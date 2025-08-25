@@ -187,7 +187,7 @@ jobs:
         uses: robinraju/release-downloader@v1.8
         with:
           repository: "khmyznikov/PyEnv-WoA-State"
-          tag: "cryptography-46.0.0"
+          tag: "cryptography-46.0.0-py3.11-arm64"
           fileName: "*.whl"
           out-file-path: "wheels"
 

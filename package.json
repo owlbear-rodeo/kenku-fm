@@ -5,6 +5,7 @@
   "description": "Online tabletop audio sharing for Discord",
   "main": "./.webpack/main",
   "scripts": {
+    "install": "yarn --cwd ./severus",
     "start": "yarn --cwd ./severus && electron-forge start",
     "package": "env-cmd electron-forge package",
     "make": "yarn --cwd ./severus build-release && env-cmd electron-forge make",

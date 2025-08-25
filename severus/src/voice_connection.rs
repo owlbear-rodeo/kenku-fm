@@ -1,4 +1,4 @@
-use crypto_secretbox::{Error as CryptoError, KeyInit, XSalsa20Poly1305 as Cipher};
+use aes_gcm::{Error as CryptoError};
 use discortp::discord::{IpDiscoveryPacket, IpDiscoveryType, MutableIpDiscoveryPacket};
 use log::error;
 use neon::context::Context;
@@ -15,6 +15,8 @@ use tokio::sync::Notify;
 
 use crate::broadcast::Broadcast;
 use crate::constants::runtime;
+use crate::encrypt::CryptoMode;
+use crate::encrypt::CryptoState;
 use crate::rtc_udp;
 use crate::{error::Error, error::Result};
 
@@ -28,7 +30,7 @@ pub struct VoiceConnection {
     pub udp_socket: Arc<UdpSocket>,
     pub ssrc: u32,
     /// A thread safe message used to disconnect the rtc_udp runner
-    notify: Arc<Notify>,
+    notify: Arc<Notify>
 }
 
 impl Finalize for VoiceConnection {}
@@ -48,7 +50,7 @@ impl VoiceConnection {
         Ok(Arc::new(Self {
             udp_socket: udp_arc,
             ssrc,
-            notify,
+            notify
         }))
     }
 
@@ -101,13 +103,19 @@ impl VoiceConnection {
     pub async fn connect(
         &self,
         secret_key: Vec<u8>,
+        crypto_mode: String,
         broadcast: Arc<Broadcast>,
         rt: &Runtime,
     ) -> Result<()> {
-        let cipher = match Cipher::new_from_slice(&secret_key) {
+        let crypto_mode = match CryptoMode::from_str(&crypto_mode) {
             Ok(v) => Ok(v),
-            Err(_) => Err(Error::Crypto(CryptoError)),
+            Err(_) => Err(Error::Crypto(CryptoError))
         }?;
+        let cipher = match crypto_mode.cipher_from_key(&secret_key) {
+            Ok(v) => Ok(v),
+            Err(_) => Err(Error::Crypto(CryptoError))
+        }?;
+        let mut crypto_state = CryptoState::from(crypto_mode);
 
         let udp = Arc::clone(&self.udp_socket);
         let ssrc = self.ssrc;
@@ -117,7 +125,7 @@ impl VoiceConnection {
             let (rtc_tx, rtc_rx) = flume::unbounded();
             let key = broadcast.register(rtc_tx);
 
-            rtc_udp::runner(rtc_rx, udp, cipher, ssrc, notify).await;
+            rtc_udp::runner(rtc_rx, udp, cipher, &mut crypto_state, ssrc, notify).await;
 
             broadcast.unregister(key);
         });
@@ -186,7 +194,8 @@ impl VoiceConnection {
         let rt = runtime(&mut cx)?;
         let voice_connection = Arc::clone(&&cx.argument::<JsBox<Arc<VoiceConnection>>>(0)?);
         let secret_key_arr = cx.argument::<JsArray>(1)?.to_vec(&mut cx)?;
-        let broadcast = Arc::clone(&&cx.argument::<JsBox<Arc<Broadcast>>>(2)?);
+        let crypto_mode = cx.argument::<JsString>(2)?.value(&mut cx);
+        let broadcast = Arc::clone(&&cx.argument::<JsBox<Arc<Broadcast>>>(3)?);
 
         let mut secret_key = Vec::new();
 
@@ -202,7 +211,7 @@ impl VoiceConnection {
         let (deferred, promise) = cx.promise();
 
         rt.spawn(async move {
-            let connected = voice_connection.connect(secret_key, broadcast, rt).await;
+            let connected = voice_connection.connect(secret_key, crypto_mode, broadcast, rt).await;
 
             deferred.settle_with(&channel, move |mut cx| match connected {
                 Ok(_) => Ok(cx.undefined()),

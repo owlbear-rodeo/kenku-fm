@@ -1,4 +1,4 @@
-use crypto_secretbox::aead::Error as CryptoError;
+use aead::Error as CryptoError;
 use std::{error::Error as StdError, fmt, io::Error as IoError};
 use tokio::time::error::Elapsed;
 

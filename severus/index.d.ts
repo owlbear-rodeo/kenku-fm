@@ -18,6 +18,7 @@ declare module "severus" {
     voiceConnectionConnect: (
       voiceConnection: VoiceConnection,
       secretKey: number[],
+      cryptoMode: string,
       broadcast: Broadcast
     ) => Promise<void>;
     voiceConnectionDisconnect: (

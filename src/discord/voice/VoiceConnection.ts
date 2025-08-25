@@ -14,6 +14,7 @@ import {
 } from "./VoiceGateway";
 import { TypedEmitter } from "tiny-typed-emitter";
 import {
+  DiscordVoiceEncryptionMode,
   ReadyEvent,
   SelectProtocolEvent,
   SessionDescriptionEvent,
@@ -24,6 +25,11 @@ import severus, {
   Broadcast,
   VoiceConnection as SeverusVoiceConnection,
 } from "severus";
+import {
+  FALLBACK_AUDIO_ENCRYPTION,
+  PREFERRED_AUDIO_ENCRYPTION,
+  SUPPORTED_AUDIO_ENCRYPTION,
+} from "../constants";
 
 export interface VoiceConnectionEvents {
   error: (error: Error) => void;
@@ -184,8 +190,11 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
   private handleVoiceReady = async (data: ReadyEvent["d"]) => {
     log.debug("voice ready event", data);
     try {
-      if (!data.modes.includes("xsalsa20_poly1305")) {
-        throw Error("Invalid encryption mode");
+      const isVoiceEncryptionSupported = data.modes.filter((mode) =>
+        SUPPORTED_AUDIO_ENCRYPTION.includes(mode)
+      );
+      if (isVoiceEncryptionSupported.length === 0) {
+        throw Error("Encryption mode not supported");
       }
       this.updateSpeaking({
         speaking: 1 << 1,
@@ -200,12 +209,19 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
       const ip = await severus.voiceConnectionDiscoverIp(
         this.severusConnection
       );
+      const selectedEncryption: DiscordVoiceEncryptionMode =
+        isVoiceEncryptionSupported.includes(PREFERRED_AUDIO_ENCRYPTION)
+          ? PREFERRED_AUDIO_ENCRYPTION
+          : FALLBACK_AUDIO_ENCRYPTION;
+      log.debug(
+        `selecting encryption mode: ${selectedEncryption} for audio encryption`
+      );
       this.selectProtocol({
         protocol: "udp",
         data: {
           address: ip.address,
           port: ip.port,
-          mode: "xsalsa20_poly1305",
+          mode: selectedEncryption,
         },
       });
     } catch (error) {
@@ -223,6 +239,7 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
       await severus.voiceConnectionConnect(
         this.severusConnection,
         session.secret_key,
+        session.mode,
         this.broadcast
       );
     } catch (error) {

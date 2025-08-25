@@ -23,6 +23,15 @@ flume = "0.11.0"
 dashmap = "5.5.3"
 rtp = "0.11.0"
 webrtc = "0.11.0"
+chacha20poly1305 = "0.10.1"
+aead = "0.5.2"
+typenum = "1.18.0"
+byteorder = "1"
+aes-gcm = "0.10.3"
+
+[dependencies.crypto-common]
+version = "0.1"
+features = ["std"]
 
 [dependencies.neon]
 version = "1.0.0"
@@ -34,7 +43,3 @@ features = ["full"]
 [dependencies.discortp]
 version = "0.5"
 features = ["discord-full"]
-
-[dependencies.crypto_secretbox]
-version = "0.1.1"
-features = ["std"]

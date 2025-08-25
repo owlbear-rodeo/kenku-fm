@@ -47,6 +47,19 @@ export interface IdentifyEvent extends BaseEvent {
   };
 }
 
+const DISCORD_VOICE_ENCRYPTION_MODES = [
+  "aead_aes256_gcm_rtpsize",
+  "aead_xchacha20_poly1305_rtpsize",
+  "xsalsa20_poly1305_lite_rtpsize",
+  "aead_aes256_gcm",
+  "xsalsa20_poly1305",
+  "xsalsa20_poly1305_suffix",
+  "xsalsa20_poly1305_lite",
+] as const;
+
+export type DiscordVoiceEncryptionMode =
+  (typeof DISCORD_VOICE_ENCRYPTION_MODES)[number];
+
 export interface SelectProtocolEvent extends BaseEvent {
   op: VoiceOpCode.SelectProtocol;
   d: {
@@ -54,7 +67,7 @@ export interface SelectProtocolEvent extends BaseEvent {
     data: {
       address: string;
       port: number;
-      mode: string;
+      mode: DiscordVoiceEncryptionMode;
     };
   };
 }
@@ -68,7 +81,7 @@ export interface ReadyEvent extends BaseEvent {
     ssrc: number;
     ip: string;
     port: number;
-    modes: string[];
+    modes: DiscordVoiceEncryptionMode[];
   };
 }
 
@@ -86,8 +99,13 @@ export interface HeartbeatEvent extends BaseEvent {
 export interface SessionDescriptionEvent extends BaseEvent {
   op: VoiceOpCode.SessionDescription;
   d: {
-    mode: string;
+    video_codec: string;
+    secure_frames_version: number;
+    mode: DiscordVoiceEncryptionMode;
     secret_key: number[];
+    media_session_id: string;
+    dave_protocol_version: number;
+    audio_codec: string;
   };
 }
 

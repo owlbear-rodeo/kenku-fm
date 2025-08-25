@@ -167,8 +167,8 @@ jobs:
     strategy:
       matrix:
         os:
-          - runner: warp-windows-latest-x64-4x
-            arch: x64
+          # - runner: warp-windows-latest-x64-4x
+          #   arch: x64
           - runner: windows-11-arm
             arch: "arm64"
 
@@ -188,7 +188,7 @@ jobs:
         with:
           repository: "khmyznikov/PyEnv-WoA-State"
           tag: "cryptography-46.0.0-py3.11-arm64"
-          fileName: "*.whl"
+          fileName: "cryptography-46.0.0.whl"
           out-file-path: "wheels"
 
       - if: ${{ matrix.os.arch == 'arm64' }}

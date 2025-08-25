@@ -6,7 +6,7 @@
   "main": "./.webpack/main",
   "scripts": {
     "install": "yarn --cwd ./severus",
-    "start": "yarn --cwd ./severus && electron-forge start",
+    "start": "yarn --cwd ./severus build-debug && electron-forge start",
     "package": "env-cmd electron-forge package",
     "make": "yarn --cwd ./severus build-release && env-cmd electron-forge make",
     "publish": "yarn --cwd ./severus build-release && env-cmd electron-forge publish",

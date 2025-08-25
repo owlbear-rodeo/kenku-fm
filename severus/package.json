@@ -7,7 +7,6 @@
     "build": "cargo-cp-artifact -nc ../dist/index.node -- cargo build --message-format=json-render-diagnostics",
     "build-debug": "yarn build",
     "build-release": "yarn build --release",
-    "install": "yarn build-debug",
     "test": "cargo test"
   },
   "author": "",

@@ -4,7 +4,7 @@ on:
     branches:
       - experimental/*
     tags:
-      - 'v*.*.*-experimental'
+      - "v*.*.*-experimental"
   workflow_dispatch:
 
 jobs:
@@ -22,7 +22,7 @@ jobs:
       - name: Node Config
         uses: actions/setup-node@v4
         with:
-          node-version: "18.x"
+          node-version: "22.x"
           cache: "yarn"
       - run: rustup update stable && rustup default stable
       - name: Install Dependencies
@@ -78,7 +78,7 @@ jobs:
       - name: Node Config
         uses: actions/setup-node@v4
         with:
-          node-version: "18.x"
+          node-version: "22.x"
           cache: "yarn"
       - name: Install Dependencies
         run: yarn install --non-interactive --frozen-lockfile
@@ -166,21 +166,38 @@ jobs:
 
     strategy:
       matrix:
-        os: [windows-11-arm]
+        os:
+          - runner: warp-windows-latest-x64-4x
+            arch: x64
+          - runner: windows-11-arm
+            arch: "arm64"
 
     steps:
       - name: Set env ARCH
         shell: bash
         run: |
-          if [[ ${{ runner.arch }} == 'ARM64' ]]; then
-              echo "ARCH=arm64" >> "$GITHUB_ENV"
-          elif [[ ${{ runner.arch }} == 'X64' ]]; then
-              echo "ARCH=x64" >> "$GITHUB_ENV"
-          fi
+          echo "ARCH=${{ matrix.os.arch }}" >> "$GITHUB_ENV"
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+
+      - if: ${{ matrix.os.arch == 'arm64' }}
+        name: Download cryptography wheel
+        uses: robinraju/release-downloader@v1.8
+        with:
+          repository: "khmyznikov/PyEnv-WoA-State"
+          tag: "cryptography-46.0.0"
+          fileName: "*.whl"
+          out-file-path: "wheels"
+
+      - if: ${{ matrix.os.arch == 'arm64' }}
+        name: Install from wheel
+        run: |
+          python -m pip install --find-links=wheels cryptography
+          # Verify installation
+          python -c "import cryptography; print(f'Installed cryptography version: {cryptography.__version__}')"
+
       - name: Install Widevine Python Module
         run: |
           python -m pip install --upgrade castlabs-evs
@@ -214,7 +231,7 @@ jobs:
       - name: Signtool
         run: |
           echo $env:WINDOWS_CERT | openssl base64 -A -d -out certificate.pfx
-          
+
           $DIR = $(pwd)
           $CERT = "${DIR}\certificate.pfx"
           $CERT_PASSWORD = $(echo $env:WINDOWS_CERT_PWD | openssl base64 -A -d)
@@ -236,7 +253,7 @@ jobs:
         run: |
           CERT_PASSWORD=$(echo "${WINDOWS_CERT_PWD}" | openssl base64 -A -d)
           yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows
-          
+
           VERSION=${TAG//v}
           node ./publish/windows/index.js ./ $VERSION  $CERT_PASSWORD
         env:

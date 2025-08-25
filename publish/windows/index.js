@@ -5,7 +5,7 @@ const { exit } = require("process");
 async function createApp(dir, version, certPassword) {
   try {
     await electronInstaller.createWindowsInstaller({
-      appDirectory: path.join(dir, "out", "Kenku FM-win32-x64"),
+      appDirectory: path.join(dir, "out", `Kenku FM-win32-${process.arch}`),
       outputDirectory: path.join(dir, "out", "windows"),
       loadingGif: path.join(dir, "src", "assets", "loading.gif"),
       setupIcon: path.join(dir, "src", "assets", "setup.ico"),

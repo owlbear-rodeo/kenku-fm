@@ -70,13 +70,17 @@ export const tabsSlice = createSlice({
       state.tabs.allIds.splice(newIndex, 0, action.payload.active);
     },
     increaseTabPlayingMedia: (state, action: PayloadAction<number>) => {
-      state.tabs.byId[action.payload].playingMedia += 1;
+      if (action.payload in state.tabs.byId) {
+        state.tabs.byId[action.payload].playingMedia += 1;
+      }
     },
     decreaseTabPlayingMedia: (state, action: PayloadAction<number>) => {
-      state.tabs.byId[action.payload].playingMedia = Math.max(
-        state.tabs.byId[action.payload].playingMedia - 1,
-        0
-      );
+      if (action.payload in state.tabs.byId) {
+        state.tabs.byId[action.payload].playingMedia = Math.max(
+          state.tabs.byId[action.payload].playingMedia - 1,
+          0
+        );
+      }
     },
   },
 });

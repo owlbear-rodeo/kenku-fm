@@ -82,6 +82,6 @@
     "react-router-dom": "^6.24.1",
     "redux-persist": "^6.0.0",
     "tiny-typed-emitter": "^2.1.0",
-    "uuid": "^10.0.0"
+    "uuid": "^11.1.0"
   }
 }

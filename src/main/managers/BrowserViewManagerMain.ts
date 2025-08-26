@@ -70,19 +70,19 @@ export class BrowserViewManagerMain {
   }
 
   private resizeListener = () => {
-      if (!this.window || !this.topView) {
-        return;
-      }
-      const bounds = this.window.getBounds();
-      const viewBounds = this.topView.getBounds();
+    if (!this.window || !this.topView) {
+      return;
+    }
+    const bounds = this.window.getBounds();
+    const viewBounds = this.topView.getBounds();
 
-      this.topView.setBounds({
-        x: viewBounds.x,
-        y: viewBounds.y,
-        width: bounds.width - viewBounds.x,
-        height: bounds.height - viewBounds.y,
-      });
-    };
+    this.topView.setBounds({
+      x: viewBounds.x,
+      y: viewBounds.y,
+      width: bounds.width - viewBounds.x,
+      height: bounds.height - viewBounds.y,
+    });
+  };
 
   private handleCreateBrowserView = (
     event: Electron.IpcMainEvent,
@@ -210,6 +210,9 @@ export class BrowserViewManagerMain {
 
   removeBrowserView(id: number) {
     if (this.views[id]) {
+      if (this.topView === this.views[id]) {
+        this.topView = undefined;
+      }
       this.views[id].webContents.close({ waitForBeforeUnload: false });
       this.window.contentView.removeChildView(this.views[id]);
       (this.views[id].webContents as any).destroy();
@@ -222,12 +225,16 @@ export class BrowserViewManagerMain {
       this.views[id].webContents.close({ waitForBeforeUnload: false });
       this.window.contentView.removeChildView(this.views[id]);
       (this.views[id].webContents as any).destroy();
+      this.topView = undefined;
       delete this.views[id];
     }
   }
 
   hideBrowserView(id: number) {
     if (this.views[id]) {
+      if (this.topView === this.views[id]) {
+        this.topView = undefined;
+      }
       this.window.contentView.removeChildView(this.views[id]);
     }
   }

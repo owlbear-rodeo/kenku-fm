@@ -45,6 +45,7 @@ jobs:
     runs-on: ${{ matrix.os.runner }}
 
     strategy:
+      fail-fast: false
       matrix:
         os:
           - runner: warp-macos-13-arm64-6x
@@ -157,6 +158,7 @@ jobs:
     runs-on: ${{ matrix.os.runner }}
 
     strategy:
+      fail-fast: false
       matrix:
         os:
           - runner: warp-windows-latest-x64-4x

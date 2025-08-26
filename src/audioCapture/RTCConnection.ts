@@ -28,11 +28,17 @@ export class RTCConnection extends TypedEmitter<RTCConnectionEvents> {
         try {
           window.capture.log("debug", "renderer rtc stream negotiating");
           const offer = await this.peerConnection.createOffer();
-          offer.sdp = offer.sdp.replace(
-            "minptime=10;useinbandfec=1",
-            // Increase bitrate and enable stereo
-            "minptime=10; useinbandfec=1; maxaveragebitrate=128000; stereo=1; sprop-stereo=1"
-          );
+          offer.sdp = offer.sdp
+            .replace(
+              "minptime=10;useinbandfec=1",
+              // Increase bitrate and enable stereo
+              "minptime=10; useinbandfec=1; maxaveragebitrate=128000; stereo=1; sprop-stereo=1"
+            )
+            .replace(
+              // Add preferred packetization time for Opus
+              /(a=rtpmap:\d+ opus\/48000\/2.*\r?\n)/,
+              `$1a=ptime:20\r\na=maxptime:60\r\n`
+            );
           await this.peerConnection.setLocalDescription(offer);
           const answer = await window.capture.rtcSignal(
             JSON.stringify(this.peerConnection.localDescription)

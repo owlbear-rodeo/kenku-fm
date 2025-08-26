@@ -158,6 +158,7 @@ jobs:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   win-release:
+    if: false
     runs-on: ${{ matrix.os.runner }}
 
     strategy:

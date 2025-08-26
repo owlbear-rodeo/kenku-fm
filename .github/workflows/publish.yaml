@@ -46,7 +46,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   mac-release:
-    if: false
     runs-on: ${{ matrix.os.runner }}
 
     strategy:
@@ -122,7 +121,7 @@ jobs:
         run: |
           yarn install --non-interactive --frozen-lockfile --cwd ./publish/mac
 
-          node ./publish/mac/sign.js ./ "Mitchell McCaffrey" "${APPLE_DEVELOPER_TEAM_ID}" ./entitlements.plist
+          node ./publish/mac/sign.js "Mitchell McCaffrey" "${APPLE_DEVELOPER_TEAM_ID}"
         env:
           APPLE_DEVELOPER_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_TEAM_ID }}
           KENKU_FM_MAC_ZIP_PATH: "./out/mac"
@@ -147,16 +146,16 @@ jobs:
         run: |
           yarn install --non-interactive --frozen-lockfile --cwd ./publish/mac
 
-          node ./publish/mac/package.js "${KENKU_FM_MAC_PATH}/" "${KENKU_FM_MAC_PATH}/" "Kenku FM" ./src/assets/dmg-background.png ./src/assets/setup.icns
-      - name: Publish DMG
-        run: |
-          VERSION=${TAG//v}
-          RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
-          ./publish/script-macos.sh "${KENKU_FM_MAC_PATH}/Kenku FM.dmg" $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-${{ matrix.os.arch }}-$VERSION.dmg
-          ./publish/script-macos.sh "${KENKU_FM_MAC_PATH}/Kenku FM.zip" $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-${{ matrix.os.arch }}-$VERSION.zip
-        env:
-          TAG: ${{ github.ref_name}}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          node ./publish/mac/package.js
+      # - name: Publish DMG
+      #   run: |
+      #     VERSION=${TAG//v}
+      #     RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
+      #     ./publish/script-macos.sh "${KENKU_FM_MAC_PATH}/Kenku FM.dmg" $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-${{ matrix.os.arch }}-$VERSION.dmg
+      #     ./publish/script-macos.sh "${KENKU_FM_MAC_PATH}/Kenku FM.zip" $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-${{ matrix.os.arch }}-$VERSION.zip
+      #   env:
+      #     TAG: ${{ github.ref_name}}
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   win-release:
     runs-on: ${{ matrix.os.runner }}
@@ -249,7 +248,7 @@ jobs:
           yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows
 
           VERSION=${TAG//v}
-          node ./publish/windows/index.js ./ $VERSION  $CERT_PASSWORD
+          node ./publish/windows/index.js $VERSION  $CERT_PASSWORD
         env:
           WINDOWS_CERT_PWD: ${{ secrets.WINDOWS_CERT_PWD }}
           TAG: ${{ github.ref_name}}

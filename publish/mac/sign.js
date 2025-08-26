@@ -2,10 +2,12 @@ import { sign } from "@electron/osx-sign";
 import path from "node:path";
 import { exit } from "node:process";
 
-function signApp(appDir, identityName, identityId, entitlementsFile) {
+function signApp(identityName, identityId) {
+  const __dirname = import.meta.dirname;
+  const srcDir = path.resolve(__dirname, "..", "..");
   sign({
-    app: path.resolve(
-      appDir,
+    app: path.join(
+      srcDir,
       "out",
       `Kenku FM-darwin-${process.arch}`,
       "Kenku FM.app"
@@ -15,7 +17,7 @@ function signApp(appDir, identityName, identityId, entitlementsFile) {
     "gatekeeper-assess": false,
     optionsForFile: {
       hardenedRuntime: true,
-      entitlements: path.resolve(entitlementsFile),
+      entitlements: path.resolve(srcDir, "entitlements.plist"),
     },
   })
     .then(() => {
@@ -28,15 +30,8 @@ function signApp(appDir, identityName, identityId, entitlementsFile) {
 }
 
 const args = process.argv.slice(2);
-const appDir = path.resolve(args[0]);
-const identityName = args[1];
-const identityId = args[2];
-const entitlementsFile = args[3];
-
-if (appDir === undefined) {
-  console.log("appDir is undefined");
-  exit(1);
-}
+const identityName = args[0];
+const identityId = args[1];
 
 if (identityName === undefined) {
   console.log("Apple identity name is undefined");
@@ -48,9 +43,4 @@ if (identityId === undefined) {
   exit(1);
 }
 
-if (entitlementsFile === undefined) {
-  console.log("Entitlements is undefined");
-  exit(1);
-}
-
-signApp(appDir, identityName, identityId, entitlementsFile);
+signApp(identityName, identityId);

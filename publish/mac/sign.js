@@ -15,10 +15,10 @@ function signApp(identityName, identityId) {
     identity: `Developer ID Application: ${identityName} (${identityId})`,
     platform: "darwin",
     "gatekeeper-assess": false,
-    optionsForFile: {
+    optionsForFile: () => ({
       hardenedRuntime: true,
       entitlements: path.resolve(srcDir, "entitlements.plist"),
-    },
+    }),
   })
     .then(() => {
       console.log("Successfully signed application");

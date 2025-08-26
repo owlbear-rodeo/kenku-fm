@@ -4,6 +4,7 @@
   "description": "packaging script for electron app (windows)",
   "main": "index.js",
   "license": "MIT",
+  "type": "module",
   "devDependencies": {
     "electron-winstaller": "^5.1.0"
   }

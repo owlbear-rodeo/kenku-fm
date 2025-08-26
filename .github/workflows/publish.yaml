@@ -1,11 +1,8 @@
 name: Publish Kenku FM
 on:
   push:
-    branches:
-      - experimental/*
     tags:
       - "v*.*.*-experimental"
-  workflow_dispatch:
 
 jobs:
   linux-release:

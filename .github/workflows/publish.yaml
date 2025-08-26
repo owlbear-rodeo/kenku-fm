@@ -144,15 +144,15 @@ jobs:
           yarn install --non-interactive --frozen-lockfile --cwd ./publish/mac
 
           node ./publish/mac/package.js
-      # - name: Publish DMG
-      #   run: |
-      #     VERSION=${TAG//v}
-      #     RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
-      #     ./publish/script-macos.sh "${KENKU_FM_MAC_PATH}/Kenku FM.dmg" $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-${{ matrix.os.arch }}-$VERSION.dmg
-      #     ./publish/script-macos.sh "${KENKU_FM_MAC_PATH}/Kenku FM.zip" $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-${{ matrix.os.arch }}-$VERSION.zip
-      #   env:
-      #     TAG: ${{ github.ref_name}}
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish DMG
+        run: |
+          VERSION=${TAG//v}
+          RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
+          ./publish/script-macos.sh "${KENKU_FM_MAC_PATH}/Kenku FM.dmg" $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-${{ matrix.os.arch }}-$VERSION.dmg
+          ./publish/script-macos.sh "${KENKU_FM_MAC_PATH}/Kenku FM.zip" $GITHUB_TOKEN $RELEASE_ID kenku-fm-darwin-${{ matrix.os.arch }}-$VERSION.zip
+        env:
+          TAG: ${{ github.ref_name}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   win-release:
     if: false
@@ -164,7 +164,7 @@ jobs:
           - runner: warp-windows-latest-x64-4x
             arch: x64
           - runner: windows-11-arm
-            arch: "arm64"
+            arch: arm64
 
     steps:
       - name: Setup Python
@@ -250,14 +250,14 @@ jobs:
         env:
           WINDOWS_CERT_PWD: ${{ secrets.WINDOWS_CERT_PWD }}
           TAG: ${{ github.ref_name}}
-      # - name: Publish
-      #   shell: bash
-      #   run: |
-      #     VERSION=${TAG//v}
-      #     RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
-      #     ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-win32-${{ matrix.os.arch }}.exe $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-win32-${{ matrix.os.arch }}.exe
-      #     ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-full.nupkg $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-full.nupkg
-      #     ./publish/script-win.sh ./out/windows/RELEASES $GITHUB_TOKEN $RELEASE_ID RELEASES
-      #   env:
-      #     TAG: ${{ github.ref_name}}
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish
+        shell: bash
+        run: |
+          VERSION=${TAG//v}
+          RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
+          ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-win32-${{ matrix.os.arch }}.exe $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-win32-${{ matrix.os.arch }}.exe
+          ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-full.nupkg $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-full.nupkg
+          ./publish/script-win.sh ./out/windows/RELEASES $GITHUB_TOKEN $RELEASE_ID RELEASES
+        env:
+          TAG: ${{ github.ref_name}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

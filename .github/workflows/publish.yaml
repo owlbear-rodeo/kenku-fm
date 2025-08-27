@@ -255,9 +255,9 @@ jobs:
         run: |
           VERSION=${TAG//v}
           RELEASE_ID=$(./publish/script-get-github-release.sh $TAG $GITHUB_TOKEN)
-          ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-win32-${{ matrix.os.arch }}.exe $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-win32-${{ matrix.os.arch }}.exe
-          ./publish/script-win.sh ./out/windows/kenku-fm-$VERSION-full.nupkg $GITHUB_TOKEN $RELEASE_ID kenku-fm-$VERSION-full.nupkg
-          ./publish/script-win.sh ./out/windows/RELEASES $GITHUB_TOKEN $RELEASE_ID RELEASES
+          ./publish/script-win.sh ./out/windows/kenku-fm-win32-${{ matrix.os.arch }}-$VERSION.exe $GITHUB_TOKEN $RELEASE_ID kenku-fm-win32-${{ matrix.os.arch }}-$VERSION.exe
+          ./publish/script-win.sh ./out/windows/kenku-fm-win32-${{ matrix.os.arch }}-$VERSION-full.nupkg $GITHUB_TOKEN $RELEASE_ID kenku-fm-win32-${{ matrix.os.arch }}-$VERSION-full.nupkg
+          ./publish/script-win.sh ./out/windows/RELEASES $GITHUB_TOKEN $RELEASE_ID RELEASES-${{ matrix.os.arch }}
         env:
           TAG: ${{ github.ref_name}}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

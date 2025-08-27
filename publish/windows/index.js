@@ -14,7 +14,8 @@ async function createApp(version, certPassword) {
       iconUrl: path.join(parent, "src", "assets", "setup.ico"),
       noMsi: true,
       exe: "kenku-fm.exe",
-      setupExe: `kenku-fm-${version}-win32-${process.arch}.exe`,
+      name: `kenku-fm-win32-${process.arch}`,
+      setupExe: `kenku-fm-win32-${process.arch}-${version}.exe`,
       signWithParams: `/a /f "${path.join(
         parent,
         "certificate.pfx"

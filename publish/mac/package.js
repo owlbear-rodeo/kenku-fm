@@ -13,7 +13,7 @@ function make() {
     background: path.join(srcDir, "src", "assets", "dmg-background.png"),
     icon: path.join(srcDir, "src", "assets", "setup.icns"),
     appPath: path.join(srcDir, "out", `Kenku FM-darwin-${process.arch}`, `${appName}.app`),
-    out: path.join(srcDir, "out", `Kenku FM-darwin-${process.arch}`, `${appName}.dmg`)
+    out: path.join(srcDir, "out", `Kenku FM-darwin-${process.arch}`)
   };
 
   createDMG(dmgConfig)

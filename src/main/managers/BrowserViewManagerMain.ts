@@ -209,6 +209,9 @@ export class BrowserViewManagerMain {
 
   removeBrowserView(id: number) {
     if (this.views[id]) {
+      if (this.topView === this.views[id]) {
+        this.topView = undefined;
+      }
       this.views[id].webContents.close({ waitForBeforeUnload: false });
       this.window.contentView.removeChildView(this.views[id]);
       (this.views[id].webContents as any).destroy();
@@ -221,12 +224,16 @@ export class BrowserViewManagerMain {
       this.views[id].webContents.close({ waitForBeforeUnload: false });
       this.window.contentView.removeChildView(this.views[id]);
       (this.views[id].webContents as any).destroy();
+      this.topView = undefined;
       delete this.views[id];
     }
   }
 
   hideBrowserView(id: number) {
     if (this.views[id]) {
+      if (this.topView === this.views[id]) {
+        this.topView = undefined;
+      }
       this.window.contentView.removeChildView(this.views[id]);
     }
   }

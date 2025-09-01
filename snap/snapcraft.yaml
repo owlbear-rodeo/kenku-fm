@@ -1,0 +1,63 @@
+name: kenku-fm
+base: core22
+version: '1.4.3'
+summary: Kenku FM shares music in Discord voice calls
+description: |
+  Kenku FM is a desktop application for Windows, MacOS and Linux designed to be the easiest way to share music in a Discord voice call.
+
+grade: stable
+confinement: strict
+compression: lzo
+icon: snap/gui/kenku-fm.png
+
+assumes:
+  - snapd2.54
+
+architectures:
+  - amd64
+
+parts:
+  # based on discord snap repo
+  launcher:
+    plugin: dump
+    source: snap/local/bin
+    organize:
+      '*': bin/
+    stage-packages:
+      - jq
+
+  kenku-fm:
+    plugin: dump
+    source: out/make/zip/linux/x64/Kenku FM-linux-x64-1.4.3.zip
+    override-build: |
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      mv $SNAPCRAFT_PART_BUILD/Kenku\ FM-linux-x64/* $SNAPCRAFT_PART_INSTALL/bin/
+    stage-packages:
+      - libnspr4
+      - libnss3
+      - libxss1
+      - xdg-utils
+
+plugs:
+  shmem:
+    interface: shared-memory
+    private: true
+
+apps:
+  kenku-fm:
+    extensions: [gnome]
+    command: bin/launcher
+    command-chain: [bin/disable-updater]
+    environment:
+      # Correct the TMPDIR path for Chromium Framework/Electron to
+      # ensure libappindicator has readable resources
+      TMPDIR: $XDG_RUNTIME_DIR
+    plugs:
+      - audio-playback
+      - audio-record
+      - home
+      # - mount-observe
+      - network
+      - removable-media
+      - shmems
+      - unity7

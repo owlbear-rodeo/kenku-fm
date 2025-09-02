@@ -25,10 +25,10 @@ type TrackItemProps = {
 
 export function TrackItem({ track, playlist, onPlay }: TrackItemProps) {
   const isCurrentTrack = useSelector(
-    (state: RootState) => state.playlistPlayback.track?.id === track.id
+    (state: RootState) => state.playlistPlayback.track?.id === track.id,
   );
   const playing = useSelector(
-    (state: RootState) => state.playlistPlayback.playing && isCurrentTrack
+    (state: RootState) => state.playlistPlayback.playing && isCurrentTrack,
   );
   const dispatch = useDispatch();
 
@@ -90,6 +90,9 @@ export function TrackItem({ track, playlist, onPlay }: TrackItemProps) {
                 overflow: "hidden",
                 textOverflow: "ellipsis",
               },
+            }}
+            primaryTypographyProps={{
+              typography: "body1",
             }}
           />
           <IconButton

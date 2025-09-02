@@ -7,7 +7,10 @@ const store = new Store<{
   maximized: boolean;
 }>();
 
-export function getSavedBounds(): {
+export function getSavedBounds(
+  minWidth: number,
+  minHeight: number,
+): {
   bounds: Partial<Rectangle>;
   maximized: boolean;
 } {
@@ -28,8 +31,9 @@ export function getSavedBounds(): {
     }
     // If the saved size is still valid, use it.
     if (bounds.width <= area.width || bounds.height <= area.height) {
-      savedBounds.width = bounds.width;
-      savedBounds.height = bounds.height;
+      // If the saved width and height are smaller than the window min then return the window min
+      savedBounds.width = Math.max(bounds.width, minWidth);
+      savedBounds.height = Math.max(bounds.height, minHeight);
     }
   }
   return { bounds: savedBounds, maximized };

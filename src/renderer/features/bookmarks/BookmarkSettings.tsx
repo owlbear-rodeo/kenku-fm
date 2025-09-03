@@ -41,9 +41,6 @@ export function BookmarkSettings({
   }
 
   function handleClose() {
-    window.kenku.appIcon(bookmark.url).then((icon) => {
-      dispatch(editBookmark({ id: bookmark.id, icon }));
-    });
     onClose();
   }
 

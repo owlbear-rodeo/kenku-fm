@@ -69,7 +69,7 @@ const api = {
     y: number,
     width: number,
     height: number,
-    preload?: string
+    preload?: string,
   ): Promise<number> => {
     const viewId = await viewManager.createBrowserView(
       url,
@@ -77,7 +77,7 @@ const api = {
       y,
       width,
       height,
-      preload
+      preload,
     );
     return viewId;
   },
@@ -100,7 +100,7 @@ const api = {
     x: number,
     y: number,
     width: number,
-    height: number
+    height: number,
   ) => {
     viewManager.setBrowserViewBounds(id, x, y, width, height);
   },
@@ -126,9 +126,6 @@ const api = {
     if (validChannels.includes(channel)) {
       ipcRenderer.removeAllListeners(channel);
     }
-  },
-  appIcon: async (appURL: string): Promise<string> => {
-    return ipcRenderer.invoke("APP_ICON_REQUEST", appURL);
   },
   playerGetURL: (): string => {
     return ipcRenderer.sendSync("PLAYER_GET_URL");

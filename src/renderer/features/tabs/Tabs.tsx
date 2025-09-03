@@ -25,7 +25,7 @@ import { editBookmark } from "../bookmarks/bookmarksSlice";
  * Safely parse a URL string. Returns a URL object if valid, otherwise null.
  * Logs a warning when the URL is malformed.
  */
-const safeURL = (urlString: string): URL | null => {
+export const safeURL = (urlString: string): URL | null => {
   try {
     return new URL(urlString);
   } catch {
@@ -199,8 +199,6 @@ export function Tabs() {
   }, [settings.urlBarEnabled, isPlayer, tabs.selectedTab]);
 
   function handleURLChange(url: string) {
-    const urlObj = safeURL(url);
-    if (!urlObj) return;
     dispatch(editTab({ id: tabs.selectedTab, url }));
   }
 

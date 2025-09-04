@@ -60,6 +60,7 @@ export const playlistPlaybackSlice = createSlice({
       state.queue = {
         tracks,
         current: tracks.indexOf(trackId),
+        current: state.shuffle ? 0 : trackIndex,
         playlistId,
         shuffled,
       };

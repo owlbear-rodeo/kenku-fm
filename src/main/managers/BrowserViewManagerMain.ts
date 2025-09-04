@@ -17,21 +17,21 @@ export class BrowserViewManagerMain {
 
     ipcMain.on(
       "BROWSER_VIEW_CREATE_BROWSER_VIEW",
-      this.handleCreateBrowserView
+      this.handleCreateBrowserView,
     );
     ipcMain.on(
       "BROWSER_VIEW_REMOVE_BROWSER_VIEW",
-      this.handleRemoveBrowserView
+      this.handleRemoveBrowserView,
     );
     ipcMain.on(
       "BROWSER_VIEW_REMOVE_ALL_BROWSER_VIEWS",
-      this.handleRemoveAllBrowserViews
+      this.handleRemoveAllBrowserViews,
     );
     ipcMain.on("BROWSER_VIEW_HIDE_BROWSER_VIEW", this.handleHideBrowserView);
     ipcMain.on("BROWSER_VIEW_SHOW_BROWSER_VIEW", this.handleShowBrowserView);
     ipcMain.on(
       "BROWSER_VIEW_SET_BROWSER_VIEW_BOUNDS",
-      this.handleSetBrowserViewBounds
+      this.handleSetBrowserViewBounds,
     );
     ipcMain.on("BROWSER_VIEW_LOAD_URL", this.handleLoadURL);
     ipcMain.on("BROWSER_VIEW_GO_FORWARD", this.handleGoForward);
@@ -44,21 +44,21 @@ export class BrowserViewManagerMain {
   destroy() {
     ipcMain.off(
       "BROWSER_VIEW_CREATE_BROWSER_VIEW",
-      this.handleCreateBrowserView
+      this.handleCreateBrowserView,
     );
     ipcMain.off(
       "BROWSER_VIEW_REMOVE_BROWSER_VIEW",
-      this.handleRemoveBrowserView
+      this.handleRemoveBrowserView,
     );
     ipcMain.off(
       "BROWSER_VIEW_REMOVE_ALL_BROWSER_VIEWS",
-      this.handleRemoveAllBrowserViews
+      this.handleRemoveAllBrowserViews,
     );
     ipcMain.off("BROWSER_VIEW_HIDE_BROWSER_VIEW", this.handleHideBrowserView);
     ipcMain.off("BROWSER_VIEW_SHOW_BROWSER_VIEW", this.handleShowBrowserView);
     ipcMain.off(
       "BROWSER_VIEW_SET_BROWSER_VIEW_BOUNDS",
-      this.handleSetBrowserViewBounds
+      this.handleSetBrowserViewBounds,
     );
     ipcMain.off("BROWSER_VIEW_LOAD_URL", this.handleLoadURL);
     ipcMain.off("BROWSER_VIEW_GO_FORWARD", this.handleGoForward);
@@ -91,7 +91,7 @@ export class BrowserViewManagerMain {
     y: number,
     width: number,
     height: number,
-    preload?: string
+    preload?: string,
   ) => {
     const id = this.createBrowserView(url, x, y, width, height, preload);
     this.views[id].webContents.on(
@@ -100,7 +100,7 @@ export class BrowserViewManagerMain {
         if (isMainFrame) {
           event.reply("BROWSER_VIEW_DID_NAVIGATE", id, url);
         }
-      }
+      },
     );
     this.views[id].webContents.on("page-title-updated", (_, title) => {
       event.reply("BROWSER_VIEW_TITLE_UPDATED", id, title);
@@ -125,6 +125,7 @@ export class BrowserViewManagerMain {
         loaded = true;
       }
     });
+
     event.returnValue = id;
   };
 
@@ -145,7 +146,7 @@ export class BrowserViewManagerMain {
     x: number,
     y: number,
     width: number,
-    height: number
+    height: number,
   ) => this.setBrowserViewBounds(id, x, y, width, height);
 
   private handleLoadURL = (_: Electron.IpcMainEvent, id: number, url: string) =>
@@ -172,7 +173,7 @@ export class BrowserViewManagerMain {
     y: number,
     width: number,
     height: number,
-    preload?: string
+    preload?: string,
   ): number {
     const view = new WebContentsView({
       webPreferences: {
@@ -251,7 +252,7 @@ export class BrowserViewManagerMain {
     x: number,
     y: number,
     width: number,
-    height: number
+    height: number,
   ) {
     try {
       this.views[id].setBounds({ x, y, width, height });

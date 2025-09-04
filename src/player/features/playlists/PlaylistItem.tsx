@@ -30,11 +30,11 @@ export function PlaylistItem({
   const playing = useSelector(
     (state: RootState) =>
       state.playlistPlayback.playing &&
-      state.playlistPlayback.queue?.playlistId === playlist.id
+      state.playlistPlayback.queue?.playlistId === playlist.id,
   );
   const queue = useSelector((state: RootState) => state.playlistPlayback.queue);
   const shuffle = useSelector(
-    (state: RootState) => state.playlistPlayback.shuffle
+    (state: RootState) => state.playlistPlayback.shuffle,
   );
 
   const dispatch = useDispatch();

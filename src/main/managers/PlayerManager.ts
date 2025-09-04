@@ -78,7 +78,7 @@ export class PlayerManager {
   private handleStartRemote = (
     _: Electron.IpcMainEvent,
     address: string,
-    port: string
+    port: string,
   ) => this.startRemote(address, port);
 
   private handleStopRemote = () => this.stopRemote();

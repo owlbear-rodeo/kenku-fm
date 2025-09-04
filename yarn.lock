@@ -2987,9 +2987,9 @@ electron-winstaller@^5.3.0:
   optionalDependencies:
     "@electron/windows-sign" "^1.1.2"
 
-"electron@https://github.com/castlabs/electron-releases#v37.2.5+wvcus":
-  version "37.2.5"
-  resolved "https://github.com/castlabs/electron-releases#3d2c050af10edc7913c5cbbe03c2ab04267eeadb"
+"electron@https://github.com/castlabs/electron-releases#37.4.0+wvcus":
+  version "37.4.0"
+  resolved "https://github.com/castlabs/electron-releases#b2632431a044501f1bbd977c9af0230e444e5c8e"
   dependencies:
     "@electron/get" "^2.0.0"
     "@types/node" "^22.7.7"

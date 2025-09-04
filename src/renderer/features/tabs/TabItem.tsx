@@ -38,11 +38,17 @@ export function TabItem({ tab, selected, allowClose, shadow }: TabType) {
     return bookmark.url === tab.url;
   });
 
+  const showMedia = tab.playingMedia > 0;
+  const showBookmark = Boolean(safeURL(tab.url) && selected && allowClose);
+  const showClose = Boolean(allowClose);
+  const shownIcons =
+    Number(showBookmark) + Number(showClose) + Number(showMedia);
+
   return (
     <ListItem
       secondaryAction={
         <>
-          {tab.playingMedia > 0 && (
+          {showMedia && (
             <IconButton
               edge="end"
               aria-label={tab.muted ? "unmute" : "mute"}
@@ -64,7 +70,7 @@ export function TabItem({ tab, selected, allowClose, shadow }: TabType) {
               )}
             </IconButton>
           )}
-          {safeURL(tab.url) && allowClose && (
+          {showBookmark && (
             <IconButton
               edge="end"
               size="small"
@@ -92,7 +98,7 @@ export function TabItem({ tab, selected, allowClose, shadow }: TabType) {
               )}
             </IconButton>
           )}
-          {allowClose && (
+          {showClose && (
             <IconButton
               edge="end"
               aria-label="close"
@@ -123,15 +129,7 @@ export function TabItem({ tab, selected, allowClose, shadow }: TabType) {
           right: "12px",
         },
         "& .MuiListItemButton-root": {
-          pr:
-            // Both close and media controls enabled
-            allowClose && tab.playingMedia > 0
-              ? "62px"
-              : // Either close or media controls enabled
-                allowClose || tab.playingMedia > 0
-                ? "38px"
-                : // None enabled
-                  2,
+          pr: `${shownIcons * 23 + 8}px`,
         },
         WebkitAppRegion: "no-drag",
       }}

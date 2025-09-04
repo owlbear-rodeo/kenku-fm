@@ -87,7 +87,6 @@ const createWindow = (): void => {
     runAutoUpdate(mainWindow);
   }
 
-  // mainWindow.webContents.openDevTools();
   window = mainWindow;
 };
 

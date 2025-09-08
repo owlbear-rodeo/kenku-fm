@@ -139,7 +139,7 @@ export function TabBar() {
           maxWidth: "100%",
         }}
       >
-        <Box sx={{ flexGrow: 1 }}>
+        <Box sx={{ width: "100%", minWidth: "120px" }}>
           <PlayerTab />
         </Box>
         <DndContext
@@ -156,7 +156,7 @@ export function TabBar() {
               <SortableItem
                 key={tab.id}
                 id={`${tab.id}`}
-                style={{ minWidth: "76px", flexGrow: 1 }}
+                style={{ width: "100%", minWidth: "120px" }}
               >
                 {getTabComponent(tab)}
               </SortableItem>

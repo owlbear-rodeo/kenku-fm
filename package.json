@@ -45,7 +45,7 @@
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
     "css-loader": "^6.6.0",
-    "electron": "21.3.0",
+    "electron": "37.4.0",
     "electron-installer-dmg": "^5.0.1",
     "electron-osx-sign": "0.6.0",
     "eslint": "^7.6.0",

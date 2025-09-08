@@ -27,6 +27,7 @@ import { useDispatch } from "react-redux";
 import { Soundboard, Sound, moveSound } from "./soundboardsSlice";
 
 import { useHideScrollbar } from "../../../renderer/common/useHideScrollbar";
+import Stack from "@mui/material/Stack";
 
 type SoundboardSoundsProps = {
   soundboard: Soundboard;
@@ -64,7 +65,7 @@ export function SoundboardSounds({
           soundboardId: soundboard.id,
           active: active.id,
           over: over.id,
-        })
+        }),
       );
     }
 
@@ -94,7 +95,6 @@ export function SoundboardSounds({
       <Grid
         sx={{
           width: "100%",
-          maxWidth: "1200px",
           margin: "0 auto",
           marginBottom: "240px",
         }}
@@ -112,7 +112,7 @@ export function SoundboardSounds({
             strategy={rectSortingStrategy}
           >
             {soundboard.sounds.map((id) => (
-              <Grid item xs={6} sm={6} md={4} lg={3} key={id}>
+              <Grid item xs={12} sm={6} md={4} lg={3} xl={2} key={id}>
                 <SortableItem key={id} id={id}>
                   <SoundItem
                     id={id}

@@ -1,37 +1,42 @@
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
+import {
+  Link as RouterLink,
+  LinkProps as RouterLinkProps,
+  useNavigate,
+} from "react-router-dom";
+
+import AddIcon from "@mui/icons-material/AddCircleRounded";
+import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Container from "@mui/material/Container";
-import Typography from "@mui/material/Typography";
-import IconButton from "@mui/material/IconButton";
-import AddIcon from "@mui/icons-material/AddCircleRounded";
-import Stack from "@mui/material/Stack";
-import Link from "@mui/material/Link";
-import Tooltip from "@mui/material/Tooltip";
-
-import { useSelector } from "react-redux";
-import { RootState } from "../../app/store";
-import { PlaylistItem } from "../playlists/PlaylistItem";
 import Grid from "@mui/material/Grid";
-import Box from "@mui/material/Box";
-import {
-  useNavigate,
-  Link as RouterLink,
-  LinkProps as RouterLinkProps,
-} from "react-router-dom";
-import { SoundboardItem } from "../soundboards/SoundboardItem";
-import { Track } from "../playlists/playlistsSlice";
-import { Sound } from "../soundboards/soundboardsSlice";
+import IconButton from "@mui/material/IconButton";
+import Link from "@mui/material/Link";
+import Stack from "@mui/material/Stack";
+import useTheme from "@mui/material/styles/useTheme";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
+import useMediaQuery from "@mui/material/useMediaQuery";
+
+import { RootState } from "../../app/store";
 import { PlaylistAdd } from "../playlists/PlaylistAdd";
+import { PlaylistItem } from "../playlists/PlaylistItem";
+import { Track } from "../playlists/playlistsSlice";
 import { SoundboardAdd } from "../soundboards/SoundboardAdd";
+import { SoundboardItem } from "../soundboards/SoundboardItem";
+import { Sound } from "../soundboards/soundboardsSlice";
 
-const PlaylistsLink = React.forwardRef<any, Omit<RouterLinkProps, "to">>(
-  (props, ref) => <RouterLink ref={ref} to="/playlists" {...props} />
-);
+const PlaylistsLink = React.forwardRef<
+  HTMLAnchorElement,
+  Omit<RouterLinkProps, "to">
+>((props, ref) => <RouterLink ref={ref} to="/playlists" {...props} />);
 
-const SoundboardsLink = React.forwardRef<any, Omit<RouterLinkProps, "to">>(
-  (props, ref) => <RouterLink ref={ref} to="/soundboards" {...props} />
-);
+const SoundboardsLink = React.forwardRef<
+  HTMLAnchorElement,
+  Omit<RouterLinkProps, "to">
+>((props, ref) => <RouterLink ref={ref} to="/soundboards" {...props} />);
 
 type HomeProps = {
   onPlayTrack: (track: Track) => void;
@@ -43,11 +48,14 @@ export function Home({ onPlayTrack, onPlaySound }: HomeProps) {
   const playlists = useSelector((state: RootState) => state.playlists);
   const soundboards = useSelector((state: RootState) => state.soundboards);
 
+  const theme = useTheme();
+  const isSmall = useMediaQuery(theme.breakpoints.down("lg"));
+
   const playlistItems = playlists.playlists.allIds
-    .slice(0, 4)
+    .slice(0, isSmall ? 4 : 8)
     .map((id) => playlists.playlists.byId[id]);
   const soundboardItems = soundboards.soundboards.allIds
-    .slice(0, 4)
+    .slice(0, isSmall ? 4 : 8)
     .map((id) => soundboards.soundboards.byId[id]);
 
   const [playlistAddOpen, setPlaylistAddOpen] = useState(false);
@@ -55,7 +63,6 @@ export function Home({ onPlayTrack, onPlaySound }: HomeProps) {
 
   return (
     <Container
-      maxWidth="md"
       sx={{
         display: "flex",
         flexDirection: "column",
@@ -117,12 +124,7 @@ export function Home({ onPlayTrack, onPlaySound }: HomeProps) {
               </IconButton>
             </Tooltip>
             <Box sx={{ flexGrow: 1 }} />
-            <Link
-              href="#"
-              color="inherit"
-              underline="hover"
-              component={SoundboardsLink}
-            >
+            <Link color="inherit" underline="hover" component={SoundboardsLink}>
               See All
             </Link>
           </Stack>

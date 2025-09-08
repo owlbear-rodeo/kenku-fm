@@ -27,6 +27,7 @@ import { PlayerTab } from "../player/PlayerTab";
 import { AddTabButton } from "./AddTabButton";
 import { SortableItem } from "../../common/SortableItem";
 import { WindowControls } from "../../common/WindowControls";
+import { Box, Stack } from "@mui/material";
 
 export function TabBar() {
   const dispatch = useDispatch();
@@ -55,7 +56,7 @@ export function TabBar() {
         moveTab({
           active: Number.parseInt(active.id),
           over: Number.parseInt(over.id),
-        })
+        }),
       );
     }
 
@@ -115,51 +116,64 @@ export function TabBar() {
   }
 
   return (
-    <List
+    <Stack
+      direction="row"
       component="div"
+      alignItems="start"
+      p={1}
       ref={containerRef}
-      sx={{
-        flexDirection: "row",
-        display: "flex",
-        alignItems: "center",
-        px: 1,
-        overflowX: "auto",
-        WebkitAppRegion: "drag",
-      }}
       onDoubleClick={(e) =>
         e.target === e.currentTarget && window.kenku.toggleMaximize()
       }
+      sx={{ WebkitAppRegion: "drag" }}
     >
-      <PlayerTab />
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
+      <List
+        disablePadding
+        sx={{
+          flexDirection: "row",
+          display: "flex",
+          alignItems: "center",
+          WebkitAppRegion: "no-drag",
+          overflowX: "auto",
+          flexGrow: 1,
+          maxWidth: "100%",
+        }}
       >
-        <SortableContext
-          items={tabs.tabs.allIds.map((id) => `${id}`)}
-          strategy={horizontalListSortingStrategy}
+        <Box sx={{ width: "100%", minWidth: "120px" }}>
+          <PlayerTab />
+        </Box>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
         >
-          {items.map((tab) => (
-            <SortableItem
-              key={tab.id}
-              id={`${tab.id}`}
-              style={{ width: "100%", minWidth: "76px" }}
-            >
-              {getTabComponent(tab)}
-            </SortableItem>
-          ))}
-          <DragOverlay>
-            {dragId
-              ? getTabComponent(tabs.tabs.byId[Number.parseInt(dragId)], true)
-              : null}
-          </DragOverlay>
-        </SortableContext>
-      </DndContext>
-      <AddTabButton />
+          <SortableContext
+            items={tabs.tabs.allIds.map((id) => `${id}`)}
+            strategy={horizontalListSortingStrategy}
+          >
+            {items.map((tab) => (
+              <SortableItem
+                key={tab.id}
+                id={`${tab.id}`}
+                style={{ width: "100%", minWidth: "120px" }}
+              >
+                {getTabComponent(tab)}
+              </SortableItem>
+            ))}
+            <DragOverlay>
+              {dragId
+                ? getTabComponent(tabs.tabs.byId[Number.parseInt(dragId)], true)
+                : null}
+            </DragOverlay>
+          </SortableContext>
+        </DndContext>
+      </List>
+      <Box>
+        <AddTabButton />
+      </Box>
       {/* Show window controls in the tab bar for windows */}
       {window.kenku.platform === "win32" && <WindowControls />}
-    </List>
+    </Stack>
   );
 }

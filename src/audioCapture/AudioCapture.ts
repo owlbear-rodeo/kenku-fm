@@ -6,127 +6,52 @@ const SAMPLE_RATE = 48000;
  */
 export class AudioCapture {
   /** Audio context to mix media streams into one audio output */
-  _audioContext?: AudioContext;
+  private audioContext: AudioContext;
   /** Audio output node that streams will connect to */
-  _audioOutputNode?: AudioNode;
+  private audioOutputNode: AudioNode;
 
   /** Audio DOM element for the current output / local playback */
-  _audioOutputElement?: HTMLAudioElement;
+  private audioOutputElement: HTMLAudioElement;
   /** Raw media streams for each browser view containing webp/opus audio */
-  _mediaStreams: Record<number, MediaStream> = {};
-  _mediaStreamOutputs: Record<number, GainNode> = {};
+  private mediaStreams: Record<number, MediaStream> = {};
+  private mediaStreamOutputs: Record<number, GainNode> = {};
 
   /** Raw media stream for each external audio source e.g. microphone or virtual audio cables */
-  _externalAudioStreams: Record<string, MediaStream> = {};
-  _externalAudioStreamOutputs: Record<string, GainNode> = {};
+  private externalAudioStreams: Record<string, MediaStream> = {};
+  private externalAudioStreamOutputs: Record<string, GainNode> = {};
 
-  _peerConnection: RTCPeerConnection;
+  outputStream: MediaStream;
 
   /**
-   * Create the Audio Context, setup the communication socket and start the
-   * internal PCM stream for communicating between the renderer and main context
+   * Create the Audio Context, setup the communication socket and start the RTC stream for communicating with the Rust process
    */
-  async start(): Promise<void> {
-    this._audioContext = new AudioContext({
+  constructor() {
+    this.audioContext = new AudioContext({
       // Setting the latency hint to `playback` fixes audio glitches on some Windows 11 machines.
       latencyHint: "playback",
       sampleRate: SAMPLE_RATE,
     });
-    this._audioOutputNode = this._audioContext.createGain();
+    this.audioOutputNode = this.audioContext.createGain();
 
-    const mediaDestination = this._audioContext.createMediaStreamDestination();
-    this._audioOutputNode.connect(mediaDestination);
+    const mediaDestination = this.audioContext.createMediaStreamDestination();
+    this.audioOutputNode.connect(mediaDestination);
+
+    this.outputStream = mediaDestination.stream;
 
     // Setup loopback element for local playback
-    this._audioOutputElement = document.createElement("audio");
-    this._audioOutputElement.srcObject = mediaDestination.stream;
-    this._audioOutputElement.onloadedmetadata = () => {
-      this._audioOutputElement.play();
+    this.audioOutputElement = document.createElement("audio");
+    this.audioOutputElement.srcObject = mediaDestination.stream;
+    this.audioOutputElement.onloadedmetadata = () => {
+      this.audioOutputElement.play();
     };
-
-    try {
-      await window.capture.rtc();
-
-      const config = {
-        iceServers: [
-          {
-            urls: "stun:stun.l.google.com:19302",
-          },
-        ],
-      };
-
-      this._peerConnection = new RTCPeerConnection(config);
-
-      mediaDestination.stream
-        .getTracks()
-        .forEach((track) =>
-          this._peerConnection.addTrack(track, mediaDestination.stream)
-        );
-
-      let makingOffer = true;
-      let bufferedCandidates: RTCIceCandidate[] = [];
-      this._peerConnection.onnegotiationneeded = async () => {
-        try {
-          const offer = await this._peerConnection.createOffer();
-          offer.sdp = offer.sdp.replace(
-            "minptime=10;useinbandfec=1",
-            // Increase bitrate and enable stereo
-            "minptime=10; useinbandfec=1; maxaveragebitrate=64000; stereo=1; sprop-stereo=1"
-          );
-          await this._peerConnection.setLocalDescription(offer);
-          const answer = await window.capture.signal(
-            JSON.stringify(this._peerConnection.localDescription)
-          );
-          await this._peerConnection.setRemoteDescription(
-            new RTCSessionDescription(JSON.parse(answer))
-          );
-          makingOffer = false;
-          for (const candidate of bufferedCandidates) {
-            await window.capture.addCandidate(JSON.stringify(candidate));
-          }
-          await window.capture.stream();
-          throw Error("Stream capture unexpectedly ended");
-        } catch (err) {
-          window.capture.error(err.message);
-          console.error(err);
-        }
-      };
-
-      this._peerConnection.onicecandidate = async ({ candidate }) => {
-        if (candidate) {
-          if (makingOffer) {
-            bufferedCandidates.push(candidate);
-          } else {
-            await window.capture.addCandidate(JSON.stringify(candidate));
-          }
-        }
-      };
-
-      this._peerConnection.onicecandidateerror = (e) => {
-        window.capture.error("Connection candidate failed");
-        console.error(e);
-      };
-    } catch (err) {
-      window.capture.error(err.message);
-      console.error(err);
-    }
-  }
-
-  addIceCandidate(candidate: string) {
-    try {
-      this._peerConnection.addIceCandidate(JSON.parse(candidate));
-    } catch (err) {
-      window.capture.error(err.message);
-      console.error(err);
-    }
   }
 
   setMuted(id: number, muted: boolean): void {
     // Mute the audio context node
     // Note: we can't use `webContents.setAudioMuted()` as we are capturing a
     // separate audio stream then what is being sent to the user
-    if (this._mediaStreamOutputs[id]) {
-      this._mediaStreamOutputs[id].gain.value = muted ? 0 : 1;
+    if (this.mediaStreamOutputs[id]) {
+      this.mediaStreamOutputs[id].gain.value = muted ? 0 : 1;
     }
   }
 
@@ -135,7 +60,7 @@ export class AudioCapture {
    * @param {boolean} loopback
    */
   setLoopback(loopback: boolean): void {
-    this._audioOutputElement.muted = !loopback;
+    this.audioOutputElement.muted = !loopback;
   }
 
   async startExternalAudioCapture(deviceId: string): Promise<void> {
@@ -151,46 +76,46 @@ export class AudioCapture {
       };
       const stream = await navigator.mediaDevices.getUserMedia(streamConfig);
 
-      this._externalAudioStreams[deviceId] = stream;
+      this.externalAudioStreams[deviceId] = stream;
 
-      const output = this._audioContext.createGain();
-      this._externalAudioStreamOutputs[deviceId] = output;
+      const output = this.audioContext.createGain();
+      this.externalAudioStreamOutputs[deviceId] = output;
 
-      const audioSource = this._audioContext.createMediaStreamSource(stream);
+      const audioSource = this.audioContext.createMediaStreamSource(stream);
       audioSource.connect(output);
 
-      output.connect(this._audioOutputNode);
+      output.connect(this.audioOutputNode);
     } catch (error) {
-      console.error(
-        `Unable to start stream for external audio device ${deviceId}`
+      window.capture.log(
+        "error",
+        `Unable to start stream for external audio device ${deviceId}: ${error.message}`
       );
       window.capture.error(
         `Unable to start stream for external audio device ${deviceId}`
       );
-      console.error(error);
     }
   }
 
   stopExternalAudioCapture(deviceId: string): void {
-    const stream = this._externalAudioStreams[deviceId];
+    const stream = this.externalAudioStreams[deviceId];
     if (stream) {
       for (const track of stream.getTracks()) {
         track.stop();
       }
-      delete this._externalAudioStreams[deviceId];
-      delete this._externalAudioStreamOutputs[deviceId];
+      delete this.externalAudioStreams[deviceId];
+      delete this.externalAudioStreamOutputs[deviceId];
     }
   }
 
   async _setupLoopback(): Promise<void> {
     // Create loopback media element
-    const mediaDestination = this._audioContext.createMediaStreamDestination();
-    this._audioOutputNode.connect(mediaDestination);
+    const mediaDestination = this.audioContext.createMediaStreamDestination();
+    this.audioOutputNode.connect(mediaDestination);
 
-    this._audioOutputElement = document.createElement("audio");
-    this._audioOutputElement.srcObject = mediaDestination.stream;
-    this._audioOutputElement.onloadedmetadata = () => {
-      this._audioOutputElement.play();
+    this.audioOutputElement = document.createElement("audio");
+    this.audioOutputElement.srcObject = mediaDestination.stream;
+    this.audioOutputElement.onloadedmetadata = () => {
+      this.audioOutputElement.play();
     };
   }
 
@@ -219,19 +144,21 @@ export class AudioCapture {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         streamConfig as any
       );
-      this._mediaStreams[viewId] = stream;
+      this.mediaStreams[viewId] = stream;
 
-      const output = this._audioContext.createGain();
-      this._mediaStreamOutputs[viewId] = output;
+      const output = this.audioContext.createGain();
+      this.mediaStreamOutputs[viewId] = output;
 
-      const audioSource = this._audioContext.createMediaStreamSource(stream);
+      const audioSource = this.audioContext.createMediaStreamSource(stream);
       audioSource.connect(output);
 
-      output.connect(this._audioOutputNode);
+      output.connect(this.audioOutputNode);
     } catch (error) {
-      console.error(`Unable to start stream for web view ${viewId}`);
+      window.capture.log(
+        "error",
+        `Unable to start stream for web view ${viewId}: ${error.message}`
+      );
       window.capture.error(`Unable to start stream for web view ${viewId}`);
-      console.error(error);
     }
   }
 
@@ -240,20 +167,20 @@ export class AudioCapture {
    * @param viewId Browser view id
    */
   stopBrowserViewStream(viewId: number): void {
-    if (this._mediaStreams[viewId]) {
-      for (const track of this._mediaStreams[viewId].getTracks()) {
+    if (this.mediaStreams[viewId]) {
+      for (const track of this.mediaStreams[viewId].getTracks()) {
         track.stop();
       }
-      delete this._mediaStreams[viewId];
+      delete this.mediaStreams[viewId];
     }
   }
 
   stopAllBrowserViewStreams(): void {
-    for (let viewId in this._mediaStreams) {
-      for (const track of this._mediaStreams[viewId].getTracks()) {
+    for (let viewId in this.mediaStreams) {
+      for (const track of this.mediaStreams[viewId].getTracks()) {
         track.stop();
       }
-      delete this._mediaStreams[viewId];
+      delete this.mediaStreams[viewId];
     }
   }
 }

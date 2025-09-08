@@ -12,6 +12,7 @@
     "resolveJsonModule": true,
     "downlevelIteration": true,
     "jsx": "react",
+    "target": "es5",
     "paths": {
       "*": ["node_modules/*"]
     }

@@ -18,7 +18,7 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
   const animationRef = useRef<number | null>(null);
 
   const playlists = useSelector((state: RootState) => state.playlists);
-  const store = useStore();
+  const store = useStore<RootState>();
   const muted = useSelector((state: RootState) => state.playlistPlayback.muted);
   const repeat = useSelector(
     (state: RootState) => state.playlistPlayback.repeat

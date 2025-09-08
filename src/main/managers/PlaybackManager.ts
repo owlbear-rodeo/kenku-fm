@@ -1,14 +1,13 @@
-import { BrowserWindow } from "electron";
 import { AudioCaptureManagerMain } from "./AudioCaptureManagerMain";
 import { DiscordManager } from "./DiscordManager";
 
 export class PlaybackManager {
-  discord: DiscordManager;
-  audioCaptureManager: AudioCaptureManagerMain;
+  private discord: DiscordManager;
+  private audioCaptureManager: AudioCaptureManagerMain;
 
-  constructor(window: BrowserWindow) {
+  constructor() {
     this.audioCaptureManager = new AudioCaptureManagerMain();
-    this.discord = new DiscordManager(window, this.audioCaptureManager);
+    this.discord = new DiscordManager(this.audioCaptureManager);
   }
 
   destroy() {

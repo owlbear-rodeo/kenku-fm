@@ -7,6 +7,8 @@ import ArrowBackRounded from "@mui/icons-material/ArrowBackRounded";
 import ArrowForwardRounded from "@mui/icons-material/ArrowForwardRounded";
 import RefreshRounded from "@mui/icons-material/RefreshRounded";
 
+import { sanitizeUrl } from "@braintree/sanitize-url";
+
 import { getDropURL } from "../../common/drop";
 
 type URLBarProps = {
@@ -19,7 +21,8 @@ type URLBarProps = {
 export function URLBar({ viewId, url, onURLChange, disabled }: URLBarProps) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    window.kenku.loadURL(viewId, prependHttp(url));
+    const sanitizedUrl = sanitizeUrl(prependHttp(url));
+    window.kenku.loadURL(viewId, sanitizedUrl);
   }
 
   function handleURLChange(e: React.ChangeEvent<HTMLInputElement>) {

@@ -69,7 +69,7 @@ const api = {
     y: number,
     width: number,
     height: number,
-    preload?: string
+    preload?: string,
   ): Promise<number> => {
     const viewId = await viewManager.createBrowserView(
       url,
@@ -77,7 +77,7 @@ const api = {
       y,
       width,
       height,
-      preload
+      preload,
     );
     return viewId;
   },
@@ -100,7 +100,7 @@ const api = {
     x: number,
     y: number,
     width: number,
-    height: number
+    height: number,
   ) => {
     viewManager.setBrowserViewBounds(id, x, y, width, height);
   },
@@ -126,9 +126,6 @@ const api = {
     if (validChannels.includes(channel)) {
       ipcRenderer.removeAllListeners(channel);
     }
-  },
-  appIcon: async (appURL: string): Promise<string> => {
-    return ipcRenderer.invoke("APP_ICON_REQUEST", appURL);
   },
   playerGetURL: (): string => {
     return ipcRenderer.sendSync("PLAYER_GET_URL");
@@ -158,9 +155,6 @@ const api = {
   stopExternalAudioCapture: (deviceId: string) => {
     ipcRenderer.send("AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE", deviceId);
   },
-  startAudioCapture: () => {
-    ipcRenderer.send("AUDIO_CAPTURE_START");
-  },
   toggleMaximize: () => {
     ipcRenderer.send("WINDOW_TOGGLE_MAXIMIZE");
   },
@@ -175,6 +169,15 @@ const api = {
   },
   platform: ipcRenderer.sendSync("GET_PLATFORM") as string,
   version: ipcRenderer.sendSync("GET_VERSION") as string,
+  getLogLevel: () => {
+    return ipcRenderer.sendSync("GET_LOG_LEVEL") as string;
+  },
+  setLogLevel: (level: string) => {
+    ipcRenderer.send("SET_LOG_LEVEL", level);
+  },
+  openLogFile: () => {
+    ipcRenderer.send("OPEN_LOG_FILE");
+  },
 };
 
 declare global {

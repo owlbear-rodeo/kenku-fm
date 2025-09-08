@@ -61,14 +61,18 @@ export function PlaylistTracks({
 
     if (active.id !== over.id) {
       dispatch(
-        moveTrack({ playlistId: playlist.id, active: active.id, over: over.id })
+        moveTrack({
+          playlistId: playlist.id,
+          active: active.id,
+          over: over.id,
+        }),
       );
       dispatch(
         moveQueueIfNeeded({
           playlistId: playlist.id,
           active: active.id,
           over: over.id,
-        })
+        }),
       );
     }
 
@@ -98,7 +102,8 @@ export function PlaylistTracks({
       <List
         sx={{
           width: "100%",
-          maxWidth: 360,
+          minWidth: 360,
+          maxWidth: 720,
           margin: "0 auto",
           marginBottom: "240px",
         }}

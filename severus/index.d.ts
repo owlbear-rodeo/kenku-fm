@@ -1,35 +1,42 @@
 declare module "severus" {
-  export interface VoiceChannel {
-    id: number;
-    name: string;
+  export interface IpDiscovery {
+    address: string;
+    port: number;
   }
-  export interface Guild {
-    id: number;
-    name: string;
-    icon: string;
-    voiceChannels: VoiceChannel[];
-  }
-  export interface DiscordClient {}
+  export interface VoiceConnection {}
   export interface RTCClient {}
+  export interface Broadcast {}
   export interface Severus {
-    discordNew: (token: string) => Promise<DiscordClient>;
-    discordGetInfo: (client: DiscordClient) => Promise<Guild[]>;
-    discordJoin: (
-      client: DiscordClient,
-      rtc: RTCClient,
-      guildId: string,
-      channelId: string
+    voiceConnectionNew: (
+      ip: string,
+      port: number,
+      ssrc: number
+    ) => Promise<VoiceConnection>;
+    voiceConnectionDiscoverIp: (
+      voiceConnection: VoiceConnection
+    ) => Promise<IpDiscovery>;
+    voiceConnectionConnect: (
+      voiceConnection: VoiceConnection,
+      secretKey: number[],
+      cryptoMode: string,
+      broadcast: Broadcast
     ) => Promise<void>;
-    discordLeave: (client: DiscordClient, guildId: string) => Promise<void>;
-    discordDestroy: (client: DiscordClient) => void;
-    rtcNew: () => Promise<RTCClient>;
+    voiceConnectionDisconnect: (
+      voiceConnection: VoiceConnection
+    ) => Promise<void>;
+    rtcNew: (broadcast: Broadcast) => Promise<RTCClient>;
     rtcSignal: (rtc: RTCClient, offer: string) => Promise<string>;
     rtcAddCandidate: (rtc: RTCClient, candidate: string) => Promise<void>;
     rtcOnCandidate: (
       rtc: RTCClient,
       onCandidate: (candidate: string) => void
     ) => void;
-    rtcStartStream: (rtc: RTCClient) => Promise<void>;
+    rtcOnClose: (rtc: RTCClient, onClose: () => void) => void;
+    rtcClose: (rtc: RTCClient) => Promise<void>;
+    logInit: () => void;
+    logSetLogLevel: (level: string) => void;
+    logOnLog: (onLog: (level: string, message: string) => void) => void;
+    broadcastNew: () => Broadcast;
   }
 
   const severus: Severus;

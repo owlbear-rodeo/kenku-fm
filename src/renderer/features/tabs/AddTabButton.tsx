@@ -17,7 +17,7 @@ export function AddTabButton() {
       bounds.x,
       bounds.y,
       bounds.width,
-      bounds.height
+      bounds.height,
     );
     dispatch(
       addTab({
@@ -27,7 +27,7 @@ export function AddTabButton() {
         icon: "",
         playingMedia: 0,
         muted: false,
-      })
+      }),
     );
     dispatch(selectTab(id));
   }

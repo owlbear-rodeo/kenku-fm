@@ -6,7 +6,7 @@ const platformMap: Record<string, string> = {
   linux: "X11; Linux x86_64",
 };
 
-const chromeVersion = "Chrome/106.0.5249.181";
+const chromeVersion = "138.0.7204.243";
 
 /** Approximate the user agent for this platform */
 export function getUserAgent() {

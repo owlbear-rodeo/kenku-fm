@@ -1,4 +1,4 @@
-name: Publish Kenku FM -Linux ARM
+name: Publish Kenku FM - Linux ARM
 on:
   push:
     tags:

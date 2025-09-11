@@ -36,7 +36,7 @@ import {
   setStreamingMode,
   StreamingMode,
 } from "./settingsSlice";
-import { showWindowControls } from "src/renderer/common/showWindowControls";
+import { showWindowControls } from "../../common/showWindowControls";
 
 type SettingsProps = {
   open: boolean;

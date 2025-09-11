@@ -10,7 +10,7 @@ import { useDispatch } from "react-redux";
 import { Bookmark, editBookmark } from "./bookmarksSlice";
 
 import { getDropURL } from "../../common/drop";
-import { showWindowControls } from "src/renderer/common/showWindowControls";
+import { showWindowControls } from "../../common/showWindowControls";
 
 type BookmarkSettingsProps = {
   bookmark: Bookmark;

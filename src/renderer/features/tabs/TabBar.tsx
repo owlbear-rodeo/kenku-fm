@@ -28,6 +28,7 @@ import { AddTabButton } from "./AddTabButton";
 import { SortableItem } from "../../common/SortableItem";
 import { WindowControls } from "../../common/WindowControls";
 import { Box, Stack } from "@mui/material";
+import { showWindowControls } from "src/renderer/common/showWindowControls";
 
 export function TabBar() {
   const dispatch = useDispatch();
@@ -172,8 +173,7 @@ export function TabBar() {
       <Box>
         <AddTabButton />
       </Box>
-      {/* Show window controls in the tab bar for windows */}
-      {window.kenku.platform === "win32" && <WindowControls />}
+      {showWindowControls && <WindowControls />}
     </Stack>
   );
 }

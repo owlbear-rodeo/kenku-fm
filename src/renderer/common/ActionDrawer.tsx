@@ -14,6 +14,7 @@ import { useSelector } from "react-redux";
 
 import icon from "../../assets/icon.svg";
 import { useHideScrollbar } from "./useHideScrollbar";
+import { showWindowControls } from "./showWindowControls";
 
 export const drawerWidth = 240;
 
@@ -42,8 +43,7 @@ export function ActionDrawer() {
       >
         <Toolbar
           sx={{
-            justifyContent:
-              window.kenku.platform === "win32" ? "space-between" : "end",
+            justifyContent: showWindowControls ? "space-between" : "end",
             bgcolor: "background.paper",
             px: 1,
             WebkitAppRegion: "drag",
@@ -55,7 +55,7 @@ export function ActionDrawer() {
             e.target === e.currentTarget && window.kenku.toggleMaximize()
           }
         >
-          {window.kenku.platform === "win32" && (
+          {showWindowControls && (
             <Box sx={{ width: "36px", height: "36px", m: 1 }}>
               <img src={icon} />
             </Box>

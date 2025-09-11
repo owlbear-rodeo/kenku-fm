@@ -29,6 +29,7 @@ import {
   setRemotePort,
   setURLBarEnabled,
 } from "./settingsSlice";
+import { showWindowControls } from "../../common/showWindowControls";
 
 type SettingsProps = {
   open: boolean;
@@ -131,7 +132,7 @@ export function Settings({ open, onClose }: SettingsProps) {
     if (enabled) {
       window.kenku.playerStartRemote(
         settings.remoteAddress,
-        settings.remotePort
+        settings.remotePort,
       );
     } else {
       window.kenku.playerStopRemote();
@@ -140,7 +141,7 @@ export function Settings({ open, onClose }: SettingsProps) {
   }
 
   function handleRemoteAddressChange(
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) {
     dispatch(setRemoteAddress(event.target.value));
   }
@@ -153,7 +154,7 @@ export function Settings({ open, onClose }: SettingsProps) {
     if (settings.remoteEnabled) {
       window.kenku.playerStartRemote(
         settings.remoteAddress,
-        settings.remotePort
+        settings.remotePort,
       );
     }
   }, []);
@@ -240,7 +241,7 @@ export function Settings({ open, onClose }: SettingsProps) {
   }
 
   const [logLevel, setLogLevel] = useState<string>(() =>
-    window.kenku.getLogLevel()
+    window.kenku.getLogLevel(),
   );
   function handleDebugLogToggle() {
     if (logLevel === "debug") {
@@ -349,8 +350,8 @@ export function Settings({ open, onClose }: SettingsProps) {
     <Dialog fullScreen sx={{ width: 240 }} open={open} onClose={onClose}>
       <DialogTitle
         sx={{
-          textAlign: window.kenku.platform !== "win32" ? "right" : "left",
-          py: window.kenku.platform !== "win32" ? 1.5 : 2,
+          textAlign: showWindowControls ? "left" : "right",
+          py: showWindowControls ? 2 : 1.5,
         }}
       >
         Settings

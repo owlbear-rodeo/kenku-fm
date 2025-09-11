@@ -1,33 +1,35 @@
 import React, { useEffect, useRef, useState } from "react";
-import List from "@mui/material/List";
+import { useDispatch, useSelector } from "react-redux";
 
 import {
-  DndContext,
   closestCenter,
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
-  DragStartEvent,
-  DragOverlay,
 } from "@dnd-kit/core";
 import {
   horizontalListSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
+import Box from "@mui/material/Box";
+import List from "@mui/material/List";
+import Stack from "@mui/material/Stack";
 
-import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../app/store";
 import { moveTab, Tab } from "./tabsSlice";
 
-import { TabItem } from "./TabItem";
-import { PlayerTab } from "../player/PlayerTab";
-import { AddTabButton } from "./AddTabButton";
 import { SortableItem } from "../../common/SortableItem";
 import { WindowControls } from "../../common/WindowControls";
-import { Box, Stack } from "@mui/material";
+import { showWindowControls } from "../../common/showWindowControls";
+import { PlayerTab } from "../player/PlayerTab";
+import { AddTabButton } from "./AddTabButton";
+import { TabItem } from "./TabItem";
 
 export function TabBar() {
   const dispatch = useDispatch();
@@ -172,8 +174,7 @@ export function TabBar() {
       <Box>
         <AddTabButton />
       </Box>
-      {/* Show window controls in the tab bar for windows */}
-      {window.kenku.platform === "win32" && <WindowControls />}
+      {showWindowControls && <WindowControls />}
     </Stack>
   );
 }

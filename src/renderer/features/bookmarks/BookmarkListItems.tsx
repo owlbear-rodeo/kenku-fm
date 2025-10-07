@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Collapse from "@mui/material/Collapse";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -32,7 +32,6 @@ import { useDispatch } from "react-redux";
 import { moveBookmark } from "./bookmarksSlice";
 
 import { BookmarkListItem } from "./BookmarkListItem";
-import { AddBookmark } from "./AddBookmark";
 import { SortableItem } from "../../common/SortableItem";
 
 export function BookmarkListItems() {
@@ -57,10 +56,11 @@ export function BookmarkListItems() {
   }
 
   const items = bookmarks.bookmarks.allIds.map(
-    (id) => bookmarks.bookmarks.byId[id]
+    (id) => bookmarks.bookmarks.byId[id],
   );
 
   const [dragId, setDragId] = useState<string | null>(null);
+
   function handleDragStart(event: DragStartEvent) {
     setDragId(event.active.id);
   }
@@ -84,9 +84,7 @@ export function BookmarkListItems() {
             e.stopPropagation();
             setAddOpen(true);
           }}
-        >
-          <AddIcon />
-        </IconButton>
+        />
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItemButton>
       <Collapse in={open} timeout="auto">
@@ -118,7 +116,6 @@ export function BookmarkListItems() {
           </DndContext>
         </List>
       </Collapse>
-      <AddBookmark open={addOpen} onClose={() => setAddOpen(false)} />
     </>
   );
 }

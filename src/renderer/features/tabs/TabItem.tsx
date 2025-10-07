@@ -1,17 +1,23 @@
-import React from "react";
-import ListItem from "@mui/material/ListItem";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
+import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
+import CloseIcon from "@mui/icons-material/CloseRounded";
+import VolumeOffIcon from "@mui/icons-material/VolumeOffRounded";
+import VolumeIcon from "@mui/icons-material/VolumeUpRounded";
+import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
+import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
-import Box from "@mui/material/Box";
-import CloseIcon from "@mui/icons-material/CloseRounded";
-import VolumeIcon from "@mui/icons-material/VolumeUpRounded";
-import VolumeOffIcon from "@mui/icons-material/VolumeOffRounded";
+import React from "react";
 
-import { Tab, selectTab, removeTab, editTab } from "./tabsSlice";
-import { RootState } from "../../app/store";
-import { useSelector, useDispatch } from "react-redux";
+import { v4 as uuid } from "uuid";
+
+import { useDispatch, useSelector } from "react-redux";
+import { type RootState } from "../../app/store";
+import { addBookmark, removeBookmark } from "../bookmarks/bookmarksSlice";
 import { setMuted } from "../player/playerSlice";
+import { safeURL } from "./Tabs";
+import { Tab, editTab, removeTab, selectTab } from "./tabsSlice";
 
 type TabType = {
   tab: Tab;
@@ -23,13 +29,26 @@ type TabType = {
 export function TabItem({ tab, selected, allowClose, shadow }: TabType) {
   const playerTabId = useSelector((state: RootState) => state.player.tab.id);
   const tabIds = useSelector((state: RootState) => state.tabs.tabs.allIds);
+  const bookmarks = useSelector(
+    (state: RootState) => state.bookmarks.bookmarks.byId,
+  );
   const dispatch = useDispatch();
+
+  const isBookmarked = Object.values(bookmarks).filter((bookmark) => {
+    return bookmark.url === tab.url;
+  });
+
+  const showMedia = tab.playingMedia > 0;
+  const showBookmark = Boolean(safeURL(tab.url) && selected && allowClose);
+  const showClose = Boolean(allowClose);
+  const shownIcons =
+    Number(showBookmark) + Number(showClose) + Number(showMedia);
 
   return (
     <ListItem
       secondaryAction={
         <>
-          {tab.playingMedia > 0 && (
+          {showMedia && (
             <IconButton
               edge="end"
               aria-label={tab.muted ? "unmute" : "mute"}
@@ -51,7 +70,35 @@ export function TabItem({ tab, selected, allowClose, shadow }: TabType) {
               )}
             </IconButton>
           )}
-          {allowClose && (
+          {showBookmark && (
+            <IconButton
+              edge="end"
+              size="small"
+              aria-label="bookmark"
+              onClick={() => {
+                if (isBookmarked.length === 0) {
+                  const id = uuid();
+                  dispatch(
+                    addBookmark({
+                      id,
+                      url: tab.url,
+                      title: tab.title,
+                      icon: tab.icon,
+                    }),
+                  );
+                } else {
+                  dispatch(removeBookmark(isBookmarked[0].id));
+                }
+              }}
+            >
+              {isBookmarked.length === 0 ? (
+                <BookmarkBorderIcon sx={{ fontSize: "1rem" }} />
+              ) : (
+                <BookmarkIcon sx={{ fontSize: "1rem" }} />
+              )}
+            </IconButton>
+          )}
+          {showClose && (
             <IconButton
               edge="end"
               aria-label="close"
@@ -77,20 +124,12 @@ export function TabItem({ tab, selected, allowClose, shadow }: TabType) {
         </>
       }
       sx={{
-        minWidth: "76px",
+        minWidth: "120px",
         "& .MuiListItemSecondaryAction-root": {
           right: "12px",
         },
         "& .MuiListItemButton-root": {
-          pr:
-            // Both close and media controls enabled
-            allowClose && tab.playingMedia > 0
-              ? "62px"
-              : // Either close or media controls enabled
-              allowClose || tab.playingMedia > 0
-              ? "38px"
-              : // None enabled
-                2,
+          pr: `${shownIcons * 23 + 8}px`,
         },
         WebkitAppRegion: "no-drag",
       }}

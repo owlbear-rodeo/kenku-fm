@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+
 import { shuffleArray } from "../../common/shuffle";
 import { Track } from "./playlistsSlice";
 
@@ -46,7 +47,7 @@ export const playlistPlaybackSlice = createSlice({
         tracks: string[];
         trackId: string;
         playlistId: string;
-      }>
+      }>,
     ) => {
       const { tracks, trackId, playlistId } = action.payload;
       // Create array of all indices into the tracks array
@@ -59,7 +60,7 @@ export const playlistPlaybackSlice = createSlice({
 
       state.queue = {
         tracks,
-        current: tracks.indexOf(trackId),
+        current: state.shuffle ? 0 : trackIndex,
         playlistId,
         shuffled,
       };
@@ -75,7 +76,7 @@ export const playlistPlaybackSlice = createSlice({
         playlistId: string;
         active: string;
         over: string;
-      }>
+      }>,
     ) => {
       if (
         state.queue &&
@@ -93,24 +94,86 @@ export const playlistPlaybackSlice = createSlice({
         state.queue.current = state.queue.tracks.indexOf(currentId);
       }
     },
+    removeTrackFromQueue: (
+      state,
+      action: PayloadAction<{ playlistId: string; trackId: string }>,
+    ) => {
+      if (state.queue && state.queue.playlistId === action.payload.playlistId) {
+        // create a list of tracks in the same order as state.queue.shuffle
+        let shuffleListWithTracks = [];
+        for (const value of state.queue.shuffled) {
+          const track = state.queue.tracks[value];
+          shuffleListWithTracks.push(track);
+        }
+
+        const currentTrack = shuffleListWithTracks[state.queue.current];
+        const cacheQueue = [...state.queue.tracks];
+
+        // remove the track from the shuffleListWithTracks and the queue tracks
+        shuffleListWithTracks = shuffleListWithTracks.filter(
+          (track) => track !== action.payload.trackId,
+        );
+        state.queue.tracks = state.queue.tracks.filter(
+          (track) => track !== action.payload.trackId,
+        );
+
+        // create the shuffle list with indices only
+        const newShuffleOrder = [];
+        for (const track of shuffleListWithTracks) {
+          newShuffleOrder.push(state.queue.tracks.indexOf(track));
+        }
+
+        // get the index of the current track in the new shuffle queue
+        let newCurrentValue = shuffleListWithTracks.indexOf(currentTrack);
+        if (newCurrentValue === -1) {
+          // if the value was deleted then determine the next item
+          const value = state.queue.shuffled[state.queue.current + 1];
+          const nextTrack = cacheQueue[value];
+          newCurrentValue = shuffleListWithTracks.indexOf(nextTrack);
+        }
+
+        // set the new shuffle queue order
+        state.queue.shuffled = newShuffleOrder;
+        // set the index of current value according to the new shuffle order
+        state.queue.current = newCurrentValue;
+      }
+    },
     addTrackToQueueIfNeeded: (
       state,
-      action: PayloadAction<{ playlistId: string; trackId: string }>
+      action: PayloadAction<{ playlistId: string; trackId: string }>,
     ) => {
       if (state.queue && state.queue.playlistId === action.payload.playlistId) {
         state.queue.tracks.unshift(action.payload.trackId);
         // Increase all shuffled indices by one and add the new 0 index
         state.queue.shuffled = state.queue.shuffled.map(
-          (index) => (index += 1)
+          (index) => (index += 1),
         );
         state.queue.shuffled.unshift(0);
         // Bump current to make room
         state.queue.current += 1;
       }
     },
+    addTracksToQueueIfNeeded: (
+      state,
+      action: PayloadAction<{ playlistId: string; trackIds: string[] }>,
+    ) => {
+      if (state.queue && state.queue.playlistId === action.payload.playlistId) {
+        state.queue.tracks.unshift(...action.payload.trackIds);
+        // Increase all shuffled indices by one and add the new 0 index
+        state.queue.shuffled = state.queue.shuffled.map(
+          (index) => (index += action.payload.trackIds.length),
+        );
+
+        const trackValues = action.payload.trackIds.map((v, i) => i);
+        shuffleArray(trackValues);
+        state.queue.shuffled.unshift(...trackValues);
+        // Bump current to make room
+        state.queue.current += action.payload.trackIds.length;
+      }
+    },
     playTrack: (
       state,
-      action: PayloadAction<{ track: Track; duration: number }>
+      action: PayloadAction<{ track: Track; duration: number }>,
     ) => {
       state.track = action.payload.track;
       state.playing = true;
@@ -166,7 +229,9 @@ export const {
   startQueue,
   updateQueue,
   moveQueueIfNeeded,
+  removeTrackFromQueue,
   addTrackToQueueIfNeeded,
+  addTracksToQueueIfNeeded,
   playTrack,
   stopTrack,
   playPause,

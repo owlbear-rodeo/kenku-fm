@@ -28,6 +28,8 @@ import {
   repeat,
 } from "../playlists/playlistPlaybackSlice";
 
+const minWidthForLargeContext = 650;
+
 const TimeSlider = styled(Slider)({
   color: "#fff",
   height: 4,
@@ -83,8 +85,7 @@ function Title() {
   const queue = useSelector((state: RootState) => state.playlistPlayback.queue);
   const track = useSelector((state: RootState) => state.playlistPlayback.track);
   const noTrack = track?.title === undefined;
-
-  const large = useMediaQuery("(min-width: 500px)");
+  const large = useMediaQuery(`(min-width: ${minWidthForLargeContext}px)`);
 
   return (
     <Box
@@ -122,16 +123,16 @@ function Controls({
 }: Omit<PlaylistPlayerProps, "onPlaylistSeek">) {
   const dispatch = useDispatch();
   const playbackShuffle = useSelector(
-    (state: RootState) => state.playlistPlayback.shuffle
+    (state: RootState) => state.playlistPlayback.shuffle,
   );
   const disabled = useSelector(
-    (state: RootState) => !Boolean(state.playlistPlayback.playback)
+    (state: RootState) => !Boolean(state.playlistPlayback.playback),
   );
   const playing = useSelector(
-    (state: RootState) => state.playlistPlayback.playing
+    (state: RootState) => state.playlistPlayback.playing,
   );
   const playbackRepeat = useSelector(
-    (state: RootState) => state.playlistPlayback.repeat
+    (state: RootState) => state.playlistPlayback.repeat,
   );
 
   function handlePlay() {
@@ -210,11 +211,11 @@ function Controls({
 
 function Volume() {
   const dispatch = useDispatch();
-  const large = useMediaQuery("(min-width: 500px)");
+  const large = useMediaQuery(`(min-width: ${minWidthForLargeContext}px)`);
 
   const muted = useSelector((state: RootState) => state.playlistPlayback.muted);
   const volume = useSelector(
-    (state: RootState) => state.playlistPlayback.volume
+    (state: RootState) => state.playlistPlayback.volume,
   );
 
   function handleVolumeChange(_: Event, value: number | number[]) {
@@ -260,7 +261,7 @@ function Volume() {
 
 function Time({ onPlaylistSeek }: Pick<PlaylistPlayerProps, "onPlaylistSeek">) {
   const playback = useSelector(
-    (state: RootState) => state.playlistPlayback.playback
+    (state: RootState) => state.playlistPlayback.playback,
   );
 
   function formatDuration(value: number) {
@@ -313,7 +314,7 @@ export function PlaylistPlayer({
   onPlaylistPrevious,
   onPlaylistSeek,
 }: PlaylistPlayerProps) {
-  const large = useMediaQuery("(min-width: 500px)");
+  const large = useMediaQuery(`(min-width: ${minWidthForLargeContext}px)`);
 
   if (large) {
     return (

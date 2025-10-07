@@ -1,45 +1,45 @@
 import React, { useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuid } from "uuid";
 
+import AddRounded from "@mui/icons-material/AddCircleRounded";
+import Back from "@mui/icons-material/ChevronLeftRounded";
+import Backdrop from "@mui/material/Backdrop";
 import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
-import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
-import AddRounded from "@mui/icons-material/AddCircleRounded";
-import Tooltip from "@mui/material/Tooltip";
-import Backdrop from "@mui/material/Backdrop";
-import Back from "@mui/icons-material/ChevronLeftRounded";
+import Stack from "@mui/material/Stack";
 import styled from "@mui/material/styles/styled";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
 
 import {
   DndContext,
-  closestCenter,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
   KeyboardSensor,
   PointerSensor,
+  closestCenter,
   useSensor,
   useSensors,
-  DragEndEvent,
-  DragStartEvent,
-  DragOverlay,
 } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 
-import { SoundboardItem } from "./SoundboardItem";
-import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { useHideScrollbar } from "../../../renderer/common/useHideScrollbar";
 import { RootState } from "../../app/store";
+import { getRandomBackground } from "../../backgrounds";
+import { SortableItem } from "../../common/SortableItem";
+import { useFolderDrop } from "../../common/useFolderDrop";
+import { SoundboardAdd } from "./SoundboardAdd";
+import { SoundboardItem } from "./SoundboardItem";
 import {
-  moveSoundboard,
   Sound,
   addSoundboard,
   addSounds,
+  moveSoundboard,
 } from "./soundboardsSlice";
-import { SoundboardAdd } from "./SoundboardAdd";
-import { SortableItem } from "../../common/SortableItem";
-import { useDrop } from "../../common/useDrop";
-import { getRandomBackground } from "../../backgrounds";
-import { useHideScrollbar } from "../../../renderer/common/useHideScrollbar";
-import { useNavigate } from "react-router-dom";
 
 const WallPaper = styled("div")({
   position: "absolute",
@@ -89,7 +89,7 @@ export function Soundboards({ onPlay }: SoundboardProps) {
 
   const [addOpen, setAddOpen] = useState(false);
 
-  const { dragging, containerListeners, overlayListeners } = useDrop(
+  const { dragging, containerListeners, overlayListeners } = useFolderDrop(
     (directories) => {
       for (let directory of Object.values(directories)) {
         const files = directory.audioFiles;

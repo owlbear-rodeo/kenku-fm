@@ -31,7 +31,7 @@ export function BookmarkListItem({ bookmark, shadow }: BookmarkListItemProps) {
       bounds.x,
       bounds.y,
       bounds.width,
-      bounds.height
+      bounds.height,
     );
     dispatch(
       addTab({
@@ -41,7 +41,7 @@ export function BookmarkListItem({ bookmark, shadow }: BookmarkListItemProps) {
         icon: bookmark.icon,
         playingMedia: 0,
         muted: false,
-      })
+      }),
     );
     dispatch(selectTab(id));
   }
@@ -95,12 +95,16 @@ export function BookmarkListItem({ bookmark, shadow }: BookmarkListItemProps) {
                 height: "24px",
                 objectFit: "cover",
                 marginRight: 1,
+                flexShrink: 0,
               }}
             >
               <img src={bookmark.icon} />
             </Box>
           )}
-          <ListItemText primary={bookmark.title} />
+          <ListItemText
+            primary={bookmark.title}
+            primaryTypographyProps={{ noWrap: true }}
+          />
         </ListItemButton>
       </ListItem>
       <Menu

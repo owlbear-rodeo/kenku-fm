@@ -1,27 +1,28 @@
 import React, { useState } from "react";
-import Container from "@mui/material/Container";
-import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
-import IconButton from "@mui/material/IconButton";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+
 import Add from "@mui/icons-material/AddCircleRounded";
-import Tooltip from "@mui/material/Tooltip";
-import Box from "@mui/material/Box";
 import Back from "@mui/icons-material/ChevronLeftRounded";
 import MoreVert from "@mui/icons-material/MoreVertRounded";
+import Backdrop from "@mui/material/Backdrop";
+import Box from "@mui/material/Box";
+import Container from "@mui/material/Container";
+import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import Backdrop from "@mui/material/Backdrop";
+import Stack from "@mui/material/Stack";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
 
-import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../app/store";
-import { removeSoundboard, Sound, addSounds } from "./soundboardsSlice";
 import { SoundAdd } from "./SoundAdd";
 import { SoundboardSettings } from "./SoundboardSettings";
 import { SoundboardSounds } from "./SoundboardSounds";
+import { addSounds, removeSoundboard, Sound } from "./soundboardsSlice";
 
-import { isBackground, backgrounds } from "../../backgrounds";
-import { useDrop } from "../../common/useDrop";
-import { useNavigate, useParams } from "react-router-dom";
+import { backgrounds, isBackground } from "../../backgrounds";
+import { useFolderDrop } from "../../common/useFolderDrop";
 
 type SoundboardProps = {
   onPlay: (sound: Sound) => void;
@@ -68,7 +69,7 @@ export function Soundboard({ onPlay, onStop }: SoundboardProps) {
     handleMenuClose();
   }
 
-  const { dragging, containerListeners, overlayListeners } = useDrop(
+  const { dragging, containerListeners, overlayListeners } = useFolderDrop(
     (directories) => {
       const sounds: Sound[] = [];
       for (let directory of Object.values(directories)) {

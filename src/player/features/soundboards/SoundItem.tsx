@@ -1,25 +1,27 @@
 import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+
+import MoreVert from "@mui/icons-material/MoreVertRounded";
 import PlayArrow from "@mui/icons-material/PlayArrowRounded";
-import IconButton from "@mui/material/IconButton";
 import Loop from "@mui/icons-material/RepeatRounded";
 import Stop from "@mui/icons-material/StopRounded";
-import MoreVert from "@mui/icons-material/MoreVertRounded";
 import VolumeUp from "@mui/icons-material/VolumeUp";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardActionArea from "@mui/material/CardActionArea";
+import CardContent from "@mui/material/CardContent";
+import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import styled from "@mui/material/styles/styled";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import Slider from "@mui/material/Slider";
-import CardActionArea from "@mui/material/CardActionArea";
+import Stack from "@mui/material/Stack";
+import styled from "@mui/material/styles/styled";
+import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
-import { Sound, removeSound, Soundboard, editSound } from "./soundboardsSlice";
-import { useDispatch, useSelector } from "react-redux";
-import { SoundSettings } from "./SoundSettings";
 import { RootState } from "../../app/store";
+import { Sound, Soundboard, editSound, removeSound } from "./soundboardsSlice";
+import { SoundSettings } from "./SoundSettings";
 
 type SoundItemProps = {
   id: string;
@@ -46,7 +48,7 @@ const VolumeSlider = styled(Slider)({
 export function SoundItem({ id, soundboard, onPlay, onStop }: SoundItemProps) {
   const sound = useSelector((state: RootState) => state.soundboards.sounds[id]);
   const playing = useSelector(
-    (state: RootState) => sound.id in state.soundboardPlayback.playback
+    (state: RootState) => sound.id in state.soundboardPlayback.playback,
   );
   const dispatch = useDispatch();
 
@@ -92,20 +94,22 @@ export function SoundItem({ id, soundboard, onPlay, onStop }: SoundItemProps) {
     dispatch(editSound({ id: sound.id, loop: !sound.loop }));
   }
 
-  const large = useMediaQuery("(min-width: 600px)");
-
   const loopToggle = (
     <IconButton
       aria-label={sound.loop ? "no loop" : "loop"}
       onClick={handleToggleLoop}
     >
-      {sound.loop ? <Loop color="primary" /> : <Loop />}
+      {sound.loop ? (
+        <Loop color="primary" sx={{ padding: 0 }} />
+      ) : (
+        <Loop sx={{ padding: 0 }} />
+      )}
     </IconButton>
   );
 
   const volumeSlider = (
     <>
-      <Box height="24px">
+      <Box height="24px" sx={{ padding: 0 }}>
         <VolumeUp sx={{ color: "rgba(255,255,255,0.4)" }} />
       </Box>
       <VolumeSlider
@@ -122,11 +126,15 @@ export function SoundItem({ id, soundboard, onPlay, onStop }: SoundItemProps) {
   );
 
   const playButton = (
-    <IconButton aria-label={playing ? "stop" : "play"} onClick={handlePlayStop}>
+    <IconButton
+      aria-label={playing ? "stop" : "play"}
+      onClick={handlePlayStop}
+      sx={{ padding: 0 }}
+    >
       {playing ? (
-        <Stop sx={{ fontSize: "3rem" }} />
+        <Stop sx={{ fontSize: "2.5rem" }} />
       ) : (
-        <PlayArrow sx={{ fontSize: "3rem" }} />
+        <PlayArrow sx={{ fontSize: "2.5rem" }} />
       )}
     </IconButton>
   );
@@ -138,64 +146,34 @@ export function SoundItem({ id, soundboard, onPlay, onStop }: SoundItemProps) {
           display: "flex",
           flexDirection: "column",
           backgroundColor: "rgba(34, 38, 57, 0.8)",
-          height: large ? "150px" : "200px",
           position: "relative",
         }}
       >
         <CardActionArea
           sx={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0 }}
         />
-        <CardContent>
-          <Box sx={{ display: "flex" }}>
-            <Typography variant="h5" noWrap sx={{ flexGrow: 1 }}>
-              {sound.title}
-            </Typography>
-            <IconButton onClick={handleMenuClick}>
-              <MoreVert />
-            </IconButton>
-          </Box>
-        </CardContent>
-        {large ? (
-          <Box
-            sx={{ display: "flex", gap: 2, alignItems: "center", px: 2, pb: 1 }}
-          >
-            {loopToggle}
-            {volumeSlider}
-            {playButton}
-          </Box>
-        ) : (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-              alignItems: "center",
-              px: 2,
-              pb: 1,
-            }}
-          >
-            <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-              <Box
-                sx={{ position: "absolute", left: { xs: "12px", sm: "24px" } }}
-              >
-                {loopToggle}
-              </Box>
-              {playButton}
-            </Box>
-            <Box
-              sx={{
-                display: "flex",
-                gap: 2,
-                alignItems: "center",
-                width: "100%",
-                pr: 3,
-                pb: 1,
-              }}
+        <CardContent sx={{ py: 2, ":last-child": { pb: 2 } }}>
+          <Stack direction="column" gap={0.5} justifyContent="space-between">
+            <Stack direction="row" justifyContent="space-between">
+              <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
+                {sound.title}
+              </Typography>
+              <IconButton onClick={handleMenuClick}>
+                <MoreVert />
+              </IconButton>
+            </Stack>
+            <Stack
+              direction="row"
+              spacing={2}
+              justifyContent="center"
+              alignItems="center"
             >
+              {loopToggle}
               {volumeSlider}
-            </Box>
-          </Box>
-        )}
+              {playButton}
+            </Stack>
+          </Stack>
+        </CardContent>
       </Card>
       <Menu
         id="soundboard-menu"

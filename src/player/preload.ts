@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge, ipcRenderer, webUtils } from "electron";
 import {
   PlaylistPlaybackReply,
   PlaylistsReply,
@@ -67,6 +67,9 @@ const api = {
   soundboardGetAllReply: (soundboards: SoundboardsReply) => {
     ipcRenderer.send("PLAYER_REMOTE_SOUNDBOARD_GET_ALL_REPLY", soundboards);
   },
+  getPathForFile: (file: File) => {
+    return webUtils.getPathForFile(file);
+  } 
 };
 
 declare global {

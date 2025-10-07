@@ -1,4 +1,4 @@
-import { BrowserView, ipcMain, webContents } from "electron";
+import { BrowserWindow, ipcMain, webContents } from "electron";
 import { TypedEmitter } from "tiny-typed-emitter";
 import { Readable } from "stream";
 import { WebSocketServer, WebSocket } from "ws";
@@ -18,13 +18,13 @@ interface AudioCaptureManagerEvents {
  * For the render thread counterpart see `AudioCaptureManagerPreload.ts`
  */
 export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEvents> {
-  _browserView: BrowserView;
+  _browserWindow: BrowserWindow;
   _encoder?: prism.opus.Encoder;
   _wss: WebSocketServer;
 
   constructor() {
     super();
-    this._browserView = new BrowserView({
+    this._browserWindow = new BrowserWindow({
       webPreferences: {
         preload: AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY,
         // Disable sandbox for the audio capture window
@@ -34,8 +34,11 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
         // content in the capture window
         sandbox: false,
       },
+      minimizable: false,
+      frame: false,
+      show: false
     });
-    this._browserView.webContents.loadURL(AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY);
+    this._browserWindow.webContents.loadURL(AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY);
     this._wss = new WebSocketServer({ port: 0 });
 
     ipcMain.on("AUDIO_CAPTURE_START", this._handleStart);
@@ -90,8 +93,8 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
       "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
       this._handleStopBrowserViewStream
     );
-
-    (this._browserView.webContents as any).destroy();
+    this._browserWindow.webContents.close();
+    (this._browserWindow.webContents as any).destroy();
     this._handleStreamEnd();
     this._wss.close();
   }
@@ -104,11 +107,11 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
     _: Electron.IpcMainEvent,
     streamingMode: "lowLatency" | "performance"
   ) => {
-    this._browserView.webContents.send("AUDIO_CAPTURE_START", streamingMode);
+    this._browserWindow.webContents.send("AUDIO_CAPTURE_START", streamingMode);
   };
 
   _handleSetLoopback = (_: Electron.IpcMainEvent, loopback: boolean) => {
-    this._browserView.webContents.send("AUDIO_CAPTURE_SET_LOOPBACK", loopback);
+    this._browserWindow.webContents.send("AUDIO_CAPTURE_SET_LOOPBACK", loopback);
   };
 
   _handleSetMuted = (
@@ -116,7 +119,7 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
     viewId: number,
     muted: boolean
   ) => {
-    this._browserView.webContents.send(
+    this._browserWindow.webContents.send(
       "AUDIO_CAPTURE_BROWSER_VIEW_MUTED",
       viewId,
       muted
@@ -127,7 +130,7 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
     _: Electron.IpcMainEvent,
     deviceId: string
   ) => {
-    this._browserView.webContents.send(
+    this._browserWindow.webContents.send(
       "AUDIO_CAPTURE_START_EXTERNAL_AUDIO_CAPTURE",
       deviceId
     );
@@ -137,7 +140,7 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
     _: Electron.IpcMainEvent,
     deviceId: string
   ) => {
-    this._browserView.webContents.send(
+    this._browserWindow.webContents.send(
       "AUDIO_CAPTURE_STOP_EXTERNAL_AUDIO_CAPTURE",
       deviceId
     );
@@ -183,9 +186,9 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
   ) => {
     const contents = webContents.fromId(viewId);
     const mediaSourceId = contents.getMediaSourceId(
-      this._browserView.webContents
+      this._browserWindow.webContents
     );
-    this._browserView.webContents.send(
+    this._browserWindow.webContents.send(
       "AUDIO_CAPTURE_START_BROWSER_VIEW_STREAM",
       viewId,
       mediaSourceId
@@ -193,7 +196,7 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
   };
 
   _handleStopBrowserViewStream = (_: Electron.IpcMainEvent, viewId: number) => {
-    this._browserView.webContents.send(
+    this._browserWindow.webContents.send(
       "AUDIO_CAPTURE_STOP_BROWSER_VIEW_STREAM",
       viewId
     );

@@ -15,7 +15,13 @@ import { Track, removeTrack, Playlist } from "./playlistsSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { TrackSettings } from "./TrackSettings";
 import { RootState } from "../../app/store";
-import { playPause } from "./playlistPlaybackSlice";
+import {
+  playPause,
+  removeTrackFromQueue,
+  startQueue,
+  stopTrack,
+  updatePlayback,
+} from "./playlistPlaybackSlice";
 
 type TrackItemProps = {
   track: Track;
@@ -25,10 +31,10 @@ type TrackItemProps = {
 
 export function TrackItem({ track, playlist, onPlay }: TrackItemProps) {
   const isCurrentTrack = useSelector(
-    (state: RootState) => state.playlistPlayback.track?.id === track.id
+    (state: RootState) => state.playlistPlayback.track?.id === track.id,
   );
   const playing = useSelector(
-    (state: RootState) => state.playlistPlayback.playing && isCurrentTrack
+    (state: RootState) => state.playlistPlayback.playing && isCurrentTrack,
   );
   const dispatch = useDispatch();
 
@@ -54,7 +60,15 @@ export function TrackItem({ track, playlist, onPlay }: TrackItemProps) {
   }
 
   function handleDelete() {
+    // TODO: Fix bug where playback does not update to zero when isCurrentTrack is removed
+    if (isCurrentTrack) {
+      dispatch(playPause(false));
+      dispatch(stopTrack());
+    }
     dispatch(removeTrack({ trackId: track.id, playlistId: playlist.id }));
+    dispatch(
+      removeTrackFromQueue({ trackId: track.id, playlistId: playlist.id }),
+    );
     handleMenuClose();
   }
 
@@ -91,6 +105,9 @@ export function TrackItem({ track, playlist, onPlay }: TrackItemProps) {
                 textOverflow: "ellipsis",
               },
             }}
+            primaryTypographyProps={{
+              typography: "body1",
+            }}
           />
           <IconButton
             aria-label={playing ? "pause" : "play"}
@@ -108,9 +125,7 @@ export function TrackItem({ track, playlist, onPlay }: TrackItemProps) {
         anchorEl={anchorEl}
         open={menuOpen}
         onClose={handleMenuClose}
-        MenuListProps={{
-          "aria-labelledby": "more-button",
-        }}
+        slotProps={{ list: { "aria-labelledby": "more-button" } }}
       >
         <MenuItem onClick={handleEdit}>Edit</MenuItem>
         <MenuItem onClick={handleCopyID}>Copy ID</MenuItem>

@@ -1,4 +1,4 @@
-import { BrowserView, BrowserWindow, ipcMain, shell } from "electron";
+import { BrowserWindow, ipcMain, shell, WebContentsView } from "electron";
 import { getUserAgent } from "../userAgent";
 
 /**
@@ -8,7 +8,8 @@ import { getUserAgent } from "../userAgent";
  */
 export class BrowserViewManagerMain {
   window: BrowserWindow;
-  views: Record<number, BrowserView>;
+  views: Record<number, WebContentsView>;
+  topView: WebContentsView;
 
   constructor(window: BrowserWindow) {
     this.window = window;
@@ -36,6 +37,8 @@ export class BrowserViewManagerMain {
     ipcMain.on("BROWSER_VIEW_GO_FORWARD", this._handleGoForward);
     ipcMain.on("BROWSER_VIEW_GO_BACK", this._handleGoBack);
     ipcMain.on("BROWSER_VIEW_RELOAD", this._handleReload);
+
+    this.window.on("resize", this._resizeListener);
   }
 
   destroy() {
@@ -62,8 +65,24 @@ export class BrowserViewManagerMain {
     ipcMain.off("BROWSER_VIEW_GO_BACK", this._handleGoBack);
     ipcMain.off("BROWSER_VIEW_RELOAD", this._handleReload);
 
+    this.window.off("resize", this._resizeListener);
     this.removeAllBrowserViews();
   }
+
+  _resizeListener = () => {
+    if (!this.window || !this.topView) {
+      return;
+    }
+    const bounds = this.window.getBounds();
+    const viewBounds = this.topView.getBounds();
+
+    this.topView.setBounds({
+      x: viewBounds.x,
+      y: viewBounds.y,
+      width: bounds.width - viewBounds.x,
+      height: bounds.height - viewBounds.y,
+    });
+  };
 
   _handleCreateBrowserView = (
     event: Electron.IpcMainEvent,
@@ -154,22 +173,18 @@ export class BrowserViewManagerMain {
     height: number,
     preload?: string
   ): number {
-    const view = new BrowserView({
+    const view = new WebContentsView({
       webPreferences: {
         preload,
       },
     });
-    this.window.setBrowserView(view);
+    this.window.contentView.addChildView(view);
 
     view.setBounds({
       x,
       y,
       width,
       height,
-    });
-    view.setAutoResize({
-      width: true,
-      height: true,
     });
 
     try {
@@ -187,13 +202,18 @@ export class BrowserViewManagerMain {
     view.webContents.setUserAgent(getUserAgent());
 
     this.views[view.webContents.id] = view;
+    this.topView = view;
 
     return view.webContents.id;
   }
 
   removeBrowserView(id: number) {
     if (this.views[id]) {
-      this.window.removeBrowserView(this.views[id]);
+      if (this.topView === this.views[id]) {
+        this.topView = undefined;
+      }
+      this.views[id].webContents.close({ waitForBeforeUnload: false });
+      this.window.contentView.removeChildView(this.views[id]);
       (this.views[id].webContents as any).destroy();
       delete this.views[id];
     }
@@ -201,21 +221,27 @@ export class BrowserViewManagerMain {
 
   removeAllBrowserViews() {
     for (let id in this.views) {
-      this.window.removeBrowserView(this.views[id]);
+      this.views[id].webContents.close({ waitForBeforeUnload: false });
+      this.window.contentView.removeChildView(this.views[id]);
       (this.views[id].webContents as any).destroy();
+      this.topView = undefined;
       delete this.views[id];
     }
   }
 
   hideBrowserView(id: number) {
     if (this.views[id]) {
-      this.window.removeBrowserView(this.views[id]);
+      if (this.topView === this.views[id]) {
+        this.topView = undefined;
+      }
+      this.window.contentView.removeChildView(this.views[id]);
     }
   }
 
   showBrowserView(id: number) {
     if (this.views[id]) {
-      this.window.setBrowserView(this.views[id]);
+      this.window.contentView.addChildView(this.views[id]);
+      this.topView = this.views[id];
     }
   }
 
@@ -227,7 +253,7 @@ export class BrowserViewManagerMain {
     height: number
   ) {
     try {
-      this.views[id]?.setBounds({ x, y, width, height });
+      this.views[id].setBounds({ x, y, width, height });
     } catch (err) {
       console.error(err);
     }
@@ -235,7 +261,7 @@ export class BrowserViewManagerMain {
 
   loadURL(id: number, url: string) {
     try {
-      this.views[id]?.webContents.loadURL(url);
+      this.views[id].webContents.loadURL(url);
     } catch (err) {
       console.error(err);
     }
@@ -243,7 +269,7 @@ export class BrowserViewManagerMain {
 
   goForward(id: number) {
     try {
-      this.views[id]?.webContents.goForward();
+      this.views[id].webContents.navigationHistory.goForward();
     } catch (err) {
       console.error(err);
     }
@@ -251,7 +277,7 @@ export class BrowserViewManagerMain {
 
   goBack(id: number) {
     try {
-      this.views[id]?.webContents.goBack();
+      this.views[id].webContents.navigationHistory.goBack();
     } catch (err) {
       console.error(err);
     }
@@ -259,7 +285,7 @@ export class BrowserViewManagerMain {
 
   reload(id: number) {
     try {
-      this.views[id]?.webContents.reload();
+      this.views[id].webContents.reload();
     } catch (err) {
       console.error(err);
     }

@@ -19,18 +19,33 @@ import {
   decreasePlayingMedia,
   increasePlayingMedia,
 } from "../player/playerSlice";
+import { editBookmark } from "../bookmarks/bookmarksSlice";
+
+/**
+ * Safely parse a URL string. Returns a URL object if valid, otherwise null.
+ * Logs a warning when the URL is malformed.
+ */
+export const safeURL = (urlString: string): URL | null => {
+  try {
+    return new URL(urlString);
+  } catch {
+    console.warn(`Invalid URL detected: ${urlString}`);
+    return null;
+  }
+};
 
 export function Tabs() {
   const dispatch = useDispatch();
   const player = useSelector((state: RootState) => state.player);
   const tabs = useSelector((state: RootState) => state.tabs);
+  const bookmarks = useSelector((state: RootState) => state.bookmarks);
   const settings = useSelector((state: RootState) => state.settings);
 
   const selectedTab = useMemo(() => tabs.tabs.byId[tabs.selectedTab], [tabs]);
 
   const isPlayer = useMemo(
     () => tabs.selectedTab === player.tab.id,
-    [tabs.selectedTab, player.tab]
+    [tabs.selectedTab, player.tab],
   );
 
   useEffect(() => {
@@ -50,10 +65,61 @@ export function Tabs() {
     window.kenku.on("BROWSER_VIEW_FAVICON_UPDATED", (args) => {
       const viewId = args[0];
       const favicons = args[1];
+
       if (viewId === player.tab.id) {
         return;
       }
-      dispatch(editTab({ id: viewId, icon: favicons[0] || "" }));
+
+      let validFavicons: string[] = [];
+      if (Array.isArray(favicons)) {
+        favicons.forEach((favicon) => {
+          const url = safeURL(favicon);
+          if (url) {
+            validFavicons.push(favicon);
+          }
+        });
+      }
+
+      if (validFavicons.length === 0) {
+        return;
+      }
+
+      const tab = tabs.tabs.byId[viewId];
+
+      const getParts = (url: URL) => {
+        const hostname = url.hostname;
+        const parts = hostname.split(".");
+
+        if (parts.length > 2) {
+          return parts.slice(parts.length - 2).join(".");
+        }
+
+        return hostname;
+      };
+
+      if (tab) {
+        const tabUrlObj = safeURL(tab.url);
+        if (!tabUrlObj) {
+          return;
+        }
+        const tabUrl = getParts(tabUrlObj);
+
+        const bookmarkItems = Object.values(bookmarks.bookmarks.byId);
+        const hasMatch = bookmarkItems.filter((bookmark) => {
+          const bookmarkUrlObj = safeURL(bookmark.url);
+          if (!bookmarkUrlObj) return false;
+          const url = getParts(bookmarkUrlObj);
+          return url === tabUrl;
+        });
+
+        if (hasMatch.length > 0) {
+          hasMatch.forEach((match) => {
+            dispatch(editBookmark({ id: match.id, icon: validFavicons[0] }));
+          });
+        }
+      }
+
+      dispatch(editTab({ id: viewId, icon: validFavicons[0] || "" }));
     });
     window.kenku.on("BROWSER_VIEW_MEDIA_STARTED_PLAYING", (args) => {
       const viewId = args[0];
@@ -78,7 +144,7 @@ export function Tabs() {
         bounds.x,
         bounds.y,
         bounds.width,
-        bounds.height
+        bounds.height,
       );
       dispatch(
         addTab({
@@ -88,7 +154,7 @@ export function Tabs() {
           icon: "",
           playingMedia: 0,
           muted: false,
-        })
+        }),
       );
       dispatch(selectTab(id));
     });
@@ -127,7 +193,7 @@ export function Tabs() {
         bounds.x,
         bounds.y,
         bounds.width,
-        bounds.height
+        bounds.height,
       );
     }
   }, [settings.urlBarEnabled, isPlayer, tabs.selectedTab]);

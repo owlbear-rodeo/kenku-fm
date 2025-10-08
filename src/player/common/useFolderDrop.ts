@@ -67,8 +67,9 @@ async function getDirectories(
     if (isFileSystemFileEntry(entry)) {
       const file = await getFile(entry);
       if (path in directories && supportedFileTypes.includes(file.type)) {
+        const filePath = window.player.getPathForFile(file);
         directories[path].audioFiles.push({
-          url: encodeFilePath(file.path),
+          url: encodeFilePath(filePath),
           title: cleanFileName(file.name),
           id: uuid(),
         });
@@ -87,7 +88,7 @@ async function getDirectories(
   return directories;
 }
 
-export function useDrop(onDrop: (directories: Directories) => void) {
+export function useFolderDrop(onDrop: (directories: Directories) => void) {
   const [dragging, setDragging] = useState(false);
   function handleDragEnter(event: React.DragEvent<HTMLDivElement>) {
     event.preventDefault();

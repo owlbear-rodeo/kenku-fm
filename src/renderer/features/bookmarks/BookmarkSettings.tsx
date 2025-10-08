@@ -10,6 +10,7 @@ import { useDispatch } from "react-redux";
 import { Bookmark, editBookmark } from "./bookmarksSlice";
 
 import { getDropURL } from "../../common/drop";
+import { showWindowControls } from "../../common/showWindowControls";
 
 type BookmarkSettingsProps = {
   bookmark: Bookmark;
@@ -41,9 +42,6 @@ export function BookmarkSettings({
   }
 
   function handleClose() {
-    window.kenku.appIcon(bookmark.url).then((icon) => {
-      dispatch(editBookmark({ id: bookmark.id, icon }));
-    });
     onClose();
   }
 
@@ -64,8 +62,8 @@ export function BookmarkSettings({
     >
       <DialogTitle
         sx={{
-          textAlign: window.kenku.platform !== "win32" ? "right" : "left",
-          py: window.kenku.platform !== "win32" ? 1.5 : 2,
+          textAlign: showWindowControls ? "left" : "right",
+          py: showWindowControls ? 2 : 1.5,
         }}
       >
         Edit Bookmark

@@ -28,20 +28,23 @@ if (require("electron-squirrel-startup")) {
 }
 
 const createWindow = (): BrowserWindow => {
+  const minWidth = 800;
+  const minHeight = 600;
+
   // Create the browser window.
-  const { bounds, maximized } = getSavedBounds();
+  const { bounds, maximized } = getSavedBounds(minWidth, minHeight);
 
   const mainWindow = new BrowserWindow({
-    height: 600,
     width: 800,
+    height: 600,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
     },
     titleBarStyle: "hidden",
     trafficLightPosition: { x: 16, y: 18 },
     icon: icon,
-    minWidth: 500,
-    minHeight: 375,
+    minWidth,
+    minHeight,
     ...bounds,
   });
 

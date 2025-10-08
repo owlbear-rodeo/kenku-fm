@@ -43,7 +43,6 @@ export class DiscordBroadcast {
     ipcMain.off("DISCORD_DISCONNECT", this._handleDisconnect);
     ipcMain.off("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
     ipcMain.off("DISCORD_LEAVE_CHANNEL", this._handleLeaveChannel);
-    this.audioPlayer.off("error", this._handleBroadcastError);
     this.client?.destroy();
     this.client = undefined;
   }

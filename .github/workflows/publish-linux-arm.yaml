@@ -1,0 +1,40 @@
+name: Publish Kenku FM - Linux ARM
+on:
+  push:
+    tags:
+      - "v*.*.*-linux-arm"
+
+jobs:
+  linux-release:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-22.04-arm]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node Config
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "yarn"
+      - name: Install Dependencies
+        run: yarn install --non-interactive --frozen-lockfile
+      - name: Get Images
+        uses: actions/checkout@v4
+        with:
+          repository: owlbear-rodeo/kenku-fm-assets
+          token: ${{ secrets.KENKU_ASSET_REPO_TOKEN }}
+          sparse-checkout: |
+            backgrounds
+          path: kenku-fm-assets
+      - name: Move Images to Directory
+        run: |
+          mv ./kenku-fm-assets/backgrounds/*.jpg ./src/player/backgrounds
+          rm -rf ./kenku-fm-assets
+      - name: Publish App
+        run: yarn run publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

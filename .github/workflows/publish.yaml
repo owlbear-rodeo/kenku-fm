@@ -171,24 +171,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-
-      - if: ${{ matrix.os.arch == 'arm64' }}
-        name: Download cryptography wheel
-        uses: robinraju/release-downloader@v1.8
-        with:
-          repository: "khmyznikov/PyEnv-WoA-State"
-          tag: "cryptography-46.0.0-py3.11-arm64"
-          fileName: "*.whl"
-          out-file-path: "wheels"
-
-      - if: ${{ matrix.os.arch == 'arm64' }}
-        name: Install from wheel
-        run: |
-          python -m pip install cffi
-          python -m pip install --no-index --find-links=wheels cryptography
-          # Verify installation
-          python -c "import cryptography; print(f'Installed cryptography version: {cryptography.__version__}')"
-
       - name: Install Widevine Python Module
         run: |
           python -m pip install --upgrade castlabs-evs

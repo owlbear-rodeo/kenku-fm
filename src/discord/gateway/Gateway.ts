@@ -119,8 +119,8 @@ export class Gateway extends TypedEmitter<GatewayEvents> {
           this.emit("error", e);
         });
     },
-    1200,
-    { leading: true, trailing: true }
+    2000,
+    { leading: true, trailing: true },
   );
 
   /** Manually disconnect the gateway with code `GatewayCloseCode.NormalClosure` */

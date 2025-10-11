@@ -1,0 +1,18 @@
+#!/bin/bash
+# based on discord snap
+
+CONFIG_DIR=${XDG_CONFIG_HOME:-$SNAP_USER_DATA/.config}/discord
+mkdir -p "$CONFIG_DIR"
+
+CONFIG_FILE="$CONFIG_DIR"/settings.json
+if ! [ -f "$CONFIG_FILE" ]; then
+    echo '{}' > "$CONFIG_FILE"
+fi
+
+ORIG_JSON=$(cat "$CONFIG_FILE")
+NEW_JSON=$(jq '.SKIP_HOST_UPDATE = true' < "$CONFIG_FILE")
+if [ "$ORIG_JSON" != "$NEW_JSON" ]; then
+    echo "$NEW_JSON" > "$CONFIG_FILE"
+fi
+
+exec "$@"

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# based on discord snap
+exec "$SNAP/bin/kenku-fm" --use-tray-icon --no-sandbox --disable-seccomp-filter-sandbox "$@"

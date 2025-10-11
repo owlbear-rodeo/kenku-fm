@@ -10,7 +10,7 @@ import {
 } from "electron";
 import "./menu";
 import icon from "./assets/icon.png";
-import { getUserAgent } from "./main/userAgent";
+import { getMalformedUserAgent, getUserAgent } from "./main/userAgent";
 import { SessionManager } from "./main/managers/SessionManager";
 import { runAutoUpdate } from "./autoUpdate";
 import { getSavedBounds, saveWindowBounds } from "./bounds";
@@ -92,7 +92,9 @@ const createWindow = (): BrowserWindow => {
 const spoofUserAgent = () => {
   session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
     // Google blocks sign in on CEF so spoof user agent for network requests
-    details.requestHeaders["User-Agent"] = getUserAgent();
+    details.requestHeaders["User-Agent"] = details.url.includes("google.com")
+      ? getMalformedUserAgent()
+      : getUserAgent();
     callback({ cancel: false, requestHeaders: details.requestHeaders });
   });
 };

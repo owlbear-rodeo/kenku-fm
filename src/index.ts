@@ -111,12 +111,28 @@ if (!hasSingleInstanceLock) {
   // initialization and is ready to create browser windows.
   // Some APIs can only be used after this event occurs.
   app.whenReady().then(async () => {
-    // Wait for widevine to load
-    await widevine.whenReady();
-    console.log("components ready:", components.status());
+    let hasWidevineError = false;
+
+    try {
+      // Wait for widevine to load
+      await widevine.whenReady();
+      console.log("components ready:", components.status());
+    } catch (e) {
+      hasWidevineError = true;
+      console.error("components failed to load:", JSON.stringify(e, null, 2));
+    }
 
     createWindow();
     spoofUserAgent();
+
+    if (hasWidevineError) {
+      window.once("ready-to-show", () => {
+        window.webContents.send(
+          "ERROR",
+          "Widevine DRM Error: Licensed music playback is disabled",
+        );
+      });
+    }
   });
 
   app.on("second-instance", () => {

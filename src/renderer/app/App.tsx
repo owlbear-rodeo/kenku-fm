@@ -93,7 +93,7 @@ export function App() {
       />
       <Snackbar
         open={Boolean(error)}
-        autoHideDuration={4000}
+        autoHideDuration={8000}
         onClose={() => setError(undefined)}
         sx={{ maxWidth: "192px" }}
       >

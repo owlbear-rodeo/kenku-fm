@@ -93,7 +93,7 @@ export function App() {
           <Snackbar
             key={key}
             open={Boolean(message)}
-            autoHideDuration={4000}
+            autoHideDuration={8000}
             onClose={() => setMessages(({ [key]: _, ...rest }) => rest)}
             message={message}
             sx={{ maxWidth: "192px", position: "initial" }}

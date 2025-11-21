@@ -1,5 +1,6 @@
 import { ipcMain, BrowserWindow, webContents } from "electron";
 import Fastify, { FastifyInstance } from "fastify";
+import cors from "@fastify/cors"; // Add this import
 import { registerRemote } from "../remote";
 
 declare const PLAYER_WINDOW_WEBPACK_ENTRY: string;
@@ -39,6 +40,14 @@ export class PlayerManager {
     this.port = port;
 
     this.fastify = Fastify();
+
+    // Register CORS plugin
+    this.fastify.register(cors, {
+      origin: "*", // Allow all origins (adjust as needed)
+      methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
+      allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+      credentials: true, // Allow credentials if needed
+    });
 
     registerRemote(this);
 

@@ -233,6 +233,7 @@ export function Settings({ open, onClose }: SettingsProps) {
 
   useEffect(() => {
     window.kenku.startAudioCapture(settings.streamingMode);
+    window.kenku.setDiscordOutputVolume(settings.discordOutputVolume ?? 1);
   }, []);
 
   const streamingSettings = (

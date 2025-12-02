@@ -1,8 +1,8 @@
 {
   "name": "kenku-fm",
-  "productName": "Kenku FM",
-  "version": "1.5.4",
-  "description": "Online tabletop audio sharing for Discord",
+  "productName": "Kenku FM - ArgonautCaptain Mod",
+  "version": "1.5.4-modded",
+  "description": "Online tabletop audio sharing for Discord with added functionality",
   "main": "./.webpack/main",
   "scripts": {
     "start": "electron-forge start",

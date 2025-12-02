@@ -44,6 +44,7 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
     ipcMain.on("AUDIO_CAPTURE_START", this._handleStart);
     ipcMain.on("AUDIO_CAPTURE_SET_LOOPBACK", this._handleSetLoopback);
     ipcMain.on("AUDIO_CAPTURE_SET_MUTED", this._handleSetMuted);
+    ipcMain.on("AUDIO_CAPTURE_SET_DISCORD_VOLUME", this._handleSetDiscordVolume);
     ipcMain.on(
       "AUDIO_CAPTURE_START_EXTERNAL_AUDIO_CAPTURE",
       this._handleStartExternalAudioCapture
@@ -74,6 +75,7 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
     ipcMain.off("AUDIO_CAPTURE_START", this._handleStart);
     ipcMain.off("AUDIO_CAPTURE_SET_LOOPBACK", this._handleSetLoopback);
     ipcMain.off("AUDIO_CAPTURE_SET_MUTED", this._handleSetMuted);
+    ipcMain.off("AUDIO_CAPTURE_SET_DISCORD_VOLUME", this._handleSetDiscordVolume);
     ipcMain.off(
       "AUDIO_CAPTURE_START_EXTERNAL_AUDIO_CAPTURE",
       this._handleStartExternalAudioCapture
@@ -101,6 +103,14 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
 
   _handleWebsocketConnection = (ws: WebSocket) => {
     ws.on("message", this._handleStreamData);
+  };
+
+  _handleSetDiscordVolume = (_: Electron.IpcMainEvent, volume: number) => {
+    try {
+      this._browserWindow.webContents.send("AUDIO_CAPTURE_SET_DISCORD_VOLUME", volume);
+    } catch (e) {
+      console.error("Failed to send discord volume to capture window", e);
+    }
   };
 
   _handleStart = (

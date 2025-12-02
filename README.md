@@ -13,6 +13,12 @@ Kenku FM is a desktop application for Windows, MacOS and Linux designed to be th
   <img src="./docs/example.png" alt="Kenku FM Interface" width="738">
 </p>
 
+## Mods 
+
+Added by [ArgonautCaptain](https://github.com/ArgonautCaptain/)
+
+- Created a global volume slider that attenuates the audio level sent to Discord. This feature was added because the bot is too loud by default, preventing the user from fine-tuning the volume of audio tracks.
+
 ## Installing
 
 Prebuilt binaries can be found at [kenku.fm](https://www.kenku.fm) or from the [GitHub releases](https://github.com/owlbear-rodeo/kenku-fm/releases).

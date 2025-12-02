@@ -146,6 +146,9 @@ const api = {
   setLoopback: (loopback: boolean) => {
     ipcRenderer.send("AUDIO_CAPTURE_SET_LOOPBACK", loopback);
   },
+  setDiscordOutputVolume: (volume: number) => {
+    ipcRenderer.send("AUDIO_CAPTURE_SET_DISCORD_VOLUME", volume);
+  },
   setMuted: (id: number, muted: boolean) => {
     ipcRenderer.send("AUDIO_CAPTURE_SET_MUTED", id, muted);
   },

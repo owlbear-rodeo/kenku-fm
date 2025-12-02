@@ -96,6 +96,20 @@ export class AudioCaptureManagerPreload {
     this._audioOutputNode.connect(pcmStreamNode);
   }
 
+
+  // Set a global volume multiplier applied to the mix sent to the pcm stream
+  // @param volume number - linear multiplier (0.0 - 2.0)
+  setDiscordVolume(volume: number): void {
+    try {
+      if (this._audioOutputNode) {
+        const gainNode = this._audioOutputNode as GainNode;
+        gainNode.gain.value = volume;
+      }
+    } catch (e) {
+      console.error("Failed to set discord output volume", e);
+    }
+  }
+
   setMuted(id: number, muted: boolean): void {
     // Mute the audio context node
     // Note: we can't use `webContents.setAudioMuted()` as we are capturing a

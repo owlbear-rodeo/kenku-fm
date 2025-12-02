@@ -49,3 +49,7 @@ ipcRenderer.on(
     audioCaptureManager.start(streamingMode);
   }
 );
+
+ipcRenderer.on("AUDIO_CAPTURE_SET_DISCORD_VOLUME", (_, volume: number) => {
+  audioCaptureManager.setDiscordVolume?.(volume);
+});

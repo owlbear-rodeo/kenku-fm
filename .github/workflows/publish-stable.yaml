@@ -46,14 +46,14 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - runner: warp-macos-13-arm64-6x
+          - runner: warp-macos-15-arm64-6x
             arch: arm64
-          - runner: macos-13
+          - runner: macos-15-intel
             arch: x64
 
     steps:
       - name: Select Xcode version
-        run: sudo xcode-select -s '/Applications/Xcode_14.3.1.app/Contents/Developer'
+        run: sudo xcode-select -s '/Applications/Xcode_16.4.app/Contents/Developer'
       - name: Check Xcode version
         run: xcodebuild -version
       - name: Set Kenku FM Path
@@ -168,6 +168,7 @@ jobs:
           python-version: "3.13"
       - name: Install Widevine Python Module
         run: |
+          python -m pip install cryptography==46.0.3
           python -m pip install --upgrade castlabs-evs
       - name: Checkout
         uses: actions/checkout@v4
@@ -193,23 +194,40 @@ jobs:
           rm -rf ./kenku-fm-assets
       - name: Make Package
         run: yarn run make
-      - name: Setup SM_CLIENT_CERT_FILE from base64 secret data
+
+      - name: Set up client certificate
+        shell: bash
         run: |
-          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/sm_client_cert.p12
-          shell: bash
+          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > ${RUNNER_TEMP}/Certificate_pkcs12.p12
+          echo "SM_CLIENT_CERT_FILE=${RUNNER_TEMP}/Certificate_pkcs12.p12" >> $GITHUB_ENV
+
+      - name: Set up code sign certificate
+        shell: bash
+        run: |
+          echo "${{ secrets.SM_CERT_B64 }}" | base64 --decode > ${RUNNER_TEMP}/cert.crt
+          echo "SM_CERT_FILE=${RUNNER_TEMP}/cert.crt" >> $GITHUB_ENV
+
       - name: Setup Software Trust Manager
         uses: digicert/code-signing-software-trust-action@v1
         env:
+          SM_CERT_FILE: ${{ env.SM_CERT_FILE}}
           SM_HOST: ${{ vars.SM_HOST }}
           SM_API_KEY: ${{ secrets.SM_API_KEY }}
-          SM_CLIENT_CERT_FILE: "D:\\sm_client_cert.p12"
+          SM_CLIENT_CERT_FILE: ${{ env.SM_CLIENT_CERT_FILE }}
           SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
 
-      - name: Signing using certificate fingerprint
+      - name: Signing using certificate keypair alias
         run: |
-          smctl sign --fingerprint ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }} --input "${DIR}\out\Kenku FM-win32-${{ matrix.os.arch }}\kenku-fm.exe"
-          smctl sign --fingerprint ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }} --input "${DIR}\out\Kenku FM-win32-${{ matrix.os.arch }}\Squirrel.exe"
-        shell: cmd
+          $DIR=$(pwd)
+
+          smctl sign --simple --keypair-alias ${{ secrets.SM_KEYPAIR_ALIAS }} --input "${DIR}\out\Kenku FM-win32-${{ matrix.os.arch }}\kenku-fm.exe"
+          smctl sign --simple --keypair-alias ${{ secrets.SM_KEYPAIR_ALIAS }} --input "${DIR}\out\Kenku FM-win32-${{ matrix.os.arch }}\Squirrel.exe"
+        env:
+          SM_HOST: ${{ vars.SM_HOST }}
+          SM_API_KEY: ${{ secrets.SM_API_KEY }}
+          SM_CLIENT_CERT_FILE: ${{ env.SM_CLIENT_CERT_FILE }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
 
       - name: Widevine Signature
         run: |
@@ -218,16 +236,21 @@ jobs:
         env:
           CASTLABS_ACCOUNT_NAME: ${{ secrets.CASTLABS_ACCOUNT_NAME }}
           CASTLABS_ACCOUNT_PASSWORD: ${{ secrets.CASTLABS_ACCOUNT_PASSWORD }}
+
       - name: Create App
         shell: bash
         run: |
-          CERT_PASSWORD=$(echo "${WINDOWS_CERT_PWD}" | openssl base64 -A -d)
           yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows
 
           VERSION=${TAG//v}
-          node ./publish/windows/index.js $VERSION  $CERT_PASSWORD
+          DEBUG=electron-windows-installer:main node ./publish/windows/index.js $VERSION $KEYPAIR_ALIAS $SM_CERT_FILE
         env:
-          WINDOWS_CERT_PWD: ${{ secrets.WINDOWS_CERT_PWD }}
+          SM_CERT_FILE: ${{ env.SM_CERT_FILE }}
+          SM_HOST: ${{ vars.SM_HOST }}
+          SM_API_KEY: ${{ secrets.SM_API_KEY }}
+          SM_CLIENT_CERT_FILE: ${{ env.SM_CLIENT_CERT_FILE }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
           TAG: ${{ github.ref_name}}
       - name: Publish
         shell: bash

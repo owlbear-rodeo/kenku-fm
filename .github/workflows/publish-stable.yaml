@@ -193,19 +193,24 @@ jobs:
           rm -rf ./kenku-fm-assets
       - name: Make Package
         run: yarn run make
-      - name: Signtool
+      - name: Setup SM_CLIENT_CERT_FILE from base64 secret data
         run: |
-          echo $env:WINDOWS_CERT | openssl base64 -A -d -out certificate.pfx
-
-          $DIR = $(pwd)
-          $CERT = "${DIR}\certificate.pfx"
-          $CERT_PASSWORD = $(echo $env:WINDOWS_CERT_PWD | openssl base64 -A -d)
-
-          & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\${{ matrix.os.arch }}\signtool.exe" sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-${{ matrix.os.arch }}\kenku-fm.exe"
-          & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\${{ matrix.os.arch }}\signtool.exe" sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-${{ matrix.os.arch }}\Squirrel.exe"
+          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > /d/sm_client_cert.p12
+          shell: bash
+      - name: Setup Software Trust Manager
+        uses: digicert/code-signing-software-trust-action@v1
         env:
-          WINDOWS_CERT: ${{ secrets.WINDOWS_CERT }}
-          WINDOWS_CERT_PWD: ${{ secrets.WINDOWS_CERT_PWD }}
+          SM_HOST: ${{ vars.SM_HOST }}
+          SM_API_KEY: ${{ secrets.SM_API_KEY }}
+          SM_CLIENT_CERT_FILE: "D:\\sm_client_cert.p12"
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+
+      - name: Signing using certificate fingerprint
+        run: |
+          smctl sign --fingerprint ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }} --input "${DIR}\out\Kenku FM-win32-${{ matrix.os.arch }}\kenku-fm.exe"
+          smctl sign --fingerprint ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }} --input "${DIR}\out\Kenku FM-win32-${{ matrix.os.arch }}\Squirrel.exe"
+        shell: cmd
+
       - name: Widevine Signature
         run: |
           python -m castlabs_evs.account -n reauth -A $env:CASTLABS_ACCOUNT_NAME -P $env:CASTLABS_ACCOUNT_PASSWORD

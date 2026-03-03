@@ -22,8 +22,32 @@ export enum VoiceOpCode {
   Hello = 8,
   /** Acknowledge a successful session resume. */
   Resumed = 9,
+  /** Clients who are connected to this voice session. */
+  ClientsConnect = 11,
   /** A client has disconnected from the voice channel */
   ClientDisconnect = 13,
+  /** Prepare protocol transition. */
+  DavePrepareTransition = 21,
+  /** Execute protocol transition. */
+  DaveExecuteTransition = 22,
+  /** Client transition-ready signal. */
+  DaveTransitionReady = 23,
+  /** Prepare epoch for DAVE protocol. */
+  DavePrepareEpoch = 24,
+  /** Voice gateway external sender package. */
+  MlsExternalSender = 25,
+  /** MLS key package exchange. */
+  MlsKeyPackage = 26,
+  /** MLS proposals. */
+  MlsProposals = 27,
+  /** MLS commit + optional welcome. */
+  MlsCommitWelcome = 28,
+  /** Announce commit transition. */
+  MlsAnnounceCommitTransition = 29,
+  /** Welcome pending member. */
+  MlsWelcome = 30,
+  /** Invalid commit/welcome message. */
+  MlsInvalidCommitWelcome = 31,
 }
 
 export interface BaseEvent {
@@ -31,6 +55,8 @@ export interface BaseEvent {
   d?: unknown;
   /** Event sequence */
   s?: number | null;
+  /** Voice v8 buffered resume sequence */
+  seq?: number | null;
   t?: string | null;
 }
 
@@ -44,6 +70,7 @@ export interface IdentifyEvent extends BaseEvent {
     user_id: string;
     session_id: string;
     token: string;
+    max_dave_protocol_version?: number;
   };
 }
 
@@ -90,7 +117,12 @@ export interface ReadyEvent extends BaseEvent {
  */
 export interface HeartbeatEvent extends BaseEvent {
   op: VoiceOpCode.Heartbeat;
-  d: number;
+  d:
+    | number
+    | {
+        t: number;
+        seq_ack: number;
+      };
 }
 
 /**
@@ -126,7 +158,11 @@ export interface SpeakingEvent extends BaseEvent {
  */
 export interface HeartbeatAckEvent extends BaseEvent {
   op: VoiceOpCode.HeartbeatAck;
-  d: number;
+  d:
+    | number
+    | {
+        t: number;
+      };
 }
 
 /**
@@ -138,6 +174,7 @@ export interface ResumeEvent extends BaseEvent {
     server_id: string;
     session_id: string;
     token: string;
+    seq_ack?: number;
   };
 }
 
@@ -159,6 +196,105 @@ export interface ResumedEvent extends BaseEvent {
   d: null;
 }
 
+export interface ClientsConnectEvent extends BaseEvent {
+  op: VoiceOpCode.ClientsConnect;
+  d: {
+    user_ids: string[];
+  };
+}
+
+export interface ClientDisconnectEvent extends BaseEvent {
+  op: VoiceOpCode.ClientDisconnect;
+  d: {
+    user_id: string;
+  };
+}
+
+export interface DavePrepareTransitionEvent extends BaseEvent {
+  op: VoiceOpCode.DavePrepareTransition;
+  d: {
+    transition_id: number;
+    protocol_version: number;
+  };
+}
+
+export interface DaveExecuteTransitionEvent extends BaseEvent {
+  op: VoiceOpCode.DaveExecuteTransition;
+  d: {
+    transition_id: number;
+  };
+}
+
+export interface DaveTransitionReadyEvent extends BaseEvent {
+  op: VoiceOpCode.DaveTransitionReady;
+  d: {
+    transition_id: number;
+  };
+}
+
+export interface DavePrepareEpochEvent extends BaseEvent {
+  op: VoiceOpCode.DavePrepareEpoch;
+  d: {
+    epoch: number;
+    protocol_version: number;
+    transition_id: number;
+  };
+}
+
+export interface MlsExternalSenderEvent extends BaseEvent {
+  op: VoiceOpCode.MlsExternalSender;
+  d: {
+    seq: number;
+    payload: Uint8Array;
+  };
+}
+
+export enum ProposalsOperationType {
+  Append = 0,
+  Revoke = 1,
+}
+
+export interface MlsProposalsEvent extends BaseEvent {
+  op: VoiceOpCode.MlsProposals;
+  d: {
+    seq: number;
+    operation_type: ProposalsOperationType;
+    payload: Uint8Array;
+  };
+}
+
+export interface MlsCommitWelcomeEvent extends BaseEvent {
+  op: VoiceOpCode.MlsCommitWelcome;
+  d: {
+    payload: Uint8Array;
+  };
+}
+
+export interface MlsAnnounceCommitTransitionEvent extends BaseEvent {
+  op: VoiceOpCode.MlsAnnounceCommitTransition;
+  d: {
+    seq: number;
+    transition_id: number;
+    payload: Uint8Array;
+  };
+}
+
+export interface MlsWelcomeEvent extends BaseEvent {
+  op: VoiceOpCode.MlsWelcome;
+  d: {
+    seq: number;
+    transition_id: number;
+    payload: Uint8Array;
+  };
+}
+
+export interface MlsInvalidCommitWelcomeEvent extends BaseEvent {
+  op: VoiceOpCode.MlsInvalidCommitWelcome;
+  d: {
+    transition_id: number;
+  };
+}
+
 export type VoiceGatewayEvent =
   | IdentifyEvent
   | SelectProtocolEvent
@@ -168,4 +304,17 @@ export type VoiceGatewayEvent =
   | SpeakingEvent
   | HeartbeatAckEvent
   | ResumeEvent
-  | HelloEvent;
+  | HelloEvent
+  | ResumedEvent
+  | ClientsConnectEvent
+  | ClientDisconnectEvent
+  | DavePrepareTransitionEvent
+  | DaveExecuteTransitionEvent
+  | DaveTransitionReadyEvent
+  | DavePrepareEpochEvent
+  | MlsExternalSenderEvent
+  | MlsProposalsEvent
+  | MlsCommitWelcomeEvent
+  | MlsAnnounceCommitTransitionEvent
+  | MlsWelcomeEvent
+  | MlsInvalidCommitWelcomeEvent;

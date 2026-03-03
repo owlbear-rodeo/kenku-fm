@@ -28,6 +28,7 @@ aead = "0.5.2"
 typenum = "1.18.0"
 byteorder = "1"
 aes-gcm = "0.10.3"
+davey = "0.1.2"
 
 [dependencies.crypto-common]
 version = "0.1"

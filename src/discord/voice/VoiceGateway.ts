@@ -15,6 +15,7 @@ import {
 import { VoiceGatewaySocket } from "./VoiceGatewaySocket";
 import { reconnectAfterMs } from "../../backoff";
 import { Gateway, GatewayConnectionState } from "../gateway/Gateway";
+import { DAVE_PROTOCOL_VERSION } from "../constants";
 
 export enum VoiceGatewayConnectionState {
   Disconnected,
@@ -31,6 +32,7 @@ export interface VoiceGatewayDescription {
 }
 
 export interface VoiceGatewayEvents {
+  event: (event: VoiceGatewayEvent) => void;
   close: (code: number) => void;
   ready: (data: ReadyEvent["d"]) => void;
   session: (data: SessionDescriptionEvent["d"]) => void;
@@ -118,6 +120,7 @@ export class VoiceGateway extends TypedEmitter<VoiceGatewayEvents> {
           session_id: this.description.sessionId,
           token: this.description.token,
           user_id: this.description.userId,
+          max_dave_protocol_version: DAVE_PROTOCOL_VERSION,
         },
       };
       socket.send(identify);
@@ -188,6 +191,8 @@ export class VoiceGateway extends TypedEmitter<VoiceGatewayEvents> {
     _: VoiceGatewaySocket,
     event: VoiceGatewayEvent
   ) => {
+    this.emit("event", event);
+
     if (event.op === VoiceOpCode.Ready) {
       this.ssrc = event.d.ssrc;
       this.reconnectTries = 0;
@@ -203,5 +208,9 @@ export class VoiceGateway extends TypedEmitter<VoiceGatewayEvents> {
 
   send(event: VoiceGatewayEvent) {
     this.socket?.send(event);
+  }
+
+  sendBinary(opCode: VoiceOpCode, payload: Uint8Array) {
+    this.socket?.sendBinary(opCode, payload);
   }
 }

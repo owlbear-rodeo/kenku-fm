@@ -12,6 +12,7 @@ use tokio::sync::Notify;
 
 use crate::{
     constants::{RTP_PROFILE_TYPE, RTP_VERSION, VOICE_PACKET_MAX},
+    dave::DaveSession,
     encrypt::{Cipher, CryptoState},
 };
 
@@ -21,6 +22,7 @@ fn apply_rtc_packet(
     packet: &mut [u8],
     cipher: &Cipher,
     crypto_state: &mut CryptoState,
+    dave_session: Option<&Arc<DaveSession>>,
 ) -> usize {
     let mut rtp = MutableRtpPacket::new(&mut packet[..]).expect(
         "FATAL: Too few bytes in self.packet for RTP header.\
@@ -29,9 +31,20 @@ fn apply_rtc_packet(
     rtp.set_timestamp(Wrap32::new(rtc_packet.header.timestamp));
     rtp.set_sequence(Wrap16::new(rtc_packet.header.sequence_number));
 
-    let payload_len = rtc_packet.payload.len();
+    let encrypted_payload = if let Some(dave_session) = dave_session {
+        match dave_session.encrypt_opus(&rtc_packet.payload) {
+            Ok(payload) => payload,
+            Err(error) => {
+                error!("DAVE frame encryption error: {:?}. Falling back to plaintext frame.", error);
+                rtc_packet.payload.to_vec()
+            }
+        }
+    } else {
+        rtc_packet.payload.to_vec()
+    };
+    let payload_len = encrypted_payload.len();
     let rtp_payload = rtp.payload_mut();
-    rtp_payload.as_mut().write_all(&rtc_packet.payload).unwrap();
+    rtp_payload.as_mut().write_all(&encrypted_payload).unwrap();
 
     let final_payload_size = crypto_state.write_packet_nonce(&mut rtp, payload_len);
     cipher
@@ -48,7 +61,10 @@ pub async fn runner(
     crypto_state: &mut CryptoState,
     ssrc: u32,
     notify: Arc<Notify>,
+    dave_session: Option<Arc<DaveSession>>,
 ) -> () {
+    let mut packet_count: u64 = 0;
+
     let mut packet = [0u8; VOICE_PACKET_MAX];
     let mut rtp = MutableRtpPacket::new(&mut packet[..]).expect(
         "FATAL: Too few bytes in self.packet for RTP header.\
@@ -62,7 +78,8 @@ pub async fn runner(
         tokio::select! {
             result = rtc_rx.recv_async() => {
                 if let Ok(rtc_packet) = result {
-                    let final_payload_size = apply_rtc_packet(rtc_packet, &mut packet, &cipher, crypto_state);
+                    packet_count += 1;
+                    let final_payload_size = apply_rtc_packet(rtc_packet, &mut packet, &cipher, crypto_state, dave_session.as_ref());
                         let index = RtpPacket::minimum_packet_size() + final_payload_size;
                         if let Err(e) = udp_tx.send(&packet[..index]).await {
                             error!("Fatal UDP packet send error: {:?}.", e);
@@ -75,5 +92,5 @@ pub async fn runner(
             }
         }
     }
-    debug!("udp sender closed");
+    debug!("udp sender closed after {} packets", packet_count);
 }

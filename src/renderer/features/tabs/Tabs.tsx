@@ -132,10 +132,11 @@ export function Tabs() {
         dispatch(decreaseTabPlayingMedia(viewId));
       }
     });
-    window.kenku.on("BROWSER_VIEW_NEW_TAB", async () => {
+    window.kenku.on("BROWSER_VIEW_NEW_TAB", async (args) => {
+      const url = args[0] ?? "";
       const bounds = getBounds();
       const id = await window.kenku.createBrowserView(
-        "",
+        url,
         bounds.x,
         bounds.y,
         bounds.width,
@@ -144,7 +145,7 @@ export function Tabs() {
       dispatch(
         addTab({
           id,
-          url: "",
+          url,
           title: "New Tab",
           icon: "",
           playingMedia: 0,

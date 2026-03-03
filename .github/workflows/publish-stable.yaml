@@ -223,6 +223,13 @@ jobs:
           smctl windows ksp register
           smctl windows certsync
           certutil -csp "DigiCert Software Trust Manager KSP" -key -user
+        env:
+          SM_CERT_FILE: ${{ env.SM_CERT_FILE}}
+          SM_HOST: ${{ vars.SM_HOST }}
+          SM_API_KEY: ${{ secrets.SM_API_KEY }}
+          SM_CLIENT_CERT_FILE: ${{ env.SM_CLIENT_CERT_FILE }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
 
       - if: ${{ matrix.os.arch == 'x64' }}
         name: Signing using certificate keypair alias

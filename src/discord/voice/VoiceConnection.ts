@@ -14,13 +14,7 @@ import {
 } from "./VoiceGateway";
 import { TypedEmitter } from "tiny-typed-emitter";
 import {
-  DavePrepareEpochEvent,
-  DavePrepareTransitionEvent,
   DiscordVoiceEncryptionMode,
-  MlsAnnounceCommitTransitionEvent,
-  MlsExternalSenderEvent,
-  MlsProposalsEvent,
-  MlsWelcomeEvent,
   ReadyEvent,
   SelectProtocolEvent,
   SessionDescriptionEvent,
@@ -30,7 +24,6 @@ import {
 } from "./VoiceGatewayEvent";
 import severus, {
   Broadcast,
-  DaveSession as SeverusDaveSession,
   VoiceConnection as SeverusVoiceConnection,
 } from "severus";
 import {
@@ -38,6 +31,7 @@ import {
   PREFERRED_AUDIO_ENCRYPTION,
   SUPPORTED_AUDIO_ENCRYPTION,
 } from "../constants";
+import { DaveControlPlane } from "./DaveControlPlane";
 
 export interface VoiceConnectionEvents {
   error: (error: Error) => void;
@@ -53,17 +47,7 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
   private activeChannelId?: string;
   private severusConnection?: SeverusVoiceConnection;
   private broadcast: Broadcast;
-  private daveProtocolVersion = 0;
-  private daveSession: SeverusDaveSession | undefined;
-  private davePendingTransitions = new Map<number, number>();
-  private recognizedUserIds = new Set<string>();
-  private daveExternalSenderReady = false;
-  private pendingMlsEvents: Array<{
-    type: "commit" | "welcome";
-    transitionId: number;
-    payload: Uint8Array;
-  }> = [];
-  private pendingExternalSenderPayload?: Uint8Array;
+  private daveControlPlane: DaveControlPlane;
 
   constructor(
     guildId: string,
@@ -76,6 +60,13 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
     this.connectionTimeout = connectionTimeout;
     this.guildId = guildId;
     this.broadcast = broadcast;
+    this.daveControlPlane = new DaveControlPlane({
+      getUserId: () => this.gateway.user?.id,
+      getChannelId: () => this.activeChannelId,
+      getVoiceGateway: () => this.voiceGateway,
+      getSeverusConnection: () => this.severusConnection,
+    });
+    this.daveControlPlane.on("error", this.handleDaveControlPlaneError);
   }
 
   async connect(channelId: string | null) {
@@ -189,14 +180,8 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
       await severus.voiceConnectionDisconnect(this.severusConnection);
       this.severusConnection = undefined;
     }
-    this.daveSession = undefined;
-    this.daveProtocolVersion = 0;
     this.activeChannelId = undefined;
-    this.daveExternalSenderReady = false;
-    this.pendingMlsEvents = [];
-    this.pendingExternalSenderPayload = undefined;
-    this.davePendingTransitions.clear();
-    this.recognizedUserIds.clear();
+    this.daveControlPlane.reset();
   }
 
   private openGateway(description: VoiceGatewayDescription) {
@@ -204,7 +189,6 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
       this.closeGateway();
     }
     this.voiceGateway = new VoiceGateway(this.gateway, description);
-    this.recognizedUserIds.clear();
     this.voiceGateway.on("close", this.handleVoiceClose);
     this.voiceGateway.on("event", this.handleVoiceEvent);
     this.voiceGateway.on("ready", this.handleVoiceReady);
@@ -220,64 +204,19 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
       this.voiceGateway.disconnect();
       this.voiceGateway = undefined;
     }
-    this.davePendingTransitions.clear();
-    this.daveExternalSenderReady = false;
-    this.pendingMlsEvents = [];
-    this.pendingExternalSenderPayload = undefined;
-    this.recognizedUserIds.clear();
+    this.daveControlPlane.reset();
   }
 
   private handleVoiceClose = (code: number) => {
     this.emit("close", code);
   };
 
+  private handleDaveControlPlaneError = (error: Error) => {
+    this.emit("error", error);
+  };
+
   private handleVoiceEvent = (event: VoiceGatewayEvent) => {
-    if (event.op === VoiceOpCode.ClientsConnect) {
-      for (const userId of event.d.user_ids) {
-        this.recognizedUserIds.add(userId);
-      }
-      return;
-    }
-
-    if (event.op === VoiceOpCode.ClientDisconnect) {
-      this.recognizedUserIds.delete(event.d.user_id);
-      return;
-    }
-
-    if (event.op === VoiceOpCode.DavePrepareTransition) {
-      this.handleDavePrepareTransition(event.d);
-      return;
-    }
-
-    if (event.op === VoiceOpCode.DaveExecuteTransition) {
-      this.executeDaveTransition(event.d.transition_id);
-      return;
-    }
-
-    if (event.op === VoiceOpCode.DavePrepareEpoch) {
-      this.handleDavePrepareEpoch(event.d).catch((error) => this.emit("error", error));
-      return;
-    }
-
-    if (event.op === VoiceOpCode.MlsExternalSender) {
-      this.handleMlsExternalSender(event.d).catch((error) => this.emit("error", error));
-      return;
-    }
-
-    if (event.op === VoiceOpCode.MlsProposals) {
-      this.handleMlsProposals(event.d).catch((error) => this.emit("error", error));
-      return;
-    }
-
-    if (event.op === VoiceOpCode.MlsAnnounceCommitTransition) {
-      this.handleMlsCommit(event.d).catch((error) => this.emit("error", error));
-      return;
-    }
-
-    if (event.op === VoiceOpCode.MlsWelcome) {
-      this.handleMlsWelcome(event.d).catch((error) => this.emit("error", error));
-      return;
-    }
+    this.daveControlPlane.handleVoiceEvent(event);
   };
 
   private handleVoiceReady = async (data: ReadyEvent["d"]) => {
@@ -343,14 +282,12 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
       if (!this.severusConnection) {
         throw Error("Unable to start session: no udp connection found");
       }
-      this.daveProtocolVersion = session.dave_protocol_version ?? 0;
-      if (this.gateway.user?.id) {
-        this.recognizedUserIds.add(this.gateway.user.id);
-      }
-      await this.ensureDaveSession();
+      await this.daveControlPlane.onSessionDescription(
+        session.dave_protocol_version ?? 0
+      );
       severus.voiceConnectionSetDaveSession(
         this.severusConnection,
-        this.daveProtocolVersion > 0 ? this.daveSession ?? null : null
+        this.daveControlPlane.getSessionForTransport()
       );
       await severus.voiceConnectionConnect(
         this.severusConnection,
@@ -366,278 +303,6 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
       this.emit("error", error);
     }
   };
-
-  private async ensureDaveSession() {
-    if (
-      this.daveProtocolVersion <= 0 ||
-      !this.gateway.user?.id ||
-      !this.activeChannelId
-    ) {
-      this.daveSession = undefined;
-      return;
-    }
-    this.daveExternalSenderReady = false;
-    this.pendingMlsEvents = [];
-    if (this.daveSession) {
-      await severus.daveSessionReinit(
-        this.daveSession,
-        this.daveProtocolVersion,
-        this.gateway.user.id,
-        this.activeChannelId
-      );
-    } else {
-      this.daveSession = await severus.daveSessionNew(
-        this.daveProtocolVersion,
-        this.gateway.user.id,
-        this.activeChannelId
-      );
-    }
-
-    if (this.pendingExternalSenderPayload) {
-      await severus.daveSessionSetExternalSender(
-        this.daveSession,
-        Array.from(this.pendingExternalSenderPayload)
-      );
-      this.daveExternalSenderReady = true;
-      this.pendingExternalSenderPayload = undefined;
-    }
-
-    await this.sendMlsKeyPackage();
-  }
-
-  private async sendMlsKeyPackage() {
-    if (!this.daveSession) {
-      return;
-    }
-    const keyPackage = await severus.daveSessionGetKeyPackage(this.daveSession);
-    this.sendBinary(VoiceOpCode.MlsKeyPackage, new Uint8Array(keyPackage));
-  }
-
-  private sendBinary(opCode: VoiceOpCode, payload: Uint8Array) {
-    if (!this.voiceGateway) {
-      return;
-    }
-    this.voiceGateway.sendBinary(opCode, payload);
-  }
-
-  private sendDaveTransitionReady(transitionId: number) {
-    if (transitionId === 0 || !this.voiceGateway) {
-      return;
-    }
-    const event = {
-      op: VoiceOpCode.DaveTransitionReady,
-      d: {
-        transition_id: transitionId,
-      },
-    };
-    this.voiceGateway.send(event as VoiceGatewayEvent);
-  }
-
-  private handleDavePrepareTransition(data: DavePrepareTransitionEvent["d"]) {
-    this.davePendingTransitions.set(data.transition_id, data.protocol_version);
-    if (data.protocol_version === 0 && this.daveSession) {
-      severus.daveSessionSetPassthroughMode(this.daveSession, true, 120);
-    }
-    if (data.transition_id === 0) {
-      this.executeDaveTransition(data.transition_id);
-      return;
-    }
-    this.sendDaveTransitionReady(data.transition_id);
-  }
-
-  private async handleDavePrepareEpoch(data: DavePrepareEpochEvent["d"]) {
-    if (data.epoch === 1) {
-      this.daveProtocolVersion = data.protocol_version;
-      await this.ensureDaveSession();
-    }
-  }
-
-  private async handleMlsExternalSender(data: MlsExternalSenderEvent["d"]) {
-    if (!this.daveSession) {
-      this.pendingExternalSenderPayload = data.payload.slice();
-      return;
-    }
-    await severus.daveSessionSetExternalSender(
-      this.daveSession,
-      Array.from(data.payload)
-    );
-    this.daveExternalSenderReady = true;
-    await this.sendMlsKeyPackage();
-    await this.flushPendingMlsEvents();
-  }
-
-  private async handleMlsProposals(data: MlsProposalsEvent["d"]) {
-    if (!this.daveSession) {
-      return;
-    }
-    try {
-      const result = await severus.daveSessionProcessProposals(
-        this.daveSession,
-        data.operation_type,
-        Array.from(data.payload),
-        [...this.recognizedUserIds]
-      );
-      if (result.commit) {
-        const commit = new Uint8Array(result.commit);
-        let payload: Uint8Array;
-        if (result.welcome) {
-          const welcome = new Uint8Array(result.welcome);
-          payload = new Uint8Array(commit.length + welcome.length);
-          payload.set(commit, 0);
-          payload.set(welcome, commit.length);
-        } else {
-          payload = commit;
-        }
-        this.sendBinary(VoiceOpCode.MlsCommitWelcome, payload);
-      }
-    } catch (error) {
-      const message = `${error}`;
-      // Non-fatal during transition windows where proposals can race ahead
-      // of local group initialization.
-      if (
-        message.includes("without a group") ||
-        message.includes("NoGroup") ||
-        message.includes("no group")
-      ) {
-        return;
-      }
-      throw error;
-    }
-  }
-
-  private async handleMlsCommit(data: MlsAnnounceCommitTransitionEvent["d"]) {
-    if (!this.daveSession) {
-      return;
-    }
-    try {
-      await severus.daveSessionProcessCommit(
-        this.daveSession,
-        Array.from(data.payload)
-      );
-      this.davePendingTransitions.set(data.transition_id, this.daveProtocolVersion);
-      this.sendDaveTransitionReady(data.transition_id);
-    } catch (error) {
-      if (this.isMissingExternalSenderError(error)) {
-        this.pendingMlsEvents.push({
-          type: "commit",
-          transitionId: data.transition_id,
-          payload: data.payload.slice(),
-        });
-        return;
-      }
-      this.emit("error", error);
-      this.sendInvalidCommitWelcome(data.transition_id);
-      await this.ensureDaveSession();
-    }
-  }
-
-  private async handleMlsWelcome(data: MlsWelcomeEvent["d"]) {
-    if (!this.daveSession) {
-      return;
-    }
-    try {
-      await severus.daveSessionProcessWelcome(
-        this.daveSession,
-        Array.from(data.payload)
-      );
-      this.davePendingTransitions.set(data.transition_id, this.daveProtocolVersion);
-      this.sendDaveTransitionReady(data.transition_id);
-    } catch (error) {
-      if (this.isMissingExternalSenderError(error)) {
-        this.pendingMlsEvents.push({
-          type: "welcome",
-          transitionId: data.transition_id,
-          payload: data.payload.slice(),
-        });
-        return;
-      }
-      this.emit("error", error);
-      this.sendInvalidCommitWelcome(data.transition_id);
-      await this.ensureDaveSession();
-    }
-  }
-
-  private isMissingExternalSenderError(error: unknown) {
-    const message = `${error}`;
-    return (
-      message.includes("without an external sender") ||
-      message.includes("NoExternalSender") ||
-      message.includes("external sender")
-    );
-  }
-
-  private async flushPendingMlsEvents() {
-    if (!this.daveSession || !this.daveExternalSenderReady) {
-      return;
-    }
-    if (this.pendingMlsEvents.length === 0) {
-      return;
-    }
-    const pending = this.pendingMlsEvents;
-    this.pendingMlsEvents = [];
-    for (const item of pending) {
-      try {
-        if (item.type === "commit") {
-          await severus.daveSessionProcessCommit(
-            this.daveSession,
-            Array.from(item.payload)
-          );
-        } else {
-          await severus.daveSessionProcessWelcome(
-            this.daveSession,
-            Array.from(item.payload)
-          );
-        }
-        this.davePendingTransitions.set(
-          item.transitionId,
-          this.daveProtocolVersion
-        );
-        this.sendDaveTransitionReady(item.transitionId);
-      } catch (error) {
-        if (this.isMissingExternalSenderError(error)) {
-          this.pendingMlsEvents.push(item);
-          break;
-        }
-        this.emit("error", error as Error);
-      }
-    }
-  }
-
-  private sendInvalidCommitWelcome(transitionId: number) {
-    if (!this.voiceGateway) {
-      return;
-    }
-    const event = {
-      op: VoiceOpCode.MlsInvalidCommitWelcome,
-      d: {
-        transition_id: transitionId,
-      },
-    };
-    this.voiceGateway.send(event as VoiceGatewayEvent);
-  }
-
-  private executeDaveTransition(transitionId: number) {
-    const nextVersion = this.davePendingTransitions.get(transitionId);
-    if (nextVersion === undefined) {
-      return;
-    }
-    this.davePendingTransitions.delete(transitionId);
-    this.daveProtocolVersion = nextVersion;
-    if (!this.severusConnection) {
-      return;
-    }
-    if (this.daveProtocolVersion === 0) {
-      severus.voiceConnectionSetDaveSession(this.severusConnection, null);
-      if (this.daveSession) {
-        severus.daveSessionSetPassthroughMode(this.daveSession, true, 10);
-      }
-      return;
-    }
-    severus.voiceConnectionSetDaveSession(
-      this.severusConnection,
-      this.daveSession ?? null
-    );
-  }
 
   /**
    * Select a protocol to use for the voice connection

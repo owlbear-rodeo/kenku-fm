@@ -217,6 +217,13 @@ jobs:
           SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
           KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
 
+      - if: ${{ matrix.os.arch == 'x64' }
+        name: Setup KSP
+        run: |
+          smctl windows ksp register
+          smctl windows certsync
+          certutil -csp "DigiCert Software Trust Manager KSP" -key -user
+
       - if: ${{ matrix.os.arch == 'x64' }}
         name: Signing using certificate keypair alias
         run: |

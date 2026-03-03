@@ -1,4 +1,4 @@
-name: Publish Kenku FM
+name: Publish Kenku FM - Mac, Win, Linux x64
 on:
   push:
     tags:

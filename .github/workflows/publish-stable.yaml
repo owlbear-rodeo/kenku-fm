@@ -195,15 +195,13 @@ jobs:
       - name: Make Package
         run: yarn run make
 
-      - if: ${{ matrix.os.arch == 'x64' }}
-        name: Set up client certificate
+      - name: Set up client certificate
         shell: bash
         run: |
           echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > ${RUNNER_TEMP}/Certificate_pkcs12.p12
           echo "SM_CLIENT_CERT_FILE=${RUNNER_TEMP}/Certificate_pkcs12.p12" >> $GITHUB_ENV
 
-      - if: ${{ matrix.os.arch == 'x64' }}
-        name: Set up code sign certificate
+      - name: Set up code sign certificate
         shell: bash
         run: |
           echo "${{ secrets.SM_CERT_B64 }}" | base64 --decode > ${RUNNER_TEMP}/cert.crt

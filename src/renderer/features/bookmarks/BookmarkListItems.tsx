@@ -79,12 +79,6 @@ export function BookmarkListItems() {
     <>
       <ListItemButton onClick={toggleOpen}>
         <ListItemText primary="Bookmarks" />
-        <IconButton
-          onClick={(e) => {
-            e.stopPropagation();
-            setAddOpen(true);
-          }}
-        />
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItemButton>
       <Collapse in={open} timeout="auto">

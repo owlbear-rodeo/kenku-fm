@@ -108,6 +108,7 @@ export class VoiceGateway extends TypedEmitter<VoiceGatewayEvents> {
           server_id: this.description.guildId,
           session_id: this.description.sessionId,
           token: this.description.token,
+          seq_ack: socket.getLastSequence(),
         },
       };
       socket.send(resume);

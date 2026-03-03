@@ -118,11 +118,6 @@ impl DaveSession {
         Ok(session.can_passthrough(user_id))
     }
 
-    pub fn is_ready(&self) -> bool {
-        let session = self.inner.lock().expect("failed to lock dave session");
-        session.is_ready()
-    }
-
     pub fn encrypt_opus(&self, payload: &[u8]) -> Result<Vec<u8>> {
         let mut session = self.inner.lock().expect("failed to lock dave session");
         if !session.is_ready() {

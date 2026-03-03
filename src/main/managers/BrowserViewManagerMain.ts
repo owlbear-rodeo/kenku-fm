@@ -115,7 +115,7 @@ export class BrowserViewManagerMain {
       event.reply("BROWSER_VIEW_MEDIA_PAUSED", id);
     });
     this.views[id].webContents.setWindowOpenHandler(({ url }) => {
-      shell.openExternal(url);
+      event.reply("BROWSER_VIEW_NEW_TAB", url);
       return { action: "deny" };
     });
     let loaded = false;

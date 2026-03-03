@@ -22,31 +22,31 @@ export enum VoiceOpCode {
   Hello = 8,
   /** Acknowledge a successful session resume. */
   Resumed = 9,
-  /** Clients who are connected to this voice session. */
+  /** One or more clients have connected to the voice channel. */
   ClientsConnect = 11,
-  /** A client has disconnected from the voice channel */
+  /** A client has disconnected from the voice channel. */
   ClientDisconnect = 13,
-  /** Prepare protocol transition. */
+  /** A downgrade from the DAVE protocol is upcoming. */
   DavePrepareTransition = 21,
-  /** Execute protocol transition. */
+  /** Execute a previously announced protocol transition. */
   DaveExecuteTransition = 22,
-  /** Client transition-ready signal. */
+  /** Acknowledge readiness for a previously announced transition. */
   DaveTransitionReady = 23,
-  /** Prepare epoch for DAVE protocol. */
+  /** A DAVE protocol version or group change is upcoming. */
   DavePrepareEpoch = 24,
-  /** Voice gateway external sender package. */
+  /** Credential and public key for MLS external sender. */
   MlsExternalSender = 25,
-  /** MLS key package exchange. */
+  /** MLS key package for pending group member. */
   MlsKeyPackage = 26,
-  /** MLS proposals. */
+  /** MLS proposals to be appended or revoked. */
   MlsProposals = 27,
-  /** MLS commit + optional welcome. */
+  /** MLS commit with optional MLS welcome messages. */
   MlsCommitWelcome = 28,
-  /** Announce commit transition. */
+  /** MLS commit to be processed for upcoming transition. */
   MlsAnnounceCommitTransition = 29,
-  /** Welcome pending member. */
+  /** MLS welcome to group for upcoming transition. */
   MlsWelcome = 30,
-  /** Invalid commit/welcome message. */
+  /** Flag invalid commit or welcome, request re-add. */
   MlsInvalidCommitWelcome = 31,
 }
 

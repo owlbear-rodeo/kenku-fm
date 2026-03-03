@@ -217,7 +217,7 @@ jobs:
           SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
           KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
 
-      - if: ${{ matrix.os.arch == 'x64' }
+      - if: ${{ matrix.os.arch == 'x64' }}
         name: Setup KSP
         run: |
           smctl windows ksp register

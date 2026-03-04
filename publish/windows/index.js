@@ -3,6 +3,9 @@ import path from "node:path";
 import { exit } from "node:process";
 
 async function createApp(version, keypairAlias, certfile) {
+  const __dirname = import.meta.dirname;
+  const parent = path.resolve(__dirname, "..", "..");
+
   try {
     const params = {
       appDirectory: path.join(parent, "out", `Kenku FM-win32-${process.arch}`),

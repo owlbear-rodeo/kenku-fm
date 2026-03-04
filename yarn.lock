@@ -3235,9 +3235,10 @@ electron-winstaller@^5.3.0:
   optionalDependencies:
     "@electron/windows-sign" "^1.1.2"
 
-"electron@https://github.com/castlabs/electron-releases#37.6.0+wvcus":
+electron@37.6.0:
   version "37.6.0"
-  resolved "https://github.com/castlabs/electron-releases#328ceee5aad1fb998335707a9295ad7145e7f25e"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-37.6.0.tgz#4f13cd6fe57c9577d11385ffecea5edb4fbf24bd"
+  integrity sha512-8AANcn6irYQ7cTAJRY7r0CovWckcGCHUniQecyGhw/jJ25vWwitVhF97skF+EyDztiEI6YBoF0G6tx1s37bO3g==
   dependencies:
     "@electron/get" "^2.0.0"
     "@types/node" "^22.7.7"

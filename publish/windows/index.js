@@ -8,6 +8,7 @@ async function createApp(version, keypairAlias, certfile) {
   try {
     await createWindowsInstaller({
       windowsSign: {
+        debug: true,
         hashes: ["sha256"],
         signWithParams: `/csp "DigiCert Signing Manager KSP" /kc "${keypairAlias}" /f "${certfile}" /tr "http://timestamp.digicert.com" /td sha256 /fd sha256`,
       },

@@ -6,6 +6,8 @@
   "type": "module",
   "license": "MIT",
   "devDependencies": {
-    "electron-winstaller": "^5.1.0"
-  }
+    "@electron/windows-sign": "^2.0.2",
+    "electron-winstaller": "^5.4.0"
+  },
+  "dependencies": {}
 }

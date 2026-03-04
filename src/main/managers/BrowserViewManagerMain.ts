@@ -115,7 +115,7 @@ export class BrowserViewManagerMain {
       event.reply("BROWSER_VIEW_MEDIA_PAUSED", id);
     });
     this.views[id].webContents.setWindowOpenHandler(({ url }) => {
-      shell.openExternal(url);
+      event.reply("BROWSER_VIEW_NEW_TAB", url);
       return { action: "deny" };
     });
 
@@ -192,11 +192,6 @@ export class BrowserViewManagerMain {
     } catch (err) {
       console.error(err);
     }
-
-    // Ensure browser views have a white background to maintain compatibility with regular browsers
-    view.webContents.on("dom-ready", () => {
-      view.webContents.insertCSS("html { background-color: #fff; }");
-    });
 
     // Spoof user agent to fix compatibility issues with 3rd party apps
     view.webContents.setUserAgent(getUserAgent());

@@ -9,7 +9,7 @@ async function createApp(version, keypairAlias, certfile) {
     await createWindowsInstaller({
       windowsSign: {
         hashes: ["sha256"],
-        signWithParams: `/csp "DigiCert Signing Manager KSP" /kc ${keypairAlias} /f ${certfile} /tr http://timestamp.digicert.com /td SHA256 /fd SHA256`,
+        signWithParams: `/csp "DigiCert Signing Manager KSP" /kc "${keypairAlias}" /f "${certfile}" /tr "http://timestamp.digicert.com" /td sha256 /fd sha256`,
       },
       appDirectory: path.join(parent, "out", `Kenku FM-win32-${process.arch}`),
       outputDirectory: path.join(parent, "out", "windows"),

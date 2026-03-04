@@ -48,14 +48,14 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - runner: warp-macos-13-arm64-6x
+          - runner: warp-macos-15-arm64-6x
             arch: arm64
-          - runner: macos-13
+          - runner: macos-15-intel
             arch: x64
 
     steps:
       - name: Select Xcode version
-        run: sudo xcode-select -s '/Applications/Xcode_14.3.1.app/Contents/Developer'
+        run: sudo xcode-select -s '/Applications/Xcode_16.4.app/Contents/Developer'
       - name: Check Xcode version
         run: xcodebuild -version
       - name: Set Kenku FM Path
@@ -173,6 +173,7 @@ jobs:
           python-version: "3.13"
       - name: Install Widevine Python Module
         run: |
+          python -m pip install cryptography==46.0.3
           python -m pip install --upgrade castlabs-evs
       - name: Checkout
         uses: actions/checkout@v4
@@ -201,19 +202,56 @@ jobs:
         run: yarn run make
         env:
           CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-      - name: Signtool
+
+      - name: Set up client certificate
+        shell: bash
         run: |
-          echo $env:WINDOWS_CERT | openssl base64 -A -d -out certificate.pfx
+          echo "${{ secrets.SM_CLIENT_CERT_FILE_B64 }}" | base64 --decode > ${RUNNER_TEMP}/Certificate_pkcs12.p12
+          echo "SM_CLIENT_CERT_FILE=${RUNNER_TEMP}/Certificate_pkcs12.p12" >> $GITHUB_ENV
 
-          $DIR = $(pwd)
-          $CERT = "${DIR}\certificate.pfx"
-          $CERT_PASSWORD = $(echo $env:WINDOWS_CERT_PWD | openssl base64 -A -d)
+      - name: Set up code sign certificate
+        shell: bash
+        run: |
+          echo "${{ secrets.SM_CERT_B64 }}" | base64 --decode > ${RUNNER_TEMP}/cert.crt
+          echo "SM_CERT_FILE=${RUNNER_TEMP}/cert.crt" >> $GITHUB_ENV
 
-          & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\${{ matrix.os.arch }}\signtool.exe" sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-${{ matrix.os.arch }}\kenku-fm.exe"
-          & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\${{ matrix.os.arch }}\signtool.exe" sign /d /a /f "${CERT}" /p "${CERT_PASSWORD}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256" "${DIR}\out\Kenku FM-win32-${{ matrix.os.arch }}\Squirrel.exe"
+      - name: Setup Software Trust Manager
+        uses: digicert/code-signing-software-trust-action@v1
         env:
-          WINDOWS_CERT: ${{ secrets.WINDOWS_CERT }}
-          WINDOWS_CERT_PWD: ${{ secrets.WINDOWS_CERT_PWD }}
+          SM_CERT_FILE: ${{ env.SM_CERT_FILE}}
+          SM_HOST: ${{ vars.SM_HOST }}
+          SM_API_KEY: ${{ secrets.SM_API_KEY }}
+          SM_CLIENT_CERT_FILE: ${{ env.SM_CLIENT_CERT_FILE }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
+
+      - if: ${{ matrix.os.arch == 'x64' }}
+        name: Setup KSP
+        run: |
+          smctl windows ksp register
+          smctl windows certsync
+          certutil -csp "DigiCert Software Trust Manager KSP" -key -user
+        env:
+          SM_CERT_FILE: ${{ env.SM_CERT_FILE}}
+          SM_HOST: ${{ vars.SM_HOST }}
+          SM_API_KEY: ${{ secrets.SM_API_KEY }}
+          SM_CLIENT_CERT_FILE: ${{ env.SM_CLIENT_CERT_FILE }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
+
+      - if: ${{ matrix.os.arch == 'x64' }}
+        name: Signing using certificate keypair alias
+        run: |
+          $DIR=$(pwd)
+
+          smctl sign --simple --keypair-alias ${{ secrets.SM_KEYPAIR_ALIAS }} --input "${DIR}\out\Kenku FM-win32-${{ matrix.os.arch }}\kenku-fm.exe"
+          smctl sign --simple --keypair-alias ${{ secrets.SM_KEYPAIR_ALIAS }} --input "${DIR}\out\Kenku FM-win32-${{ matrix.os.arch }}\Squirrel.exe"
+        env:
+          SM_HOST: ${{ vars.SM_HOST }}
+          SM_API_KEY: ${{ secrets.SM_API_KEY }}
+          SM_CLIENT_CERT_FILE: ${{ env.SM_CLIENT_CERT_FILE }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+
       - name: Widevine Signature
         run: |
           python -m castlabs_evs.account -n reauth -A $env:CASTLABS_ACCOUNT_NAME -P $env:CASTLABS_ACCOUNT_PASSWORD
@@ -221,16 +259,21 @@ jobs:
         env:
           CASTLABS_ACCOUNT_NAME: ${{ secrets.CASTLABS_ACCOUNT_NAME }}
           CASTLABS_ACCOUNT_PASSWORD: ${{ secrets.CASTLABS_ACCOUNT_PASSWORD }}
+
       - name: Create App
         shell: bash
         run: |
-          CERT_PASSWORD=$(echo "${WINDOWS_CERT_PWD}" | openssl base64 -A -d)
           yarn install --non-interactive --frozen-lockfile --cwd ./publish/windows
 
           VERSION=${TAG//v}
-          node ./publish/windows/index.js $VERSION  $CERT_PASSWORD
+          node ./publish/windows/index.js $VERSION $KEYPAIR_ALIAS $SM_CERT_FILE
         env:
-          WINDOWS_CERT_PWD: ${{ secrets.WINDOWS_CERT_PWD }}
+          SM_CERT_FILE: ${{ env.SM_CERT_FILE }}
+          SM_HOST: ${{ vars.SM_HOST }}
+          SM_API_KEY: ${{ secrets.SM_API_KEY }}
+          SM_CLIENT_CERT_FILE: ${{ env.SM_CLIENT_CERT_FILE }}
+          SM_CLIENT_CERT_PASSWORD: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          KEYPAIR_ALIAS: ${{ secrets.SM_KEYPAIR_ALIAS }}
           TAG: ${{ github.ref_name}}
       - name: Publish
         shell: bash

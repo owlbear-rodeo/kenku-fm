@@ -86,13 +86,8 @@ export function Tabs() {
 
       const tab = tabs.tabs.byId[viewId];
 
-      const getParts = (url: URL) => {
+      const getHostname = (url: URL) => {
         const hostname = url.hostname;
-        const parts = hostname.split(".");
-
-        if (parts.length > 2) {
-          return parts.slice(parts.length - 2).join(".");
-        }
 
         return hostname;
       };
@@ -102,13 +97,13 @@ export function Tabs() {
         if (!tabUrlObj) {
           return;
         }
-        const tabUrl = getParts(tabUrlObj);
+        const tabUrl = getHostname(tabUrlObj);
 
         const bookmarkItems = Object.values(bookmarks.bookmarks.byId);
         const hasMatch = bookmarkItems.filter((bookmark) => {
           const bookmarkUrlObj = safeURL(bookmark.url);
           if (!bookmarkUrlObj) return false;
-          const url = getParts(bookmarkUrlObj);
+          const url = getHostname(bookmarkUrlObj);
           return url === tabUrl;
         });
 
@@ -137,10 +132,11 @@ export function Tabs() {
         dispatch(decreaseTabPlayingMedia(viewId));
       }
     });
-    window.kenku.on("BROWSER_VIEW_NEW_TAB", async () => {
+    window.kenku.on("BROWSER_VIEW_NEW_TAB", async (args) => {
+      const url = args[0] ?? "";
       const bounds = getBounds();
       const id = await window.kenku.createBrowserView(
-        "",
+        url,
         bounds.x,
         bounds.y,
         bounds.width,
@@ -149,7 +145,7 @@ export function Tabs() {
       dispatch(
         addTab({
           id,
-          url: "",
+          url,
           title: "New Tab",
           icon: "",
           playingMedia: 0,

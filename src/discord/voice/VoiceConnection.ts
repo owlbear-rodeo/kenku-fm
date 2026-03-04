@@ -19,6 +19,7 @@ import {
   SelectProtocolEvent,
   SessionDescriptionEvent,
   SpeakingEvent,
+  VoiceGatewayEvent,
   VoiceOpCode,
 } from "./VoiceGatewayEvent";
 import severus, {
@@ -30,6 +31,7 @@ import {
   PREFERRED_AUDIO_ENCRYPTION,
   SUPPORTED_AUDIO_ENCRYPTION,
 } from "../constants";
+import { DaveControlPlane } from "./DaveControlPlane";
 
 export interface VoiceConnectionEvents {
   error: (error: Error) => void;
@@ -42,8 +44,10 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
   private voiceGateway?: VoiceGateway;
   private connectionPromise: Promise<void> | undefined;
   private guildId: string;
+  private activeChannelId?: string;
   private severusConnection?: SeverusVoiceConnection;
   private broadcast: Broadcast;
+  private daveControlPlane: DaveControlPlane;
 
   constructor(
     guildId: string,
@@ -56,6 +60,13 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
     this.connectionTimeout = connectionTimeout;
     this.guildId = guildId;
     this.broadcast = broadcast;
+    this.daveControlPlane = new DaveControlPlane({
+      getUserId: () => this.gateway.user?.id,
+      getChannelId: () => this.activeChannelId,
+      getVoiceGateway: () => this.voiceGateway,
+      getSeverusConnection: () => this.severusConnection,
+    });
+    this.daveControlPlane.on("error", this.handleDaveControlPlaneError);
   }
 
   async connect(channelId: string | null) {
@@ -83,6 +94,7 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
         },
       };
       log.debug("gateway voice update join channel");
+      this.activeChannelId = channelId ?? undefined;
       this.gateway.send(voiceUpdate);
 
       // Wait for both the VoiceStateUpdate and VoiceServerUpdate events
@@ -91,11 +103,17 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
       const handleGatewayEvent = (event: GatewayEvent) => {
         if (event.op === OpCode.Dispatch) {
           if (event.t === "VOICE_STATE_UPDATE") {
-            if (event.d.user_id === this.gateway.user?.id) {
+            if (
+              event.d.user_id === this.gateway.user?.id &&
+              event.d.guild_id === this.guildId &&
+              event.d.channel_id === channelId
+            ) {
               voiceState = event.d;
             }
           } else if (event.t === "VOICE_SERVER_UPDATE") {
-            serverUpdate = event.d;
+            if (event.d.guild_id === this.guildId) {
+              serverUpdate = event.d;
+            }
           }
           // Create the VoiceGateway once we have both states
           if (serverUpdate && voiceState) {
@@ -158,9 +176,12 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
     }
 
     if (this.severusConnection) {
+      severus.voiceConnectionSetDaveSession(this.severusConnection, null);
       await severus.voiceConnectionDisconnect(this.severusConnection);
       this.severusConnection = undefined;
     }
+    this.activeChannelId = undefined;
+    this.daveControlPlane.reset();
   }
 
   private openGateway(description: VoiceGatewayDescription) {
@@ -169,6 +190,7 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
     }
     this.voiceGateway = new VoiceGateway(this.gateway, description);
     this.voiceGateway.on("close", this.handleVoiceClose);
+    this.voiceGateway.on("event", this.handleVoiceEvent);
     this.voiceGateway.on("ready", this.handleVoiceReady);
     this.voiceGateway.on("session", this.handleVoiceSession);
   }
@@ -176,20 +198,31 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
   private closeGateway() {
     if (this.voiceGateway) {
       this.voiceGateway.off("close", this.handleVoiceClose);
+      this.voiceGateway.off("event", this.handleVoiceEvent);
       this.voiceGateway.off("ready", this.handleVoiceReady);
       this.voiceGateway.off("session", this.handleVoiceSession);
       this.voiceGateway.disconnect();
       this.voiceGateway = undefined;
     }
+    this.daveControlPlane.reset();
   }
 
   private handleVoiceClose = (code: number) => {
     this.emit("close", code);
   };
 
+  private handleDaveControlPlaneError = (error: Error) => {
+    this.emit("error", error);
+  };
+
+  private handleVoiceEvent = (event: VoiceGatewayEvent) => {
+    this.daveControlPlane.handleVoiceEvent(event);
+  };
+
   private handleVoiceReady = async (data: ReadyEvent["d"]) => {
     log.debug("voice ready event", data);
     try {
+      const readyGateway = this.voiceGateway;
       const isVoiceEncryptionSupported = data.modes.filter((mode) =>
         SUPPORTED_AUDIO_ENCRYPTION.includes(mode)
       );
@@ -216,6 +249,14 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
       log.debug(
         `selecting encryption mode: ${selectedEncryption} for audio encryption`
       );
+      if (!readyGateway || this.voiceGateway !== readyGateway) {
+        return;
+      }
+      if (
+        this.voiceGateway.connectionState !== VoiceGatewayConnectionState.Ready
+      ) {
+        return;
+      }
       this.selectProtocol({
         protocol: "udp",
         data: {
@@ -225,6 +266,11 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
         },
       });
     } catch (error) {
+      log.error("voice connection handleVoiceReady failed", {
+        error,
+        hasVoiceGateway: !!this.voiceGateway,
+        voiceGatewayState: this.voiceGateway?.connectionState,
+      });
       this.emit("error", error);
     }
   };
@@ -236,6 +282,13 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
       if (!this.severusConnection) {
         throw Error("Unable to start session: no udp connection found");
       }
+      await this.daveControlPlane.onSessionDescription(
+        session.dave_protocol_version ?? 0
+      );
+      severus.voiceConnectionSetDaveSession(
+        this.severusConnection,
+        this.daveControlPlane.getSessionForTransport()
+      );
       await severus.voiceConnectionConnect(
         this.severusConnection,
         session.secret_key,
@@ -243,6 +296,10 @@ export class VoiceConnection extends TypedEmitter<VoiceConnectionEvents> {
         this.broadcast
       );
     } catch (error) {
+      log.error("voice connection handleVoiceSession failed", {
+        error,
+        hasSeverusConnection: !!this.severusConnection,
+      });
       this.emit("error", error);
     }
   };

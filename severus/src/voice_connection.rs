@@ -15,6 +15,7 @@ use tokio::sync::Notify;
 
 use crate::broadcast::Broadcast;
 use crate::constants::runtime;
+use crate::dave::DaveSession;
 use crate::encrypt::CryptoMode;
 use crate::encrypt::CryptoState;
 use crate::rtc_udp;
@@ -30,7 +31,8 @@ pub struct VoiceConnection {
     pub udp_socket: Arc<UdpSocket>,
     pub ssrc: u32,
     /// A thread safe message used to disconnect the rtc_udp runner
-    notify: Arc<Notify>
+    notify: Arc<Notify>,
+    dave_session: std::sync::Mutex<Option<Arc<DaveSession>>>,
 }
 
 impl Finalize for VoiceConnection {}
@@ -50,7 +52,8 @@ impl VoiceConnection {
         Ok(Arc::new(Self {
             udp_socket: udp_arc,
             ssrc,
-            notify
+            notify,
+            dave_session: std::sync::Mutex::new(None),
         }))
     }
 
@@ -120,12 +123,25 @@ impl VoiceConnection {
         let udp = Arc::clone(&self.udp_socket);
         let ssrc = self.ssrc;
         let notify = self.notify.clone();
+        let dave_session = {
+            let lock = self.dave_session.lock().expect("failed to lock dave session");
+            lock.clone()
+        };
 
         rt.spawn(async move {
             let (rtc_tx, rtc_rx) = flume::unbounded();
             let key = broadcast.register(rtc_tx);
 
-            rtc_udp::runner(rtc_rx, udp, cipher, &mut crypto_state, ssrc, notify).await;
+            rtc_udp::runner(
+                rtc_rx,
+                udp,
+                cipher,
+                &mut crypto_state,
+                ssrc,
+                notify,
+                dave_session,
+            )
+            .await;
 
             broadcast.unregister(key);
         });
@@ -137,6 +153,11 @@ impl VoiceConnection {
         self.notify.notify_waiters();
 
         Ok(())
+    }
+
+    pub fn set_dave_session(&self, dave_session: Option<Arc<DaveSession>>) {
+        let mut lock = self.dave_session.lock().expect("failed to lock dave session");
+        *lock = dave_session;
     }
 }
 
@@ -239,5 +260,22 @@ impl VoiceConnection {
         });
 
         Ok(promise)
+    }
+
+    pub fn js_set_dave_session(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+        let voice_connection = {
+            let voice_connection = cx.argument::<JsBox<Arc<VoiceConnection>>>(0)?;
+            Arc::clone(&*voice_connection)
+        };
+        let arg = cx.argument::<JsValue>(1)?;
+        if arg.is_a::<JsNull, _>(&mut cx) || arg.is_a::<JsUndefined, _>(&mut cx) {
+            voice_connection.set_dave_session(None);
+        } else {
+            let dave = arg
+                .downcast::<JsBox<Arc<DaveSession>>, FunctionContext>(&mut cx)
+                .or_else(|_| cx.throw_error("Expected DaveSession or null"))?;
+            voice_connection.set_dave_session(Some(Arc::clone(&*dave)));
+        }
+        Ok(cx.undefined())
     }
 }

@@ -38,11 +38,19 @@ async function createApp(version, keypairAlias, certfile) {
     };
 
     if (process.arch === "x64") {
+      const normalizedCertPath = path.win32.normalize(certfile);
       params.windowsSign = {
         debug: true,
         hashes: ["sha256"],
         timestampServer: "http://timestamp.digicert.com",
-        signWithParams: `/csp "DigiCert Signing Manager KSP" /kc "${keypairAlias}" /f "${certfile}"`,
+        signWithParams: [
+          "/csp",
+          "DigiCert Signing Manager KSP",
+          "/kc",
+          keypairAlias,
+          "/f",
+          normalizedCertPath,
+        ],
       };
     }
 

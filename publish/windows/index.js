@@ -2,11 +2,12 @@ import { createWindowsInstaller } from "electron-winstaller";
 import path from "node:path";
 import { exit } from "node:process";
 
-async function createApp(version, certPassword) {
+async function createApp(version, keypairAlias, certfile) {
   const __dirname = import.meta.dirname;
   const parent = path.resolve(__dirname, "..", "..");
+
   try {
-    await createWindowsInstaller({
+    const params = {
       appDirectory: path.join(parent, "out", `Kenku FM-win32-${process.arch}`),
       outputDirectory: path.join(parent, "out", "windows"),
       loadingGif: path.join(parent, "src", "assets", "loading.gif"),
@@ -16,11 +17,26 @@ async function createApp(version, certPassword) {
       exe: "kenku-fm.exe",
       name: `kenku-fm-win32-${process.arch}`,
       setupExe: `kenku-fm-win32-${process.arch}-${version}.exe`,
-      signWithParams: `/a /f "${path.join(
-        parent,
-        "certificate.pfx"
-      )}" /p "${certPassword}" /tr "http://timestamp.comodoca.com" /td "sha256" /fd "sha256"`,
-    });
+    };
+
+    // Only sign x64 builds until DigiCert SMCTL supports ARM64
+    if (process.arch === "x64") {
+      const normalizedCertPath = path.win32.normalize(certfile);
+      params.windowsSign = {
+        hashes: ["sha256"],
+        timestampServer: "http://timestamp.digicert.com",
+        signWithParams: [
+          "/csp",
+          "DigiCert Signing Manager KSP",
+          "/kc",
+          keypairAlias,
+          "/f",
+          normalizedCertPath,
+        ],
+      };
+    }
+
+    await createWindowsInstaller(params);
   } catch (e) {
     console.log(`Error occured: ${e.message}`);
     exit(1);
@@ -29,16 +45,22 @@ async function createApp(version, certPassword) {
 
 const args = process.argv.slice(2);
 const appVersion = args[0];
-const certPassword = args[1];
+const keypairAlias = args[1];
+const certfile = args[2];
 
 if (appVersion === undefined) {
   console.log("app version is undefined");
   exit(1);
 }
 
-if (certPassword === undefined) {
-  console.log("password is undefined");
+if (keypairAlias === undefined) {
+  console.log("keypairAlias is undefined");
   exit(1);
 }
 
-createApp(appVersion, certPassword);
+if (certfile === undefined) {
+  console.log("certfile is undefined");
+  exit(1);
+}
+
+createApp(appVersion, keypairAlias, certfile);

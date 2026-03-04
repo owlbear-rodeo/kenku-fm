@@ -10,6 +10,7 @@ import {
 type VoiceChannel = {
   id: string;
   name: string;
+  position: number;
 };
 
 type Guild = {
@@ -76,6 +77,7 @@ export class DiscordBroadcast {
                 voiceChannels.push({
                   id: channel.id,
                   name: channel.name,
+                  position: channel.rawPosition,
                 });
               }
             });
@@ -83,9 +85,11 @@ export class DiscordBroadcast {
               id: guild.id,
               name: guild.name,
               icon: guild.iconURL(),
-              voiceChannels,
+              voiceChannels: voiceChannels.sort(
+                (a, b) => a.position - b.position,
+              ),
             };
-          })
+          }),
         );
         event.reply("DISCORD_GUILDS", guilds);
       });
@@ -110,7 +114,7 @@ export class DiscordBroadcast {
 
   _handleJoinChannel = async (
     event: Electron.IpcMainEvent,
-    channelId: string
+    channelId: string,
   ) => {
     if (this.client) {
       const channel = await this.client.channels.fetch(channelId);
@@ -129,7 +133,7 @@ export class DiscordBroadcast {
             event.reply("DISCORD_CHANNEL_LEFT", channelId);
             event.reply(
               "ERROR",
-              `Error connecting to voice channel: ${e.message}`
+              `Error connecting to voice channel: ${e.message}`,
             );
           });
         } catch (e) {
@@ -137,7 +141,7 @@ export class DiscordBroadcast {
           event.reply("DISCORD_CHANNEL_LEFT", channelId);
           event.reply(
             "ERROR",
-            `Error connecting to voice channel: ${e.message}`
+            `Error connecting to voice channel: ${e.message}`,
           );
         }
       }
@@ -145,14 +149,14 @@ export class DiscordBroadcast {
       event.reply("DISCORD_CHANNEL_LEFT", channelId);
       event.reply(
         "ERROR",
-        `Unable to join voice channel. This channel might be full or this bot might not have permission to join.`
+        `Unable to join voice channel. This channel might be full or this bot might not have permission to join.`,
       );
     }
   };
 
   _handleLeaveChannel = async (
     event: Electron.IpcMainEvent,
-    channelId: string
+    channelId: string,
   ) => {
     const channel = await this.client.channels.fetch(channelId);
     if (channel.type === ChannelType.GuildVoice) {

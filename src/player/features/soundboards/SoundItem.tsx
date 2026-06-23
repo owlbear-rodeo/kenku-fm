@@ -18,6 +18,7 @@ import Stack from "@mui/material/Stack";
 import styled from "@mui/material/styles/styled";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import Tooltip from "@mui/material/Tooltip";
 
 import { RootState } from "../../app/store";
 import { Sound, Soundboard, editSound, removeSound } from "./soundboardsSlice";
@@ -141,40 +142,42 @@ export function SoundItem({ id, soundboard, onPlay, onStop }: SoundItemProps) {
 
   return (
     <>
-      <Card
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          backgroundColor: "rgba(34, 38, 57, 0.8)",
-          position: "relative",
-        }}
-      >
-        <CardActionArea
-          sx={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0 }}
-        />
-        <CardContent sx={{ py: 2, ":last-child": { pb: 2 } }}>
-          <Stack direction="column" gap={0.5} justifyContent="space-between">
-            <Stack direction="row" justifyContent="space-between">
-              <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
-                {sound.title}
-              </Typography>
-              <IconButton onClick={handleMenuClick}>
-                <MoreVert />
-              </IconButton>
+      <Tooltip title={sound.title} placement="top" arrow>
+        <Card
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            backgroundColor: "rgba(34, 38, 57, 0.8)",
+            position: "relative",
+          }}
+        >
+          <CardActionArea
+            sx={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0 }}
+          />
+          <CardContent sx={{ py: 2, ":last-child": { pb: 2 } }}>
+            <Stack direction="column" gap={0.5} justifyContent="space-between">
+              <Stack direction="row" justifyContent="space-between">
+                <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
+                  {sound.title}
+                </Typography>
+                <IconButton onClick={handleMenuClick}>
+                  <MoreVert />
+                </IconButton>
+              </Stack>
+              <Stack
+                direction="row"
+                spacing={2}
+                justifyContent="center"
+                alignItems="center"
+              >
+                {loopToggle}
+                {volumeSlider}
+                {playButton}
+              </Stack>
             </Stack>
-            <Stack
-              direction="row"
-              spacing={2}
-              justifyContent="center"
-              alignItems="center"
-            >
-              {loopToggle}
-              {volumeSlider}
-              {playButton}
-            </Stack>
-          </Stack>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </Tooltip>
       <Menu
         id="soundboard-menu"
         anchorEl={anchorEl}

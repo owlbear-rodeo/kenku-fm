@@ -1,21 +1,18 @@
 {
-  "name": "kenku-fm",
-  "productName": "Kenku FM",
+  "name": "dungeon-jockey",
+  "productName": "Dungeon Jockey",
   "version": "1.5.5",
-  "description": "Online tabletop audio sharing for Discord",
+  "description": "Tabletop Audio for Game Masters",
   "main": "./.webpack/main",
   "scripts": {
     "start": "electron-forge start",
     "package": "env-cmd electron-forge package",
     "make": "env-cmd electron-forge make",
-    "publish": "env-cmd electron-forge publish",
+    "verify:phase0-boundaries": "node scripts/verify-phase0-boundaries.js",
     "lint": "eslint --ext .ts,.tsx ."
   },
   "keywords": [],
-  "author": {
-    "name": "Owlbear Rodeo",
-    "email": "support@owlbear.rodeo"
-  },
+  "author": "Dungeon Jockey contributors",
   "license": "GPL-3.0",
   "config": {
     "forge": "./forge.config.js"
@@ -27,7 +24,6 @@
     "@electron-forge/maker-squirrel": "^7.8.3",
     "@electron-forge/maker-zip": "^7.8.3",
     "@electron-forge/plugin-webpack": "^7.8.3",
-    "@electron-forge/publisher-github": "^7.8.3",
     "@electron/osx-sign": "^2.0.0",
     "@timfish/forge-externals-plugin": "^0.2.1",
     "@types/audioworklet": "^0.0.82",

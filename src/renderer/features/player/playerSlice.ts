@@ -2,8 +2,6 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { Tab } from "../tabs/tabsSlice";
 
-import icon from "../../../assets/player-icon.png";
-
 export interface PlayerState {
   tab: Tab & { preload: string };
   remoteEnabled: boolean;
@@ -12,10 +10,10 @@ export interface PlayerState {
 const initialState: PlayerState = {
   tab: {
     id: -1,
-    icon: icon,
+    icon: "",
     url: window.kenku.playerGetURL(),
     preload: window.kenku.playerGetPreloadURL(),
-    title: "Kenku Player",
+    title: "Dungeon Jockey Player",
     playingMedia: 0,
     muted: false,
   },

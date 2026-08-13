@@ -8,15 +8,20 @@ import {
   ipcMain,
   powerSaveBlocker,
 } from "electron";
-import "./menu";
-import icon from "./assets/icon.png";
+import { configureApplicationProfile } from "./applicationProfile";
 import { getMalformedUserAgent, getUserAgent } from "./main/userAgent";
 import { SessionManager } from "./main/managers/SessionManager";
-import { runAutoUpdate } from "./autoUpdate";
 import { getSavedBounds, saveWindowBounds } from "./bounds";
+import { configureApplicationMenu } from "./menu";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
+
+const applicationProfile = configureApplicationProfile();
+configureApplicationMenu();
+console.log(
+  `application profile ready: ${applicationProfile.mode} (${applicationProfile.userDataPath})`,
+);
 
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 let window: BrowserWindow | null = null;
@@ -42,7 +47,6 @@ const createWindow = (): BrowserWindow => {
     },
     titleBarStyle: "hidden",
     trafficLightPosition: { x: 16, y: 18 },
-    icon: icon,
     minWidth,
     minHeight,
     ...bounds,
@@ -71,7 +75,7 @@ const createWindow = (): BrowserWindow => {
   // Spoof user agent for window.navigator
   mainWindow.webContents.setUserAgent(getUserAgent());
 
-  // Prevent app suspension for Kenku FM to avoid playback issues
+  // Prevent app suspension to avoid playback issues
   const powerSaveBlockerId = powerSaveBlocker.start("prevent-app-suspension");
 
   mainWindow.on("close", () => {
@@ -81,10 +85,6 @@ const createWindow = (): BrowserWindow => {
   });
 
   saveWindowBounds(mainWindow);
-
-  if (app.isPackaged) {
-    runAutoUpdate(mainWindow);
-  }
 
   return mainWindow;
 };
@@ -104,8 +104,6 @@ if (!hasSingleInstanceLock) {
 } else {
   // Workaround to allow for webpack support with widevine
   // https://github.com/castlabs/electron-releases/issues/116
-  const widevine = components;
-
   // This method will be called when Electron has finished
   // initialization and is ready to create browser windows.
   // Some APIs can only be used after this event occurs.
@@ -114,7 +112,7 @@ if (!hasSingleInstanceLock) {
 
     try {
       // Wait for widevine to load
-      await widevine.whenReady();
+      await components.whenReady();
       console.log("components ready:", components.status());
     } catch (e) {
       hasWidevineError = true;

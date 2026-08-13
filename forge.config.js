@@ -1,28 +1,32 @@
-const path = require("path");
+const productIdentity = require("./product-identity.json");
 
 const config = {
   packagerConfig: {
-    executableName: "kenku-fm",
+    executableName: productIdentity.packageName,
     out: "./out",
-    icon: "./src/assets/icon",
-    appBundleId: "com.kenku.fm",
+    appBundleId: productIdentity.applicationId,
+    win32metadata: {
+      CompanyName: "Dungeon Jockey contributors",
+      FileDescription: productIdentity.displayName,
+      InternalName: productIdentity.packageName,
+      OriginalFilename: `${productIdentity.packageName}.exe`,
+      ProductName: productIdentity.displayName,
+    },
   },
   makers: [
     {
       name: "@electron-forge/maker-squirrel",
       config: {
-        name: "kenku_fm",
-        setupIcon: path.join(__dirname, "src", "assets", "setup.ico"),
-        loadingGif: path.join(__dirname, "src", "assets", "loading.gif"),
+        name: "dungeon_jockey",
+        appUserModelId: productIdentity.applicationId,
       },
     },
     {
       name: "@electron-forge/maker-deb",
       config: {
-        name: "kenku_fm",
-        productName: "Kenku FM",
-        homepage: "https://kenku.fm",
-        icon: path.join(__dirname, "src", "assets", "icons", "256x256.png"),
+        name: "dungeon_jockey",
+        productName: productIdentity.displayName,
+        homepage: "https://github.com/ProbablyRyan/kenku-fm",
       },
     },
     {
@@ -32,23 +36,9 @@ const config = {
     {
       name: "@electron-forge/maker-rpm",
       config: {
-        name: "kenku_fm",
-        productName: "Kenku FM",
-        homepage: "https://kenku.fm",
-        icon: path.join(__dirname, "src", "assets", "icons", "256x256.png"),
-      },
-    },
-  ],
-  publishers: [
-    {
-      name: "@electron-forge/publisher-github",
-      config: {
-        repository: {
-          owner: "owlbear-rodeo",
-          name: "kenku-fm",
-        },
-        prerelease: false,
-        draft: false,
+        name: "dungeon_jockey",
+        productName: productIdentity.displayName,
+        homepage: "https://github.com/ProbablyRyan/kenku-fm",
       },
     },
   ],

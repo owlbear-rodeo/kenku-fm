@@ -108,10 +108,10 @@ const template: any = [
     role: "help",
     submenu: [
       {
-        label: "Learn More",
+        label: "Project Repository",
         click: async () => {
           const { shell } = require("electron");
-          await shell.openExternal("https://kenku.fm");
+          await shell.openExternal("https://github.com/ProbablyRyan/kenku-fm");
         },
       },
       ...(!isMac ? [{ role: "about" }] : []),
@@ -119,5 +119,7 @@ const template: any = [
   },
 ];
 
-const menu = Menu.buildFromTemplate(template);
-Menu.setApplicationMenu(menu);
+export function configureApplicationMenu() {
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}

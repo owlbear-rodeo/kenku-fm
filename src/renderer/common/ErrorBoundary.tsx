@@ -4,7 +4,7 @@ import Stack from "@mui/material/Stack";
 import styled from "@mui/material/styles/styled";
 import Typography from "@mui/material/Typography";
 
-import icon from "../../assets/icon.svg";
+import { TemporaryProductMark } from "./TemporaryProductMark";
 
 const WallPaper = styled("div")({
   position: "absolute",
@@ -59,9 +59,7 @@ class ErrorBoundary extends Component<Props, State> {
             justifyContent="center"
             gap={1}
           >
-            <Stack sx={{ width: "68px", height: "68px", m: 1 }}>
-              <img src={icon} />
-            </Stack>
+            <TemporaryProductMark size={68} />
             <Typography variant="h4" color="white">
               Oops, something went wrong..
             </Typography>

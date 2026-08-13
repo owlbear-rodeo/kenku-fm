@@ -9,7 +9,6 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
-import Link from "@mui/material/Link";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
 import FormGroup from "@mui/material/FormGroup";
@@ -121,16 +120,9 @@ export function Settings({ open, onClose }: SettingsProps) {
           "Connect"
         )}
       </Button>
-      <Link
-        href="https://kenku.fm/docs/getting-a-discord-token"
-        variant="caption"
-        textAlign="center"
-        target="_blank"
-        rel="noopener noreferrer"
-        py={2}
-      >
-        Where do I get my token?
-      </Link>
+      <Typography variant="caption" textAlign="center" py={2}>
+        Use a Discord bot token created and controlled by you.
+      </Typography>
     </Stack>
   );
 
@@ -211,16 +203,9 @@ export function Settings({ open, onClose }: SettingsProps) {
       >
         {settings.remoteEnabled ? "Stop Remote" : "Start Remote"}
       </Button>
-      <Link
-        href="https://www.kenku.fm/docs/using-kenku-remote"
-        variant="caption"
-        textAlign="center"
-        target="_blank"
-        rel="noopener noreferrer"
-        py={2}
-      >
-        What is Kenku Remote?
-      </Link>
+      <Typography variant="caption" textAlign="center" py={2}>
+        Optional local control for the built-in player.
+      </Typography>
     </Stack>
   );
 

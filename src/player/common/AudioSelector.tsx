@@ -3,7 +3,6 @@ import React, { useCallback } from "react";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { Link } from "@mui/material";
 
 import {
   getDropURL,
@@ -75,15 +74,8 @@ export function AudioSelector({
         helperText={
           warning ? (
             <>
-              Unable to verify audio format, this file may not be supported. See{" "}
-              <Link
-                href="https://www.kenku.fm/docs/using-kenku-player"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                here
-              </Link>{" "}
-              for more information.
+              Unable to verify the audio format. This source may not be
+              supported.
             </>
           ) : undefined
         }

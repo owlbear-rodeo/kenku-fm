@@ -12,7 +12,7 @@ import { Settings } from "../features/settings/Settings";
 import { RootState } from "../app/store";
 import { useSelector } from "react-redux";
 
-import icon from "../../assets/icon.svg";
+import { TemporaryProductMark } from "./TemporaryProductMark";
 import { useHideScrollbar } from "./useHideScrollbar";
 import { showWindowControls } from "./showWindowControls";
 
@@ -56,8 +56,8 @@ export function ActionDrawer() {
           }
         >
           {showWindowControls && (
-            <Box sx={{ width: "36px", height: "36px", m: 1 }}>
-              <img src={icon} />
+            <Box sx={{ m: 1 }}>
+              <TemporaryProductMark />
             </Box>
           )}
           <IconButton

@@ -9,7 +9,7 @@ import { ActionDrawer } from "../common/ActionDrawer";
 
 import { Tabs } from "../features/tabs/Tabs";
 
-import icon from "../../assets/icon.svg";
+import { TemporaryProductMark } from "../common/TemporaryProductMark";
 
 import "./App.css";
 import Typography from "@mui/material/Typography";
@@ -65,9 +65,7 @@ export function App() {
           justifyContent="center"
           gap={1}
         >
-          <Stack sx={{ width: "68px", height: "68px", m: 1 }}>
-            <img src={icon} />
-          </Stack>
+          <TemporaryProductMark size={68} />
           <Typography variant="h4" color="white">
             Oops, something went wrong..
           </Typography>

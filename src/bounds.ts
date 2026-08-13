@@ -2,10 +2,22 @@ import { BrowserWindow, Rectangle, screen } from "electron";
 import Store from "electron-store";
 import throttle from "lodash.throttle";
 
-const store = new Store<{
+type BoundsStore = Store<{
   bounds: Rectangle;
   maximized: boolean;
-}>();
+}>;
+
+let store: BoundsStore | undefined;
+
+function getStore(): BoundsStore {
+  if (!store) {
+    store = new Store<{
+      bounds: Rectangle;
+      maximized: boolean;
+    }>();
+  }
+  return store;
+}
 
 export function getSavedBounds(
   minWidth: number,
@@ -14,8 +26,8 @@ export function getSavedBounds(
   bounds: Partial<Rectangle>;
   maximized: boolean;
 } {
-  const bounds = store.get("bounds");
-  const maximized = store.get("maximized");
+  const bounds = getStore().get("bounds");
+  const maximized = getStore().get("maximized");
   const savedBounds: Partial<Rectangle> = {};
   if (bounds) {
     const area = screen.getDisplayMatching(bounds).workArea;
@@ -40,6 +52,7 @@ export function getSavedBounds(
 }
 
 export function saveWindowBounds(window: BrowserWindow) {
+  const store = getStore();
   function handleResizeOrMove() {
     if (!window.isDestroyed()) {
       store.set("bounds", window.getNormalBounds());

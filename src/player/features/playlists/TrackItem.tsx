@@ -18,9 +18,7 @@ import { RootState } from "../../app/store";
 import {
   playPause,
   removeTrackFromQueue,
-  startQueue,
   stopTrack,
-  updatePlayback,
 } from "./playlistPlaybackSlice";
 
 type TrackItemProps = {

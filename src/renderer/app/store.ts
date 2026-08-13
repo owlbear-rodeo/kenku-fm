@@ -17,6 +17,8 @@ import {
   PERSIST,
   PURGE,
   REGISTER,
+  MigrationManifest,
+  PersistedState,
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 
@@ -30,8 +32,20 @@ const rootReducer = combineReducers({
   input: inputReducer,
 });
 
-const migrations: any = {
-  2: (state: RootState): RootState => {
+type ReducerState = ReturnType<typeof rootReducer>;
+
+type LegacyPersistedState = Exclude<PersistedState, undefined> & {
+  settings?: Partial<ReducerState["settings"]> | null;
+};
+
+function asLegacyPersistedState(state: PersistedState): LegacyPersistedState {
+  // Redux Persist invokes these inherited migrations with the historical root object.
+  return state as LegacyPersistedState;
+}
+
+const migrations: MigrationManifest = {
+  2: (persistedState) => {
+    const state = asLegacyPersistedState(persistedState);
     return {
       ...state,
       settings: {
@@ -47,7 +61,8 @@ const migrations: any = {
     };
   },
   // v1.1 - Add performance mode
-  3: (state: RootState): RootState => {
+  3: (persistedState) => {
+    const state = asLegacyPersistedState(persistedState);
     return {
       ...state,
       settings: {

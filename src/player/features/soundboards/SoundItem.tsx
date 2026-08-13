@@ -17,8 +17,6 @@ import Slider from "@mui/material/Slider";
 import Stack from "@mui/material/Stack";
 import styled from "@mui/material/styles/styled";
 import Typography from "@mui/material/Typography";
-import useMediaQuery from "@mui/material/useMediaQuery";
-
 import { RootState } from "../../app/store";
 import { Sound, Soundboard, editSound, removeSound } from "./soundboardsSlice";
 import { SoundSettings } from "./SoundSettings";

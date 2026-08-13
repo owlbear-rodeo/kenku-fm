@@ -1,28 +1,38 @@
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge, ipcRenderer, IpcRendererEvent } from "electron";
 
 import { BrowserViewManagerPreload } from "./preload/managers/BrowserViewManagerPreload";
 
 const viewManager = new BrowserViewManagerPreload();
 
-type Channel =
-  | "ERROR"
-  | "FATAL_ERROR"
-  | "MESSAGE"
-  | "INFO"
-  | "DISCORD_READY"
-  | "DISCORD_DISCONNECTED"
-  | "DISCORD_GUILDS"
-  | "DISCORD_CHANNEL_JOINED"
-  | "DISCORD_CHANNEL_LEFT"
-  | "SHOW_CONTROLS"
-  | "BROWSER_VIEW_DID_NAVIGATE"
-  | "BROWSER_VIEW_TITLE_UPDATED"
-  | "BROWSER_VIEW_FAVICON_UPDATED"
-  | "BROWSER_VIEW_MEDIA_STARTED_PLAYING"
-  | "BROWSER_VIEW_MEDIA_PAUSED"
-  | "BROWSER_VIEW_NEW_TAB"
-  | "BROWSER_VIEW_CLOSE_TAB"
-  | "PLAYER_REMOTE_ENABLED";
+type DiscordGuild = {
+  id: string;
+  name: string;
+  icon: string;
+  voiceChannels: { id: string; name: string }[];
+};
+
+type ChannelArguments = {
+  ERROR: [message: string];
+  FATAL_ERROR: [message: string];
+  MESSAGE: [message: string];
+  INFO: [message: string];
+  DISCORD_READY: [];
+  DISCORD_DISCONNECTED: [];
+  DISCORD_GUILDS: [guilds: DiscordGuild[]];
+  DISCORD_CHANNEL_JOINED: [channelId: string];
+  DISCORD_CHANNEL_LEFT: [channelId: string];
+  SHOW_CONTROLS: [];
+  BROWSER_VIEW_DID_NAVIGATE: [viewId: number, url: string];
+  BROWSER_VIEW_TITLE_UPDATED: [viewId: number, title: string];
+  BROWSER_VIEW_FAVICON_UPDATED: [viewId: number, favicons: string[]];
+  BROWSER_VIEW_MEDIA_STARTED_PLAYING: [viewId: number];
+  BROWSER_VIEW_MEDIA_PAUSED: [viewId: number];
+  BROWSER_VIEW_NEW_TAB: [url?: string];
+  BROWSER_VIEW_CLOSE_TAB: [];
+  PLAYER_REMOTE_ENABLED: [enabled: boolean];
+};
+
+type Channel = keyof ChannelArguments;
 
 const validChannels: Channel[] = [
   "ERROR",
@@ -116,9 +126,15 @@ const api = {
   reload: (id: number) => {
     viewManager.reload(id);
   },
-  on: (channel: Channel, callback: (...args: any[]) => any) => {
+  on: <T extends Channel>(
+    channel: T,
+    callback: (args: ChannelArguments[T]) => void,
+  ) => {
     if (validChannels.includes(channel)) {
-      const newCallback = (_: any, ...args: any[]) => callback(args);
+      const newCallback = (
+        _: IpcRendererEvent,
+        ...args: ChannelArguments[T]
+      ) => callback(args);
       ipcRenderer.on(channel, newCallback);
     }
   },

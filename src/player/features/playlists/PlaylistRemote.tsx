@@ -39,7 +39,7 @@ export function PlaylistRemote({
       if (id in playlists.tracks) {
         const track = playlists.tracks[id];
         // Find playlist assosiated with this track and start a queue
-        for (let playlist of Object.values(playlists.playlists.byId)) {
+        for (const playlist of Object.values(playlists.playlists.byId)) {
           const tracks = [...playlist.tracks];
           if (tracks.includes(track.id)) {
             dispatch(
@@ -130,12 +130,6 @@ export function PlaylistRemote({
     window.player.on("PLAYER_REMOTE_PLAYLIST_PLAYBACK_PAUSE", () => {
       if (playback.playback) {
         dispatch(playPause(false));
-      }
-    });
-
-    window.player.on("PLAYER_REMOTE_PLAYLIST_PLAYBACK_SEEK", (args) => {
-      const to = args[0];
-      if (playback.playback) {
       }
     });
 

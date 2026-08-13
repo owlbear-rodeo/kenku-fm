@@ -16,7 +16,7 @@ import { getBounds } from "../tabs/getBounds";
 
 type BookmarkListItemProps = {
   bookmark: Bookmark;
-  shadow?: Boolean;
+  shadow?: boolean;
 };
 
 export function BookmarkListItem({ bookmark, shadow }: BookmarkListItemProps) {

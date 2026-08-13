@@ -27,7 +27,6 @@ import { useDispatch } from "react-redux";
 import { Soundboard, Sound, moveSound } from "./soundboardsSlice";
 
 import { useHideScrollbar } from "../../../renderer/common/useHideScrollbar";
-import Stack from "@mui/material/Stack";
 
 type SoundboardSoundsProps = {
   soundboard: Soundboard;

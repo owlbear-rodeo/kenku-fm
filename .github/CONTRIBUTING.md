@@ -3,6 +3,25 @@
 Dungeon Jockey is under active development. Please keep proposals focused and discuss substantial changes before investing in an implementation.
 
 
+#### **Local development workflow**
+
+Use Node.js `22.23.1` and Yarn Classic `1.22.22`. The root `.node-version` file can be consumed by `fnm` and compatible version managers.
+
+Install dependencies without changing the committed lockfile:
+
+```sh
+yarn install --frozen-lockfile
+```
+
+Before submitting a change, run the fast verification entrypoint:
+
+```sh
+yarn verify
+```
+
+Application startup and package/build commands (`yarn start`, `yarn package`, and `yarn make`) remain separate from this verification entrypoint.
+
+
 #### **Did you find a bug?**
 
 * **Ensure the bug was not already reported** by searching the current repository's [issues](https://github.com/ProbablyRyan/kenku-fm/issues).

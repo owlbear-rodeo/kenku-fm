@@ -63,7 +63,7 @@ async function getDirectories(
     "/": { path: "/", name: "root", audioFiles: [] },
   }
 ): Promise<Directories> {
-  for (let entry of entries) {
+  for (const entry of entries) {
     if (isFileSystemFileEntry(entry)) {
       const file = await getFile(entry);
       if (path in directories && supportedFileTypes.includes(file.type)) {

@@ -1,7 +1,24 @@
 import blank from "../../assets/blank.png";
+
+interface WebpackContext {
+  (path: string): string;
+  keys(): string[];
+}
+
+type WebpackRequire = NodeJS.Require & {
+  context(
+    directory: string,
+    useSubdirectories: boolean,
+    regExp: RegExp,
+  ): WebpackContext;
+};
+
 // Import all images in this folder at build time
-// @ts-ignore
-const images = require.context("./", false, /\.(png|jpe?g|svg|webp)$/);
+const images = (require as WebpackRequire).context(
+  "./",
+  false,
+  /\.(png|jpe?g|svg|webp)$/,
+);
 const keys = images.keys();
 
 export const backgrounds: Record<string, string> =

@@ -72,7 +72,7 @@ export function Soundboard({ onPlay, onStop }: SoundboardProps) {
   const { dragging, containerListeners, overlayListeners } = useFolderDrop(
     (directories) => {
       const sounds: Sound[] = [];
-      for (let directory of Object.values(directories)) {
+      for (const directory of Object.values(directories)) {
         sounds.push(
           ...directory.audioFiles.map((file) => ({
             ...file,

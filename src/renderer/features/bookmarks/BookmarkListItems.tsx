@@ -1,13 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Collapse from "@mui/material/Collapse";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
-import IconButton from "@mui/material/IconButton";
 
 import ExpandLess from "@mui/icons-material/ExpandLessRounded";
 import ExpandMore from "@mui/icons-material/ExpandMoreRounded";
-import AddIcon from "@mui/icons-material/AddRounded";
 
 import {
   DndContext,
@@ -27,8 +25,7 @@ import {
 } from "@dnd-kit/sortable";
 
 import { RootState } from "../../app/store";
-import { useSelector } from "react-redux";
-import { useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { moveBookmark } from "./bookmarksSlice";
 
 import { BookmarkListItem } from "./BookmarkListItem";
@@ -49,7 +46,6 @@ export function BookmarkListItems() {
   const sensors = useSensors(pointerSensor, keyboardSensor);
 
   const [open, setOpen] = useState(true);
-  const [addOpen, setAddOpen] = useState(false);
 
   function toggleOpen() {
     setOpen(!open);

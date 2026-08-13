@@ -72,7 +72,7 @@ export function Playlist({ onPlay }: PlaylistProps) {
   function handleTrackPlay(trackId: string) {
     const track = playlists.tracks[trackId];
     if (track) {
-      let tracks = [...playlist.tracks];
+      const tracks = [...playlist.tracks];
       dispatch(startQueue({ tracks, trackId, playlistId: playlist.id }));
       onPlay(track);
     }
@@ -81,7 +81,7 @@ export function Playlist({ onPlay }: PlaylistProps) {
   const { dragging, containerListeners, overlayListeners } = useFolderDrop(
     (directories) => {
       const tracks: Track[] = [];
-      for (let directory of Object.values(directories)) {
+      for (const directory of Object.values(directories)) {
         tracks.push(...directory.audioFiles);
       }
       dispatch(addTracks({ tracks, playlistId: playlist.id }));

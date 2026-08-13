@@ -91,7 +91,7 @@ export function Soundboards({ onPlay }: SoundboardProps) {
 
   const { dragging, containerListeners, overlayListeners } = useFolderDrop(
     (directories) => {
-      for (let directory of Object.values(directories)) {
+      for (const directory of Object.values(directories)) {
         const files = directory.audioFiles;
         if (files.length > 0 && directory.path !== "/") {
           const id = uuid();

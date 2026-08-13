@@ -30,7 +30,7 @@ export function SoundboardItem({
     : soundboard.background;
 
   function handleShuffle() {
-    let sounds = [...soundboard.sounds];
+    const sounds = [...soundboard.sounds];
     // Play a random sound from the soundboard
     const soundId = sounds[Math.floor(Math.random() * sounds.length)];
     const sound = soundboards.sounds[soundId];

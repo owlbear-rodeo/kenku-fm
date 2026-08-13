@@ -42,7 +42,7 @@ export const soundboardsSlice = createSlice({
       state.soundboards.allIds.push(action.payload.id);
     },
     removeSoundboard: (state, action: PayloadAction<string>) => {
-      for (let sound of state.soundboards.byId[action.payload].sounds) {
+      for (const sound of state.soundboards.byId[action.payload].sounds) {
         delete state.sounds[sound];
       }
       delete state.soundboards.byId[action.payload];
@@ -75,7 +75,7 @@ export const soundboardsSlice = createSlice({
       state.soundboards.byId[soundboardId].sounds.unshift(
         ...sounds.map((sound) => sound.id)
       );
-      for (let sound of sounds) {
+      for (const sound of sounds) {
         state.sounds[sound.id] = sound;
       }
     },

@@ -39,7 +39,7 @@ export function InputListItems() {
         const ids = devices
           .filter((d) => d.kind === "audioinput")
           .map((device) => device.deviceId);
-        for (let id of ids) {
+        for (const id of ids) {
           window.kenku.stopExternalAudioCapture(id);
         }
         dispatch(setDevices([]));

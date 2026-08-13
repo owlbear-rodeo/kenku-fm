@@ -2,18 +2,27 @@
   "name": "dungeon-jockey",
   "productName": "Dungeon Jockey",
   "version": "1.5.5",
+  "packageManager": "yarn@1.22.22",
   "description": "Tabletop Audio for Game Masters",
   "main": "./.webpack/main",
   "scripts": {
+    "preinstall": "node scripts/verify-toolchain.js",
     "start": "electron-forge start",
     "package": "env-cmd electron-forge package",
     "make": "env-cmd electron-forge make",
+    "verify:toolchain": "node scripts/verify-toolchain.js",
     "verify:phase0-boundaries": "node scripts/verify-phase0-boundaries.js",
-    "lint": "eslint --ext .ts,.tsx ."
+    "lint": "eslint --ext .ts,.tsx .",
+    "typecheck": "tsc --noEmit",
+    "verify": "yarn verify:toolchain && yarn verify:phase0-boundaries && yarn lint && yarn typecheck"
   },
   "keywords": [],
   "author": "Dungeon Jockey contributors",
   "license": "GPL-3.0",
+  "engines": {
+    "node": "22.23.1",
+    "yarn": "1.22.22"
+  },
   "config": {
     "forge": "./forge.config.js"
   },
@@ -36,12 +45,12 @@
     "@types/react-router": "^5.1.20",
     "@types/react-router-dom": "^5.3.3",
     "@types/uuid": "^10.0.0",
-    "@typescript-eslint/eslint-plugin": "^7.16.0",
-    "@typescript-eslint/parser": "^7.16.0",
+    "@typescript-eslint/eslint-plugin": "^8.67.0",
+    "@typescript-eslint/parser": "^8.67.0",
     "css-loader": "^6.6.0",
     "electron": "https://github.com/castlabs/electron-releases#v43.0.0+wvcus",
     "electron-installer-dmg": "^5.0.1",
-    "eslint": "^7.6.0",
+    "eslint": "^8.57.1",
     "eslint-plugin-import": "^2.25.4",
     "fork-ts-checker-webpack-plugin": "^9.0.2",
     "node-loader": "^2.0.0",

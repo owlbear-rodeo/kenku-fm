@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Component, ErrorInfo, ReactNode } from "react";
 
 import Stack from "@mui/material/Stack";
 import styled from "@mui/material/styles/styled";
@@ -17,7 +17,6 @@ const WallPaper = styled("div")({
   zIndex: -1,
 });
 
-import { Component, ErrorInfo, ReactNode } from "react";
 
 interface Props {
   children?: ReactNode;

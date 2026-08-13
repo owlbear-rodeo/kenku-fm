@@ -1,8 +1,14 @@
-import { app, BrowserWindow, Menu } from "electron";
+import {
+  app,
+  BrowserWindow,
+  Menu,
+  MenuItemConstructorOptions,
+  shell,
+} from "electron";
 
 const isMac = process.platform === "darwin";
 
-const template: any = [
+const template = [
   // { role: 'appMenu' }
   ...(isMac
     ? [
@@ -71,7 +77,7 @@ const template: any = [
         accelerator: isMac ? "Cmd+T" : "Ctrl+T",
         click: () => {
           const windows = BrowserWindow.getAllWindows();
-          for (let window of windows) {
+          for (const window of windows) {
             window.webContents.send("BROWSER_VIEW_NEW_TAB");
           }
         },
@@ -81,7 +87,7 @@ const template: any = [
         accelerator: isMac ? "Cmd+W" : "Ctrl+W",
         click: () => {
           const windows = BrowserWindow.getAllWindows();
-          for (let window of windows) {
+          for (const window of windows) {
             window.webContents.send("BROWSER_VIEW_CLOSE_TAB");
           }
         },
@@ -110,14 +116,13 @@ const template: any = [
       {
         label: "Project Repository",
         click: async () => {
-          const { shell } = require("electron");
           await shell.openExternal("https://github.com/ProbablyRyan/kenku-fm");
         },
       },
       ...(!isMac ? [{ role: "about" }] : []),
     ],
   },
-];
+] as MenuItemConstructorOptions[];
 
 export function configureApplicationMenu() {
   const menu = Menu.buildFromTemplate(template);

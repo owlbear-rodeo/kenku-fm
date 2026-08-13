@@ -15,11 +15,11 @@ export class WindowManager {
     ipcMain.off("WINDOW_CLOSE", this._handleClose);
   }
 
-  _handleToggleMaximize = (_: Electron.IpcMainEvent) => this.toggleMaximize();
+  _handleToggleMaximize = () => this.toggleMaximize();
 
-  _handleMinimize = (_: Electron.IpcMainEvent) => this.minimize();
+  _handleMinimize = () => this.minimize();
 
-  _handleClose = (_: Electron.IpcMainEvent) => this.close();
+  _handleClose = () => this.close();
 
   toggleMaximize() {
     if (this.window.isMaximized()) {

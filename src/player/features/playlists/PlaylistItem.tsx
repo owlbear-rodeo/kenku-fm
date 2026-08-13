@@ -47,7 +47,7 @@ export function PlaylistItem({
     if (queue?.playlistId === playlist.id) {
       dispatch(playPause(!playing));
     } else {
-      let tracks = [...playlist.tracks];
+      const tracks = [...playlist.tracks];
       const trackIndex = shuffle
         ? Math.floor(Math.random() * tracks.length)
         : 0;

@@ -12,6 +12,8 @@ import {
 } from "./playlistPlaybackSlice";
 import { Track } from "./playlistsSlice";
 
+type HowlWithSounds = Howl & { _sounds: unknown[] };
+
 export function usePlaylistPlayback(onError: (message: string) => void) {
   const trackRef = useRef<Howl | null>(null);
   const animationRef = useRef<number | null>(null);
@@ -91,7 +93,7 @@ export function usePlaylistPlayback(onError: (message: string) => void) {
 
         howl.on("playerror", error);
 
-        const sound = (howl as any)._sounds[0];
+        const sound = (howl as HowlWithSounds)._sounds[0];
         if (!sound) {
           error();
         }

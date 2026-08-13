@@ -31,7 +31,6 @@ import { RootState } from "../../app/store";
 import { movePlaylist, Track, addPlaylist, addTracks } from "./playlistsSlice";
 import { PlaylistAdd } from "./PlaylistAdd";
 import { SortableItem } from "../../common/SortableItem";
-import { startQueue } from "./playlistPlaybackSlice";
 import { useFolderDrop } from "../../common/useFolderDrop";
 import { getRandomBackground } from "../../backgrounds";
 import { useHideScrollbar } from "../../../renderer/common/useHideScrollbar";
@@ -87,7 +86,7 @@ export function Playlists({ onPlay }: PlaylistsProps) {
 
   const { dragging, containerListeners, overlayListeners } = useFolderDrop(
     (directories) => {
-      for (let directory of Object.values(directories)) {
+      for (const directory of Object.values(directories)) {
         const files = directory.audioFiles;
         if (files.length > 0 && directory.path !== "/") {
           const id = uuid();

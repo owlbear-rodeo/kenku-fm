@@ -70,7 +70,7 @@ export function Tabs() {
         return;
       }
 
-      let validFavicons: string[] = [];
+      const validFavicons: string[] = [];
       if (Array.isArray(favicons)) {
         favicons.forEach((favicon) => {
           const url = safeURL(favicon);
@@ -206,7 +206,7 @@ export function Tabs() {
           viewId={selectedTab?.id || -1}
           url={selectedTab?.url || ""}
           onURLChange={handleURLChange}
-          disabled={!Boolean(selectedTab)}
+          disabled={!selectedTab}
         />
       )}
     </Stack>

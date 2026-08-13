@@ -38,7 +38,7 @@ export const playlistsSlice = createSlice({
       state.playlists.allIds.push(action.payload.id);
     },
     removePlaylist: (state, action: PayloadAction<string>) => {
-      for (let track of state.playlists.byId[action.payload].tracks) {
+      for (const track of state.playlists.byId[action.payload].tracks) {
         delete state.tracks[track];
       }
       delete state.playlists.byId[action.payload];
@@ -71,7 +71,7 @@ export const playlistsSlice = createSlice({
       state.playlists.byId[playlistId].tracks.unshift(
         ...tracks.map((track) => track.id)
       );
-      for (let track of tracks) {
+      for (const track of tracks) {
         state.tracks[track.id] = track;
       }
     },

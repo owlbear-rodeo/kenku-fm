@@ -126,7 +126,7 @@ function Controls({
     (state: RootState) => state.playlistPlayback.shuffle,
   );
   const disabled = useSelector(
-    (state: RootState) => !Boolean(state.playlistPlayback.playback),
+    (state: RootState) => !state.playlistPlayback.playback,
   );
   const playing = useSelector(
     (state: RootState) => state.playlistPlayback.playing,
@@ -290,7 +290,7 @@ function Time({ onPlaylistSeek }: Pick<PlaylistPlayerProps, "onPlaylistSeek">) {
         min={0}
         step={1}
         max={duration}
-        disabled={!Boolean(playback)}
+        disabled={!playback}
         onChange={(_, value) => setTimeOverride(value as number)}
         onChangeCommitted={handleTimeChange}
       />

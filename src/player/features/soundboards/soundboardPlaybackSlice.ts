@@ -33,7 +33,7 @@ export const soundboardPlaybackSlice = createSlice({
       action: PayloadAction<{ id: string; progress: number }[]>
     ) => {
       const updates = action.payload;
-      for (let { id, progress } of updates) {
+      for (const { id, progress } of updates) {
         if (id in state.playback) {
           state.playback[id].progress = progress;
         }

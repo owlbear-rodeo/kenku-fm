@@ -1,5 +1,7 @@
-import { BrowserWindow, ipcMain, shell, WebContentsView } from "electron";
+import { BrowserWindow, ipcMain, WebContentsView } from "electron";
 import { getUserAgent } from "../userAgent";
+
+type DestroyableWebContents = Electron.WebContents & { destroy(): void };
 
 /**
  * Manager to help create and manager browser views
@@ -209,16 +211,16 @@ export class BrowserViewManagerMain {
       }
       this.views[id].webContents.close({ waitForBeforeUnload: false });
       this.window.contentView.removeChildView(this.views[id]);
-      (this.views[id].webContents as any).destroy();
+      (this.views[id].webContents as DestroyableWebContents).destroy();
       delete this.views[id];
     }
   }
 
   removeAllBrowserViews() {
-    for (let id in this.views) {
+    for (const id in this.views) {
       this.views[id].webContents.close({ waitForBeforeUnload: false });
       this.window.contentView.removeChildView(this.views[id]);
-      (this.views[id].webContents as any).destroy();
+      (this.views[id].webContents as DestroyableWebContents).destroy();
       this.topView = undefined;
       delete this.views[id];
     }

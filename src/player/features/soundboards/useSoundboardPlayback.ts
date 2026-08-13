@@ -64,7 +64,7 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
       const delta = time - prevTime;
       if (delta > 1000) {
         const updates: { id: string; progress: number }[] = [];
-        for (let id in soundsRef.current) {
+        for (const id in soundsRef.current) {
           const sound = soundsRef.current[id];
           if (sound.playing()) {
             updates.push({ id, progress: sound.progress() });
@@ -98,7 +98,7 @@ export function useSoundboardPlayback(onError: (message: string) => void) {
   // Sync function for updating the currently playing sounds with the redux store
   // Used in `SoundboardPlaybackSync`
   const sync = useCallback((update: (id: string, sound: Sound) => void) => {
-    for (let [id, sound] of Object.entries(soundsRef.current)) {
+    for (const [id, sound] of Object.entries(soundsRef.current)) {
       update(id, sound);
     }
   }, []);

@@ -7,6 +7,8 @@ import prism from "prism-media";
 declare const AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY: string;
 declare const AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
+type DestroyableWebContents = Electron.WebContents & { destroy(): void };
+
 interface AudioCaptureManagerEvents {
   streamStart: (stream: Readable) => void;
   streamEnd: () => void;
@@ -94,7 +96,7 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
       this._handleStopBrowserViewStream
     );
     this._browserWindow.webContents.close();
-    (this._browserWindow.webContents as any).destroy();
+    (this._browserWindow.webContents as DestroyableWebContents).destroy();
     this._handleStreamEnd();
     this._wss.close();
   }

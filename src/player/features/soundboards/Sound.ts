@@ -15,6 +15,8 @@ type SoundOptions = {
   fadeOut: number;
 };
 
+type HowlWithSounds = Howl & { _sounds: unknown[] };
+
 /**
  * Cross fade wrapper around a Howler sound playback.
  * Setting fadeIn and fadeOut to 0 will disable cross fading.
@@ -85,7 +87,7 @@ export class Sound extends TypedEmitter<SoundEvents> {
         howl.on("loaderror", handleError);
         howl.on("playerror", handleError);
 
-        const howlSound = (howl as any)._sounds[0];
+        const howlSound = (howl as HowlWithSounds)._sounds[0];
         if (!howlSound) {
           handleError();
         }

@@ -39,7 +39,7 @@
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
     "css-loader": "^6.6.0",
-    "electron": "https://github.com/castlabs/electron-releases#37.6.0+wvcus",
+    "electron": "https://github.com/castlabs/electron-releases#v43.0.0+wvcus",
     "electron-installer-dmg": "^5.0.1",
     "eslint": "^7.6.0",
     "eslint-plugin-import": "^2.25.4",
@@ -83,7 +83,6 @@
     "redux-persist": "^6.0.0",
     "tiny-typed-emitter": "^2.1.0",
     "uuid": "^10.0.0",
-    "ws": "^8.19.0",
-    "zlib-sync": "^0.1.10"
+    "ws": "^8.19.0"
   }
 }

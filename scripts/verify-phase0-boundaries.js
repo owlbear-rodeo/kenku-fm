@@ -49,14 +49,26 @@ if (packageJson.scripts && packageJson.scripts.publish) fail("publish script ret
 if (packageJson.devDependencies?.["@electron-forge/publisher-github"]) {
   fail("Forge GitHub publisher dependency returned");
 }
-if (
-  packageJson.devDependencies?.electron !==
-  "https://github.com/castlabs/electron-releases#37.6.0+wvcus"
-) {
-  fail("the inherited CastLabs Electron 37.6.0+wvcus dependency changed");
-}
-
+const expectedElectron =
+  "https://github.com/castlabs/electron-releases#v43.0.0+wvcus";
 const forgeConfig = require(path.join(root, "forge.config.js"));
+if (
+  packageJson.devDependencies?.electron !== expectedElectron ||
+  forgeConfig.rebuildConfig?.forceABI !== 148
+) {
+  fail(
+    "CastLabs Electron v43.0.0+wvcus and Forge ABI 148 must remain pinned and be reviewed together",
+  );
+}
+if (packageJson.dependencies?.["zlib-sync"]) {
+  fail("optional zlib-sync root dependency returned");
+}
+const forgeExternals = forgeConfig.plugins?.find(
+  (plugin) => plugin.name === "@timfish/forge-externals-plugin",
+)?.config?.externals;
+if (forgeExternals?.includes("zlib-sync")) {
+  fail("optional zlib-sync Forge external returned");
+}
 if (forgeConfig.packagerConfig.executableName !== identity.packageName) {
   fail("Forge executable name drifted");
 }

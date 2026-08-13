@@ -1,6 +1,9 @@
 const productIdentity = require("./product-identity.json");
 
 const config = {
+  rebuildConfig: {
+    forceABI: 148,
+  },
   packagerConfig: {
     executableName: productIdentity.packageName,
     out: "./out",
@@ -82,7 +85,7 @@ const config = {
     {
       name: "@timfish/forge-externals-plugin",
       config: {
-        externals: ["opusscript", "prism-media", "@snazzah/davey", "zlib-sync"],
+        externals: ["opusscript", "prism-media", "@snazzah/davey"],
         includeDeps: true,
       },
     },

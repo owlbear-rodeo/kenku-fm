@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Dungeon Jockey browser audio fixture</title>
+  </head>
+  <body>
+    <main>
+      <h1>Browser audio smoke fixture</h1>
+      <p id="state">silent</p>
+      <button id="start" type="button">Start deterministic tone</button>
+    </main>
+    <script>
+      let context;
+      let oscillator;
+      let gain;
+
+      async function startTone() {
+        if (oscillator) return;
+        context = new AudioContext({ sampleRate: 48000 });
+        oscillator = context.createOscillator();
+        gain = context.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.value = 440;
+        gain.gain.value = 0.25;
+        oscillator.connect(gain).connect(context.destination);
+        oscillator.start();
+        await context.resume();
+        document.getElementById("state").textContent = "tone-started";
+      }
+
+      document.getElementById("start").addEventListener("click", startTone);
+      window.startDeterministicTone = startTone;
+    </script>
+  </body>
+</html>

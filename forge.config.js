@@ -1,12 +1,18 @@
 const productIdentity = require("./product-identity.json");
+const { resolveTemporaryChild } = require("./scripts/temporary-path");
+
+const outputOverride = process.env.DUNGEON_JOCKEY_FORGE_OUT;
+const forgeOutput = outputOverride
+  ? resolveTemporaryChild(outputOverride, __dirname)
+  : "./out";
 
 const config = {
+  outDir: forgeOutput,
   rebuildConfig: {
     forceABI: 148,
   },
   packagerConfig: {
     executableName: productIdentity.packageName,
-    out: "./out",
     appBundleId: productIdentity.applicationId,
     win32metadata: {
       CompanyName: "Dungeon Jockey contributors",

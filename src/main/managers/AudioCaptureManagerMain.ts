@@ -3,6 +3,10 @@ import { TypedEmitter } from "tiny-typed-emitter";
 import { Readable } from "stream";
 import { WebSocketServer, WebSocket } from "ws";
 import prism from "prism-media";
+import {
+  AudioCaptureSmokeProbe,
+  createAudioCaptureSmokeProbe,
+} from "../testSupport/audioCaptureSmokeProbe";
 
 declare const AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY: string;
 declare const AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -23,9 +27,11 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
   _browserWindow: BrowserWindow;
   _encoder?: prism.opus.Encoder;
   _wss: WebSocketServer;
+  _smokeProbe?: AudioCaptureSmokeProbe;
 
   constructor() {
     super();
+    this._smokeProbe = createAudioCaptureSmokeProbe();
     this._browserWindow = new BrowserWindow({
       webPreferences: {
         preload: AUDIO_CAPTURE_WINDOW_PRELOAD_WEBPACK_ENTRY,
@@ -38,7 +44,7 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
       },
       minimizable: false,
       frame: false,
-      show: false
+      show: false,
     });
     this._browserWindow.webContents.loadURL(AUDIO_CAPTURE_WINDOW_WEBPACK_ENTRY);
     this._wss = new WebSocketServer({ port: 0 });
@@ -99,6 +105,8 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
     (this._browserWindow.webContents as DestroyableWebContents).destroy();
     this._handleStreamEnd();
     this._wss.close();
+    this._smokeProbe?.dispose();
+    this._smokeProbe = undefined;
   }
 
   _handleWebsocketConnection = (ws: WebSocket) => {
@@ -169,6 +177,7 @@ export class AudioCaptureManagerMain extends TypedEmitter<AudioCaptureManagerEve
   };
 
   _handleStreamData = async (data: Buffer) => {
+    this._smokeProbe?.observe(data);
     this._encoder?.write(data);
   };
 

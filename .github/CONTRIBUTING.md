@@ -19,7 +19,17 @@ Before submitting a change, run the fast verification entrypoint:
 yarn verify
 ```
 
-Application startup and package/build commands (`yarn start`, `yarn package`, and `yarn make`) remain separate from this verification entrypoint.
+This runs the toolchain and Phase 0 boundary checks, lint, typechecking, and the deterministic unit, component, and integration tests.
+
+On Windows x64, run the slower packaged browser-audio smoke separately:
+
+```sh
+yarn test:e2e
+```
+
+The smoke creates an unsigned package and isolated application data beneath the operating system temporary directory, serves a loopback-only audio fixture, and requires no real account or external service. It cleans its own package and profile after the run. Application startup and other package/build commands (`yarn start`, `yarn package`, and `yarn make`) remain separate.
+
+GitHub Actions runs fast verification on `ubuntu-24.04` and the packaged smoke on `windows-2025`.
 
 
 #### **Did you find a bug?**

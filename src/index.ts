@@ -13,6 +13,8 @@ import { getMalformedUserAgent, getUserAgent } from "./main/userAgent";
 import { SessionManager } from "./main/managers/SessionManager";
 import { getSavedBounds, saveWindowBounds } from "./bounds";
 import { configureApplicationMenu } from "./menu";
+import { createDungeonJockeyCompositionRoot } from "./dungeonJockey/main/compositionRoot";
+import { selectStartupRoute } from "./dungeonJockey/main/startupRoute";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -66,12 +68,27 @@ const createWindow = (): BrowserWindow => {
     return { action: "deny" };
   });
 
-  let session = new SessionManager(mainWindow);
+  const startupRoute = selectStartupRoute(app.isPackaged);
+  let refreshVisibleRendererSession: () => void;
+  let destroySession: () => void;
+
+  if (startupRoute === "legacy-kenku") {
+    // Temporary unpackaged-development recovery route for inherited behavior.
+    let legacySession = new SessionManager(mainWindow);
+    refreshVisibleRendererSession = () => {
+      legacySession.destroy();
+      legacySession = new SessionManager(mainWindow);
+    };
+    destroySession = () => legacySession.destroy();
+  } else {
+    const dungeonJockeyRoot = createDungeonJockeyCompositionRoot(mainWindow);
+    refreshVisibleRendererSession = () =>
+      dungeonJockeyRoot.refreshVisibleRendererCompatibilitySession();
+    destroySession = () => dungeonJockeyRoot.dispose();
+  }
 
   mainWindow.webContents.on("did-start-loading", () => {
-    // Restart the session on refresh
-    session.destroy();
-    session = new SessionManager(mainWindow);
+    refreshVisibleRendererSession();
   });
 
   // Spoof user agent for window.navigator
@@ -81,7 +98,7 @@ const createWindow = (): BrowserWindow => {
   const powerSaveBlockerId = powerSaveBlocker.start("prevent-app-suspension");
 
   mainWindow.on("close", () => {
-    session.destroy();
+    destroySession();
     window = null;
     powerSaveBlocker.stop(powerSaveBlockerId);
   });

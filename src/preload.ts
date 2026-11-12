@@ -1,6 +1,13 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from "electron";
 
 import { BrowserViewManagerPreload } from "./preload/managers/BrowserViewManagerPreload";
+import { createRequestId } from "./dungeonJockey/domain/ids/ids";
+import {
+  ApplicationBridge,
+  VERSION_CHANNEL,
+  VERSION_OPERATION,
+  VersionRequest,
+} from "./dungeonJockey/contracts/version";
 
 const viewManager = new BrowserViewManagerPreload();
 
@@ -187,13 +194,28 @@ const api = {
     return ipcRenderer.invoke("CLEAR_CACHE");
   },
   platform: ipcRenderer.sendSync("GET_PLATFORM") as string,
-  version: ipcRenderer.sendSync("GET_VERSION") as string,
 };
 
 declare global {
   interface Window {
     kenku: typeof api;
+    dungeonJockey: ApplicationBridge;
   }
 }
 
 contextBridge.exposeInMainWorld("kenku", api);
+
+if (process.isMainFrame) {
+  const applicationBridge: ApplicationBridge = {
+    getVersion: async () => {
+      const request: VersionRequest = {
+        id: createRequestId({ createUuid: () => crypto.randomUUID() }),
+        type: VERSION_OPERATION,
+        protocolVersion: 1,
+        payload: {},
+      };
+      return ipcRenderer.invoke(VERSION_CHANNEL, request);
+    },
+  };
+  contextBridge.exposeInMainWorld("dungeonJockey", applicationBridge);
+}

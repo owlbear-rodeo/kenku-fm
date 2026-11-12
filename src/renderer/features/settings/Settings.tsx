@@ -46,6 +46,20 @@ export function Settings({ open, onClose }: SettingsProps) {
   const connection = useSelector((state: RootState) => state.connection);
   const settings = useSelector((state: RootState) => state.settings);
   const dispatch = useDispatch();
+  const [version, setVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    window.dungeonJockey
+      .getVersion()
+      .then((result) => {
+        if (active && result.ok) setVersion(result.version);
+      })
+      .catch((): void => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function handleDiscordTokenChange(e: React.ChangeEvent<HTMLInputElement>) {
     dispatch(setDiscordToken(e.target.value));
@@ -360,7 +374,7 @@ export function Settings({ open, onClose }: SettingsProps) {
             color="text.secondary"
             textAlign="center"
           >
-            v{window.kenku.version}
+            {version === null ? null : `v${version}`}
           </Typography>
         </Stack>
       </DialogContent>

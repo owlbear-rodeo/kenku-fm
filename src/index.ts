@@ -15,6 +15,8 @@ import { getSavedBounds, saveWindowBounds } from "./bounds";
 import { configureApplicationMenu } from "./menu";
 import { createDungeonJockeyCompositionRoot } from "./dungeonJockey/main/compositionRoot";
 import { selectStartupRoute } from "./dungeonJockey/main/startupRoute";
+import { createApplicationIpc } from "./dungeonJockey/main/applicationIpc";
+import { createApplicationEntryPolicy } from "./dungeonJockey/main/applicationEntryPolicy";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -27,6 +29,7 @@ console.log(
 
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 let window: BrowserWindow | null = null;
+let applicationIpc: ReturnType<typeof createApplicationIpc>;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // This CommonJS package eagerly evaluates Squirrel startup arguments at load time;
@@ -48,6 +51,9 @@ const createWindow = (): BrowserWindow => {
     height: 600,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+      contextIsolation: true,
+      sandbox: true,
+      nodeIntegration: false,
     },
     titleBarStyle: "hidden",
     trafficLightPosition: { x: 16, y: 18 },
@@ -60,13 +66,13 @@ const createWindow = (): BrowserWindow => {
     mainWindow.maximize();
   }
 
-  // and load the index.html of the app.
-  mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
-
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url);
-    return { action: "deny" };
-  });
+  applicationIpc.bindApplicationWindow(
+    mainWindow.webContents,
+    createApplicationEntryPolicy(MAIN_WINDOW_WEBPACK_ENTRY, app.isPackaged),
+    (url) => {
+      void shell.openExternal(url).catch((): void => {});
+    },
+  );
 
   const startupRoute = selectStartupRoute(app.isPackaged);
   let refreshVisibleRendererSession: () => void;
@@ -105,6 +111,9 @@ const createWindow = (): BrowserWindow => {
 
   saveWindowBounds(mainWindow);
 
+  // Install identity, navigation and session lifecycle hooks before loading UI.
+  mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+
   return mainWindow;
 };
 
@@ -138,6 +147,7 @@ if (!hasSingleInstanceLock) {
       console.error("components failed to load:", JSON.stringify(e, null, 2));
     }
 
+    applicationIpc = createApplicationIpc(ipcMain, () => app.getVersion());
     window = createWindow();
 
     spoofUserAgent();
@@ -174,14 +184,12 @@ if (!hasSingleInstanceLock) {
   app.on("activate", () => {
     // On OS X it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) {
+    if (applicationIpc && BrowserWindow.getAllWindows().length === 0) {
       window = createWindow();
     }
   });
 
-  ipcMain.on("GET_VERSION", (event) => {
-    event.returnValue = app.getVersion();
-  });
+  app.on("will-quit", () => applicationIpc?.dispose());
 
   ipcMain.on("GET_PLATFORM", (event) => {
     event.returnValue = os.platform();

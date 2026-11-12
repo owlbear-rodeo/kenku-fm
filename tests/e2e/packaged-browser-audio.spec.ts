@@ -11,6 +11,7 @@ import {
 } from "@playwright/test";
 
 import productIdentity from "../../product-identity.json";
+import packageMetadata from "../../package.json";
 
 type ProbeFacts = {
   pcmFrameCount: number;
@@ -130,6 +131,39 @@ test("packaged app captures non-silent PCM from a loopback browser fixture", asy
       userData: profilePath,
     });
 
+    // Exercise the real isolated preload and guarded main handler on both
+    // documents, not a main-process shortcut to app.getVersion().
+    for (const reload of [false, true]) {
+      if (reload) {
+        await mainWindow.reload();
+        await expect(
+          mainWindow.getByRole("button", { name: "add tab" }),
+        ).toBeVisible();
+      }
+      const versionResult = await mainWindow.evaluate(() =>
+        window.dungeonJockey.getVersion(),
+      );
+      expect(versionResult).toEqual({
+        ok: true,
+        protocolVersion: 1,
+        id: expect.stringMatching(/^[0-9a-f-]{36}$/),
+        version: packageMetadata.version,
+      });
+      expect(
+        await mainWindow.evaluate(() => Object.keys(window.dungeonJockey)),
+      ).toEqual(["getVersion"]);
+      expect(await mainWindow.evaluate(() => "version" in window.kenku)).toBe(
+        false,
+      );
+      await mainWindow.getByTestId("SettingsRoundedIcon").click();
+      await expect(
+        mainWindow.getByText(`v${packageMetadata.version}`, { exact: true }),
+      ).toBeVisible();
+      await mainWindow
+        .getByRole("button", { name: "Done", exact: true })
+        .click();
+    }
+
     await mainWindow.getByRole("button", { name: "add tab" }).click();
     const urlInput = mainWindow.getByRole("textbox", { name: "enter a URL" });
     await expect(urlInput).toBeVisible();
@@ -146,6 +180,18 @@ test("packaged app captures non-silent PCM from a loopback browser fixture", asy
         ),
       )
       .toBe(true);
+
+    const fixtureHasOwnedBridge = await launchedApplication.evaluate(
+      async ({ webContents }, fixtureUrl) => {
+        const contents = webContents
+          .getAllWebContents()
+          .find((item) => item.getURL() === fixtureUrl);
+        if (!contents) throw new Error("loopback fixture tab was not found");
+        return contents.executeJavaScript("'dungeonJockey' in window");
+      },
+      fixture.url,
+    );
+    expect(fixtureHasOwnedBridge).toBe(false);
 
     await launchedApplication.evaluate(() => {
       const surface = (

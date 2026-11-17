@@ -7,6 +7,11 @@ import { CredentialId, parseCredentialId } from "../../src/dungeonJockey/domain/
 import { createProtectedSecretStore } from "../../src/dungeonJockey/adapters/secrets/protectedSecretStore";
 import { createSessionSecretStore } from "../../src/dungeonJockey/adapters/secrets/sessionSecretStore";
 import { SecretStorePort } from "../../src/dungeonJockey/ports/SecretStorePort";
+import type { IpcMainInvokeEvent, WebContents } from "electron";
+import { RendererRoleRegistry } from "../../src/dungeonJockey/main/RendererRoleRegistry";
+import { createApplicationEntryPolicy } from "../../src/dungeonJockey/main/applicationEntryPolicy";
+import { createCredentialHandlers } from "../../src/dungeonJockey/main/credentialIpc";
+import { CREDENTIAL_OPERATIONS, CredentialOperation, parseCredentialResult } from "../../src/dungeonJockey/contracts/credentials";
 
 const FAKE = "fake-credential-for-storage-tests";
 const REPLACEMENT = "fake-replacement-for-storage-tests";
@@ -122,6 +127,48 @@ describe.each(["remembered", "session-only"] as const)("%s secret contract", (pe
 });
 
 describe("protected records", () => {
+  it("preserves failures and recovers through the authorized credential boundary", async () => {
+    const entry = "dungeon-jockey://app/index.html";
+    const contents = { session: {}, mainFrame: { parent: null as null, detached: false, url: entry },
+      isDestroyed: () => false, getURL: () => entry } as unknown as WebContents;
+    const event = { sender: contents, senderFrame: contents.mainFrame } as IpcMainInvokeEvent;
+    const registry = new RendererRoleRegistry();
+    registry.register(contents, "application", createApplicationEntryPolicy(entry, true));
+    const handlers = createCredentialHandlers(registry, () => store);
+    const call = async (operation: CredentialOperation, payload: unknown) => {
+      const result = await handlers.handler(operation)(event, { id: "123e4567-e89b-42d3-a456-426614174000",
+        protocolVersion: 1, type: CREDENTIAL_OPERATIONS[operation], payload });
+      expect(parseCredentialResult(result, operation)).toEqual(result);
+      expect(JSON.stringify(result).includes(FAKE) || JSON.stringify(result).includes(REPLACEMENT) || JSON.stringify(result).includes(SENTINEL)).toBe(false);
+      return result;
+    };
+    const saved = await call("store", { secret: FAKE });
+    if (!saved.ok) throw new Error("Fake IPC credential save failed");
+    const credentialId = saved.credentialId;
+    const before = await fs.readFile(filename(credentialId));
+    expect(await call("status", { credentialId })).toMatchObject({ status: { state: "available", persistence: "remembered" } });
+    protection.isAsyncEncryptionAvailable.mockResolvedValue(false);
+    expect(await call("status", { credentialId })).toMatchObject({ status: { state: "unavailable", persistence: "remembered" } });
+    expect(await call("replace", { credentialId, secret: REPLACEMENT })).toMatchObject({ error: { code: "SECRET_UNAVAILABLE" } });
+    expect(await fs.readFile(filename(credentialId))).toEqual(before);
+    protection.isAsyncEncryptionAvailable.mockResolvedValue(true);
+    protection.encryptStringAsync.mockRejectedValueOnce(new Error(SENTINEL));
+    expect(await call("replace", { credentialId, secret: REPLACEMENT })).toMatchObject({ error: { code: "SECRET_UNAVAILABLE" } });
+    expect(await fs.readFile(filename(credentialId))).toEqual(before);
+    protection.decryptStringAsync.mockRejectedValueOnce(new Error(SENTINEL));
+    expect(await call("status", { credentialId })).toMatchObject({ status: { state: "unavailable" } });
+    expect(await fs.readFile(filename(credentialId))).toEqual(before);
+    expect(await call("status", { credentialId })).toMatchObject({ status: { state: "available" } });
+    await expectUse(store, credentialId, FAKE);
+    expect(await call("replace", { credentialId, secret: REPLACEMENT })).toMatchObject({ ok: true, persistence: "remembered" });
+    store = createProtectedSecretStore(root, protection);
+    expect(await call("status", { credentialId })).toMatchObject({ status: { state: "available", persistence: "remembered" } });
+    await expectUse(store, credentialId, REPLACEMENT);
+    expect(await call("forget", { credentialId })).toMatchObject({ ok: true });
+    expect(await call("status", { credentialId })).toMatchObject({ status: { state: "missing", persistence: "remembered" } });
+    expect(await call("replace", { credentialId, secret: REPLACEMENT })).toMatchObject({ error: { code: "CREDENTIAL_MISSING" } });
+  });
+
   it("persists only ciphertext in its profile and survives reconstruction", async () => {
     const id = await save();
     const text = await fs.readFile(filename(id), "utf8");

@@ -14,6 +14,11 @@ import {
 import productIdentity from "../../product-identity.json";
 import packageMetadata from "../../package.json";
 import { APPLICATION_CSP, APPLICATION_ENTRY } from "../../src/dungeonJockey/main/applicationProtocol";
+import type { CredentialId } from "../../src/dungeonJockey/domain/ids/CredentialId";
+import type { CredentialResult } from "../../src/dungeonJockey/contracts/credentials";
+
+const FAKE_CREDENTIAL = "fake-packaged-credential-initial";
+const FAKE_REPLACEMENT = "fake-packaged-credential-replacement";
 
 type ProbeFacts = {
   pcmFrameCount: number;
@@ -105,6 +110,14 @@ test("packaged app captures non-silent PCM from a loopback browser fixture", asy
   const observedWindows = new Set<Page>();
   let application: ElectronApplication | undefined;
   let cleanExitCode: number | null = null;
+  let credentialMaterialLogged = false;
+  const safeDiagnostic = (text: string) => {
+    for (const fake of [FAKE_CREDENTIAL, FAKE_REPLACEMENT]) {
+      if (text.includes(fake)) credentialMaterialLogged = true;
+      text = text.split(fake).join("[redacted fake credential]");
+    }
+    return text;
+  };
 
   const launch = async () => {
     const launchedApplication = await electron.launch({
@@ -117,10 +130,12 @@ test("packaged app captures non-silent PCM from a loopback browser fixture", asy
     });
     application = launchedApplication;
     launchedApplication.process().stderr?.on("data", (chunk) => {
-      processErrors.push(String(chunk));
+      processErrors.push(safeDiagnostic(String(chunk)));
     });
+    launchedApplication.process().stdout?.on("data", (chunk) => { safeDiagnostic(String(chunk)); });
     launchedApplication.on("console", (message) => {
-      if (message.type() === "error") mainConsoleErrors.push(message.text());
+      const text = safeDiagnostic(message.text());
+      if (message.type() === "error") mainConsoleErrors.push(text);
     });
     const observeWindow = (page: Page) => {
       if (observedWindows.has(page)) return;
@@ -133,11 +148,12 @@ test("packaged app captures non-silent PCM from a loopback browser fixture", asy
         rendererErrors.push(`${page.url()}: renderer crashed`),
       );
       page.on("pageerror", (error) =>
-        rendererErrors.push(`${page.url()}: ${error.message}`),
+        rendererErrors.push(safeDiagnostic(`${page.url()}: ${error.message}`)),
       );
       page.on("console", (message) => {
+        const text = safeDiagnostic(message.text());
         if (message.type() === "error") {
-          rendererConsoleErrors.push(`${page.url()}: ${message.text()}`);
+          rendererConsoleErrors.push(`${page.url()}: ${text}`);
         }
       });
     };
@@ -237,7 +253,7 @@ test("packaged app captures non-silent PCM from a loopback browser fixture", asy
       });
       expect(
         await mainWindow.evaluate(() => Object.keys(window.dungeonJockey)),
-      ).toEqual(["getVersion"]);
+      ).toEqual(["getVersion", "storeCredential", "getCredentialStatus", "replaceCredential", "forgetCredential"]);
       expect(await mainWindow.evaluate(() => "version" in window.kenku)).toBe(
         false,
       );
@@ -250,6 +266,16 @@ test("packaged app captures non-silent PCM from a loopback browser fixture", asy
         .getByRole("button", { name: "Done", exact: true })
         .click();
     }
+
+    // Only the opaque reference is retained by the harness across app restart.
+    const savedCredential = await credentialStep(mainWindow, "store");
+    expect(savedCredential.valid).toBe(true);
+    const credentialId = savedCredential.credentialId;
+    const initialCredential = await credentialStep(mainWindow, "status", credentialId);
+    expect(initialCredential.valid).toBe(true);
+    expect(initialCredential.state).toBe("available");
+    expect((await credentialStep(mainWindow, "replace", credentialId)).valid).toBe(true);
+    expect(await credentialStorageIsClean(mainWindow)).toBe(true);
 
     await mainWindow.getByRole("button", { name: "add tab" }).click();
     const urlInput = mainWindow.getByRole("textbox", { name: "enter a URL" });
@@ -348,6 +374,10 @@ test("packaged app captures non-silent PCM from a loopback browser fixture", asy
     await expect(mainWindow.getByRole("button", { name: "add tab" })).toBeVisible();
     await expect(mainWindow.getByText(fixtureTitle, { exact: true })).toBeVisible();
     await expect.poll(() => readFixturePreferences(mainWindow)).toEqual(expectedPreferences);
+    const reloadedCredential = await credentialStep(mainWindow, "status", credentialId);
+    expect(reloadedCredential.valid).toBe(true);
+    expect(reloadedCredential.state).toBe("available");
+    expect(await credentialStorageIsClean(mainWindow)).toBe(true);
     await closeApplication();
     const restartedApplication = await launch();
     const restartedWindow = await findApplicationWindow(restartedApplication);
@@ -360,6 +390,16 @@ test("packaged app captures non-silent PCM from a loopback browser fixture", asy
     expect(await restartedWindow.evaluate(() => window.dungeonJockey.getVersion())).toMatchObject({
       ok: true, version: packageMetadata.version,
     });
+    const restoredCredential = await credentialStep(restartedWindow, "status", credentialId);
+    expect(restoredCredential.valid).toBe(true);
+    expect(restoredCredential.state).toBe("available");
+    expect(await credentialStorageIsClean(restartedWindow)).toBe(true);
+    expect((await credentialStep(restartedWindow, "forget", credentialId)).valid).toBe(true);
+    const missingCredential = await credentialStep(restartedWindow, "status", credentialId);
+    expect(missingCredential.valid).toBe(true);
+    expect(missingCredential.state).toBe("missing");
+    expect(await credentialStorageIsClean(restartedWindow)).toBe(true);
+    expect(credentialMaterialLogged).toBe(false);
     expect(rendererErrors).toEqual([]);
     expect(processErrors.join("")).not.toMatch(/fatal|uncaught|unhandled/i);
     const applicationCspErrors = rendererConsoleErrors.filter((message) =>
@@ -380,7 +420,7 @@ test("packaged app captures non-silent PCM from a loopback browser fixture", asy
         mainConsoleErrors,
         rendererErrors,
         rendererConsoleErrors,
-        failure: error instanceof Error ? error.stack : String(error),
+        failure: safeDiagnostic(error instanceof Error ? error.stack || error.message : String(error)),
       }, null, 2),
     );
     throw error;
@@ -393,9 +433,42 @@ test("packaged app captures non-silent PCM from a loopback browser fixture", asy
   }
 
   expect(cleanExitCode).toBe(0);
+  expect(credentialMaterialLogged).toBe(false);
   expect(fs.existsSync(profilePath)).toBe(true);
   console.log(`Packaged application clean exit verified: ${cleanExitCode}`);
 });
+
+async function credentialStep(page: Page, operation: "store" | "status" | "replace" | "forget", credentialId?: CredentialId) {
+  return page.evaluate(async ({ operation, credentialId, fake, replacement }) => {
+    const bridge = window.dungeonJockey;
+    const reply: CredentialResult = operation === "store" ? await bridge.storeCredential(fake)
+      : operation === "status" ? await bridge.getCredentialStatus(credentialId)
+      : operation === "replace" ? await bridge.replaceCredential(credentialId, replacement)
+      : await bridge.forgetCredential(credentialId);
+    const text = JSON.stringify(reply);
+    const uuid = (value: unknown): value is CredentialId => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
+    const expectedType = { store: "application.storeCredential", status: "application.getCredentialStatus", replace: "application.replaceCredential", forget: "application.forgetCredential" }[operation];
+    const keys = ["ok", "id", "type", "protocolVersion", "credentialId", operation === "status" ? "status" : "persistence"].sort();
+    const status = reply.ok && "status" in reply ? reply.status : undefined;
+    const state = status && ["available", "missing", "unavailable"].includes(status.state) ? status.state : null;
+    const valid = reply.ok && uuid(reply.id) && uuid(reply.credentialId) && reply.protocolVersion === 1 && reply.type === expectedType &&
+      JSON.stringify(Object.keys(reply).sort()) === JSON.stringify(keys) && !text.includes(fake) && !text.includes(replacement) &&
+      (operation === "store" || reply.credentialId === credentialId) &&
+      (operation === "status" ? !!status && state !== null && status.persistence === "remembered" &&
+        JSON.stringify(Object.keys(status).sort()) === JSON.stringify(["persistence", "state"])
+        : "persistence" in reply && reply.persistence === "remembered");
+    // Failed assertions return only scalar facts, never dependency/native errors.
+    return { valid, state, credentialId: reply.ok && uuid(reply.credentialId) ? reply.credentialId : null };
+  }, { operation, credentialId, fake: FAKE_CREDENTIAL, replacement: FAKE_REPLACEMENT });
+}
+
+async function credentialStorageIsClean(page: Page) {
+  return page.evaluate(({ fake, replacement }) => {
+    // Includes the complete persisted Redux root without returning any of it.
+    return [localStorage, sessionStorage].every((storage) => Object.keys(storage).every((key) =>
+      [key, storage.getItem(key) || ""].every((text) => !text.includes(fake) && !text.includes(replacement))));
+  }, { fake: FAKE_CREDENTIAL, replacement: FAKE_REPLACEMENT });
+}
 
 async function readFixturePreferences(page: Page) {
   return page.evaluate(() => {

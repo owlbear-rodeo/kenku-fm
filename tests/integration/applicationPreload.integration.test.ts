@@ -3,6 +3,7 @@ import {
   parseVersionRequest,
   VERSION_CHANNEL,
 } from "../../src/dungeonJockey/contracts/version";
+import { CREDENTIAL_CHANNELS, CREDENTIAL_OPERATIONS, CredentialOperation, parseCredentialRequest } from "../../src/dungeonJockey/contracts/credentials";
 
 const electron = vi.hoisted(() => ({
   contextBridge: { exposeInMainWorld: vi.fn() },
@@ -17,7 +18,7 @@ afterEach(() => {
 });
 
 describe("application preload", () => {
-  it("exposes one async operation, owns request IDs and channels, and retains platform", async () => {
+  it("exposes only named operations, owns request IDs and channels, and retains platform", async () => {
     vi.stubGlobal("process", { ...process, isMainFrame: true });
     const response = { ok: true, version: "1.5.5" };
     electron.ipcRenderer.invoke.mockResolvedValue(response);
@@ -28,7 +29,7 @@ describe("application preload", () => {
       ),
     );
     const owned = exposed.get("dungeonJockey");
-    expect(Object.keys(owned)).toEqual(["getVersion"]);
+    expect(Object.keys(owned)).toEqual(["getVersion", "storeCredential", "getCredentialStatus", "replaceCredential", "forgetCredential"]);
     expect(
       await owned.getVersion("attacker-channel", { id: "attacker-id" }),
     ).toBe(response);
@@ -40,6 +41,22 @@ describe("application preload", () => {
       expect(parseVersionRequest(request)).toEqual(request);
     }
     expect(calls[0][1].id).not.toBe(calls[1][1].id);
+    const credentialId = "00000000-0000-4000-8000-000000000001";
+    const secret = "fake-preload-credential";
+    await owned.storeCredential(secret, "attacker-channel");
+    await owned.getCredentialStatus(credentialId, "attacker-channel");
+    await owned.replaceCredential(credentialId, secret, "attacker-channel");
+    await owned.forgetCredential(credentialId, "attacker-channel");
+    const operations = Object.keys(CREDENTIAL_CHANNELS) as CredentialOperation[];
+    for (const [index, operation] of operations.entries()) {
+      const [channel, request] = calls[index + 2];
+      expect(channel).toBe(CREDENTIAL_CHANNELS[operation]);
+      expect(parseCredentialRequest(request, operation)).toEqual({
+        id: request.id, type: CREDENTIAL_OPERATIONS[operation], protocolVersion: 1,
+        payload: operation === "store" ? { secret } : operation === "replace" ? { credentialId, secret } : { credentialId },
+      });
+    }
+    expect(new Set(calls.map(([, request]) => request.id)).size).toBe(6);
     expect(exposed.get("kenku").platform).toBe("win32");
     expect(exposed.get("kenku")).not.toHaveProperty("version");
     expect(electron.ipcRenderer.sendSync).toHaveBeenCalledExactlyOnceWith(

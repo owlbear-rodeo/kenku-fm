@@ -3,11 +3,12 @@ import { contextBridge, ipcRenderer, IpcRendererEvent } from "electron";
 import { BrowserViewManagerPreload } from "./preload/managers/BrowserViewManagerPreload";
 import { createRequestId } from "./dungeonJockey/domain/ids/ids";
 import {
-  ApplicationBridge,
   VERSION_CHANNEL,
   VERSION_OPERATION,
   VersionRequest,
 } from "./dungeonJockey/contracts/version";
+import type { ApplicationBridge } from "./dungeonJockey/contracts/applicationBridge";
+import { CREDENTIAL_CHANNELS, CREDENTIAL_OPERATIONS } from "./dungeonJockey/contracts/credentials";
 
 const viewManager = new BrowserViewManagerPreload();
 
@@ -216,6 +217,22 @@ if (process.isMainFrame) {
       };
       return ipcRenderer.invoke(VERSION_CHANNEL, request);
     },
+    storeCredential: (secret) => ipcRenderer.invoke(CREDENTIAL_CHANNELS.store, {
+      id: createRequestId({ createUuid: () => crypto.randomUUID() }),
+      type: CREDENTIAL_OPERATIONS.store, protocolVersion: 1, payload: { secret },
+    }),
+    getCredentialStatus: (credentialId) => ipcRenderer.invoke(CREDENTIAL_CHANNELS.status, {
+      id: createRequestId({ createUuid: () => crypto.randomUUID() }),
+      type: CREDENTIAL_OPERATIONS.status, protocolVersion: 1, payload: { credentialId },
+    }),
+    replaceCredential: (credentialId, secret) => ipcRenderer.invoke(CREDENTIAL_CHANNELS.replace, {
+      id: createRequestId({ createUuid: () => crypto.randomUUID() }),
+      type: CREDENTIAL_OPERATIONS.replace, protocolVersion: 1, payload: { credentialId, secret },
+    }),
+    forgetCredential: (credentialId) => ipcRenderer.invoke(CREDENTIAL_CHANNELS.forget, {
+      id: createRequestId({ createUuid: () => crypto.randomUUID() }),
+      type: CREDENTIAL_OPERATIONS.forget, protocolVersion: 1, payload: { credentialId },
+    }),
   };
   contextBridge.exposeInMainWorld("dungeonJockey", applicationBridge);
 }

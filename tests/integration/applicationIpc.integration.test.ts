@@ -270,7 +270,7 @@ describe("application IPC lifetime and navigation", () => {
       removeHandler: vi.fn((channel: string) => handlers.delete(channel)),
     };
     const provider = vi.fn(() => "1.5.5");
-    const owned = createApplicationIpc(ipc as unknown as IpcMain, provider);
+    const owned = createApplicationIpc(ipc as unknown as IpcMain, provider, () => { throw new Error("Unused credential dependency"); });
     const contents = new Contents();
     const external = vi.fn();
     const unbind = owned.bindApplicationWindow(
@@ -294,7 +294,7 @@ describe("application IPC lifetime and navigation", () => {
     contents.commit();
     expect(call(stale)).toMatchObject({ error: { code: "IPC_FORBIDDEN" } });
     expect(call()).toMatchObject({ ok: true });
-    expect(ipc.handle).toHaveBeenCalledTimes(1);
+    expect(ipc.handle).toHaveBeenCalledTimes(5);
     owned.dispose();
   });
 
@@ -407,7 +407,7 @@ describe("application IPC lifetime and navigation", () => {
     owned.bindApplicationWindow(replacement.asElectron(), policy, external);
     replacement.commit();
     expect(call(replacement.event())).toMatchObject({ ok: true });
-    expect(ipc.handle).toHaveBeenCalledTimes(1);
+    expect(ipc.handle).toHaveBeenCalledTimes(5);
     owned.dispose();
     expect(replacement.eventNames()).toEqual([]);
   });
@@ -424,7 +424,9 @@ describe("application IPC lifetime and navigation", () => {
     const retainedHandler = handlers.get(VERSION_CHANNEL);
     owned.dispose();
     owned.dispose();
-    expect(ipc.removeHandler).toHaveBeenCalledExactlyOnceWith(VERSION_CHANNEL);
+    expect(ipc.removeHandler).toHaveBeenCalledWith(VERSION_CHANNEL);
+    expect(ipc.removeHandler).toHaveBeenCalledTimes(5);
+    expect(handlers.size).toBe(0);
     expect(contents.eventNames()).toEqual([]);
     expect(retainedHandler(contents.event(), request())).toMatchObject({
       ok: false,

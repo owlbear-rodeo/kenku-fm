@@ -11,6 +11,8 @@ import {
   isExternalApplicationLink,
 } from "./applicationEntryPolicy";
 import { RendererRoleRegistry } from "./RendererRoleRegistry";
+import { CREDENTIAL_CHANNELS, CredentialOperation } from "../contracts/credentials";
+import { createCredentialHandlers, CredentialOperations } from "./credentialIpc";
 
 const VERSION_ROLES: readonly string[] = Object.freeze(["application"]);
 
@@ -58,12 +60,16 @@ export function createVersionHandler(
   };
 }
 
-/** One main-lifetime handler, independent of renderer compatibility sessions. */
-export function createApplicationIpc(ipc: IpcMain, getVersion: () => string) {
+/** Main-lifetime handlers, independent of renderer compatibility sessions. */
+export function createApplicationIpc(ipc: IpcMain, getVersion: () => string, getStore: () => CredentialOperations) {
   const registry = new RendererRoleRegistry();
   const windows = new Map<WebContents, () => void>();
   let disposed = false;
   ipc.handle(VERSION_CHANNEL, createVersionHandler(registry, getVersion));
+  const credentials = createCredentialHandlers(registry, getStore);
+  for (const operation of Object.keys(CREDENTIAL_CHANNELS) as CredentialOperation[]) {
+    ipc.handle(CREDENTIAL_CHANNELS[operation], credentials.handler(operation));
+  }
 
   return {
     bindApplicationWindow(
@@ -142,9 +148,11 @@ export function createApplicationIpc(ipc: IpcMain, getVersion: () => string) {
     dispose(): void {
       if (disposed) return;
       disposed = true;
+      credentials.dispose();
       for (const unbind of windows.values()) unbind();
       registry.clear();
       ipc.removeHandler(VERSION_CHANNEL);
+      for (const channel of Object.values(CREDENTIAL_CHANNELS)) ipc.removeHandler(channel);
     },
   };
 }

@@ -18,6 +18,7 @@ import { configureApplicationMenu } from "./menu";
 import { createDungeonJockeyCompositionRoot } from "./dungeonJockey/main/compositionRoot";
 import { selectStartupRoute } from "./dungeonJockey/main/startupRoute";
 import { createApplicationIpc } from "./dungeonJockey/main/applicationIpc";
+import { getApplicationSecretStore } from "./dungeonJockey/main/secretStore";
 import { createApplicationEntryPolicy } from "./dungeonJockey/main/applicationEntryPolicy";
 import {
   APPLICATION_ENTRY,
@@ -166,7 +167,8 @@ if (!hasSingleInstanceLock) {
         path.join(app.getAppPath(), ".webpack", "renderer", "main_window"),
       );
     }
-    applicationIpc = createApplicationIpc(ipcMain, () => app.getVersion());
+    applicationIpc = createApplicationIpc(ipcMain, () => app.getVersion(),
+      () => getApplicationSecretStore(applicationProfile.userDataPath));
     window = createWindow();
 
     spoofUserAgent();

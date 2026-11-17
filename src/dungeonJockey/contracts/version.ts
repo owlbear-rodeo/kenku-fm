@@ -22,10 +22,6 @@ export type VersionResult =
       error: SerializedApplicationError;
     }>;
 
-export interface ApplicationBridge {
-  getVersion(): Promise<VersionResult>;
-}
-
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return (
     value !== null &&

@@ -1,15 +1,18 @@
 import type { BrowserWindow, IpcMainInvokeEvent } from "electron";
 import path from "path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { createVersionHandler } from "../../src/dungeonJockey/main/applicationIpc";
 import {
   VERSION_CHANNEL,
   VERSION_OPERATION,
 } from "../../src/dungeonJockey/contracts/version";
+import { CREDENTIAL_CHANNELS, CREDENTIAL_OPERATIONS, CredentialResult } from "../../src/dungeonJockey/contracts/credentials";
+import { createSessionSecretStore } from "../../src/dungeonJockey/adapters/secrets/sessionSecretStore";
+
+type IpcHandler = (event: IpcMainInvokeEvent, ...args: unknown[]) => unknown;
 
 const state = vi.hoisted(() => ({
   windows: [] as BrowserWindow[],
-  handlers: new Map<string, ReturnType<typeof createVersionHandler>>(),
+  handlers: new Map<string, IpcHandler>(),
   legacyConstruct: vi.fn(),
   legacyDestroy: vi.fn(),
   rootConstruct: vi.fn(),
@@ -18,7 +21,9 @@ const state = vi.hoisted(() => ({
   order: [] as string[],
   protocolHandle: vi.fn(),
   registerSchemes: vi.fn(),
+  getStore: vi.fn(),
 }));
+vi.mock("../../src/dungeonJockey/main/secretStore", () => ({ getApplicationSecretStore: state.getStore }));
 
 vi.mock("electron", async () => {
   const { EventEmitter } = await import("events");
@@ -82,7 +87,7 @@ vi.mock("electron", async () => {
       on: vi.fn(),
       handle: (
         channel: string,
-        handler: ReturnType<typeof createVersionHandler>,
+        handler: IpcHandler,
       ) => {
         if (state.handlers.has(channel)) throw new Error("duplicate handler");
         state.handlers.set(channel, handler);
@@ -94,7 +99,7 @@ vi.mock("electron", async () => {
 vi.mock("../../src/applicationProfile", () => ({
   configureApplicationProfile: () => ({
     mode: "test",
-    userDataPath: "test-profile",
+    userDataPath: path.resolve("test-profile"),
   }),
 }));
 vi.mock("../../src/menu", () => ({ configureApplicationMenu: vi.fn() }));
@@ -134,6 +139,8 @@ beforeEach(() => {
   state.order.length = 0;
   state.registerSchemes.mockImplementation(() => state.order.push("scheme"));
   state.protocolHandle.mockImplementation(() => state.order.push("handler"));
+  const store = createSessionSecretStore();
+  state.getStore.mockReturnValue(store);
   vi.stubGlobal(
     "MAIN_WINDOW_WEBPACK_ENTRY",
     "http://localhost:3000/main_window",
@@ -197,9 +204,21 @@ describe("application startup IPC wiring", () => {
           },
         );
       expect(read()).toMatchObject({ ok: true, version: "1.5.5" });
+      expect(state.getStore).not.toHaveBeenCalled();
+      const credentialHandler = state.handlers.get(CREDENTIAL_CHANNELS.store);
+      const saved = await credentialHandler({ sender: window.webContents, senderFrame: window.webContents.mainFrame } as IpcMainInvokeEvent,
+        { id: "123e4567-e89b-42d3-a456-426614174000", type: CREDENTIAL_OPERATIONS.store, protocolVersion: 1, payload: { secret: "fake-startup-credential" } }) as CredentialResult<"store">;
+      expect(state.getStore).toHaveBeenCalledExactlyOnceWith(path.resolve("test-profile"));
+      if (!saved.ok) throw new Error("Fake credential save failed");
       window.loadURL(entry);
       expect(state.handlers.get(VERSION_CHANNEL)).toBe(handler);
       expect(read()).toMatchObject({ ok: true, version: "1.5.5" });
+      expect(state.handlers.get(CREDENTIAL_CHANNELS.store)).toBe(credentialHandler);
+      expect(await state.handlers.get(CREDENTIAL_CHANNELS.status)({ sender: window.webContents, senderFrame: window.webContents.mainFrame } as IpcMainInvokeEvent,
+        { id: "123e4567-e89b-42d3-a456-426614174000", type: CREDENTIAL_OPERATIONS.status, protocolVersion: 1, payload: { credentialId: saved.credentialId } })).toMatchObject({
+          ok: true, credentialId: saved.credentialId, status: { state: "available", persistence: "session-only" },
+        });
+      expect(state.getStore).toHaveBeenCalledTimes(2);
       if (route === "legacy-kenku") {
         expect(state.rootConstruct).not.toHaveBeenCalled();
         expect(state.legacyDestroy).toHaveBeenCalledTimes(2);
@@ -215,6 +234,7 @@ describe("application startup IPC wiring", () => {
       const { app } = await import("electron");
       app.emit("will-quit");
       expect(state.handlers.has(VERSION_CHANNEL)).toBe(false);
+      for (const channel of Object.values(CREDENTIAL_CHANNELS)) expect(state.handlers.has(channel)).toBe(false);
     },
   );
 });

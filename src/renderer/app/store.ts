@@ -21,6 +21,7 @@ import {
   PersistedState,
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
+import { sanitizedStorage } from "./sanitizedStorage";
 
 const rootReducer = combineReducers({
   connection: connectionReducer,
@@ -75,8 +76,8 @@ const migrations: MigrationManifest = {
 
 const persistConfig = {
   key: "root",
-  version: 4,
-  storage,
+  version: 5,
+  storage: sanitizedStorage(storage),
   whitelist: ["bookmarks", "settings"],
   migrate: createMigrate(migrations, { debug: false }),
 };

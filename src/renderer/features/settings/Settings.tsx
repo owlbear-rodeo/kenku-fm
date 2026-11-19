@@ -22,9 +22,8 @@ import FormHelperText from "@mui/material/FormHelperText";
 
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
-import { setStatus } from "../connection/connectionSlice";
+import { DiscordSettings } from "./DiscordSettings";
 import {
-  setDiscordToken,
   setExternalInputsEnabled,
   setMultipleInputsEnabled,
   setMultipleOutputsEnabled,
@@ -43,7 +42,6 @@ type SettingsProps = {
 };
 
 export function Settings({ open, onClose }: SettingsProps) {
-  const connection = useSelector((state: RootState) => state.connection);
   const settings = useSelector((state: RootState) => state.settings);
   const dispatch = useDispatch();
   const [version, setVersion] = useState<string | null>(null);
@@ -60,85 +58,6 @@ export function Settings({ open, onClose }: SettingsProps) {
       active = false;
     };
   }, []);
-
-  function handleDiscordTokenChange(e: React.ChangeEvent<HTMLInputElement>) {
-    dispatch(setDiscordToken(e.target.value));
-  }
-
-  function handleDiscordConnect() {
-    if (connection.status === "disconnected") {
-      dispatch(setStatus("connecting"));
-      window.kenku.connect(settings.discordToken);
-    } else {
-      window.kenku.disconnect();
-    }
-  }
-
-  useEffect(() => {
-    if (settings.discordToken) {
-      dispatch(setStatus("connecting"));
-      window.kenku.connect(settings.discordToken);
-    }
-
-    return () => {
-      window.kenku.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    window.kenku.on("DISCORD_READY", () => {
-      dispatch(setStatus("ready"));
-    });
-    window.kenku.on("DISCORD_DISCONNECTED", () => {
-      dispatch(setStatus("disconnected"));
-    });
-
-    return () => {
-      window.kenku.removeAllListeners("DISCORD_READY");
-      window.kenku.removeAllListeners("DISCORD_DISCONNECTED");
-    };
-  }, [dispatch]);
-
-  const discordSettings = (
-    <Stack spacing={1}>
-      <TextField
-        autoFocus
-        margin="dense"
-        size="small"
-        id="token"
-        label="Token"
-        type="password"
-        fullWidth
-        variant="standard"
-        autoComplete="off"
-        InputLabelProps={{
-          shrink: true,
-        }}
-        value={settings.discordToken}
-        onChange={handleDiscordTokenChange}
-        disabled={connection.status !== "disconnected"}
-        helperText="Enter your bot's token"
-      />
-      <Button
-        disabled={connection.status === "connecting" || !settings.discordToken}
-        onClick={handleDiscordConnect}
-        fullWidth
-        variant="outlined"
-        size="small"
-      >
-        {connection.status === "connecting" ? (
-          <CircularProgress size={24} />
-        ) : connection.status === "ready" ? (
-          "Disconnect"
-        ) : (
-          "Connect"
-        )}
-      </Button>
-      <Typography variant="caption" textAlign="center" py={2}>
-        Use a Discord bot token created and controlled by you.
-      </Typography>
-    </Stack>
-  );
 
   function handleRemoteToggle() {
     const enabled = !settings.remoteEnabled;
@@ -358,7 +277,7 @@ export function Settings({ open, onClose }: SettingsProps) {
       </DialogTitle>
       <DialogContent>
         <DialogContentText>Discord</DialogContentText>
-        {discordSettings}
+        {open && <DiscordSettings />}
         <Divider sx={{ mb: 2 }} />
         <DialogContentText>Remote</DialogContentText>
         {remoteSettings}

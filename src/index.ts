@@ -19,6 +19,7 @@ import { createDungeonJockeyCompositionRoot } from "./dungeonJockey/main/composi
 import { selectStartupRoute } from "./dungeonJockey/main/startupRoute";
 import { createApplicationIpc } from "./dungeonJockey/main/applicationIpc";
 import { getApplicationSecretStore } from "./dungeonJockey/main/secretStore";
+import { createDiscordServices } from "./dungeonJockey/main/discordServices";
 import { createApplicationEntryPolicy } from "./dungeonJockey/main/applicationEntryPolicy";
 import {
   APPLICATION_ENTRY,
@@ -39,6 +40,7 @@ console.log(
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 let window: BrowserWindow | null = null;
 let applicationIpc: ReturnType<typeof createApplicationIpc>;
+let discord: ReturnType<typeof createDiscordServices>;
 const applicationEntry = app.isPackaged
   ? APPLICATION_ENTRY
   : MAIN_WINDOW_WEBPACK_ENTRY;
@@ -92,14 +94,14 @@ const createWindow = (): BrowserWindow => {
 
   if (startupRoute === "legacy-kenku") {
     // Temporary unpackaged-development recovery route for inherited behavior.
-    let legacySession = new SessionManager(mainWindow);
+    let legacySession = new SessionManager(mainWindow, discord.output.audioPlayer);
     refreshVisibleRendererSession = () => {
       legacySession.destroy();
-      legacySession = new SessionManager(mainWindow);
+      legacySession = new SessionManager(mainWindow, discord.output.audioPlayer);
     };
     destroySession = () => legacySession.destroy();
   } else {
-    const dungeonJockeyRoot = createDungeonJockeyCompositionRoot(mainWindow);
+    const dungeonJockeyRoot = createDungeonJockeyCompositionRoot(mainWindow, discord.output.audioPlayer);
     refreshVisibleRendererSession = () =>
       dungeonJockeyRoot.refreshVisibleRendererCompatibilitySession();
     destroySession = () => dungeonJockeyRoot.dispose();
@@ -167,8 +169,10 @@ if (!hasSingleInstanceLock) {
         path.join(app.getAppPath(), ".webpack", "renderer", "main_window"),
       );
     }
+    discord = createDiscordServices(applicationProfile.userDataPath);
     applicationIpc = createApplicationIpc(ipcMain, () => app.getVersion(),
-      () => getApplicationSecretStore(applicationProfile.userDataPath));
+      () => getApplicationSecretStore(applicationProfile.userDataPath), () => discord);
+    void discord.configuration.startup();
     window = createWindow();
 
     spoofUserAgent();
@@ -210,7 +214,7 @@ if (!hasSingleInstanceLock) {
     }
   });
 
-  app.on("will-quit", () => applicationIpc?.dispose());
+  app.on("will-quit", () => { applicationIpc?.dispose(); discord?.configuration.dispose(); });
 
   ipcMain.on("GET_PLATFORM", (event) => {
     event.returnValue = os.platform();

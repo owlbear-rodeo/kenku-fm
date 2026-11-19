@@ -15,6 +15,7 @@ type OutputListItemProps = {
   voiceChannel: VoiceChannel;
   selected: boolean;
   tick?: boolean;
+  disabled?: boolean;
   onClick: (channelId: string) => void;
 };
 
@@ -22,6 +23,7 @@ export function OutputListItem({
   voiceChannel,
   selected,
   tick,
+  disabled,
   onClick,
 }: OutputListItemProps) {
   return (
@@ -41,6 +43,7 @@ export function OutputListItem({
       }}
     >
       <ListItemButton
+        disabled={disabled}
         selected={selected}
         dense
         onClick={() => onClick(voiceChannel.id)}

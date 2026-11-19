@@ -253,7 +253,7 @@ test("packaged app captures non-silent PCM from a loopback browser fixture", asy
       });
       expect(
         await mainWindow.evaluate(() => Object.keys(window.dungeonJockey)),
-      ).toEqual(["getVersion", "storeCredential", "getCredentialStatus", "replaceCredential", "forgetCredential"]);
+      ).toEqual(["getDiscordConfiguration", "configureDiscord", "forgetDiscord", "getDiscordStatus", "connectDiscord", "disconnectDiscord", "joinDiscordChannel", "leaveDiscordChannel", "getVersion", "storeCredential", "getCredentialStatus", "replaceCredential", "forgetCredential"]);
       expect(await mainWindow.evaluate(() => "version" in window.kenku)).toBe(
         false,
       );
@@ -266,6 +266,33 @@ test("packaged app captures non-silent PCM from a loopback browser fixture", asy
         .getByRole("button", { name: "Done", exact: true })
         .click();
     }
+
+    // Configure/replace with the real Settings UI and native protected storage.
+    // No Connect click: fake credentials must never reach Discord.
+    await mainWindow.getByTestId("SettingsRoundedIcon").click();
+    await expect(mainWindow.getByText(/Missing — remembered/)).toBeVisible();
+    await mainWindow.getByLabel("Token", { exact: true }).fill(FAKE_CREDENTIAL);
+    await mainWindow.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(mainWindow.getByText(/Configured — remembered/)).toBeVisible();
+    await expect(mainWindow.getByLabel("Token", { exact: true })).toHaveValue("");
+    await mainWindow.getByLabel("Token", { exact: true }).fill(FAKE_REPLACEMENT);
+    await mainWindow.getByRole("button", { name: "Replace", exact: true }).click();
+    await expect(mainWindow.getByLabel("Token", { exact: true })).toHaveValue("");
+    expect(await credentialStorageIsClean(mainWindow)).toBe(true);
+    await mainWindow.getByRole("button", { name: "Done", exact: true }).click();
+    await mainWindow.reload();
+    await expect(mainWindow.getByRole("button", { name: "add tab" })).toBeVisible();
+    await mainWindow.getByTestId("SettingsRoundedIcon").click();
+    await expect(mainWindow.getByText(/Configured — remembered/)).toBeVisible();
+    await expect(mainWindow.getByLabel("Token", { exact: true })).toHaveValue("");
+    expect(await mainWindow.evaluate(() => ["connect", "disconnect", "joinChannel", "leaveChannel"].some((key) => key in window.kenku))).toBe(false);
+    expect(await launchedApplication.evaluate(({ ipcMain }) => ["DISCORD_CONNECT", "DISCORD_DISCONNECT", "DISCORD_JOIN_CHANNEL", "DISCORD_LEAVE_CHANNEL"].some((key) => ipcMain.listenerCount(key) > 0))).toBe(false);
+    // Clear the selection before restart so remembered-token startup never logs
+    // in with a fake token. Configured restart/login uses injected clients in
+    // integration tests; the generic native record below survives this restart.
+    await mainWindow.getByRole("button", { name: "Forget", exact: true }).click();
+    await expect(mainWindow.getByText(/Missing — remembered/)).toBeVisible();
+    await mainWindow.getByRole("button", { name: "Done", exact: true }).click();
 
     // Only the opaque reference is retained by the harness across app restart.
     const savedCredential = await credentialStep(mainWindow, "store");
@@ -390,6 +417,8 @@ test("packaged app captures non-silent PCM from a loopback browser fixture", asy
     expect(await restartedWindow.evaluate(() => window.dungeonJockey.getVersion())).toMatchObject({
       ok: true, version: packageMetadata.version,
     });
+    await expect(restartedWindow.getByText(/Missing — remembered/)).toBeVisible();
+    await expect(restartedWindow.getByLabel("Token", { exact: true })).toHaveValue("");
     const restoredCredential = await credentialStep(restartedWindow, "status", credentialId);
     expect(restoredCredential.valid).toBe(true);
     expect(restoredCredential.state).toBe("available");

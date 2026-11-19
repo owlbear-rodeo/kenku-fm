@@ -294,7 +294,7 @@ describe("application IPC lifetime and navigation", () => {
     contents.commit();
     expect(call(stale)).toMatchObject({ error: { code: "IPC_FORBIDDEN" } });
     expect(call()).toMatchObject({ ok: true });
-    expect(ipc.handle).toHaveBeenCalledTimes(5);
+    expect(ipc.handle).toHaveBeenCalledTimes(13);
     owned.dispose();
   });
 
@@ -407,7 +407,7 @@ describe("application IPC lifetime and navigation", () => {
     owned.bindApplicationWindow(replacement.asElectron(), policy, external);
     replacement.commit();
     expect(call(replacement.event())).toMatchObject({ ok: true });
-    expect(ipc.handle).toHaveBeenCalledTimes(5);
+    expect(ipc.handle).toHaveBeenCalledTimes(13);
     owned.dispose();
     expect(replacement.eventNames()).toEqual([]);
   });
@@ -425,7 +425,7 @@ describe("application IPC lifetime and navigation", () => {
     owned.dispose();
     owned.dispose();
     expect(ipc.removeHandler).toHaveBeenCalledWith(VERSION_CHANNEL);
-    expect(ipc.removeHandler).toHaveBeenCalledTimes(5);
+    expect(ipc.removeHandler).toHaveBeenCalledTimes(13);
     expect(handlers.size).toBe(0);
     expect(contents.eventNames()).toEqual([]);
     expect(retainedHandler(contents.event(), request())).toMatchObject({

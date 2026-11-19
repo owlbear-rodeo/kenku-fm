@@ -4,7 +4,6 @@ export type ConnectionStatus = "disconnected" | "connecting" | "ready";
 export type StreamingMode = "lowLatency" | "performance";
 
 export interface SettingsState {
-  discordToken: string;
   urlBarEnabled: boolean;
   remoteEnabled: boolean;
   remoteAddress: string;
@@ -16,7 +15,6 @@ export interface SettingsState {
 }
 
 const initialState: SettingsState = {
-  discordToken: "",
   urlBarEnabled: true,
   remoteEnabled: false,
   remoteAddress: "127.0.0.1",
@@ -31,9 +29,6 @@ export const connectionSlice = createSlice({
   name: "settings",
   initialState,
   reducers: {
-    setDiscordToken: (state, action: PayloadAction<string>) => {
-      state.discordToken = action.payload;
-    },
     setURLBarEnabled: (state, action: PayloadAction<boolean>) => {
       state.urlBarEnabled = action.payload;
     },
@@ -62,7 +57,6 @@ export const connectionSlice = createSlice({
 });
 
 export const {
-  setDiscordToken,
   setURLBarEnabled,
   setRemoteEnabled,
   setRemoteAddress,

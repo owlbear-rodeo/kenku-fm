@@ -8,6 +8,13 @@ import {
 import { CREDENTIAL_CHANNELS, CREDENTIAL_OPERATIONS, CredentialResult } from "../../src/dungeonJockey/contracts/credentials";
 import { createSessionSecretStore } from "../../src/dungeonJockey/adapters/secrets/sessionSecretStore";
 
+vi.mock("../../src/dungeonJockey/main/discordServices", () => ({
+  createDiscordServices: () => {
+    state.discordConstruct();
+    return { output: { audioPlayer: state.audioPlayer }, configuration: { startup: state.discordStartup, dispose: state.discordDispose } };
+  },
+}));
+
 type IpcHandler = (event: IpcMainInvokeEvent, ...args: unknown[]) => unknown;
 
 const state = vi.hoisted(() => ({
@@ -22,6 +29,10 @@ const state = vi.hoisted(() => ({
   protocolHandle: vi.fn(),
   registerSchemes: vi.fn(),
   getStore: vi.fn(),
+  audioPlayer: {},
+  discordConstruct: vi.fn(),
+  discordStartup: vi.fn(),
+  discordDispose: vi.fn(),
 }));
 vi.mock("../../src/dungeonJockey/main/secretStore", () => ({ getApplicationSecretStore: state.getStore }));
 
@@ -113,8 +124,8 @@ vi.mock("../../src/main/userAgent", () => ({
 }));
 vi.mock("../../src/main/managers/SessionManager", () => ({
   SessionManager: class {
-    constructor() {
-      state.legacyConstruct();
+    constructor(window: BrowserWindow, player: unknown) {
+      state.legacyConstruct(window, player);
     }
     destroy() {
       state.legacyDestroy();
@@ -122,8 +133,8 @@ vi.mock("../../src/main/managers/SessionManager", () => ({
   },
 }));
 vi.mock("../../src/dungeonJockey/main/compositionRoot", () => ({
-  createDungeonJockeyCompositionRoot: () => {
-    state.rootConstruct();
+  createDungeonJockeyCompositionRoot: (window: BrowserWindow, player: unknown) => {
+    state.rootConstruct(window, player);
     return {
       refreshVisibleRendererCompatibilitySession: state.rootRefresh,
       dispose: state.rootDispose,
@@ -151,6 +162,7 @@ beforeEach(() => {
 afterEach(async () => {
   const { app } = await import("electron");
   app.emit("will-quit");
+  app.removeAllListeners();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
 });
@@ -219,6 +231,10 @@ describe("application startup IPC wiring", () => {
           ok: true, credentialId: saved.credentialId, status: { state: "available", persistence: "session-only" },
         });
       expect(state.getStore).toHaveBeenCalledTimes(2);
+      expect(state.discordConstruct).toHaveBeenCalledOnce();
+      expect(state.discordStartup).toHaveBeenCalledOnce();
+      expect(state.discordDispose).not.toHaveBeenCalled();
+      expect(route === "legacy-kenku" ? state.legacyConstruct : state.rootConstruct).toHaveBeenCalledWith(window, state.audioPlayer);
       if (route === "legacy-kenku") {
         expect(state.rootConstruct).not.toHaveBeenCalled();
         expect(state.legacyDestroy).toHaveBeenCalledTimes(2);
@@ -233,6 +249,7 @@ describe("application startup IPC wiring", () => {
       });
       const { app } = await import("electron");
       app.emit("will-quit");
+      expect(state.discordDispose).toHaveBeenCalledOnce();
       expect(state.handlers.has(VERSION_CHANNEL)).toBe(false);
       for (const channel of Object.values(CREDENTIAL_CHANNELS)) expect(state.handlers.has(channel)).toBe(false);
     },

@@ -1,173 +1,74 @@
-import { BrowserWindow, ipcMain } from "electron";
-import { ChannelType, Client, Events, GatewayIntentBits } from "discord.js";
-import {
-  createAudioPlayer,
-  getVoiceConnection,
-  joinVoiceChannel,
-  NoSubscriberBehavior,
-} from "@discordjs/voice";
+import { Client, GatewayIntentBits } from "discord.js";
+import { createAudioPlayer, entersState, joinVoiceChannel, NoSubscriberBehavior, VoiceConnectionStatus } from "@discordjs/voice";
+import { DiscordGuild, MAX_DISCORD_CHANNELS, MAX_DISCORD_GUILDS } from "../../dungeonJockey/contracts/discord";
 
-type VoiceChannel = {
-  id: string;
-  name: string;
-  position: number;
-};
+export interface DiscordVoice {
+  ready(signal: AbortSignal): Promise<void>;
+  onFailure(callback: () => void): void;
+  destroy(): void;
+}
+export interface DiscordClient {
+  login(secret: string): Promise<unknown>;
+  catalog(signal: AbortSignal): Promise<DiscordGuild[]>;
+  prepare(guildId: string, channelId: string): Promise<() => DiscordVoice>;
+  onFailure(callback: () => void): void;
+  destroy(): void;
+}
 
-type Guild = {
-  id: string;
-  name: string;
-  icon: string;
-  voiceChannels: VoiceChannel[];
-};
-
+/** Retained SDK/player mechanics only. No Electron, IPC, renderer or token cache. */
 export class DiscordBroadcast {
-  window: BrowserWindow;
-  client?: Client;
-  audioPlayer = createAudioPlayer({
-    behaviors: {
-      noSubscriber: NoSubscriberBehavior.Play,
-      // Set max missed frames to 60 seconds (20ms per frame)
-      maxMissedFrames: 3000,
-    },
+  readonly audioPlayer = createAudioPlayer({
+    behaviors: { noSubscriber: NoSubscriberBehavior.Play, maxMissedFrames: 3000 },
   });
-  constructor(window: BrowserWindow) {
-    this.window = window;
-    ipcMain.on("DISCORD_CONNECT", this._handleConnect);
-    ipcMain.on("DISCORD_DISCONNECT", this._handleDisconnect);
-    ipcMain.on("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
-    ipcMain.on("DISCORD_LEAVE_CHANNEL", this._handleLeaveChannel);
-    this.audioPlayer.on("error", this._handleBroadcastError);
-  }
-
-  destroy() {
-    ipcMain.off("DISCORD_CONNECT", this._handleConnect);
-    ipcMain.off("DISCORD_DISCONNECT", this._handleDisconnect);
-    ipcMain.off("DISCORD_JOIN_CHANNEL", this._handleJoinChannel);
-    ipcMain.off("DISCORD_LEAVE_CHANNEL", this._handleLeaveChannel);
-    this.client?.destroy();
-    this.client = undefined;
-  }
-
-  _handleConnect = async (event: Electron.IpcMainEvent, token: string) => {
-    if (!token) {
-      event.reply("DISCORD_DISCONNECTED");
-      event.reply("ERROR", "Error connecting to bot: Invalid token");
-      return;
-    }
-    if (this.client) {
-      this.client.destroy();
-      this.client = undefined;
-    }
-
-    try {
-      this.client = new Client({
-        intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
-      });
-      this.client.once(Events.ClientReady, async () => {
-        event.reply("DISCORD_READY");
-        event.reply("MESSAGE", "Connected");
-        const rawGuilds = await this.client.guilds.fetch();
-        const guilds: Guild[] = await Promise.all(
-          rawGuilds.map(async (baseGuild) => {
-            const guild = await baseGuild.fetch();
-            const voiceChannels: VoiceChannel[] = [];
-            const channels = await guild.channels.fetch();
-            channels.forEach((channel) => {
-              if (channel && channel.isVoiceBased()) {
-                voiceChannels.push({
-                  id: channel.id,
-                  name: channel.name,
-                  position: channel.rawPosition,
-                });
-              }
-            });
-            return {
-              id: guild.id,
-              name: guild.name,
-              icon: guild.iconURL(),
-              voiceChannels: voiceChannels.sort(
-                (a, b) => a.position - b.position,
-              ),
-            };
-          }),
-        );
-        event.reply("DISCORD_GUILDS", guilds);
-      });
-      this.client.on("error", (err) => {
-        event.reply("DISCORD_DISCONNECTED");
-        event.reply("ERROR", `Error connecting to bot: ${err.message}`);
-      });
-      await this.client.login(token);
-    } catch (err) {
-      event.reply("DISCORD_DISCONNECTED");
-      event.reply("ERROR", `Error connecting to bot: ${err.message}`);
-    }
-  };
-
-  _handleDisconnect = async (event: Electron.IpcMainEvent) => {
-    event.reply("DISCORD_DISCONNECTED");
-    event.reply("DISCORD_GUILDS", []);
-    event.reply("DISCORD_CHANNEL_JOINED", "local");
-    this.client.destroy();
-    this.client = undefined;
-  };
-
-  _handleJoinChannel = async (
-    event: Electron.IpcMainEvent,
-    channelId: string,
-  ) => {
-    if (this.client) {
-      const channel = await this.client.channels.fetch(channelId);
-      if (channel && channel.isVoiceBased() && channel.joinable) {
-        try {
-          const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
+  createClient(): DiscordClient {
+    const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates], rest: { timeout: 10_000, retries: 0 } });
+    let fail = () => {};
+    client.on("error", () => fail());
+    client.on("shardDisconnect", () => fail());
+    return {
+      login: (secret) => client.login(secret),
+      onFailure: (callback) => { fail = callback; },
+      destroy: () => { void client.destroy().catch(() => {}); },
+      async catalog(signal) {
+        const raw = await client.guilds.fetch();
+        const guilds: DiscordGuild[] = [];
+        // Sequential, capped discovery prevents unbounded network fan-out.
+        for (const base of Array.from(raw.values()).slice(0, MAX_DISCORD_GUILDS)) {
+          if (signal.aborted) throw new Error("Discord operation cancelled");
+          const guild = await base.fetch();
+          if (signal.aborted) throw new Error("Discord operation cancelled");
+          const channels = await guild.channels.fetch();
+          guilds.push({ id: guild.id, name: guild.name.slice(0, 100), voiceChannels:
+            Array.from(channels.values()).filter((channel) => channel?.isVoiceBased())
+              .sort((a, b) => a.rawPosition - b.rawPosition).slice(0, MAX_DISCORD_CHANNELS)
+              .map((channel) => ({ id: channel.id, name: channel.name.slice(0, 100) })),
           });
-          connection.subscribe(this.audioPlayer);
-          event.reply("DISCORD_CHANNEL_JOINED", channelId);
-          connection.on("error", (e) => {
-            console.error(e);
-            connection.destroy();
-            event.reply("DISCORD_CHANNEL_LEFT", channelId);
-            event.reply(
-              "ERROR",
-              `Error connecting to voice channel: ${e.message}`,
-            );
-          });
-        } catch (e) {
-          console.error(e);
-          event.reply("DISCORD_CHANNEL_LEFT", channelId);
-          event.reply(
-            "ERROR",
-            `Error connecting to voice channel: ${e.message}`,
-          );
         }
-      }
-    } else {
-      event.reply("DISCORD_CHANNEL_LEFT", channelId);
-      event.reply(
-        "ERROR",
-        `Unable to join voice channel. This channel might be full or this bot might not have permission to join.`,
-      );
-    }
-  };
-
-  _handleLeaveChannel = async (
-    event: Electron.IpcMainEvent,
-    channelId: string,
-  ) => {
-    const channel = await this.client.channels.fetch(channelId);
-    if (channel.type === ChannelType.GuildVoice) {
-      const connection = getVoiceConnection(channel.guild.id);
-      connection.destroy();
-    }
-    event.reply("DISCORD_CHANNEL_LEFT", channelId);
-  };
-
-  _handleBroadcastError = (error: Error) => {
-    this.window.webContents.send("ERROR", error.message);
-    console.error(error);
-  };
+        return guilds;
+      },
+      prepare: async (guildId, channelId) => {
+        const channel = await client.channels.fetch(channelId);
+        if (!channel?.isVoiceBased() || channel.guild.id !== guildId || !channel.joinable) throw new Error("Discord destination unavailable");
+        return () => {
+          const connection = joinVoiceChannel({ channelId, guildId, adapterCreator: channel.guild.voiceAdapterCreator });
+          connection.subscribe(this.audioPlayer);
+          let failure = () => {};
+          const state = (_old: unknown, next: { status: string }) => {
+            if (next.status === VoiceConnectionStatus.Disconnected || next.status === VoiceConnectionStatus.Destroyed) failure();
+          };
+          connection.on("error", () => failure());
+          connection.on("stateChange", state);
+          return {
+            ready: async (signal) => { await entersState(connection, VoiceConnectionStatus.Ready, signal); },
+            onFailure: (callback) => { failure = callback; },
+            destroy: () => {
+              failure = () => {};
+              connection.off("stateChange", state);
+              if (connection.state.status !== VoiceConnectionStatus.Destroyed) connection.destroy();
+            },
+          };
+        };
+      },
+    };
+  }
 }

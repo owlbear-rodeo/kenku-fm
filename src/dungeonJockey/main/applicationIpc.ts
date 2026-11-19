@@ -13,6 +13,8 @@ import {
 import { RendererRoleRegistry } from "./RendererRoleRegistry";
 import { CREDENTIAL_CHANNELS, CredentialOperation } from "../contracts/credentials";
 import { createCredentialHandlers, CredentialOperations } from "./credentialIpc";
+import { DISCORD_CHANNELS, DiscordOperation } from "../contracts/discord";
+import { createDiscordHandlers, DiscordServices } from "./discordIpc";
 
 const VERSION_ROLES: readonly string[] = Object.freeze(["application"]);
 
@@ -61,12 +63,17 @@ export function createVersionHandler(
 }
 
 /** Main-lifetime handlers, independent of renderer compatibility sessions. */
-export function createApplicationIpc(ipc: IpcMain, getVersion: () => string, getStore: () => CredentialOperations) {
+export function createApplicationIpc(ipc: IpcMain, getVersion: () => string, getStore: () => CredentialOperations,
+  getDiscord: () => DiscordServices = () => { throw new Error("Discord unavailable"); }) {
   const registry = new RendererRoleRegistry();
   const windows = new Map<WebContents, () => void>();
   let disposed = false;
   ipc.handle(VERSION_CHANNEL, createVersionHandler(registry, getVersion));
   const credentials = createCredentialHandlers(registry, getStore);
+  const discord = createDiscordHandlers(registry, getDiscord);
+  for (const operation of Object.keys(DISCORD_CHANNELS) as DiscordOperation[]) {
+    ipc.handle(DISCORD_CHANNELS[operation], discord.handler(operation));
+  }
   for (const operation of Object.keys(CREDENTIAL_CHANNELS) as CredentialOperation[]) {
     ipc.handle(CREDENTIAL_CHANNELS[operation], credentials.handler(operation));
   }
@@ -149,10 +156,12 @@ export function createApplicationIpc(ipc: IpcMain, getVersion: () => string, get
       if (disposed) return;
       disposed = true;
       credentials.dispose();
+      discord.dispose();
       for (const unbind of windows.values()) unbind();
       registry.clear();
       ipc.removeHandler(VERSION_CHANNEL);
       for (const channel of Object.values(CREDENTIAL_CHANNELS)) ipc.removeHandler(channel);
+      for (const channel of Object.values(DISCORD_CHANNELS)) ipc.removeHandler(channel);
     },
   };
 }

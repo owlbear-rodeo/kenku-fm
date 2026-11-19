@@ -4,6 +4,7 @@ import {
   VERSION_CHANNEL,
 } from "../../src/dungeonJockey/contracts/version";
 import { CREDENTIAL_CHANNELS, CREDENTIAL_OPERATIONS, CredentialOperation, parseCredentialRequest } from "../../src/dungeonJockey/contracts/credentials";
+import { DISCORD_CHANNELS, DiscordOperation, parseDiscordRequest } from "../../src/dungeonJockey/contracts/discord";
 
 const electron = vi.hoisted(() => ({
   contextBridge: { exposeInMainWorld: vi.fn() },
@@ -29,7 +30,7 @@ describe("application preload", () => {
       ),
     );
     const owned = exposed.get("dungeonJockey");
-    expect(Object.keys(owned)).toEqual(["getVersion", "storeCredential", "getCredentialStatus", "replaceCredential", "forgetCredential"]);
+    expect(Object.keys(owned)).toEqual(["getDiscordConfiguration", "configureDiscord", "forgetDiscord", "getDiscordStatus", "connectDiscord", "disconnectDiscord", "joinDiscordChannel", "leaveDiscordChannel", "getVersion", "storeCredential", "getCredentialStatus", "replaceCredential", "forgetCredential"]);
     expect(
       await owned.getVersion("attacker-channel", { id: "attacker-id" }),
     ).toBe(response);
@@ -57,6 +58,18 @@ describe("application preload", () => {
       });
     }
     expect(new Set(calls.map(([, request]) => request.id)).size).toBe(6);
+    const discordMethods = ["getDiscordConfiguration", "configureDiscord", "forgetDiscord", "getDiscordStatus", "connectDiscord", "disconnectDiscord", "joinDiscordChannel", "leaveDiscordChannel"];
+    const discordOperations = Object.keys(DISCORD_CHANNELS) as DiscordOperation[];
+    for (const [index, operation] of discordOperations.entries()) {
+      await owned[discordMethods[index]](...(operation === "configure" ? [secret] : ["join", "leave"].includes(operation) ? ["1", "11"] : []));
+      const [channel, request] = calls[calls.length - 1];
+      expect(channel).toBe(DISCORD_CHANNELS[operation]);
+      expect(parseDiscordRequest(request, operation)).toMatchObject({ id: request.id });
+    }
+    for (const method of ["connect", "disconnect", "joinChannel", "leaveChannel"]) expect(exposed.get("kenku")).not.toHaveProperty(method);
+    const subscriptions = electron.ipcRenderer.on.mock.calls.length;
+    exposed.get("kenku").on("DISCORD_READY", vi.fn());
+    expect(electron.ipcRenderer.on).toHaveBeenCalledTimes(subscriptions);
     expect(exposed.get("kenku").platform).toBe("win32");
     expect(exposed.get("kenku")).not.toHaveProperty("version");
     expect(electron.ipcRenderer.sendSync).toHaveBeenCalledExactlyOnceWith(

@@ -1,4 +1,5 @@
 import type { BrowserWindow } from "electron";
+import type { AudioPlayer } from "@discordjs/voice";
 
 import { VisibleRendererCompatibilitySession } from "../../ports/lifecycle/LifecycleSubsystems";
 import { SessionManager } from "../../../main/managers/SessionManager";
@@ -13,8 +14,8 @@ export class KenkuRendererCompatibilitySession
   readonly lifetime = "visible-renderer-compatibility" as const;
   private session: SessionManager | null;
 
-  constructor(window: BrowserWindow) {
-    this.session = new SessionManager(window);
+  constructor(window: BrowserWindow, audioPlayer: AudioPlayer) {
+    this.session = new SessionManager(window, audioPlayer);
   }
 
   dispose(): void {

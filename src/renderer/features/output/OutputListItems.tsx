@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 import Collapse from "@mui/material/Collapse";
 import Divider from "@mui/material/Divider";
@@ -14,8 +14,10 @@ import ExpandMore from "@mui/icons-material/ExpandMoreRounded";
 
 import { RootState } from "../../app/store";
 import { useSelector, useDispatch } from "react-redux";
-import { addOutput, removeOutput, setGuilds, setOutput } from "./outputSlice";
+import { addOutput, removeOutput, receiveDiscordSnapshot } from "./outputSlice";
 
+import { setStatus } from "../connection/connectionSlice";
+import type { DiscordResult } from "../../../dungeonJockey/contracts/discord";
 import { OutputListItem } from "./OutputListItem";
 
 export function OutputListItems() {
@@ -29,91 +31,63 @@ export function OutputListItems() {
   const settings = useSelector((state: RootState) => state.settings);
   const dispatch = useDispatch();
 
+  const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState(false);
+  const active = useRef(false);
+  const working = useRef(false);
+  const revision = useRef(0);
+  async function refresh() {
+    const current = revision.current;
+    try {
+      const result = await window.dungeonJockey.getDiscordStatus();
+      if (active.current && current === revision.current && result.ok && result.snapshot) {
+        dispatch(receiveDiscordSnapshot(result.snapshot));
+        dispatch(setStatus(result.snapshot.state));
+        if (result.snapshot.failure !== "none") setFailure(true);
+      }
+    } catch { if (active.current) setFailure(true); }
+  }
   useEffect(() => {
-    window.kenku.on("DISCORD_GUILDS", (args) => {
-      const guilds = args[0];
-      dispatch(setGuilds(guilds));
-    });
-
-    window.kenku.on("DISCORD_CHANNEL_LEFT", (args) => {
-      const id = args[0];
-      dispatch(removeOutput(id));
-    });
-
-    window.kenku.on("DISCORD_CHANNEL_JOINED", (args) => {
-      dispatch(addOutput(args[0]));
-    });
-
-    return () => {
-      window.kenku.removeAllListeners("DISCORD_GUILDS");
-      window.kenku.removeAllListeners("DISCORD_CHANNEL_LEFT");
-      window.kenku.removeAllListeners("DISCORD_CHANNEL_JOINED");
+    active.current = true;
+    let live = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      if (!working.current) await refresh();
+      if (live) timer = setTimeout(poll, 1000);
     };
+    void poll();
+    return () => { live = false; active.current = false; revision.current++; clearTimeout(timer); };
   }, [dispatch]);
 
-  function handleChannelChange(channelId: string) {
-    if (settings.multipleOutputsEnabled) {
-      // Already selected
-      if (output.outputs.includes(channelId)) {
-        dispatch(removeOutput(channelId));
-        if (channelId === "local") {
-          window.kenku.setLoopback(false);
-        } else {
-          window.kenku.leaveChannel(channelId);
-        }
+  async function handleChannelChange(channelId: string) {
+    if (working.current) return;
+    working.current = true; revision.current++;
+    setBusy(true); setFailure(false);
+    const guildFor = (id: string) => output.guilds.find((g) => g.voiceChannels.some((c) => c.id === id))?.id;
+    const requireSuccess = async (command: Promise<DiscordResult>) => { if (!(await command).ok) throw new Error("Discord operation failed"); };
+    const local = (enabled: boolean) => {
+      window.kenku.setLoopback(enabled);
+      dispatch(enabled ? addOutput("local") : removeOutput("local"));
+    };
+    try {
+      if (settings.multipleOutputsEnabled) {
+        if (channelId === "local") local(!output.outputs.includes("local"));
+        else if (output.outputs.includes(channelId)) await requireSuccess(window.dungeonJockey.leaveDiscordChannel(guildFor(channelId), channelId));
+        else await requireSuccess(window.dungeonJockey.joinDiscordChannel(guildFor(channelId), channelId));
       } else {
-        // Not selected
-        dispatch(addOutput(channelId));
-        if (channelId === "local") {
-          window.kenku.setLoopback(true);
-        } else {
-          // Check if the channel is in the same guild as one already selected
-          const channelsToGuild: Record<string, string> = {};
-          for (const guild of output.guilds) {
-            for (const channel of guild.voiceChannels) {
-              channelsToGuild[channel.id] = guild.id;
-            }
+        // Join first: a failed new destination leaves existing audio intact.
+        if (channelId !== "local") await requireSuccess(window.dungeonJockey.joinDiscordChannel(guildFor(channelId), channelId));
+        for (const previous of output.outputs) {
+          if (previous !== "local" && previous !== channelId && guildFor(previous) !== guildFor(channelId)) {
+            await requireSuccess(window.dungeonJockey.leaveDiscordChannel(guildFor(previous), previous));
           }
-          const currentGuild = channelsToGuild[channelId];
-          let guildChannel: string;
-          for (const id of output.outputs) {
-            const guild = channelsToGuild[id];
-            if (guild === currentGuild) {
-              guildChannel = id;
-            }
-          }
-          // Discord only allows for one channel to be joined per guild so we need to leave
-          // a channel if it's in the same guild as the one we're about to join
-          if (guildChannel) {
-            dispatch(removeOutput(guildChannel));
-            window.kenku.leaveChannel(guildChannel);
-          }
-
-          window.kenku.joinChannel(channelId);
         }
+        local(channelId === "local");
       }
-    } else {
-      const prev = output.outputs[0];
-
-      // Already selected so return early
-      if (prev === channelId) {
-        return;
-      }
-
-      if (prev) {
-        if (prev === "local") {
-          window.kenku.setLoopback(false);
-        } else {
-          // Only leave channel if selecting a different guild
-          window.kenku.leaveChannel(prev);
-        }
-      }
-      dispatch(setOutput(channelId));
-      if (channelId === "local") {
-        window.kenku.setLoopback(true);
-      } else {
-        window.kenku.joinChannel(channelId);
-      }
+    } catch { if (active.current) setFailure(true); }
+    finally {
+      working.current = false;
+      if (active.current) { setBusy(false); await refresh(); }
     }
   }
 
@@ -125,6 +99,7 @@ export function OutputListItems() {
         />
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItemButton>
+      {failure && <ListItemText role="alert" primary="Discord output unavailable. Try again." />}
       <Collapse in={open} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
           <OutputListItem
@@ -135,6 +110,7 @@ export function OutputListItems() {
               output.outputs.includes("local")
             }
             onClick={handleChannelChange}
+            disabled={busy}
           />
           <Divider variant="middle" />
           {output.guilds.map((guild) => (
@@ -147,7 +123,6 @@ export function OutputListItems() {
                     <Avatar
                       sx={{ width: "24px", height: "24px" }}
                       alt={guild.name}
-                      src={guild.icon}
                     />
                   </ListItemAvatar>
                   <ListItemText
@@ -175,6 +150,7 @@ export function OutputListItems() {
                     output.outputs.includes(channel.id)
                   }
                   onClick={handleChannelChange}
+                  disabled={busy}
                   key={channel.id}
                 />
               ))}

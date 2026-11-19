@@ -1,26 +1,25 @@
 import { createAudioResource } from "@discordjs/voice";
-import { BrowserWindow } from "electron";
-import { DiscordBroadcast } from "../broadcast/DiscordBroadcast";
+import type { AudioPlayer } from "@discordjs/voice";
 import { AudioCaptureManagerMain } from "./AudioCaptureManagerMain";
 
 export class PlaybackManager {
-  discord: DiscordBroadcast;
+  private readonly audioPlayer: AudioPlayer;
   audioCaptureManager: AudioCaptureManagerMain;
 
-  constructor(window: BrowserWindow) {
-    this.discord = new DiscordBroadcast(window);
+  constructor(audioPlayer: AudioPlayer) {
+    this.audioPlayer = audioPlayer;
     this.audioCaptureManager = new AudioCaptureManagerMain();
     this.audioCaptureManager.on("streamStart", (stream) => {
       const resource = createAudioResource(stream);
-      this.discord.audioPlayer.play(resource);
+      this.audioPlayer.play(resource);
     });
     this.audioCaptureManager.on("streamEnd", () => {
-      this.discord.audioPlayer.stop();
+      this.audioPlayer.stop();
     });
   }
 
   destroy() {
-    this.discord.destroy();
+    this.audioPlayer.stop();
     this.audioCaptureManager.destroy();
   }
 }

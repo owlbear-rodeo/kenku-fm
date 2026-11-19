@@ -7,8 +7,8 @@ const legacySession = vi.hoisted(() => ({
 
 vi.mock("../../src/main/managers/SessionManager", () => ({
   SessionManager: class {
-    constructor() {
-      legacySession.construct();
+    constructor(window: unknown, player: unknown) {
+      legacySession.construct(window, player);
     }
 
     destroy() {
@@ -23,16 +23,21 @@ beforeEach(() => vi.clearAllMocks());
 
 describe("Dungeon Jockey composition root", () => {
   it("constructs and disposes the inherited session only through the Kenku adapter", () => {
+    const player = {} as import("@discordjs/voice").AudioPlayer;
+    const window = {} as Electron.BrowserWindow;
     const root = createDungeonJockeyCompositionRoot(
-      {} as Electron.BrowserWindow,
+      window,
+      player,
     );
 
     expect(root.sessionId).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
     );
     expect(legacySession.construct).toHaveBeenCalledOnce();
+    root.refreshVisibleRendererCompatibilitySession();
+    expect(legacySession.construct).toHaveBeenNthCalledWith(2, window, player);
 
     root.dispose();
-    expect(legacySession.destroy).toHaveBeenCalledOnce();
+    expect(legacySession.destroy).toHaveBeenCalledTimes(2);
   });
 });

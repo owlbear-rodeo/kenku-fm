@@ -213,8 +213,8 @@ describe("credential admission and application lifetime", () => {
     app.dispose();
     await denied();
     expect(registered.size).toBe(0);
-    expect(ipc.handle).toHaveBeenCalledTimes(5);
-    expect(ipc.removeHandler).toHaveBeenCalledTimes(5);
+    expect(ipc.handle).toHaveBeenCalledTimes(13);
+    expect(ipc.removeHandler).toHaveBeenCalledTimes(13);
     expect(contents.eventNames()).toEqual([]);
     finish((operation === "status" ? { state: "available", persistence: "remembered" } : { ok: true, id: credentialId, persistence: "remembered" }) as never);
     expect(await accepted).toMatchObject({ ok: true });

@@ -10,25 +10,15 @@ import {
 import type { ApplicationBridge } from "./dungeonJockey/contracts/applicationBridge";
 import { CREDENTIAL_CHANNELS, CREDENTIAL_OPERATIONS } from "./dungeonJockey/contracts/credentials";
 
-const viewManager = new BrowserViewManagerPreload();
+import { DISCORD_CHANNELS, DISCORD_OPERATIONS, DiscordOperation } from "./dungeonJockey/contracts/discord";
 
-type DiscordGuild = {
-  id: string;
-  name: string;
-  icon: string;
-  voiceChannels: { id: string; name: string }[];
-};
+const viewManager = new BrowserViewManagerPreload();
 
 type ChannelArguments = {
   ERROR: [message: string];
   FATAL_ERROR: [message: string];
   MESSAGE: [message: string];
   INFO: [message: string];
-  DISCORD_READY: [];
-  DISCORD_DISCONNECTED: [];
-  DISCORD_GUILDS: [guilds: DiscordGuild[]];
-  DISCORD_CHANNEL_JOINED: [channelId: string];
-  DISCORD_CHANNEL_LEFT: [channelId: string];
   SHOW_CONTROLS: [];
   BROWSER_VIEW_DID_NAVIGATE: [viewId: number, url: string];
   BROWSER_VIEW_TITLE_UPDATED: [viewId: number, title: string];
@@ -47,11 +37,6 @@ const validChannels: Channel[] = [
   "FATAL_ERROR",
   "MESSAGE",
   "INFO",
-  "DISCORD_READY",
-  "DISCORD_DISCONNECTED",
-  "DISCORD_GUILDS",
-  "DISCORD_CHANNEL_JOINED",
-  "DISCORD_CHANNEL_LEFT",
   "SHOW_CONTROLS",
   "BROWSER_VIEW_DID_NAVIGATE",
   "BROWSER_VIEW_TITLE_UPDATED",
@@ -69,18 +54,6 @@ ipcRenderer.on("BROWSER_VIEW_LOADED", (_, viewId: number) => {
 });
 
 const api = {
-  connect: (token: string) => {
-    ipcRenderer.send("DISCORD_CONNECT", token);
-  },
-  disconnect: () => {
-    ipcRenderer.send("DISCORD_DISCONNECT");
-  },
-  joinChannel: (channelId: string) => {
-    ipcRenderer.send("DISCORD_JOIN_CHANNEL", channelId);
-  },
-  leaveChannel: (channelId: string) => {
-    ipcRenderer.send("DISCORD_LEAVE_CHANNEL", channelId);
-  },
   createBrowserView: async (
     url: string,
     x: number,
@@ -207,7 +180,19 @@ declare global {
 contextBridge.exposeInMainWorld("kenku", api);
 
 if (process.isMainFrame) {
+  const discordRequest = (operation: DiscordOperation, payload = {}) => ipcRenderer.invoke(DISCORD_CHANNELS[operation], {
+    id: createRequestId({ createUuid: () => crypto.randomUUID() }),
+    type: DISCORD_OPERATIONS[operation], protocolVersion: 1, payload,
+  });
   const applicationBridge: ApplicationBridge = {
+    getDiscordConfiguration: () => discordRequest("configuration"),
+    configureDiscord: (secret) => discordRequest("configure", { secret }),
+    forgetDiscord: () => discordRequest("forget"),
+    getDiscordStatus: () => discordRequest("status"),
+    connectDiscord: () => discordRequest("connect"),
+    disconnectDiscord: () => discordRequest("disconnect"),
+    joinDiscordChannel: (guildId, channelId) => discordRequest("join", { guildId, channelId }),
+    leaveDiscordChannel: (guildId, channelId) => discordRequest("leave", { guildId, channelId }),
     getVersion: async () => {
       const request: VersionRequest = {
         id: createRequestId({ createUuid: () => crypto.randomUUID() }),

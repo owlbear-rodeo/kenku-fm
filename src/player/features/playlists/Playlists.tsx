@@ -35,6 +35,7 @@ import { startQueue } from "./playlistPlaybackSlice";
 import { useFolderDrop } from "../../common/useFolderDrop";
 import { getRandomBackground } from "../../backgrounds";
 import { useHideScrollbar } from "../../../renderer/common/useHideScrollbar";
+import { useRememberScroll } from "../../../renderer/common/useRememberScroll";
 import { useNavigate } from "react-router-dom";
 
 const WallPaper = styled("div")({
@@ -107,6 +108,7 @@ export function Playlists({ onPlay }: PlaylistsProps) {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const hideScrollbar = useHideScrollbar(scrollRef);
+  useRememberScroll(scrollRef, "playlists");
 
   return (
     <>

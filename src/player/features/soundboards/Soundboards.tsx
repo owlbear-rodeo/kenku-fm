@@ -28,6 +28,7 @@ import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 
 import { useNavigate } from "react-router-dom";
 import { useHideScrollbar } from "../../../renderer/common/useHideScrollbar";
+import { useRememberScroll } from "../../../renderer/common/useRememberScroll";
 import { RootState } from "../../app/store";
 import { getRandomBackground } from "../../backgrounds";
 import { SortableItem } from "../../common/SortableItem";
@@ -122,6 +123,7 @@ export function Soundboards({ onPlay }: SoundboardProps) {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const hideScrollbar = useHideScrollbar(scrollRef);
+  useRememberScroll(scrollRef, "soundboards");
 
   return (
     <>
